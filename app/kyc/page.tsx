@@ -1,22 +1,50 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import LoadingButton from "@/LoadingButton";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
+function toSafeStorageFileName(fileName: string) {
+  const cleaned = fileName.replace(/[^a-zA-Z0-9._-]/g, "-").replace(/-+/g, "-");
+  return cleaned || "passport";
+}
+
+function toErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : "Something went wrong. Please try again.";
+}
+
 export default function KYCPage() {
   const router = useRouter();
   const user = useStore((state) => state.user);
+  const isAuthenticated = useStore((state) => state.isAuthenticated);
+  const isLoading = useStore((state) => state.isLoading);
   const loadCurrentUser = useStore((state) => state.loadCurrentUser);
 
   const [bankName, setBankName] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [passportFile, setPassportFile] = useState<File | null>(null);
   const [error, setError] = useState("");
+  const [mounted, setMounted] = useState(false);
 
-  if (!user) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (mounted && !isLoading && (!isAuthenticated || !user)) {
+      router.push("/login");
+    }
+  }, [mounted, isLoading, isAuthenticated, user, router]);
+
+  if (!mounted || isLoading || !user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-accent-primary)] border-t-transparent" />
+      </div>
+    );
+  }
 
   if (user.kycVerified) {
     return (
@@ -50,9 +78,17 @@ export default function KYCPage() {
     }
 
     try {
-      // 1. Upload the image
       const supabase = getSupabaseBrowserClient();
-      const filePath = `${user.id}/${Date.now()}-${passportFile.name}`;
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError || !session?.access_token) {
+        throw new Error("Session expired. Please log in again.");
+      }
+
+      const filePath = `${user.id}/${Date.now()}-${toSafeStorageFileName(passportFile.name)}`;
       
       const { error: uploadError } = await supabase.storage
         .from("kyc-documents")
@@ -62,18 +98,16 @@ export default function KYCPage() {
         throw new Error(uploadError.message || "Failed to upload passport photograph.");
       }
 
-      const { data: publicUrlData } = supabase.storage
-        .from("kyc-documents")
-        .getPublicUrl(filePath);
-
-      // 2. Submit KYC data to API
       const response = await fetch("/api/onboarding/kyc", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           bankName,
           accountNumber,
-          passportPhotoUrl: publicUrlData.publicUrl,
+          passportPhotoUrl: filePath,
         }),
       });
 
@@ -82,10 +116,14 @@ export default function KYCPage() {
         throw new Error(data.error || "Failed to complete KYC");
       }
 
-      await loadCurrentUser();
+      const loadResult = await loadCurrentUser();
+      if (!loadResult.ok) {
+        throw new Error(loadResult.error || "KYC saved, but the profile could not be refreshed.");
+      }
+
       router.push("/dashboard");
-    } catch (err: any) {
-      setError(err.message || "Something went wrong. Please try again.");
+    } catch (err) {
+      setError(toErrorMessage(err));
       throw err;
     }
   };

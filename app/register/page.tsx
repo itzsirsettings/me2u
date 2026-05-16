@@ -89,6 +89,7 @@ function RegisterContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -141,8 +142,10 @@ function RegisterContent() {
   };
 
   const completeRegistration = async () => {
+    if (isSubmitting) return;
     if (!validate()) throw new Error("Validation failed");
 
+    setIsSubmitting(true);
     try {
       const response = await fetch("/api/auth/register", {
         method: "POST",
@@ -178,6 +181,8 @@ function RegisterContent() {
         toast.error("Unable to complete registration.");
       }
       throw err;
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -196,7 +201,9 @@ function RegisterContent() {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            completeRegistration().catch(() => {});
+            completeRegistration().catch(() => {
+              setIsSubmitting(false);
+            });
           }}
           className="space-y-6 rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-5 shadow-[4px_4px_0px_var(--color-shadow)] md:p-8"
         >

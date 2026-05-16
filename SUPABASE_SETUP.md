@@ -47,9 +47,15 @@ supabase/migrations/20260516002000_registration_reference_flow.sql
 supabase/migrations/20260516003000_platform_loan_rules.sql
 supabase/migrations/20260516004000_onboarding_affiliate_zero_interest.sql
 supabase/migrations/20260516005000_platform_account_wallet_funding.sql
+supabase/migrations/20260516006000_kyc_and_peer_visibility.sql
+supabase/migrations/20260516007000_notifications_for_loans.sql
+supabase/migrations/20260516008000_admin_reject_proof.sql
+supabase/migrations/20260516009000_repair_auth_onboarding_storage.sql
 ```
 
 You can paste them into the Supabase SQL editor in that order or apply them through the Supabase CLI after linking the project.
+
+If an older project failed while applying `20260516006000_kyc_and_peer_visibility.sql`, apply `20260516009000_repair_auth_onboarding_storage.sql` after the earlier migrations. It repairs the invalid peer-profile policy, ensures onboarding/payment-proof tables and private storage buckets exist, and replaces the admin payment approval/rejection RPCs.
 
 The migration creates:
 
@@ -58,7 +64,10 @@ The migration creates:
 - `transactions`
 - `marketplace_items`
 - `loans`
+- `payment_proofs`
+- `notifications`
 - RLS policies for authenticated users
+- Private `receipts` and `kyc-documents` storage buckets
 
 ## 3. MVP Authentication
 
@@ -126,10 +135,12 @@ NEXT_PUBLIC_PLATFORM_ACCOUNT_NUMBER=
 
 For a strict live-money launch, verify the submitted reference operationally or replace the manual reference flow with provider-backed webhooks.
 
+Receipt uploads are stored in the private `receipts` bucket. Admins view receipts through short-lived signed URLs generated from the stored object path.
+
 ## 6. Registration Deposit And First Withdrawal
 
 Users complete registration with Supabase Auth, then pay a ₦1,000 registration deposit to the platform account details.
-The app records their payment reference and then credits the first ₦2,000 platform loan to their wallet.
+The app records their payment proof as pending. Once an admin approves it, the app records the payment reference and credits the first ₦2,000 platform loan to their wallet.
 That first ₦2,000 can be withdrawn without a 50% retained wallet condition.
 
 The platform account details are public operational values:
@@ -197,7 +208,18 @@ Users now register by:
 2. Choosing a username
 3. Optionally entering a referral code
 4. Creating a Supabase Auth user and database profile
-5. Paying the ₦1,000 registration deposit
-6. Receiving the first ₦2,000 platform loan in their wallet
+5. Being auto-logged in and sent to the wallet page
+6. Uploading proof of the ₦1,000 registration deposit
+7. Receiving the first ₦2,000 platform loan after admin approval
 
 The dashboard greeting uses the first name stored in the Supabase-backed profile. NIN verification can be added later without changing the basic auth flow.
+
+## 12. Verification Checklist
+
+After applying the migrations, verify:
+
+- Registering a new user creates one Supabase Auth user, one `profiles` row, and one `wallets` row.
+- Login succeeds only after the profile and wallet are readable.
+- KYC uploads a private object path to `profiles.passport_photo_url`.
+- Wallet funding and registration deposit uploads create pending `payment_proofs` rows with private receipt paths.
+- Admin approval of a registration deposit sets `registration_deposit_paid=true`, stores `registration_payment_reference`, creates the first platform loan only once, and credits any direct referral reward only once.

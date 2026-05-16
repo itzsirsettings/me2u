@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useStore } from "@/lib/store";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import Image from "next/image";
 
 type PaymentProof = {
   id: string;
@@ -14,6 +13,7 @@ type PaymentProof = {
   reference: string;
   type: string;
   receipt_image_url: string;
+  receiptSignedUrl?: string | null;
   status: string;
   created_at: string;
   profiles: {
@@ -23,24 +23,33 @@ type PaymentProof = {
   };
 };
 
+const signedReceiptTtlSeconds = 10 * 60;
+
+function isHttpUrl(value: string) {
+  return /^https?:\/\//i.test(value);
+}
+
+function toErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : "Something went wrong.";
+}
+
 export default function AdminDashboard() {
   const user = useStore((state) => state.user);
+  const isAuthenticated = useStore((state) => state.isAuthenticated);
+  const isLoading = useStore((state) => state.isLoading);
   const router = useRouter();
   const [proofs, setProofs] = useState<PaymentProof[]>([]);
   const [loading, setLoading] = useState(true);
   const [approving, setApproving] = useState<string | null>(null);
   const [rejecting, setRejecting] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
-    if (user.role !== "admin") {
-      router.replace("/dashboard");
-      return;
-    }
-    fetchProofs();
-  }, [user, router]);
+    setMounted(true);
+  }, []);
 
-  const fetchProofs = async () => {
+  const fetchProofs = useCallback(async () => {
+    setLoading(true);
     try {
       const supabase = getSupabaseBrowserClient();
       const { data, error } = await supabase
@@ -49,27 +58,67 @@ export default function AdminDashboard() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setProofs(data as any[]);
-    } catch (error: any) {
-      toast.error("Failed to load payment proofs: " + error.message);
+
+      const signedProofs = await Promise.all(
+        ((data || []) as unknown as PaymentProof[]).map(async (proof) => {
+          const receiptValue = proof.receipt_image_url;
+          if (!receiptValue) return { ...proof, receiptSignedUrl: null };
+          if (isHttpUrl(receiptValue)) return { ...proof, receiptSignedUrl: receiptValue };
+
+          const { data: signedData, error: signedError } = await supabase.storage
+            .from("receipts")
+            .createSignedUrl(receiptValue, signedReceiptTtlSeconds);
+
+          if (signedError) {
+            console.warn("Could not sign receipt URL.", signedError.message);
+          }
+
+          return { ...proof, receiptSignedUrl: signedData?.signedUrl || null };
+        }),
+      );
+
+      setProofs(signedProofs);
+    } catch (error) {
+      toast.error("Failed to load payment proofs: " + toErrorMessage(error));
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || isLoading) return;
+
+    if (!isAuthenticated) {
+      router.replace("/login");
+      return;
+    }
+
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    if (user.role !== "admin") {
+      router.replace("/dashboard");
+      return;
+    }
+
+    fetchProofs();
+  }, [fetchProofs, isAuthenticated, isLoading, mounted, router, user]);
 
   const handleApprove = async (id: string) => {
     setApproving(id);
     try {
       const supabase = getSupabaseBrowserClient();
-      const { error } = await supabase.rpc("admin_approve_payment_proof" as any, {
+      const { error } = await supabase.rpc("admin_approve_payment_proof", {
         p_proof_id: id,
       });
 
       if (error) throw error;
       toast.success("Payment proof approved successfully.");
-      fetchProofs();
-    } catch (error: any) {
-      toast.error("Failed to approve: " + error.message);
+      await fetchProofs();
+    } catch (error) {
+      toast.error("Failed to approve: " + toErrorMessage(error));
     } finally {
       setApproving(null);
     }
@@ -80,21 +129,21 @@ export default function AdminDashboard() {
     setRejecting(id);
     try {
       const supabase = getSupabaseBrowserClient();
-      const { error } = await supabase.rpc("admin_reject_payment_proof" as any, {
+      const { error } = await supabase.rpc("admin_reject_payment_proof", {
         p_proof_id: id,
       });
 
       if (error) throw error;
       toast.success("Payment proof rejected.");
-      fetchProofs();
-    } catch (error: any) {
-      toast.error("Failed to reject: " + error.message);
+      await fetchProofs();
+    } catch (error) {
+      toast.error("Failed to reject: " + toErrorMessage(error));
     } finally {
       setRejecting(null);
     }
   };
 
-  if (loading) {
+  if (!mounted || isLoading || loading) {
     return (
       <div className="flex h-screen items-center justify-center pt-16 pb-20">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-accent-primary)] border-t-transparent" />
@@ -142,8 +191,8 @@ export default function AdminDashboard() {
                   <td className="px-4 py-3 font-medium">₦{proof.amount.toLocaleString()}</td>
                   <td className="px-4 py-3 truncate max-w-[150px]">{proof.reference}</td>
                   <td className="px-4 py-3">
-                    {proof.receipt_image_url ? (
-                      <a href={proof.receipt_image_url} target="_blank" rel="noopener noreferrer" className="text-[var(--color-accent-primary)] hover:underline">
+                    {proof.receiptSignedUrl ? (
+                      <a href={proof.receiptSignedUrl} target="_blank" rel="noopener noreferrer" className="text-[var(--color-accent-primary)] hover:underline">
                         View Image
                       </a>
                     ) : (

@@ -10,11 +10,20 @@ import { toast } from "sonner";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const signInWithPassword = useStore((s) => s.signInWithPassword);
   const router = useRouter();
 
   const handleLogin = async () => {
+    if (isSubmitting) return;
+    if (!email || !password) {
+      toast.error("Please fill in all fields.");
+      throw new Error("Empty fields");
+    }
+
+    setIsSubmitting(true);
     const result = await signInWithPassword(email, password);
+    setIsSubmitting(false);
 
     if (!result.ok) {
       toast.error(result.error || "Login failed");
@@ -32,7 +41,9 @@ export default function Login() {
         <form
           onSubmit={(event) => {
             event.preventDefault();
-            handleLogin();
+            handleLogin().catch(() => {
+              setIsSubmitting(false);
+            });
           }}
         >
           <label htmlFor="login-email" className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-secondary">
@@ -63,13 +74,7 @@ export default function Login() {
             label="Login"
             loadingText="Logging in..."
             successText="Login successful!"
-            onClick={async () => {
-              if (!email || !password) {
-                toast.error("Please fill in all fields.");
-                throw new Error("Empty fields");
-              }
-              await handleLogin();
-            }}
+            onClick={handleLogin}
           />
         </form>
       </div>

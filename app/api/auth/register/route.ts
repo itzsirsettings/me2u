@@ -6,6 +6,41 @@ function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
+function registrationErrorResponse(error: unknown) {
+  const message = error instanceof Error ? error.message : "Unable to register account.";
+  const normalized = message.toLowerCase();
+
+  if (
+    normalized.includes("already been registered") ||
+    normalized.includes("already registered") ||
+    normalized.includes("user already exists") ||
+    normalized.includes("email_exists")
+  ) {
+    return NextResponse.json({ error: "Email is already registered." }, { status: 409 });
+  }
+
+  if (
+    normalized.includes("profiles_username_lower_unique_idx") ||
+    (normalized.includes("duplicate key") && normalized.includes("username"))
+  ) {
+    return NextResponse.json({ error: "Username is already taken." }, { status: 409 });
+  }
+
+  if (
+    normalized.includes("schema cache") ||
+    normalized.includes("could not find") ||
+    normalized.includes("column") ||
+    normalized.includes("relation")
+  ) {
+    return NextResponse.json(
+      { error: "Database setup is incomplete. Apply the latest Supabase migrations and try again." },
+      { status: 500 },
+    );
+  }
+
+  return NextResponse.json({ error: message }, { status: 400 });
+}
+
 export async function POST(request: Request) {
   try {
     const clientIp = getClientIp(request);
@@ -169,9 +204,6 @@ export async function POST(request: Request) {
       },
     );
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unable to register account." },
-      { status: 400 },
-    );
+    return registrationErrorResponse(error);
   }
 }

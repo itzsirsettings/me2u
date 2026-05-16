@@ -21,6 +21,7 @@ export default function Marketplace() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   const [formData, setFormData] = useState({
     type: "borrow_request" as ListingType,
     amount: 10000,
@@ -41,6 +42,7 @@ export default function Marketplace() {
   if (!mounted || (!isAuthenticated && !isLoading)) return null;
 
   const handleCreate = async () => {
+    if (isCreating) return;
     if (!user) {
       toast.error("Please login to create an offer");
       return;
@@ -50,14 +52,19 @@ export default function Marketplace() {
       return;
     }
 
-    const result = await createMarketplaceItem({ ...formData, rate: 0 });
-    if (!result.ok) {
-      toast.error(result.error || "Unable to create listing");
-      throw new Error("Unable to create");
-    }
+    setIsCreating(true);
+    try {
+      const result = await createMarketplaceItem({ ...formData, rate: 0 });
+      if (!result.ok) {
+        toast.error(result.error || "Unable to create listing");
+        throw new Error("Unable to create");
+      }
 
-    toast.success("Listing created successfully!");
-    setShowForm(false);
+      toast.success("Listing created successfully!");
+      setShowForm(false);
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   const handleAccept = async (itemId: string, amount: number, type: string) => {

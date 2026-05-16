@@ -188,6 +188,7 @@ export default function LoadingButton({
       `}</style>
 
       <button
+        type="button"
         className="lb-root"
         style={btnStyle}
         disabled={state !== "idle"}

@@ -280,6 +280,18 @@ export interface Database {
         };
         Returns: undefined;
       };
+      admin_approve_payment_proof: {
+        Args: {
+          p_proof_id: string;
+        };
+        Returns: undefined;
+      };
+      admin_reject_payment_proof: {
+        Args: {
+          p_proof_id: string;
+        };
+        Returns: undefined;
+      };
     };
     Enums: {
       transaction_type: TransactionRow["type"];

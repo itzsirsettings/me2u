@@ -15,7 +15,7 @@ USING (
   EXISTS (
     SELECT 1 FROM public.loans l
     WHERE l.status = 'active'
-      AND l.source = 'peer'
+      AND l.lender_id IS NOT NULL
       AND (
         (l.borrower_id = auth.uid() AND l.lender_id = profiles.id)
         OR

@@ -98,7 +98,7 @@ interface AppStore {
   activeLoans: ActiveLoan[];
   notifications: AppNotification[];
   initialize: () => Promise<void>;
-  loadCurrentUser: () => Promise<void>;
+  loadCurrentUser: () => Promise<ActionResult>;
   signInWithPassword: (email: string, password: string) => Promise<ActionResult>;
   logout: () => Promise<void>;
   fundWallet: (amount: number, reference: string, receiptFile?: File) => Promise<ActionResult>;
@@ -119,6 +119,47 @@ const missingSupabaseResult = {
 
 function toErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Something went wrong.";
+}
+
+function clearSessionState() {
+  return {
+    user: null,
+    isAuthenticated: false,
+    isLoading: false,
+    transactions: [],
+    activeLoans: [],
+    marketplace: [],
+    notifications: [],
+  };
+}
+
+function toSafeStorageFileName(fileName: string) {
+  const cleaned = fileName.replace(/[^a-zA-Z0-9._-]/g, "-").replace(/-+/g, "-");
+  return cleaned || "upload";
+}
+
+function toUserStoragePath(userId: string, file: File) {
+  return `${userId}/${Date.now()}-${toSafeStorageFileName(file.name)}`;
+}
+
+function readOptionalRows<T>(
+  result: PromiseSettledResult<{
+    data: T[] | null;
+    error: { message: string } | null;
+  }>,
+  label: string,
+) {
+  if (result.status === "rejected") {
+    console.warn(`${label} could not be loaded.`, result.reason);
+    return [];
+  }
+
+  if (result.value.error) {
+    console.warn(`${label} could not be loaded.`, result.value.error.message);
+    return [];
+  }
+
+  return result.value.data || [];
 }
 
 async function postAuthenticatedJson(path: string, body: Record<string, unknown>): Promise<ActionResult> {
@@ -250,7 +291,7 @@ export const useStore = create<AppStore>((set, get) => ({
   loadCurrentUser: async () => {
     if (!hasSupabaseConfig()) {
       set({ user: null, isAuthenticated: false, isLoading: false });
-      return;
+      return missingSupabaseResult;
     }
 
     set({ isLoading: true });
@@ -263,78 +304,67 @@ export const useStore = create<AppStore>((set, get) => ({
       } = await supabase.auth.getUser();
 
       if (authError || !authUser) {
-        set({
-          user: null,
-          isAuthenticated: false,
-          isLoading: false,
-          transactions: [],
-          activeLoans: [],
-          marketplace: [],
-          notifications: [],
-        });
-        return;
+        set(clearSessionState());
+        return { ok: false, error: authError?.message || "Please log in first." };
       }
 
-      const [
-        profileResponse,
-        walletResponse,
-        transactionsResponse,
-        loansResponse,
-        marketplaceResponse,
-        notificationsResponse,
-      ] = await Promise.all([
+      const [profileResponse, walletResponse, optionalResponses] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", authUser.id).maybeSingle(),
         supabase.from("wallets").select("*").eq("user_id", authUser.id).maybeSingle(),
-        supabase
-          .from("transactions")
-          .select("*")
-          .eq("user_id", authUser.id)
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("loans")
-          .select(`
-            *,
-            borrower:profiles!loans_borrower_id_fkey(phone, bank_name, account_number),
-            lender:profiles!loans_lender_id_fkey(phone, bank_name, account_number)
-          `)
-          .or(`borrower_id.eq.${authUser.id},lender_id.eq.${authUser.id}`)
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("marketplace_items")
-          .select("*")
-          .eq("status", "active")
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("notifications")
-          .select("*")
-          .eq("user_id", authUser.id)
-          .order("created_at", { ascending: false }),
+        Promise.allSettled([
+          supabase
+            .from("transactions")
+            .select("*")
+            .eq("user_id", authUser.id)
+            .order("created_at", { ascending: false }),
+          supabase
+            .from("loans")
+            .select(`
+              *,
+              borrower:profiles!loans_borrower_id_fkey(phone, bank_name, account_number),
+              lender:profiles!loans_lender_id_fkey(phone, bank_name, account_number)
+            `)
+            .or(`borrower_id.eq.${authUser.id},lender_id.eq.${authUser.id}`)
+            .order("created_at", { ascending: false }),
+          supabase
+            .from("marketplace_items")
+            .select("*")
+            .eq("status", "active")
+            .order("created_at", { ascending: false }),
+          supabase
+            .from("notifications")
+            .select("*")
+            .eq("user_id", authUser.id)
+            .order("created_at", { ascending: false }),
+        ]),
       ]);
 
       if (profileResponse.error) throw profileResponse.error;
       if (walletResponse.error) throw walletResponse.error;
-      if (transactionsResponse.error) throw transactionsResponse.error;
-      if (loansResponse.error) throw loansResponse.error;
-      if (marketplaceResponse.error) throw marketplaceResponse.error;
-      if (notificationsResponse.error) throw notificationsResponse.error;
 
       const profile = profileResponse.data;
       if (!profile) {
         throw new Error("Profile not found. Please complete registration again.");
       }
 
+      const [transactionsResponse, loansResponse, marketplaceResponse, notificationsResponse] =
+        optionalResponses;
+
       set({
         user: toUser(profile, walletResponse.data),
         isAuthenticated: true,
         isLoading: false,
-        transactions: (transactionsResponse.data || []).map(toTransaction),
-        activeLoans: (loansResponse.data || []).map((loan) => toLoan(loan, authUser.id)),
-        marketplace: (marketplaceResponse.data || []).map(toMarketplaceItem),
-        notifications: (notificationsResponse.data || []).map(toNotification),
+        transactions: readOptionalRows<TransactionRow>(transactionsResponse, "Transactions").map(toTransaction),
+        activeLoans: readOptionalRows<any>(loansResponse, "Loans").map((loan) => toLoan(loan, authUser.id)),
+        marketplace: readOptionalRows<MarketplaceRow>(marketplaceResponse, "Marketplace").map(toMarketplaceItem),
+        notifications: readOptionalRows<NotificationRow>(notificationsResponse, "Notifications").map(toNotification),
       });
+
+      return { ok: true };
     } catch (error) {
       console.error(error);
-      set({ isLoading: false });
+      set(clearSessionState());
+      return { ok: false, error: toErrorMessage(error) };
     }
   },
 
@@ -349,8 +379,13 @@ export const useStore = create<AppStore>((set, get) => ({
       });
 
       if (error) throw error;
-      await get().loadCurrentUser();
-      return { ok: true };
+      const loadResult = await get().loadCurrentUser();
+      if (!loadResult.ok) {
+        await supabase.auth.signOut();
+        return loadResult;
+      }
+
+      return loadResult;
     } catch (error) {
       return { ok: false, error: toErrorMessage(error) };
     }
@@ -383,10 +418,10 @@ export const useStore = create<AppStore>((set, get) => ({
 
     let receiptImageUrl = "";
     if (receiptFile) {
-      const filePath = `${user.id}/${Date.now()}-${receiptFile.name}`;
+      const filePath = toUserStoragePath(user.id, receiptFile);
       const { error: uploadError } = await getSupabaseBrowserClient().storage.from("receipts").upload(filePath, receiptFile);
       if (uploadError) return { ok: false, error: uploadError.message };
-      receiptImageUrl = getSupabaseBrowserClient().storage.from("receipts").getPublicUrl(filePath).data.publicUrl;
+      receiptImageUrl = filePath;
     }
 
     const result = await postAuthenticatedJson("/api/wallet/fund", {
@@ -415,10 +450,10 @@ export const useStore = create<AppStore>((set, get) => ({
 
     let receiptImageUrl = "";
     if (receiptFile) {
-      const filePath = `${user.id}/${Date.now()}-${receiptFile.name}`;
+      const filePath = toUserStoragePath(user.id, receiptFile);
       const { error: uploadError } = await getSupabaseBrowserClient().storage.from("receipts").upload(filePath, receiptFile);
       if (uploadError) return { ok: false, error: uploadError.message };
-      receiptImageUrl = getSupabaseBrowserClient().storage.from("receipts").getPublicUrl(filePath).data.publicUrl;
+      receiptImageUrl = filePath;
     }
 
     const result = await postAuthenticatedJson("/api/onboarding/registration-deposit", {
