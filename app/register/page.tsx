@@ -5,7 +5,7 @@ import LoadingButton from "@/LoadingButton";
 import { Input } from "@/components/ui/input";
 import { useStore } from "@/lib/store";
 import { useRouter, useSearchParams } from "next/navigation";
-import { type InputHTMLAttributes, useState, useEffect } from "react";
+import { type InputHTMLAttributes, useState, useEffect, Suspense } from "react";
 import { toast } from "sonner";
 
 type FieldProps = {
@@ -73,6 +73,18 @@ function RegistrationField({
 }
 
 export default function Register() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-primary)] p-4">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-accent-primary)] border-t-transparent" />
+      </div>
+    }>
+      <RegisterContent />
+    </Suspense>
+  );
+}
+
+function RegisterContent() {
   const signInWithPassword = useStore((state) => state.signInWithPassword);
   const router = useRouter();
   const searchParams = useSearchParams();
