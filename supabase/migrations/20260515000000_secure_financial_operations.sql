@@ -33,7 +33,7 @@ drop policy if exists "Users can fund active marketplace listings" on public.mar
 drop policy if exists "Users can create loans they participate in" on public.loans;
 drop policy if exists "Borrowers can mark own loan complete" on public.loans;
 
-create or replace function private.lendpeer_fund_wallet(
+create or replace function private.me2u_fund_wallet(
   p_user_id uuid,
   p_amount numeric
 )
@@ -68,7 +68,7 @@ begin
 end;
 $$;
 
-create or replace function private.lendpeer_withdraw_wallet(
+create or replace function private.me2u_withdraw_wallet(
   p_user_id uuid,
   p_amount numeric
 )
@@ -104,7 +104,7 @@ begin
 end;
 $$;
 
-create or replace function private.lendpeer_create_marketplace_item(
+create or replace function private.me2u_create_marketplace_item(
   p_user_id uuid,
   p_type public.marketplace_item_type,
   p_amount numeric,
@@ -165,7 +165,7 @@ begin
 end;
 $$;
 
-create or replace function private.lendpeer_accept_marketplace_item(
+create or replace function private.me2u_accept_marketplace_item(
   p_user_id uuid,
   p_item_id uuid
 )
@@ -256,7 +256,7 @@ begin
 end;
 $$;
 
-create or replace function private.lendpeer_repay_loan(
+create or replace function private.me2u_repay_loan(
   p_user_id uuid,
   p_loan_id uuid
 )
@@ -316,7 +316,7 @@ begin
 end;
 $$;
 
-create or replace function public.lendpeer_fund_wallet(
+create or replace function public.me2u_fund_wallet(
   p_user_id uuid,
   p_amount numeric
 )
@@ -325,10 +325,10 @@ language sql
 security invoker
 set search_path = public, private, pg_temp
 as $$
-  select private.lendpeer_fund_wallet(p_user_id, p_amount);
+  select private.me2u_fund_wallet(p_user_id, p_amount);
 $$;
 
-create or replace function public.lendpeer_withdraw_wallet(
+create or replace function public.me2u_withdraw_wallet(
   p_user_id uuid,
   p_amount numeric
 )
@@ -337,10 +337,10 @@ language sql
 security invoker
 set search_path = public, private, pg_temp
 as $$
-  select private.lendpeer_withdraw_wallet(p_user_id, p_amount);
+  select private.me2u_withdraw_wallet(p_user_id, p_amount);
 $$;
 
-create or replace function public.lendpeer_create_marketplace_item(
+create or replace function public.me2u_create_marketplace_item(
   p_user_id uuid,
   p_type public.marketplace_item_type,
   p_amount numeric,
@@ -352,7 +352,7 @@ language sql
 security invoker
 set search_path = public, private, pg_temp
 as $$
-  select private.lendpeer_create_marketplace_item(
+  select private.me2u_create_marketplace_item(
     p_user_id,
     p_type,
     p_amount,
@@ -361,7 +361,7 @@ as $$
   );
 $$;
 
-create or replace function public.lendpeer_accept_marketplace_item(
+create or replace function public.me2u_accept_marketplace_item(
   p_user_id uuid,
   p_item_id uuid
 )
@@ -370,10 +370,10 @@ language sql
 security invoker
 set search_path = public, private, pg_temp
 as $$
-  select private.lendpeer_accept_marketplace_item(p_user_id, p_item_id);
+  select private.me2u_accept_marketplace_item(p_user_id, p_item_id);
 $$;
 
-create or replace function public.lendpeer_repay_loan(
+create or replace function public.me2u_repay_loan(
   p_user_id uuid,
   p_loan_id uuid
 )
@@ -382,7 +382,7 @@ language sql
 security invoker
 set search_path = public, private, pg_temp
 as $$
-  select private.lendpeer_repay_loan(p_user_id, p_loan_id);
+  select private.me2u_repay_loan(p_user_id, p_loan_id);
 $$;
 
 revoke execute on all functions in schema private from public;
@@ -390,14 +390,14 @@ revoke execute on all functions in schema private from anon;
 revoke execute on all functions in schema private from authenticated;
 grant execute on all functions in schema private to service_role;
 
-revoke execute on function public.lendpeer_fund_wallet(uuid, numeric) from public, anon, authenticated;
-revoke execute on function public.lendpeer_withdraw_wallet(uuid, numeric) from public, anon, authenticated;
-revoke execute on function public.lendpeer_create_marketplace_item(uuid, public.marketplace_item_type, numeric, numeric, integer) from public, anon, authenticated;
-revoke execute on function public.lendpeer_accept_marketplace_item(uuid, uuid) from public, anon, authenticated;
-revoke execute on function public.lendpeer_repay_loan(uuid, uuid) from public, anon, authenticated;
+revoke execute on function public.me2u_fund_wallet(uuid, numeric) from public, anon, authenticated;
+revoke execute on function public.me2u_withdraw_wallet(uuid, numeric) from public, anon, authenticated;
+revoke execute on function public.me2u_create_marketplace_item(uuid, public.marketplace_item_type, numeric, numeric, integer) from public, anon, authenticated;
+revoke execute on function public.me2u_accept_marketplace_item(uuid, uuid) from public, anon, authenticated;
+revoke execute on function public.me2u_repay_loan(uuid, uuid) from public, anon, authenticated;
 
-grant execute on function public.lendpeer_fund_wallet(uuid, numeric) to service_role;
-grant execute on function public.lendpeer_withdraw_wallet(uuid, numeric) to service_role;
-grant execute on function public.lendpeer_create_marketplace_item(uuid, public.marketplace_item_type, numeric, numeric, integer) to service_role;
-grant execute on function public.lendpeer_accept_marketplace_item(uuid, uuid) to service_role;
-grant execute on function public.lendpeer_repay_loan(uuid, uuid) to service_role;
+grant execute on function public.me2u_fund_wallet(uuid, numeric) to service_role;
+grant execute on function public.me2u_withdraw_wallet(uuid, numeric) to service_role;
+grant execute on function public.me2u_create_marketplace_item(uuid, public.marketplace_item_type, numeric, numeric, integer) to service_role;
+grant execute on function public.me2u_accept_marketplace_item(uuid, uuid) to service_role;
+grant execute on function public.me2u_repay_loan(uuid, uuid) to service_role;

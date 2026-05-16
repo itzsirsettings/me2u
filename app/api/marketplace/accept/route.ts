@@ -26,7 +26,7 @@ export async function POST(request: Request) {
       throw new Error("Marketplace listing is required.");
     }
 
-    const { error } = await auth.supabase.rpc("lendpeer_accept_marketplace_item", {
+    const { error } = await auth.supabase.rpc("me2u_accept_marketplace_item", {
       p_user_id: auth.user.id,
       p_item_id: itemId,
     });

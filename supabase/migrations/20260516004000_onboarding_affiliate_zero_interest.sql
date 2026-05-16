@@ -41,7 +41,7 @@ drop constraint if exists marketplace_items_rate_check;
 alter table public.marketplace_items
 add constraint marketplace_items_rate_check check (rate >= 0);
 
-create or replace function private.lendpeer_create_marketplace_item(
+create or replace function private.me2u_create_marketplace_item(
   p_user_id uuid,
   p_type public.marketplace_item_type,
   p_amount numeric,
@@ -97,7 +97,7 @@ begin
 end;
 $$;
 
-create or replace function private.lendpeer_confirm_registration_deposit(
+create or replace function private.me2u_confirm_registration_deposit(
   p_user_id uuid,
   p_reference text
 )
@@ -232,7 +232,7 @@ begin
 end;
 $$;
 
-create or replace function private.lendpeer_request_platform_loan(
+create or replace function private.me2u_request_platform_loan(
   p_user_id uuid,
   p_amount numeric default null
 )
@@ -357,7 +357,7 @@ begin
 end;
 $$;
 
-create or replace function private.lendpeer_withdraw_wallet(
+create or replace function private.me2u_withdraw_wallet(
   p_user_id uuid,
   p_amount numeric
 )
@@ -419,7 +419,7 @@ begin
 end;
 $$;
 
-create or replace function public.lendpeer_confirm_registration_deposit(
+create or replace function public.me2u_confirm_registration_deposit(
   p_user_id uuid,
   p_reference text
 )
@@ -428,11 +428,11 @@ language sql
 security invoker
 set search_path = public, private, pg_temp
 as $$
-  select private.lendpeer_confirm_registration_deposit(p_user_id, p_reference);
+  select private.me2u_confirm_registration_deposit(p_user_id, p_reference);
 $$;
 
-revoke execute on function private.lendpeer_confirm_registration_deposit(uuid, text) from public, anon, authenticated;
-grant execute on function private.lendpeer_confirm_registration_deposit(uuid, text) to service_role;
+revoke execute on function private.me2u_confirm_registration_deposit(uuid, text) from public, anon, authenticated;
+grant execute on function private.me2u_confirm_registration_deposit(uuid, text) to service_role;
 
-revoke execute on function public.lendpeer_confirm_registration_deposit(uuid, text) from public, anon, authenticated;
-grant execute on function public.lendpeer_confirm_registration_deposit(uuid, text) to service_role;
+revoke execute on function public.me2u_confirm_registration_deposit(uuid, text) from public, anon, authenticated;
+grant execute on function public.me2u_confirm_registration_deposit(uuid, text) to service_role;

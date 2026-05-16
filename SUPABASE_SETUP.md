@@ -152,7 +152,7 @@ Only the withdrawal amount is deducted. The 50% platform loan condition remains 
 
 ## 8. Platform Loan Rules
 
-The MVP platform loan flow is enforced in Postgres through `lendpeer_request_platform_loan`:
+The MVP platform loan flow is enforced in Postgres through `me2u_request_platform_loan`:
 
 - First platform loan: fixed at ₦2,000 after the ₦1,000 registration deposit, with no 50% wallet condition.
 - Second and later platform loans: start from ₦10,000.

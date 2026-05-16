@@ -11,7 +11,7 @@ create index if not exists loans_platform_borrower_status_idx
 on public.loans (borrower_id, status, created_at desc)
 where lender_id is null;
 
-create or replace function private.lendpeer_request_platform_loan(
+create or replace function private.me2u_request_platform_loan(
   p_user_id uuid,
   p_amount numeric default null
 )
@@ -122,7 +122,7 @@ begin
 end;
 $$;
 
-create or replace function private.lendpeer_withdraw_wallet(
+create or replace function private.me2u_withdraw_wallet(
   p_user_id uuid,
   p_amount numeric
 )
@@ -170,7 +170,7 @@ begin
 end;
 $$;
 
-create or replace function private.lendpeer_repay_loan(
+create or replace function private.me2u_repay_loan(
   p_user_id uuid,
   p_loan_id uuid
 )
@@ -248,7 +248,7 @@ begin
 end;
 $$;
 
-create or replace function public.lendpeer_request_platform_loan(
+create or replace function public.me2u_request_platform_loan(
   p_user_id uuid,
   p_amount numeric default null
 )
@@ -257,11 +257,11 @@ language sql
 security invoker
 set search_path = public, private, pg_temp
 as $$
-  select private.lendpeer_request_platform_loan(p_user_id, p_amount);
+  select private.me2u_request_platform_loan(p_user_id, p_amount);
 $$;
 
-revoke execute on function private.lendpeer_request_platform_loan(uuid, numeric) from public, anon, authenticated;
-grant execute on function private.lendpeer_request_platform_loan(uuid, numeric) to service_role;
+revoke execute on function private.me2u_request_platform_loan(uuid, numeric) from public, anon, authenticated;
+grant execute on function private.me2u_request_platform_loan(uuid, numeric) to service_role;
 
-revoke execute on function public.lendpeer_request_platform_loan(uuid, numeric) from public, anon, authenticated;
-grant execute on function public.lendpeer_request_platform_loan(uuid, numeric) to service_role;
+revoke execute on function public.me2u_request_platform_loan(uuid, numeric) from public, anon, authenticated;
+grant execute on function public.me2u_request_platform_loan(uuid, numeric) to service_role;

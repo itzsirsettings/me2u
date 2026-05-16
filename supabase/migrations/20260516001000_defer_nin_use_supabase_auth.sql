@@ -2,7 +2,7 @@ alter table public.profiles
 alter column nin_hash drop not null,
 alter column nin_last4 drop not null;
 
-create or replace function private.lendpeer_create_marketplace_item(
+create or replace function private.me2u_create_marketplace_item(
   p_user_id uuid,
   p_type public.marketplace_item_type,
   p_amount numeric,

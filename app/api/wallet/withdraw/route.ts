@@ -62,7 +62,7 @@ export async function POST(request: Request) {
       throw new Error("Insufficient balance.");
     }
 
-    const { error } = await auth.supabase.rpc("lendpeer_withdraw_wallet", {
+    const { error } = await auth.supabase.rpc("me2u_withdraw_wallet", {
       p_user_id: auth.user.id,
       p_amount: amount,
     });

@@ -26,7 +26,7 @@ export async function POST(request: Request) {
         ? null
         : readPositiveAmount(body.amount, "Loan amount");
 
-    const { error } = await auth.supabase.rpc("lendpeer_request_platform_loan", {
+    const { error } = await auth.supabase.rpc("me2u_request_platform_loan", {
       p_user_id: auth.user.id,
       p_amount: amount,
     });

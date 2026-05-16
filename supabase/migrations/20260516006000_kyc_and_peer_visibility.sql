@@ -141,7 +141,7 @@ BEGIN
   ELSIF v_proof.type = 'registration_deposit' THEN
     UPDATE public.profiles SET registration_deposit_paid = true, registration_deposit_amount = v_proof.amount, registration_deposit_confirmed_at = now(), updated_at = now() WHERE id = v_proof.user_id;
     -- Note: first platform loan is expected to be triggered elsewhere or added here, but for simplicity we rely on existing mechanisms or add it directly:
-    PERFORM public.lendpeer_request_platform_loan(v_proof.user_id, 2000);
+    PERFORM public.me2u_request_platform_loan(v_proof.user_id, 2000);
   END IF;
 
   -- Notify user

@@ -1,6 +1,6 @@
 -- Migration: Add notifications for loan acceptance and repayment
 
-create or replace function private.lendpeer_accept_marketplace_item(
+create or replace function private.me2u_accept_marketplace_item(
   p_user_id uuid,
   p_item_id uuid
 )
@@ -98,7 +98,7 @@ end;
 $$;
 
 
-create or replace function private.lendpeer_repay_loan(
+create or replace function private.me2u_repay_loan(
   p_user_id uuid,
   p_loan_id uuid
 )

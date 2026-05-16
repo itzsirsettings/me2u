@@ -227,7 +227,7 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: {
-      lendpeer_fund_wallet: {
+      me2u_fund_wallet: {
         Args: {
           p_user_id: string;
           p_amount: number;
@@ -235,14 +235,14 @@ export interface Database {
         };
         Returns: undefined;
       };
-      lendpeer_withdraw_wallet: {
+      me2u_withdraw_wallet: {
         Args: {
           p_user_id: string;
           p_amount: number;
         };
         Returns: undefined;
       };
-      lendpeer_create_marketplace_item: {
+      me2u_create_marketplace_item: {
         Args: {
           p_user_id: string;
           p_type: MarketplaceRow["type"];
@@ -252,28 +252,28 @@ export interface Database {
         };
         Returns: undefined;
       };
-      lendpeer_accept_marketplace_item: {
+      me2u_accept_marketplace_item: {
         Args: {
           p_user_id: string;
           p_item_id: string;
         };
         Returns: undefined;
       };
-      lendpeer_repay_loan: {
+      me2u_repay_loan: {
         Args: {
           p_user_id: string;
           p_loan_id: string;
         };
         Returns: undefined;
       };
-      lendpeer_request_platform_loan: {
+      me2u_request_platform_loan: {
         Args: {
           p_user_id: string;
           p_amount: number | null;
         };
         Returns: undefined;
       };
-      lendpeer_confirm_registration_deposit: {
+      me2u_confirm_registration_deposit: {
         Args: {
           p_user_id: string;
           p_reference: string;

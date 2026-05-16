@@ -1,4 +1,4 @@
-create or replace function private.lendpeer_fund_wallet(
+create or replace function private.me2u_fund_wallet(
   p_user_id uuid,
   p_amount numeric,
   p_reference text
@@ -43,7 +43,7 @@ begin
 end;
 $$;
 
-create or replace function public.lendpeer_fund_wallet(
+create or replace function public.me2u_fund_wallet(
   p_user_id uuid,
   p_amount numeric,
   p_reference text
@@ -53,11 +53,11 @@ language sql
 security invoker
 set search_path = public, private, pg_temp
 as $$
-  select private.lendpeer_fund_wallet(p_user_id, p_amount, p_reference);
+  select private.me2u_fund_wallet(p_user_id, p_amount, p_reference);
 $$;
 
-revoke execute on function private.lendpeer_fund_wallet(uuid, numeric, text) from public, anon, authenticated;
-grant execute on function private.lendpeer_fund_wallet(uuid, numeric, text) to service_role;
+revoke execute on function private.me2u_fund_wallet(uuid, numeric, text) from public, anon, authenticated;
+grant execute on function private.me2u_fund_wallet(uuid, numeric, text) to service_role;
 
-revoke execute on function public.lendpeer_fund_wallet(uuid, numeric, text) from public, anon, authenticated;
-grant execute on function public.lendpeer_fund_wallet(uuid, numeric, text) to service_role;
+revoke execute on function public.me2u_fund_wallet(uuid, numeric, text) from public, anon, authenticated;
+grant execute on function public.me2u_fund_wallet(uuid, numeric, text) to service_role;

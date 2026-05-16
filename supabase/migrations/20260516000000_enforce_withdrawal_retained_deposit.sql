@@ -1,4 +1,4 @@
-create or replace function private.lendpeer_withdraw_wallet(
+create or replace function private.me2u_withdraw_wallet(
   p_user_id uuid,
   p_amount numeric
 )

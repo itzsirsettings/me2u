@@ -26,7 +26,7 @@ export async function POST(request: Request) {
       throw new Error("Loan is required.");
     }
 
-    const { error } = await auth.supabase.rpc("lendpeer_repay_loan", {
+    const { error } = await auth.supabase.rpc("me2u_repay_loan", {
       p_user_id: auth.user.id,
       p_loan_id: loanId,
     });

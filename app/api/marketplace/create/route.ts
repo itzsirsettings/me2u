@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       throw new Error("Duration must be between 7 and 365 days.");
     }
 
-    const { error } = await auth.supabase.rpc("lendpeer_create_marketplace_item", {
+    const { error } = await auth.supabase.rpc("me2u_create_marketplace_item", {
       p_user_id: auth.user.id,
       p_type: type,
       p_amount: amount,

@@ -43,7 +43,7 @@ export async function POST(request: Request) {
       throw new Error("Enter a valid payment reference.");
     }
 
-    const { error } = await auth.supabase.rpc("lendpeer_fund_wallet", {
+    const { error } = await auth.supabase.rpc("me2u_fund_wallet", {
       p_user_id: auth.user.id,
       p_amount: amount,
       p_reference: reference,
