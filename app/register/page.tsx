@@ -4,8 +4,8 @@ import Icons8Icon, { type Icons8IconName } from "@/components/Icons8Icon";
 import LoadingButton from "@/LoadingButton";
 import { Input } from "@/components/ui/input";
 import { useStore } from "@/lib/store";
-import { useRouter } from "next/navigation";
-import { type InputHTMLAttributes, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { type InputHTMLAttributes, useState, useEffect } from "react";
 import { toast } from "sonner";
 
 type FieldProps = {
@@ -75,6 +75,7 @@ function RegistrationField({
 export default function Register() {
   const signInWithPassword = useStore((state) => state.signInWithPassword);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
@@ -82,9 +83,16 @@ export default function Register() {
     username: "",
     email: "",
     phone: "",
-    referral: "",
+    referral: searchParams.get("ref") || "",
     password: "",
   });
+
+  useEffect(() => {
+    const ref = searchParams.get("ref");
+    if (ref) {
+      setFormData(prev => ({ ...prev, referral: ref }));
+    }
+  }, [searchParams]);
 
   const updateField = (field: keyof typeof formData) => (value: string) => {
     setFormData((current) => ({ ...current, [field]: value }));
@@ -253,7 +261,7 @@ export default function Register() {
               <button
                 type="button"
                 aria-label={showPassword ? "Hide password" : "Show password"}
-                aria-pressed={showPassword}
+                aria-pressed={showPassword ? "true" : "false"}
                 className="absolute right-4 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-[8px] text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-hover-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)]"
                 onClick={() => setShowPassword((current) => !current)}
               >

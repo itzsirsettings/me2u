@@ -12,6 +12,7 @@ import type {
   ProfileRow,
   TransactionRow,
   WalletRow,
+  NotificationRow,
 } from "@/lib/supabase/types";
 
 export interface Transaction {
@@ -49,6 +50,8 @@ export interface ActiveLoan {
   status: "active" | "completed";
   startDate: string;
   dueDate: string;
+  peerPhone?: string;
+  peerBankDetails?: string;
 }
 
 export interface User {
@@ -69,6 +72,16 @@ export interface User {
   registrationDepositConfirmedAt: string | null;
   referredBy: string | null;
   affiliateEarnings: number;
+  passportPhotoUrl: string | null;
+  role: "user" | "admin";
+}
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  isRead: boolean;
+  date: string;
 }
 
 type ActionResult = {
@@ -83,12 +96,13 @@ interface AppStore {
   transactions: Transaction[];
   marketplace: MarketplaceItem[];
   activeLoans: ActiveLoan[];
+  notifications: AppNotification[];
   initialize: () => Promise<void>;
   loadCurrentUser: () => Promise<void>;
   signInWithPassword: (email: string, password: string) => Promise<ActionResult>;
   logout: () => Promise<void>;
-  fundWallet: (amount: number, reference: string) => Promise<ActionResult>;
-  confirmRegistrationDeposit: (reference: string) => Promise<ActionResult>;
+  fundWallet: (amount: number, reference: string, receiptFile?: File) => Promise<ActionResult>;
+  confirmRegistrationDeposit: (reference: string, receiptFile?: File) => Promise<ActionResult>;
   withdraw: (amount: number) => Promise<ActionResult>;
   createMarketplaceItem: (
     item: Omit<MarketplaceItem, "id" | "authorName" | "trustScore">,
@@ -150,6 +164,16 @@ function toTransaction(row: TransactionRow): Transaction {
   };
 }
 
+function toNotification(row: NotificationRow): AppNotification {
+  return {
+    id: row.id,
+    title: row.title,
+    message: row.message,
+    isRead: row.is_read,
+    date: row.created_at,
+  };
+}
+
 function toMarketplaceItem(row: MarketplaceRow): MarketplaceItem {
   return {
     id: row.id,
@@ -162,17 +186,22 @@ function toMarketplaceItem(row: MarketplaceRow): MarketplaceItem {
   };
 }
 
-function toLoan(row: LoanRow, userId: string): ActiveLoan {
+function toLoan(row: any, userId: string): ActiveLoan {
+  const isBorrower = row.borrower_id === userId;
+  const peerDetails = isBorrower ? row.lender : row.borrower;
+  
   return {
     id: row.id,
     amount: Number(row.amount),
     rate: Number(row.rate),
     days: row.days,
-    role: row.borrower_id === userId ? "borrower" : "lender",
+    role: isBorrower ? "borrower" : "lender",
     source: row.lender_id ? "peer" : "platform",
     status: row.status,
     startDate: row.start_date,
     dueDate: row.due_date,
+    peerPhone: peerDetails?.phone,
+    peerBankDetails: peerDetails?.bank_name ? `${peerDetails.bank_name} - ${peerDetails.account_number}` : undefined,
   };
 }
 
@@ -195,6 +224,8 @@ function toUser(profile: ProfileRow, wallet: WalletRow | null): User {
     registrationDepositConfirmedAt: profile.registration_deposit_confirmed_at,
     referredBy: profile.referred_by,
     affiliateEarnings: Number(profile.affiliate_earnings || 0),
+    passportPhotoUrl: profile.passport_photo_url,
+    role: profile.role,
   };
 }
 
@@ -205,6 +236,7 @@ export const useStore = create<AppStore>((set, get) => ({
   transactions: [],
   marketplace: [],
   activeLoans: [],
+  notifications: [],
 
   initialize: async () => {
     if (!hasSupabaseConfig()) {
@@ -238,6 +270,7 @@ export const useStore = create<AppStore>((set, get) => ({
           transactions: [],
           activeLoans: [],
           marketplace: [],
+          notifications: [],
         });
         return;
       }
@@ -248,6 +281,7 @@ export const useStore = create<AppStore>((set, get) => ({
         transactionsResponse,
         loansResponse,
         marketplaceResponse,
+        notificationsResponse,
       ] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", authUser.id).maybeSingle(),
         supabase.from("wallets").select("*").eq("user_id", authUser.id).maybeSingle(),
@@ -258,13 +292,22 @@ export const useStore = create<AppStore>((set, get) => ({
           .order("created_at", { ascending: false }),
         supabase
           .from("loans")
-          .select("*")
+          .select(`
+            *,
+            borrower:profiles!loans_borrower_id_fkey(phone, bank_name, account_number),
+            lender:profiles!loans_lender_id_fkey(phone, bank_name, account_number)
+          `)
           .or(`borrower_id.eq.${authUser.id},lender_id.eq.${authUser.id}`)
           .order("created_at", { ascending: false }),
         supabase
           .from("marketplace_items")
           .select("*")
           .eq("status", "active")
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("notifications")
+          .select("*")
+          .eq("user_id", authUser.id)
           .order("created_at", { ascending: false }),
       ]);
 
@@ -273,6 +316,7 @@ export const useStore = create<AppStore>((set, get) => ({
       if (transactionsResponse.error) throw transactionsResponse.error;
       if (loansResponse.error) throw loansResponse.error;
       if (marketplaceResponse.error) throw marketplaceResponse.error;
+      if (notificationsResponse.error) throw notificationsResponse.error;
 
       const profile = profileResponse.data;
       if (!profile) {
@@ -286,6 +330,7 @@ export const useStore = create<AppStore>((set, get) => ({
         transactions: (transactionsResponse.data || []).map(toTransaction),
         activeLoans: (loansResponse.data || []).map((loan) => toLoan(loan, authUser.id)),
         marketplace: (marketplaceResponse.data || []).map(toMarketplaceItem),
+        notifications: (notificationsResponse.data || []).map(toNotification),
       });
     } catch (error) {
       console.error(error);
@@ -322,26 +367,38 @@ export const useStore = create<AppStore>((set, get) => ({
       transactions: [],
       activeLoans: [],
       marketplace: [],
+      notifications: [],
     });
   },
 
-  fundWallet: async (amount, reference) => {
+  fundWallet: async (amount, reference, receiptFile) => {
     if (!hasSupabaseConfig()) return missingSupabaseResult;
+    const user = get().user;
+    if (!user) return { ok: false, error: "Please log in first." };
 
     const normalizedReference = reference.trim();
     if (normalizedReference.length < 4 || normalizedReference.length > 120) {
       return { ok: false, error: "Enter a valid payment reference." };
     }
 
+    let receiptImageUrl = "";
+    if (receiptFile) {
+      const filePath = `${user.id}/${Date.now()}-${receiptFile.name}`;
+      const { error: uploadError } = await getSupabaseBrowserClient().storage.from("receipts").upload(filePath, receiptFile);
+      if (uploadError) return { ok: false, error: uploadError.message };
+      receiptImageUrl = getSupabaseBrowserClient().storage.from("receipts").getPublicUrl(filePath).data.publicUrl;
+    }
+
     const result = await postAuthenticatedJson("/api/wallet/fund", {
       amount,
       reference: normalizedReference,
+      receiptImageUrl,
     });
     if (result.ok) await get().loadCurrentUser();
     return result;
   },
 
-  confirmRegistrationDeposit: async (reference) => {
+  confirmRegistrationDeposit: async (reference, receiptFile) => {
     if (!hasSupabaseConfig()) return missingSupabaseResult;
 
     const user = get().user;
@@ -356,8 +413,17 @@ export const useStore = create<AppStore>((set, get) => ({
       return { ok: false, error: "Enter a valid payment reference." };
     }
 
+    let receiptImageUrl = "";
+    if (receiptFile) {
+      const filePath = `${user.id}/${Date.now()}-${receiptFile.name}`;
+      const { error: uploadError } = await getSupabaseBrowserClient().storage.from("receipts").upload(filePath, receiptFile);
+      if (uploadError) return { ok: false, error: uploadError.message };
+      receiptImageUrl = getSupabaseBrowserClient().storage.from("receipts").getPublicUrl(filePath).data.publicUrl;
+    }
+
     const result = await postAuthenticatedJson("/api/onboarding/registration-deposit", {
       reference: normalizedReference,
+      receiptImageUrl,
     });
     if (result.ok) await get().loadCurrentUser();
     return result;
@@ -368,6 +434,8 @@ export const useStore = create<AppStore>((set, get) => ({
 
     const user = get().user;
     if (!user) return { ok: false, error: "Please log in first." };
+    if (!user.kycVerified) return { ok: false, error: "Complete your KYC before transacting." };
+
     if (!user.registrationDepositPaid) {
       return {
         ok: false,
@@ -398,6 +466,7 @@ export const useStore = create<AppStore>((set, get) => ({
 
     const user = get().user;
     if (!user) return { ok: false, error: "Please log in first." };
+    if (!user.kycVerified) return { ok: false, error: "Complete your KYC before transacting." };
 
     const result = await postAuthenticatedJson("/api/marketplace/create", item);
     if (result.ok) await get().loadCurrentUser();
@@ -409,6 +478,7 @@ export const useStore = create<AppStore>((set, get) => ({
 
     const user = get().user;
     if (!user) return { ok: false, error: "Please log in first." };
+    if (!user.kycVerified) return { ok: false, error: "Complete your KYC before transacting." };
 
     const result = await postAuthenticatedJson("/api/marketplace/accept", { itemId });
     if (result.ok) await get().loadCurrentUser();
@@ -420,6 +490,7 @@ export const useStore = create<AppStore>((set, get) => ({
 
     const user = get().user;
     if (!user) return { ok: false, error: "Please log in first." };
+    if (!user.kycVerified) return { ok: false, error: "Complete your KYC before taking a loan." };
 
     const platformLoans = get().activeLoans.filter(
       (loan) => loan.role === "borrower" && loan.source === "platform",
@@ -465,6 +536,15 @@ export const useStore = create<AppStore>((set, get) => ({
     const loan = get().activeLoans.find((item) => item.id === loanId);
     if (!loan || loan.status === "completed" || loan.role !== "borrower") {
       return { ok: false, error: "This loan cannot be repaid from this account." };
+    }
+
+    const loanStartDate = new Date(loan.startDate).getTime();
+    const daysElapsed = (Date.now() - loanStartDate) / (1000 * 3600 * 24);
+    if (daysElapsed < 7) {
+      return { 
+        ok: false, 
+        error: `Loan repayment must be made after 7 days to unlock higher limits. Please wait ${Math.ceil(7 - daysElapsed)} more days.` 
+      };
     }
 
     const repaymentAmount = loan.amount + (loan.amount * loan.rate) / 100;

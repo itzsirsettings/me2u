@@ -122,6 +122,7 @@ export default function Marketplace() {
                   <select
                     className="h-12 w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 font-sans focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none"
                     value={formData.type}
+                    title="Listing Type"
                     onChange={(e) => {
                       const nextType = e.target.value;
                       if (nextType === "borrow_request" || nextType === "lending_offer") {
@@ -140,6 +141,8 @@ export default function Marketplace() {
                     min="1000"
                     className="h-12 w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 font-mono focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none"
                     value={formData.amount}
+                    title="Amount"
+                    placeholder="Enter amount"
                     onChange={(e) =>
                       setFormData({ ...formData, amount: Number(e.target.value) })
                     }
@@ -158,6 +161,8 @@ export default function Marketplace() {
                     max="365"
                     className="h-12 w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 font-mono focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none"
                     value={formData.days}
+                    title="Duration in Days"
+                    placeholder="Days"
                     onChange={(e) =>
                       setFormData({ ...formData, days: Number(e.target.value) })
                     }

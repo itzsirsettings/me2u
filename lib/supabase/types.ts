@@ -26,6 +26,8 @@ export type ProfileRow = {
   registration_deposit_confirmed_at: string | null;
   referred_by: string | null;
   affiliate_earnings: number;
+  passport_photo_url: string | null;
+  role: "user" | "admin";
   created_at: string;
   updated_at: string;
 };
@@ -85,6 +87,27 @@ export type AffiliateRewardRow = {
   referrer_id: string;
   referred_user_id: string;
   amount: number;
+  created_at: string;
+};
+
+export type PaymentProofRow = {
+  id: string;
+  user_id: string;
+  amount: number;
+  reference: string;
+  type: "wallet_funding" | "registration_deposit";
+  receipt_image_url: string;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+  updated_at: string;
+};
+
+export type NotificationRow = {
+  id: string;
+  user_id: string;
+  title: string;
+  message: string;
+  is_read: boolean;
   created_at: string;
 };
 
@@ -172,6 +195,35 @@ export interface Database {
         Update: Partial<Omit<AffiliateRewardRow, "id" | "created_at">>;
         Relationships: [];
       };
+      payment_proofs: {
+        Row: PaymentProofRow;
+        Insert: {
+          id?: string;
+          user_id: string;
+          amount: number;
+          reference: string;
+          type: PaymentProofRow["type"];
+          receipt_image_url: string;
+          status?: PaymentProofRow["status"];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<PaymentProofRow, "id" | "user_id" | "created_at">>;
+        Relationships: [];
+      };
+      notifications: {
+        Row: NotificationRow;
+        Insert: {
+          id?: string;
+          user_id: string;
+          title: string;
+          message: string;
+          is_read?: boolean;
+          created_at?: string;
+        };
+        Update: Partial<Omit<NotificationRow, "id" | "user_id" | "created_at">>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -234,6 +286,8 @@ export interface Database {
       marketplace_item_type: MarketplaceRow["type"];
       marketplace_status: MarketplaceRow["status"];
       loan_status: LoanRow["status"];
+      payment_proof_status: PaymentProofRow["status"];
+      payment_proof_type: PaymentProofRow["type"];
     };
     CompositeTypes: Record<string, never>;
   };

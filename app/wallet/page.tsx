@@ -12,7 +12,9 @@ import { motion, type Variants } from "framer-motion";
 export default function WalletPage() {
   const [amount, setAmount] = useState("");
   const [fundingReference, setFundingReference] = useState("");
+  const [fundReceiptFile, setFundReceiptFile] = useState<File | null>(null);
   const [registrationReference, setRegistrationReference] = useState("");
+  const [regReceiptFile, setRegReceiptFile] = useState<File | null>(null);
   const fundWallet = useStore((state) => state.fundWallet);
   const confirmRegistrationDeposit = useStore((state) => state.confirmRegistrationDeposit);
   const user = useStore((state) => state.user);
@@ -47,16 +49,22 @@ export default function WalletPage() {
       return;
     }
 
-    const result = await confirmRegistrationDeposit(registrationReference);
+    if (!regReceiptFile) {
+      toast.error("Please upload a proof of payment screenshot");
+      return;
+    }
+
+    const result = await confirmRegistrationDeposit(registrationReference, regReceiptFile);
     if (!result.ok) {
-      toast.error(result.error || "Unable to confirm registration deposit");
-      throw new Error("Unable to confirm");
+      toast.error(result.error || "Unable to submit registration deposit");
+      throw new Error("Unable to submit");
     }
 
     toast.success(
-      `Registration deposit confirmed. Your first ₦${firstPlatformLoanAmount.toLocaleString()} loan is now in your wallet.`,
+      "Receipt submitted! Awaiting platform approval to unlock your first loan.",
     );
     setRegistrationReference("");
+    setRegReceiptFile(null);
   };
 
   const handleFund = async () => {
@@ -76,16 +84,22 @@ export default function WalletPage() {
       return;
     }
     
-    const result = await fundWallet(numAmount, fundingReference);
+    if (!fundReceiptFile) {
+      toast.error("Please upload a proof of payment screenshot");
+      return;
+    }
+    
+    const result = await fundWallet(numAmount, fundingReference, fundReceiptFile);
     if (!result.ok) {
-      toast.error(result.error || "Unable to fund wallet");
-      throw new Error("Unable to fund");
+      toast.error(result.error || "Unable to submit wallet funding request");
+      throw new Error("Unable to submit request");
     }
 
-    toast.success(`Wallet successfully funded with ₦${numAmount.toLocaleString()}`);
+    toast.success("Receipt submitted! Awaiting platform approval to credit your wallet.");
     setAmount("");
     setFundingReference("");
-    router.push("/dashboard");
+    setFundReceiptFile(null);
+    // Don't push to dashboard, let them stay and see it's pending
   };
 
   const containerVariants: Variants = {
@@ -170,13 +184,46 @@ export default function WalletPage() {
                 />
               </div>
 
-              {registrationReference.trim().length >= 4 && (
-                <LoadingButton
-                  label="Confirm Registration Deposit"
-                  loadingText="Confirming..."
-                  successText="Confirmed!"
-                  onClick={handleConfirmRegistrationDeposit}
-                />
+              <div>
+                <label className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">Proof of Payment</label>
+                <div className="relative">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        setRegReceiptFile(e.target.files[0]);
+                      }
+                    }}
+                    className="hidden"
+                    id="reg-receipt-upload"
+                  />
+                  <label
+                    htmlFor="reg-receipt-upload"
+                    className="flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] py-4 transition-colors hover:bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+                  >
+                    {regReceiptFile ? (
+                      <span className="text-sm font-medium text-[var(--color-positive-text)]">
+                        {regReceiptFile.name}
+                      </span>
+                    ) : (
+                      <>
+                        <span className="text-sm font-medium">Click to upload screenshot</span>
+                      </>
+                    )}
+                  </label>
+                </div>
+              </div>
+
+              {registrationReference.trim().length >= 4 && regReceiptFile && (
+                <div className="w-full [&>button]:w-full">
+                  <LoadingButton
+                    label="Submit Deposit Proof"
+                    loadingText="Submitting..."
+                    successText="Submitted!"
+                    onClick={handleConfirmRegistrationDeposit}
+                  />
+                </div>
               )}
             </div>
           )}
@@ -232,13 +279,46 @@ export default function WalletPage() {
             </p>
           </div>
           
-          {hasPlatformAccountDetails && amount && Number(amount) > 0 && fundingReference.trim().length >= 4 && (
-            <LoadingButton
-              label="Fund Now"
-              loadingText="Funding..."
-              successText="Funded!"
-              onClick={handleFund}
-            />
+          <div className="mb-6 md:mb-8">
+            <label className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">Proof of Payment</label>
+            <div className="relative">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    setFundReceiptFile(e.target.files[0]);
+                  }
+                }}
+                className="hidden"
+                id="fund-receipt-upload"
+              />
+              <label
+                htmlFor="fund-receipt-upload"
+                className="flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] py-4 transition-colors hover:bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+              >
+                {fundReceiptFile ? (
+                  <span className="text-sm font-medium text-[var(--color-positive-text)]">
+                    {fundReceiptFile.name}
+                  </span>
+                ) : (
+                  <>
+                    <span className="text-sm font-medium">Click to upload screenshot</span>
+                  </>
+                )}
+              </label>
+            </div>
+          </div>
+          
+          {hasPlatformAccountDetails && amount && Number(amount) > 0 && fundingReference.trim().length >= 4 && fundReceiptFile && (
+            <div className="w-full [&>button]:w-full">
+              <LoadingButton
+                label="Submit Funding Proof"
+                loadingText="Submitting..."
+                successText="Submitted!"
+                onClick={handleFund}
+              />
+            </div>
           )}
         </Card>
       </motion.div>

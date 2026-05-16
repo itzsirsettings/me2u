@@ -4,6 +4,7 @@ import Icons8Icon from "@/components/Icons8Icon";
 import { useStore } from "@/lib/store";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function Profile() {
   const user = useStore((state) => state.user);
@@ -34,11 +35,26 @@ export default function Profile() {
           <span className="inline-flex h-10 w-10 items-center justify-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-accent-primary)]">
             <Icons8Icon name="referral" size={22} />
           </span>
-          <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Referral Username</p>
-            <p className="break-words font-mono">{user?.username || "Not available"}</p>
-            <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
-              Earn 50% of a direct referral's ₦1,000 onboarding deposit after they complete onboarding.
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-bold uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Referral Link</p>
+            <div className="mt-1 flex items-center gap-2">
+              <p className="truncate font-mono text-sm bg-[var(--color-bg-secondary)] px-2 py-1 rounded-[5px] border border-[var(--color-border)]">
+                {mounted ? `${window.location.origin}/register?ref=${user?.username || ""}` : "..."}
+              </p>
+              <button
+                onClick={() => {
+                  const link = `${window.location.origin}/register?ref=${user?.username || ""}`;
+                  navigator.clipboard.writeText(link);
+                  toast.success("Referral link copied!");
+                }}
+                className="shrink-0 text-[var(--color-accent-primary)] hover:opacity-80 p-1"
+                title="Copy Link"
+              >
+                <Icons8Icon name="tap" size={20} />
+              </button>
+            </div>
+            <p className="mt-2 text-xs text-[var(--color-text-secondary)]">
+              Earn 500 naira for telling your friend about me2u.
             </p>
           </div>
         </div>
@@ -85,14 +101,7 @@ export default function Profile() {
         >
           Logout
         </button>
-        <a
-          href="https://icons8.com"
-          target="_blank"
-          rel="noreferrer"
-          className="block text-center text-xs font-semibold text-[var(--color-text-secondary)] underline-offset-4 hover:underline"
-        >
-          Icons by Icons8
-        </a>
+
       </div>
     </div>
   );

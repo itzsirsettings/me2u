@@ -69,7 +69,7 @@ export default function Dashboard() {
         <h1 className="mb-2 text-[2.75rem] font-display leading-[0.85] tracking-tight md:text-7xl md:tracking-tighter">
           Welcome {firstName}
         </h1>
-        <p className="text-base leading-relaxed font-sans italic opacity-90 text-[var(--color-text-secondary)] md:text-xl">Lagos • {user?.kycVerified ? "KYC Approved" : "KYC Pending"}</p>
+        <p className="text-base leading-relaxed font-sans italic opacity-90 text-[var(--color-text-secondary)] md:text-xl">{user?.kycVerified ? "KYC Approved" : "KYC Pending"}</p>
       </motion.div>
 
       {!user?.registrationDepositPaid && (
@@ -129,20 +129,35 @@ export default function Dashboard() {
       <motion.div variants={itemVariants} className="mb-10 md:mb-16">
         <h3 className="mb-4 text-2xl font-display leading-none md:mb-8 md:text-3xl">Quick Actions</h3>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-8">
-          {quickActions.map((action) => (
+          {user?.role === "admin" && (
             <button
-              key={action.path}
-              className={`min-h-16 flex-col gap-2 text-center ${
-                action.tone === "primary" ? "btn-primary" : "btn-ghost"
-              } ${
-                action.tone === "danger" ? "text-[var(--color-negative-text)] hover:bg-[var(--color-negative-bg)]" : ""
-              }`}
-              onClick={() => (window.location.href = action.path)}
+              className="min-h-16 flex-col gap-2 text-center btn-ghost bg-red-500/10 text-red-600 hover:bg-red-500/20"
+              onClick={() => router.push("/admin")}
             >
-              <Icons8Icon name={action.icon} size={24} />
-              <span>{action.label}</span>
+              <Icons8Icon name="shield" size={24} />
+              <span>Admin Dashboard</span>
             </button>
-          ))}
+          )}
+          {quickActions.map((action) => {
+            const isDisabled = !user?.kycVerified && action.path !== "/wallet"; // Wallet is allowed for reg deposit, wait actually wallet needs POP but let's just disable everything but wallet if not KYC
+            return (
+              <button
+                key={action.path}
+                disabled={isDisabled}
+                className={`min-h-16 flex-col gap-2 text-center ${
+                  action.tone === "primary" ? "btn-primary" : "btn-ghost"
+                } ${
+                  action.tone === "danger" ? "text-[var(--color-negative-text)] hover:bg-[var(--color-negative-bg)]" : ""
+                } ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                onClick={() => {
+                  if (!isDisabled) window.location.href = action.path;
+                }}
+              >
+                <Icons8Icon name={action.icon} size={24} />
+                <span>{action.label}</span>
+              </button>
+            );
+          })}
         </div>
       </motion.div>
 

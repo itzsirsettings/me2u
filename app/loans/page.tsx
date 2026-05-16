@@ -188,6 +188,8 @@ export default function Loans() {
                       min={repeatPlatformLoanMinimum}
                       value={loanAmount}
                       onChange={(event) => setLoanAmount(event.target.value)}
+                      title="Loan Amount"
+                      placeholder="Enter amount"
                       className="h-14 w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 font-mono text-xl focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none"
                     />
                   </div>
@@ -303,6 +305,19 @@ export default function Loans() {
                     <p className="mt-2 text-sm font-sans text-[var(--color-text-secondary)]">
                       Repayment amount: <span className="font-semibold text-[var(--color-text-primary)]">₦{(loan.amount + (loan.amount * loan.rate) / 100).toLocaleString()}</span>
                     </p>
+                    {loan.source === "peer" && loan.status === "active" && (
+                      <div className="mt-4 p-3 rounded bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
+                        <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-text-secondary)] mb-1">
+                          Peer Contact Info
+                        </p>
+                        <p className="text-sm font-semibold text-[var(--color-text-primary)]">
+                          Phone: {loan.peerPhone || "N/A"}
+                        </p>
+                        <p className="text-sm font-semibold text-[var(--color-text-primary)] mt-1">
+                          Bank: {loan.peerBankDetails || "N/A"}
+                        </p>
+                      </div>
+                    )}
                   </div>
                   
                   {loan.status === "active" && loan.role === "borrower" && (
