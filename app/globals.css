@@ -1,0 +1,185 @@
+@import "tailwindcss";
+
+:root {
+  --color-bg-primary: #F4F1EA;
+  --color-bg-secondary: #EBE7DF;
+  --color-bg-card: #FFFFFF;
+  --color-accent-primary: #0037af;
+  --color-text-primary: #121212;
+  --color-text-secondary: #4A4A4A;
+  --color-border: #121212;
+  --color-on-accent: #F8F5EC;
+  --color-shadow: rgba(18, 18, 18, 0.16);
+  --color-hover-soft: rgba(18, 18, 18, 0.05);
+  --color-glass-bg: rgba(244, 241, 234, 0.82);
+  --color-glass-border: rgba(18, 18, 18, 0.22);
+  --color-warning-bg: #FFF6D9;
+  --color-warning-text: #7A3F00;
+  --color-positive-bg: #E4F7E9;
+  --color-positive-text: #116239;
+  --color-negative-bg: #FFE8E8;
+  --color-negative-text: #B42318;
+  --white: #ffffff;
+  --black: #000000;
+  --transparent: transparent;
+  --blue-500: #3b82f6;
+  --indigo-300: #a5b4fc;
+  --blue-300: #93c5fd;
+  --violet-200: #ddd6fe;
+  --blue-400: #60a5fa;
+}
+
+html[data-theme="dark"] {
+  --color-bg-primary: #151611;
+  --color-bg-secondary: #22241B;
+  --color-bg-card: #292A20;
+  --color-accent-primary: #78A7FF;
+  --color-text-primary: #F4EEDC;
+  --color-text-secondary: #C6BFAE;
+  --color-border: #D7CBAE;
+  --color-on-accent: #111725;
+  --color-shadow: rgba(0, 0, 0, 0.42);
+  --color-hover-soft: rgba(244, 238, 220, 0.08);
+  --color-glass-bg: rgba(21, 22, 17, 0.82);
+  --color-glass-border: rgba(215, 203, 174, 0.28);
+  --color-warning-bg: #3A2C12;
+  --color-warning-text: #F2C66E;
+  --color-positive-bg: #183421;
+  --color-positive-text: #8DE0A6;
+  --color-negative-bg: #3A1816;
+  --color-negative-text: #FF9A91;
+  --white: #F4EEDC;
+  --black: #151611;
+  --blue-500: #78A7FF;
+  --indigo-300: #AEBEFF;
+  --blue-300: #7DBBEA;
+  --violet-200: #D1C3FF;
+  --blue-400: #91B5FF;
+}
+
+@theme inline {
+  --color-background: var(--color-bg-primary);
+  --color-ring: var(--color-accent-primary);
+  --font-display: var(--font-bricolage);
+  --font-sans: var(--font-geologica);
+  --font-serif-italic: var(--font-geologica);
+  --font-mono: var(--font-geologica);
+  --radius-xs: 5px;
+  --radius-sm: 5px;
+  --radius-md: 5px;
+  --radius-lg: 5px;
+  --radius-xl: 5px;
+  --radius-2xl: 5px;
+  --radius-3xl: 5px;
+  --radius-4xl: 5px;
+  --animate-aurora: aurora 60s linear infinite;
+}
+
+@keyframes aurora {
+  from {
+    background-position: 50% 50%, 50% 50%;
+  }
+  to {
+    background-position: 350% 50%, 350% 50%;
+  }
+}
+
+body {
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+@media (max-width: 767px) {
+  .mobile-landing-shell {
+    height: 100svh;
+    min-height: 100svh;
+    max-height: 100svh;
+    overflow: hidden;
+    scrollbar-width: none;
+  }
+
+  .mobile-landing-shell::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility bg-primary {
+  background-color: var(--color-bg-primary);
+}
+
+@utility bg-secondary {
+  background-color: var(--color-bg-secondary);
+}
+
+@utility bg-card {
+  background-color: var(--color-bg-card);
+}
+
+@utility text-primary {
+  color: var(--color-text-primary);
+}
+
+@utility text-secondary {
+  color: var(--color-text-secondary);
+}
+
+@utility accent-primary {
+  accent-color: var(--color-accent-primary);
+  color: var(--color-accent-primary);
+}
+
+@utility border-primary {
+  border-color: var(--color-border);
+}
+
+@utility serif-italic {
+  font-family: var(--font-geologica);
+  font-style: italic;
+}
+
+/* Glassmorphism */
+.glass {
+  background: var(--color-glass-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--color-glass-border);
+}
+
+[data-sonner-toaster] {
+  --border-radius: 5px;
+}
+
+[data-sonner-toast][data-styled="true"] [data-button],
+[data-sonner-toast][data-styled="true"] [data-close-button],
+.sonner-loading-bar {
+  border-radius: 5px !important;
+}
+
+/* Kinetic Borders */
+.kinetic-border {
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+}
+
+/* Custom Buttons */
+.btn-primary {
+  @apply inline-flex items-center justify-center rounded-[5px] border border-[var(--color-border)] text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background h-10 py-2 px-4 shadow-[2px_2px_0px_var(--color-shadow)];
+  background-color: var(--color-accent-primary);
+  color: var(--color-on-accent);
+}
+.btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+.btn-ghost {
+  @apply inline-flex items-center justify-center rounded-[5px] border border-[var(--color-border)] text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background h-10 py-2 px-4 shadow-[2px_2px_0px_var(--color-shadow)];
+  background-color: transparent;
+  color: var(--color-text-primary);
+}
+.btn-ghost:hover {
+  background-color: var(--color-hover-soft);
+  transform: translateY(2px);
+  box-shadow: none;
+}
