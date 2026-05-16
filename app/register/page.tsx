@@ -261,7 +261,7 @@ export default function Register() {
               <button
                 type="button"
                 aria-label={showPassword ? "Hide password" : "Show password"}
-                aria-pressed={showPassword ? "true" : "false"}
+                aria-pressed={showPassword}
                 className="absolute right-4 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-[8px] text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-hover-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)]"
                 onClick={() => setShowPassword((current) => !current)}
               >

@@ -135,6 +135,8 @@ export async function POST(request: Request) {
       registration_deposit_confirmed_at: null,
       referred_by: referredBy,
       affiliate_earnings: 0,
+      passport_photo_url: null,
+      role: "user",
     });
 
     if (profileError) {
