@@ -15,6 +15,7 @@ const quickActions: Array<{
   tone: "primary" | "ghost" | "danger";
 }> = [
   { label: "Fund Wallet", path: "/wallet", icon: "cash", tone: "primary" },
+  { label: "KYC", path: "/kyc", icon: "shield", tone: "ghost" },
   { label: "Marketplace", path: "/marketplace", icon: "market", tone: "ghost" },
   { label: "Withdraw", path: "/withdraw", icon: "requestMoney", tone: "danger" },
   { label: "My Loans", path: "/loans", icon: "loans", tone: "ghost" },
@@ -128,7 +129,7 @@ export default function Dashboard() {
 
       <motion.div variants={itemVariants} className="mb-10 md:mb-16">
         <h3 className="mb-4 text-2xl font-display leading-none md:mb-8 md:text-3xl">Quick Actions</h3>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-8">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-5 md:gap-8">
           {user?.role === "admin" && (
             <button
               className="min-h-16 flex-col gap-2 text-center btn-ghost bg-red-500/10 text-red-600 hover:bg-red-500/20"
@@ -139,7 +140,12 @@ export default function Dashboard() {
             </button>
           )}
           {quickActions.map((action) => {
-            const isDisabled = !user?.kycVerified && action.path !== "/wallet"; // Wallet is allowed for reg deposit, wait actually wallet needs POP but let's just disable everything but wallet if not KYC
+            const isDisabled =
+              action.path === "/wallet"
+                ? false
+                : action.path === "/kyc"
+                  ? !user?.registrationDepositPaid
+                  : !user?.kycVerified;
             return (
               <button
                 key={action.path}
@@ -150,7 +156,7 @@ export default function Dashboard() {
                   action.tone === "danger" ? "text-[var(--color-negative-text)] hover:bg-[var(--color-negative-bg)]" : ""
                 } ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
                 onClick={() => {
-                  if (!isDisabled) window.location.href = action.path;
+                  if (!isDisabled) router.push(action.path);
                 }}
               >
                 <Icons8Icon name={action.icon} size={24} />

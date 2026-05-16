@@ -30,7 +30,6 @@ export default function Login() {
       throw new Error("Login failed");
     }
 
-    toast.success("Login successful");
     router.push("/dashboard");
   };
 
@@ -41,9 +40,14 @@ export default function Login() {
         <form
           onSubmit={(event) => {
             event.preventDefault();
-            handleLogin().catch(() => {
-              setIsSubmitting(false);
-            });
+            const btn = document.querySelector(".lb-root") as HTMLButtonElement | null;
+            if (btn) {
+              btn.click();
+            } else {
+              handleLogin().catch(() => {
+                setIsSubmitting(false);
+              });
+            }
           }}
         >
           <label htmlFor="login-email" className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-secondary">

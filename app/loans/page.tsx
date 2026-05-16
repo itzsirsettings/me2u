@@ -8,6 +8,7 @@ import Icons8Icon from "@/components/Icons8Icon";
 import {
   firstPlatformLoanAmount,
   getPlatformLoanRetainedDeposit,
+  platformLoanDays,
   repeatPlatformLoanMinimum,
   registrationDepositAmount,
 } from "@/lib/loans";
@@ -171,8 +172,8 @@ export default function Loans() {
                   </h2>
                   <p className="mt-1 text-sm font-sans text-[var(--color-text-secondary)]">
                     {hasPlatformLoanHistory
-                      ? "Starts from ₦10,000 with 50% retained in your wallet."
-                      : `Pay the ₦${registrationDepositAmount.toLocaleString()} registration deposit to unlock ₦2,000.`}
+                      ? `Starts from ₦10,000 for up to ${platformLoanDays} days with 50% retained in your wallet.`
+                      : `Pay the ₦${registrationDepositAmount.toLocaleString()} registration deposit to unlock ₦2,000 for ${platformLoanDays} days.`}
                   </p>
                 </div>
               </div>

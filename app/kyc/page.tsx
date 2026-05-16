@@ -5,11 +5,7 @@ import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import LoadingButton from "@/LoadingButton";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-
-function toSafeStorageFileName(fileName: string) {
-  const cleaned = fileName.replace(/[^a-zA-Z0-9._-]/g, "-").replace(/-+/g, "-");
-  return cleaned || "passport";
-}
+import { uploadPrivateImage } from "@/lib/uploads";
 
 function toErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Something went wrong. Please try again.";
@@ -64,6 +60,24 @@ export default function KYCPage() {
     );
   }
 
+  if (!user.registrationDepositPaid) {
+    return (
+      <div className="mx-auto max-w-lg px-4 pb-32 pt-20 text-center md:pt-24">
+        <div className="rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-6 shadow-[4px_4px_0px_var(--color-shadow)] md:p-8">
+          <h1 className="text-[2.75rem] font-display leading-[0.85] tracking-tight md:text-6xl">
+            KYC Locked
+          </h1>
+          <p className="mt-4 text-base leading-relaxed text-[var(--color-text-secondary)]">
+            Confirm your registration deposit first.
+          </p>
+          <button className="btn-primary mt-6 h-12 w-full" onClick={() => router.push("/wallet")}>
+            Complete Registration Deposit
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setPassportFile(e.target.files[0]);
@@ -88,15 +102,7 @@ export default function KYCPage() {
         throw new Error("Session expired. Please log in again.");
       }
 
-      const filePath = `${user.id}/${Date.now()}-${toSafeStorageFileName(passportFile.name)}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from("kyc-documents")
-        .upload(filePath, passportFile);
-
-      if (uploadError) {
-        throw new Error(uploadError.message || "Failed to upload passport photograph.");
-      }
+      const filePath = await uploadPrivateImage("kyc-documents", user.id, passportFile);
 
       const response = await fetch("/api/onboarding/kyc", {
         method: "POST",

@@ -20,7 +20,7 @@ const STYLES = {
     border: "none",
     borderRadius: "12px",
     cursor: "pointer",
-    fontFamily: "'DM Sans', system-ui, sans-serif",
+    fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     fontSize: "15px",
     fontWeight: 600,
     letterSpacing: "0.02em",
@@ -117,6 +117,7 @@ export default function LoadingButton({
   onClick,
   variant = "solid",
   icon = null,
+  disabled = false,
 }) {
   const [state, setState] = useState("idle"); // idle | loading | success
   const [barWidth, setBarWidth] = useState(0);
@@ -133,11 +134,11 @@ export default function LoadingButton({
     ...(isOutline
       ? state === "success" ? STYLES.outlineSuccess : STYLES.outline
       : state === "success" ? STYLES.solidSuccess : STYLES.solid),
-    ...(state !== "idle" ? { cursor: "not-allowed" } : {}),
+    ...(state !== "idle" || disabled ? { cursor: "not-allowed", opacity: 0.65 } : {}),
   };
 
   async function handleClick() {
-    if (state !== "idle") return;
+    if (state !== "idle" || disabled) return;
     setState("loading");
     setCurrentMsg(loadingText);
     setBarWidth(0);
@@ -178,7 +179,6 @@ export default function LoadingButton({
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');
         @keyframes lb-spin { to { transform: rotate(360deg); } }
         .lb-root:hover:not(:disabled) {
           transform: translateY(-1px) !important;
@@ -191,7 +191,7 @@ export default function LoadingButton({
         type="button"
         className="lb-root"
         style={btnStyle}
-        disabled={state !== "idle"}
+        disabled={state !== "idle" || disabled}
         onClick={handleClick}
         aria-live="polite"
         aria-label={state === "loading" ? currentMsg : state === "success" ? successText : label}

@@ -1,23 +1,10 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, Geologica } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import BottomNav from "@/components/BottomNav";
 import AuthBootstrap from "@/components/AuthBootstrap";
 import ThemeToggle from "@/components/ThemeToggle";
 import MobileHeader from "@/components/MobileHeader";
-
-const bricolage = Bricolage_Grotesque({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-bricolage",
-});
-
-const geologica = Geologica({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-geologica",
-});
 
 const themeScript = `
 (() => {
@@ -37,7 +24,7 @@ const themeScript = `
 export const metadata: Metadata = {
   title: "me2u - Peer to Peer Lending",
   description: "Secure P2P Lending Platform in Nigeria",
-  icons: { icon: "/favicon.ico" },
+  icons: { icon: "/icon.svg" },
 };
 
 export default function RootLayout({
@@ -47,7 +34,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${bricolage.variable} ${geologica.variable} font-sans`} suppressHydrationWarning>
+      <body className="font-sans" suppressHydrationWarning>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <AuthBootstrap />
         <MobileHeader />

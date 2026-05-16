@@ -33,6 +33,28 @@ function toErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Something went wrong.";
 }
 
+async function createSignedReceiptUrl(receiptPath: string, accessToken: string) {
+  const response = await fetch("/api/uploads/signed-url", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      bucket: "receipts",
+      path: receiptPath,
+      expiresIn: signedReceiptTtlSeconds,
+    }),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(typeof data.error === "string" ? data.error : "Unable to create signed URL.");
+  }
+
+  return typeof data.signedUrl === "string" ? data.signedUrl : null;
+}
+
 export default function AdminDashboard() {
   const user = useStore((state) => state.user);
   const isAuthenticated = useStore((state) => state.isAuthenticated);
@@ -52,6 +74,14 @@ export default function AdminDashboard() {
     setLoading(true);
     try {
       const supabase = getSupabaseBrowserClient();
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError) throw sessionError;
+      if (!session?.access_token) throw new Error("Please log in again.");
+
       const { data, error } = await supabase
         .from("payment_proofs")
         .select(`*, profiles(first_name, last_name, email)`)
@@ -65,15 +95,13 @@ export default function AdminDashboard() {
           if (!receiptValue) return { ...proof, receiptSignedUrl: null };
           if (isHttpUrl(receiptValue)) return { ...proof, receiptSignedUrl: receiptValue };
 
-          const { data: signedData, error: signedError } = await supabase.storage
-            .from("receipts")
-            .createSignedUrl(receiptValue, signedReceiptTtlSeconds);
-
-          if (signedError) {
-            console.warn("Could not sign receipt URL.", signedError.message);
+          try {
+            const signedUrl = await createSignedReceiptUrl(receiptValue, session.access_token);
+            return { ...proof, receiptSignedUrl: signedUrl };
+          } catch (signedError) {
+            console.warn("Could not sign receipt URL.", toErrorMessage(signedError));
+            return { ...proof, receiptSignedUrl: null };
           }
-
-          return { ...proof, receiptSignedUrl: signedData?.signedUrl || null };
         }),
       );
 

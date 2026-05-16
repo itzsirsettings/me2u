@@ -7,6 +7,7 @@ export interface LoadingButtonProps {
   onClick?: () => Promise<void> | void;
   variant?: "solid" | "outline";
   icon?: ReactNode;
+  disabled?: boolean;
 }
 
 export default function LoadingButton(props: LoadingButtonProps): JSX.Element;

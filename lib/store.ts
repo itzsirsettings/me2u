@@ -5,6 +5,7 @@ import {
   repeatPlatformLoanMinimum,
 } from "@/lib/loans";
 import { getSupabaseBrowserClient, hasSupabaseConfig } from "@/lib/supabase/client";
+import { uploadPrivateImage } from "@/lib/uploads";
 import { getRequiredWithdrawalBalance } from "@/lib/withdrawal";
 import type {
   LoanRow,
@@ -131,15 +132,6 @@ function clearSessionState() {
     marketplace: [],
     notifications: [],
   };
-}
-
-function toSafeStorageFileName(fileName: string) {
-  const cleaned = fileName.replace(/[^a-zA-Z0-9._-]/g, "-").replace(/-+/g, "-");
-  return cleaned || "upload";
-}
-
-function toUserStoragePath(userId: string, file: File) {
-  return `${userId}/${Date.now()}-${toSafeStorageFileName(file.name)}`;
 }
 
 function readOptionalRows<T>(
@@ -418,10 +410,11 @@ export const useStore = create<AppStore>((set, get) => ({
 
     let receiptImageUrl = "";
     if (receiptFile) {
-      const filePath = toUserStoragePath(user.id, receiptFile);
-      const { error: uploadError } = await getSupabaseBrowserClient().storage.from("receipts").upload(filePath, receiptFile);
-      if (uploadError) return { ok: false, error: uploadError.message };
-      receiptImageUrl = filePath;
+      try {
+        receiptImageUrl = await uploadPrivateImage("receipts", user.id, receiptFile);
+      } catch (error) {
+        return { ok: false, error: toErrorMessage(error) };
+      }
     }
 
     const result = await postAuthenticatedJson("/api/wallet/fund", {
@@ -450,10 +443,11 @@ export const useStore = create<AppStore>((set, get) => ({
 
     let receiptImageUrl = "";
     if (receiptFile) {
-      const filePath = toUserStoragePath(user.id, receiptFile);
-      const { error: uploadError } = await getSupabaseBrowserClient().storage.from("receipts").upload(filePath, receiptFile);
-      if (uploadError) return { ok: false, error: uploadError.message };
-      receiptImageUrl = filePath;
+      try {
+        receiptImageUrl = await uploadPrivateImage("receipts", user.id, receiptFile);
+      } catch (error) {
+        return { ok: false, error: toErrorMessage(error) };
+      }
     }
 
     const result = await postAuthenticatedJson("/api/onboarding/registration-deposit", {
@@ -571,15 +565,6 @@ export const useStore = create<AppStore>((set, get) => ({
     const loan = get().activeLoans.find((item) => item.id === loanId);
     if (!loan || loan.status === "completed" || loan.role !== "borrower") {
       return { ok: false, error: "This loan cannot be repaid from this account." };
-    }
-
-    const loanStartDate = new Date(loan.startDate).getTime();
-    const daysElapsed = (Date.now() - loanStartDate) / (1000 * 3600 * 24);
-    if (daysElapsed < 7) {
-      return { 
-        ok: false, 
-        error: `Loan repayment must be made after 7 days to unlock higher limits. Please wait ${Math.ceil(7 - daysElapsed)} more days.` 
-      };
     }
 
     const repaymentAmount = loan.amount + (loan.amount * loan.rate) / 100;

@@ -8,6 +8,7 @@ import { useStore } from "@/lib/store";
 import { toast } from "sonner";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { loanDurationMaxDays, loanDurationMinDays } from "@/lib/loans";
 
 type ListingType = "borrow_request" | "lending_offer";
 
@@ -26,7 +27,7 @@ export default function Marketplace() {
     type: "borrow_request" as ListingType,
     amount: 10000,
     rate: 0,
-    days: 30,
+    days: loanDurationMaxDays,
   });
 
   useEffect(() => {
@@ -47,8 +48,12 @@ export default function Marketplace() {
       toast.error("Please login to create an offer");
       return;
     }
-    if (formData.amount < 1000 || formData.days < 7 || formData.days > 365) {
-      toast.error("Enter an amount from ₦1,000 and duration from 7 to 365 days.");
+    if (
+      formData.amount < 1000 ||
+      formData.days < loanDurationMinDays ||
+      formData.days > loanDurationMaxDays
+    ) {
+      toast.error(`Enter an amount from ₦1,000 and duration from ${loanDurationMinDays} to ${loanDurationMaxDays} days.`);
       return;
     }
 
@@ -164,8 +169,8 @@ export default function Marketplace() {
                   <label className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">Duration (Days)</label>
                   <input
                     type="number"
-                    min="7"
-                    max="365"
+                    min={loanDurationMinDays}
+                    max={loanDurationMaxDays}
                     className="h-12 w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 font-mono focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none"
                     value={formData.days}
                     title="Duration in Days"

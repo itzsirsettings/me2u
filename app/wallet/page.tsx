@@ -41,6 +41,13 @@ export default function WalletPage() {
   const hasPlatformAccountDetails = Boolean(
     platformAccountName && platformAccountBank && platformAccountNumber,
   );
+  const registrationProofReady = registrationReference.trim().length >= 4 && Boolean(regReceiptFile);
+  const fundingProofReady =
+    hasPlatformAccountDetails &&
+    Boolean(amount) &&
+    Number(amount) > 0 &&
+    fundingReference.trim().length >= 4 &&
+    Boolean(fundReceiptFile);
 
   const handleConfirmRegistrationDeposit = async () => {
     if (!user) {
@@ -215,16 +222,15 @@ export default function WalletPage() {
                 </div>
               </div>
 
-              {registrationReference.trim().length >= 4 && regReceiptFile && (
-                <div className="w-full [&>button]:w-full">
-                  <LoadingButton
-                    label="Submit Deposit Proof"
-                    loadingText="Submitting..."
-                    successText="Submitted!"
-                    onClick={handleConfirmRegistrationDeposit}
-                  />
-                </div>
-              )}
+              <div className="w-full [&>button]:w-full">
+                <LoadingButton
+                  label="Submit Deposit Proof"
+                  loadingText="Submitting..."
+                  successText="Submitted!"
+                  disabled={!registrationProofReady}
+                  onClick={handleConfirmRegistrationDeposit}
+                />
+              </div>
             </div>
           )}
         </Card>
@@ -310,16 +316,15 @@ export default function WalletPage() {
             </div>
           </div>
           
-          {hasPlatformAccountDetails && amount && Number(amount) > 0 && fundingReference.trim().length >= 4 && fundReceiptFile && (
-            <div className="w-full [&>button]:w-full">
-              <LoadingButton
-                label="Submit Funding Proof"
-                loadingText="Submitting..."
-                successText="Submitted!"
-                onClick={handleFund}
-              />
-            </div>
-          )}
+          <div className="w-full [&>button]:w-full">
+            <LoadingButton
+              label="Submit Funding Proof"
+              loadingText="Submitting..."
+              successText="Submitted!"
+              disabled={!fundingProofReady}
+              onClick={handleFund}
+            />
+          </div>
         </Card>
       </motion.div>
     </motion.div>

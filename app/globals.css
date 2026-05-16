@@ -27,6 +27,8 @@
   --blue-300: #93c5fd;
   --violet-200: #ddd6fe;
   --blue-400: #60a5fa;
+  --font-bricolage: Arial, "Helvetica Neue", sans-serif;
+  --font-geologica: "Segoe UI", Arial, sans-serif;
 }
 
 html[data-theme="dark"] {

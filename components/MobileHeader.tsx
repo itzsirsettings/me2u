@@ -8,6 +8,7 @@ const routeTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/wallet": "Wallet",
   "/withdraw": "Withdraw",
+  "/kyc": "KYC",
   "/marketplace": "Marketplace",
   "/loans": "Loans",
   "/profile": "Profile",

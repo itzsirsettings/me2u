@@ -6,6 +6,7 @@ import {
   requireAuthenticatedUser,
   tooManyRequestsResponse,
 } from "@/lib/server/auth";
+import { loanDurationMaxDays, loanDurationMinDays } from "@/lib/loans";
 import type { MarketplaceRow } from "@/lib/supabase/types";
 
 const listingTypes = new Set<MarketplaceRow["type"]>(["borrow_request", "lending_offer"]);
@@ -33,8 +34,8 @@ export async function POST(request: Request) {
       throw new Error("Choose a valid listing type.");
     }
 
-    if (!Number.isInteger(days) || days < 7 || days > 365) {
-      throw new Error("Duration must be between 7 and 365 days.");
+    if (!Number.isInteger(days) || days < loanDurationMinDays || days > loanDurationMaxDays) {
+      throw new Error(`Duration must be between ${loanDurationMinDays} and ${loanDurationMaxDays} days.`);
     }
 
     const { error } = await auth.supabase.rpc("me2u_create_marketplace_item", {

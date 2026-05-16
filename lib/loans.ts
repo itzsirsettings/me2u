@@ -4,7 +4,9 @@ export const repeatPlatformLoanMinimum = 10000;
 export const platformLoanRetainedDepositRate = 0.5;
 export const affiliateRewardRate = 0.5;
 export const affiliateRewardAmount = registrationDepositAmount * affiliateRewardRate;
-export const platformLoanDays = 30;
+export const loanDurationMinDays = 1;
+export const loanDurationMaxDays = 14;
+export const platformLoanDays = loanDurationMaxDays;
 export const platformLoanRate = 0;
 
 export function getPlatformLoanRetainedDeposit(amount: number) {
