@@ -29,6 +29,7 @@ export default function AdminDashboard() {
   const [proofs, setProofs] = useState<PaymentProof[]>([]);
   const [loading, setLoading] = useState(true);
   const [approving, setApproving] = useState<string | null>(null);
+  const [rejecting, setRejecting] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -71,6 +72,25 @@ export default function AdminDashboard() {
       toast.error("Failed to approve: " + error.message);
     } finally {
       setApproving(null);
+    }
+  };
+
+  const handleReject = async (id: string) => {
+    if (!confirm("Are you sure you want to reject this payment proof?")) return;
+    setRejecting(id);
+    try {
+      const supabase = getSupabaseBrowserClient();
+      const { error } = await supabase.rpc("admin_reject_payment_proof" as any, {
+        p_proof_id: id,
+      });
+
+      if (error) throw error;
+      toast.success("Payment proof rejected.");
+      fetchProofs();
+    } catch (error: any) {
+      toast.error("Failed to reject: " + error.message);
+    } finally {
+      setRejecting(null);
     }
   };
 
@@ -142,13 +162,22 @@ export default function AdminDashboard() {
                   <td className="px-4 py-3 text-xs">{new Date(proof.created_at).toLocaleString()}</td>
                   <td className="px-4 py-3">
                     {proof.status === 'pending' && (
-                      <button
-                        onClick={() => handleApprove(proof.id)}
-                        disabled={approving === proof.id}
-                        className="rounded bg-[var(--color-accent-primary)] px-3 py-1.5 text-xs font-bold text-white hover:bg-[var(--color-accent-primary-hover)] disabled:opacity-50"
-                      >
-                        {approving === proof.id ? "Approving..." : "Approve"}
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleApprove(proof.id)}
+                          disabled={approving === proof.id || rejecting === proof.id}
+                          className="rounded bg-[var(--color-accent-primary)] px-3 py-1.5 text-xs font-bold text-white hover:bg-[var(--color-accent-primary-hover)] disabled:opacity-50"
+                        >
+                          {approving === proof.id ? "Approving..." : "Approve"}
+                        </button>
+                        <button
+                          onClick={() => handleReject(proof.id)}
+                          disabled={approving === proof.id || rejecting === proof.id}
+                          className="rounded border border-red-200 bg-[var(--color-negative-bg)] px-3 py-1.5 text-xs font-bold text-[var(--color-negative-text)] hover:bg-red-100 disabled:opacity-50"
+                        >
+                          {rejecting === proof.id ? "Rejecting..." : "Reject"}
+                        </button>
+                      </div>
                     )}
                   </td>
                 </tr>

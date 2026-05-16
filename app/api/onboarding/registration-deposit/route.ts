@@ -21,15 +21,26 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const reference = String(body.reference || "").trim();
+    const receiptImageUrl = String(body.receiptImageUrl || "").trim();
+
+    if (!receiptImageUrl) {
+      throw new Error("Proof of payment receipt is required.");
+    }
 
     if (reference.length < 4 || reference.length > 120) {
       throw new Error("Enter a valid payment reference.");
     }
 
-    const { error } = await auth.supabase.rpc("me2u_confirm_registration_deposit", {
-      p_user_id: auth.user.id,
-      p_reference: reference,
-    });
+    const { error } = await auth.supabase
+      .from("payment_proofs")
+      .insert({
+        user_id: auth.user.id,
+        amount: 1000, // Registration deposit is fixed at 1000
+        reference: reference,
+        receipt_image_url: receiptImageUrl,
+        type: "registration_deposit",
+        status: "pending",
+      });
 
     if (error) throw new Error(error.message);
 

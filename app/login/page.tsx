@@ -64,7 +64,10 @@ export default function Login() {
             loadingText="Logging in..."
             successText="Login successful!"
             onClick={async () => {
-              if (!email || !password) return;
+              if (!email || !password) {
+                toast.error("Please fill in all fields.");
+                throw new Error("Empty fields");
+              }
               await handleLogin();
             }}
           />
