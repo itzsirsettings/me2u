@@ -22,6 +22,7 @@ export const icons8Icons = {
   cash: "https://img.icons8.com/material-outlined/96/cash-app.png",
   tap: "https://img.icons8.com/material-outlined/96/tap.png",
   check: "https://img.icons8.com/material-outlined/96/checked--v1.png",
+  back: "https://img.icons8.com/material-outlined/96/back.png",
 } as const;
 
 export type Icons8IconName = keyof typeof icons8Icons;

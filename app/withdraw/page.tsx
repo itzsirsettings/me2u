@@ -80,7 +80,7 @@ export default function WithdrawPage() {
       throw new Error("Withdrawal failed");
     }
 
-    toast.success("Withdrawal processed.");
+    toast.success("Withdrawal request submitted for admin approval.");
     setStep(1);
     setAmount("");
     router.push("/dashboard");
@@ -162,7 +162,7 @@ export default function WithdrawPage() {
                       </p>
                     ) : (
                       <p className="rounded-[5px] bg-[var(--color-positive-bg)] p-3 text-[var(--color-positive-text)]">
-                        After withdrawal, ₦{balanceAfterWithdrawal.toLocaleString()} will remain in your wallet.
+                        After admin approval, ₦{balanceAfterWithdrawal.toLocaleString()} will remain in your wallet.
                       </p>
                     )}
                   </div>
@@ -186,6 +186,9 @@ export default function WithdrawPage() {
                 <div className="mb-8 rounded-[5px] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] p-5 md:p-6">
                   <p className="text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)] mb-1">Withdraw</p>
                   <p className="text-2xl font-mono mb-4">₦{Number(amount).toLocaleString()}</p>
+                  <p className="mb-4 rounded-[5px] bg-[var(--color-warning-bg)] p-3 text-sm text-[var(--color-warning-text)]">
+                    This creates a pending request. An admin must approve it before your wallet is debited.
+                  </p>
                   
                   <div className="pt-4 border-t border-dashed border-[var(--color-border)]">
                     <p className="text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-warning-text)] mb-1">Retained In Wallet</p>
@@ -198,7 +201,7 @@ export default function WithdrawPage() {
                   </div>
 
                   <div className="mt-4 pt-4 border-t border-dashed border-[var(--color-border)]">
-                    <p className="text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)] mb-1">Wallet After Withdrawal</p>
+                    <p className="text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)] mb-1">Wallet After Approval</p>
                     <p className="text-2xl font-display">
                       ₦{balanceAfterWithdrawal.toLocaleString()}
                     </p>
@@ -206,9 +209,9 @@ export default function WithdrawPage() {
                 </div>
                 
                 <LoadingButton
-                  label="Confirm Withdrawal"
-                  loadingText="Processing..."
-                  successText="Processed!"
+                  label="Submit Withdrawal Request"
+                  loadingText="Submitting..."
+                  successText="Submitted!"
                   onClick={confirmWithdrawal}
                 />
                 <button onClick={() => setStep(1)} className="btn-ghost w-full mt-4 h-12">

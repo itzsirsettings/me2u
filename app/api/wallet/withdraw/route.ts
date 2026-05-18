@@ -27,7 +27,7 @@ export async function POST(request: Request) {
 
     const { data: profile, error: profileError } = await auth.supabase
       .from("profiles")
-      .select("registration_deposit_paid, kyc_verified")
+      .select("registration_deposit_paid, kyc_verified, bank_name, account_number")
       .eq("id", auth.user.id)
       .maybeSingle();
 
@@ -38,6 +38,9 @@ export async function POST(request: Request) {
     }
     if (!profile.kyc_verified) {
       throw new Error("Complete KYC before withdrawal.");
+    }
+    if (!profile.bank_name || !profile.account_number) {
+      throw new Error("Complete your bank details before withdrawal.");
     }
 
     const { data: wallet, error: walletError } = await auth.supabase
@@ -77,14 +80,32 @@ export async function POST(request: Request) {
       throw new Error("Insufficient balance.");
     }
 
-    const { error } = await auth.supabase.rpc("me2u_withdraw_wallet", {
-      p_user_id: auth.user.id,
-      p_amount: amount,
-    });
+    const { data: pendingRequest, error: pendingRequestError } = await auth.supabase
+      .from("withdrawal_requests")
+      .select("id")
+      .eq("user_id", auth.user.id)
+      .eq("status", "pending")
+      .limit(1)
+      .maybeSingle();
+
+    if (pendingRequestError) throw new Error(pendingRequestError.message);
+    if (pendingRequest) {
+      throw new Error("You already have a pending withdrawal request.");
+    }
+
+    const { error } = await auth.supabase
+      .from("withdrawal_requests")
+      .insert({
+        user_id: auth.user.id,
+        amount,
+        bank_name: profile.bank_name,
+        account_number: profile.account_number,
+        status: "pending",
+      });
 
     if (error) throw new Error(error.message);
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, status: "pending" });
   } catch (error) {
     return errorResponse(error, "Unable to withdraw funds.");
   }

@@ -8,6 +8,17 @@ type AuthContext =
   | {
       supabase: ReturnType<typeof getSupabaseAdminClient>;
       user: User;
+      accessToken: string;
+    }
+  | {
+      response: NextResponse;
+    };
+
+type AdminAuthContext =
+  | {
+      supabase: ReturnType<typeof getSupabaseAdminClient>;
+      user: User;
+      accessToken: string;
     }
   | {
       response: NextResponse;
@@ -35,7 +46,32 @@ export async function requireAuthenticatedUser(request: Request): Promise<AuthCo
     };
   }
 
-  return { supabase, user };
+  return { supabase, user, accessToken: token };
+}
+
+export async function requireAdminUser(request: Request): Promise<AdminAuthContext> {
+  const auth = await requireAuthenticatedUser(request);
+  if ("response" in auth) return auth;
+
+  const { data: profile, error } = await auth.supabase
+    .from("profiles")
+    .select("id, role")
+    .eq("id", auth.user.id)
+    .maybeSingle();
+
+  if (error) {
+    return {
+      response: NextResponse.json({ error: error.message }, { status: 400 }),
+    };
+  }
+
+  if (!profile || profile.role !== "admin") {
+    return {
+      response: NextResponse.json({ error: "Admin access required." }, { status: 403 }),
+    };
+  }
+
+  return auth;
 }
 
 export function readPositiveAmount(value: unknown, label = "Amount", max = maxMoneyAmount) {

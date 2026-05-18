@@ -102,6 +102,20 @@ export type PaymentProofRow = {
   updated_at: string;
 };
 
+export type WithdrawalRequestRow = {
+  id: string;
+  user_id: string;
+  amount: number;
+  bank_name: string | null;
+  account_number: string | null;
+  status: "pending" | "approved" | "rejected";
+  processed_by: string | null;
+  processed_at: string | null;
+  admin_note: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type NotificationRow = {
   id: string;
   user_id: string;
@@ -211,6 +225,24 @@ export interface Database {
         Update: Partial<Omit<PaymentProofRow, "id" | "user_id" | "created_at">>;
         Relationships: [];
       };
+      withdrawal_requests: {
+        Row: WithdrawalRequestRow;
+        Insert: {
+          id?: string;
+          user_id: string;
+          amount: number;
+          bank_name?: string | null;
+          account_number?: string | null;
+          status?: WithdrawalRequestRow["status"];
+          processed_by?: string | null;
+          processed_at?: string | null;
+          admin_note?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<WithdrawalRequestRow, "id" | "user_id" | "created_at">>;
+        Relationships: [];
+      };
       notifications: {
         Row: NotificationRow;
         Insert: {
@@ -292,6 +324,18 @@ export interface Database {
         };
         Returns: undefined;
       };
+      admin_approve_withdrawal_request: {
+        Args: {
+          p_request_id: string;
+        };
+        Returns: undefined;
+      };
+      admin_reject_withdrawal_request: {
+        Args: {
+          p_request_id: string;
+        };
+        Returns: undefined;
+      };
     };
     Enums: {
       transaction_type: TransactionRow["type"];
@@ -300,6 +344,7 @@ export interface Database {
       loan_status: LoanRow["status"];
       payment_proof_status: PaymentProofRow["status"];
       payment_proof_type: PaymentProofRow["type"];
+      withdrawal_request_status: WithdrawalRequestRow["status"];
     };
     CompositeTypes: Record<string, never>;
   };
