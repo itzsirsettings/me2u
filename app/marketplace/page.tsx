@@ -106,13 +106,13 @@ export default function Marketplace() {
 
   return (
     <motion.div 
-      className="container mx-auto max-w-5xl px-4 pb-32 pt-20 md:px-6 md:py-24"
+      className="app-mobile-screen mx-auto w-full max-w-md px-5 pt-24 md:max-w-5xl md:px-6 md:py-24"
       variants={containerVariants}
       initial="hidden"
       animate="show"
     >
-      <motion.div variants={itemVariants} className="mb-8 flex flex-col gap-4 md:mb-12 md:flex-row md:items-center md:justify-between md:gap-6">
-        <h1 className="text-[2.75rem] font-display leading-[0.85] tracking-tight md:text-7xl md:tracking-tighter">Marketplace</h1>
+      <motion.div variants={itemVariants} className="mb-5 flex flex-col gap-4 md:mb-12 md:flex-row md:items-center md:justify-between md:gap-6">
+        <h1 className="sr-only md:not-sr-only md:text-7xl md:font-display md:leading-[0.85] md:tracking-tighter">Marketplace</h1>
         <button className={`${showForm ? "btn-ghost" : "btn-primary"} h-12 w-full md:w-auto`} onClick={() => setShowForm(!showForm)}>
           {showForm ? "Cancel" : "Create Listing"}
         </button>

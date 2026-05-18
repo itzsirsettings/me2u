@@ -145,22 +145,22 @@ export default function Loans() {
 
   return (
     <motion.div 
-      className="container mx-auto max-w-4xl px-4 pb-32 pt-20 md:px-6 md:py-24"
+      className="app-mobile-screen mx-auto w-full max-w-md px-5 pt-24 md:max-w-4xl md:px-6 md:py-24"
       variants={containerVariants}
       initial="hidden"
       animate="show"
     >
-      <motion.div variants={itemVariants} className="mb-8 flex flex-col gap-4 md:mb-12 md:flex-row md:items-end md:justify-between">
+      <motion.div variants={itemVariants} className="mb-5 flex flex-col gap-4 md:mb-12 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="mb-2 flex items-center gap-2 text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
+          <p className="mb-2 hidden items-center gap-2 text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)] md:flex">
             <Icons8Icon name="requestMoney" size={18} />
             Platform Credit
           </p>
-          <h1 className="text-[2.75rem] font-display leading-[0.85] md:text-7xl">
+          <h1 className="sr-only md:not-sr-only md:text-7xl md:font-display md:leading-[0.85]">
             My Loans
           </h1>
         </div>
-        <div className="rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-4 py-3 shadow-[2px_2px_0px_var(--color-shadow)]">
+        <div className="mobile-soft-card rounded-[28px] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-5 py-4 shadow-[2px_2px_0px_var(--color-shadow)]">
           <p className="text-xs font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">Wallet Balance</p>
           <p className="text-2xl font-display leading-none">₦{currentBalance.toLocaleString()}</p>
         </div>

@@ -14,7 +14,8 @@ export default function NotificationBell() {
     <div className="relative">
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 rounded-full hover:bg-[var(--color-bg-secondary)] transition-colors"
+        aria-label="Open notifications"
+        className="mobile-icon-button relative h-11 w-11 rounded-full p-2 transition-colors hover:bg-[var(--color-bg-secondary)] md:h-auto md:w-auto md:bg-transparent md:shadow-none"
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--color-text-primary)]">
           <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path>
@@ -41,7 +42,7 @@ export default function NotificationBell() {
               initial={{ opacity: 0, y: -10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] shadow-[4px_4px_0px_var(--color-shadow)]"
+              className="absolute right-0 top-full z-50 mt-2 w-[min(20rem,calc(100vw-2rem))] overflow-hidden rounded-[28px] border border-[var(--color-border)] bg-[var(--color-bg-card)] shadow-[4px_4px_0px_var(--color-shadow)] md:w-80 md:rounded-xl"
             >
               <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-4 py-3">
                 <h3 className="font-display font-semibold text-[var(--color-text-primary)]">Notifications</h3>

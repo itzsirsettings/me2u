@@ -49,7 +49,7 @@ export default function ThemeToggle() {
       aria-pressed={isDark}
       title={`Switch to ${isDark ? "light" : "dark"} mode`}
       onClick={toggleTheme}
-      className="fixed right-3 top-[calc(0.75rem+env(safe-area-inset-top))] z-[80] inline-flex h-11 w-11 items-center justify-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] text-[var(--color-text-primary)] shadow-[3px_3px_0px_var(--color-shadow)] transition-all hover:translate-y-[2px] hover:shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)] md:bottom-6 md:right-6 md:top-auto md:h-12 md:w-12"
+      className="fixed right-3 top-[calc(0.75rem+env(safe-area-inset-top))] z-[80] hidden h-11 w-11 items-center justify-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] text-[var(--color-text-primary)] shadow-[3px_3px_0px_var(--color-shadow)] transition-all hover:translate-y-[2px] hover:shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)] md:bottom-6 md:right-6 md:top-auto md:inline-flex md:h-12 md:w-12"
     >
       <Icons8Icon name={isDark ? "sun" : "moon"} size={22} />
     </button>
