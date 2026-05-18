@@ -3,19 +3,23 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import BottomNav from "@/components/BottomNav";
 import AuthBootstrap from "@/components/AuthBootstrap";
-import ThemeToggle from "@/components/ThemeToggle";
 import MobileHeader from "@/components/MobileHeader";
 
 const themeScript = `
 (() => {
   try {
     const storedTheme = localStorage.getItem("me2u-theme");
-    const theme = storedTheme === "light" || storedTheme === "dark"
+    const mode = storedTheme === "light" || storedTheme === "dark" || storedTheme === "system"
       ? storedTheme
-      : (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      : "system";
+    const theme = mode === "system"
+      ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+      : mode;
+    document.documentElement.dataset.themeMode = mode;
     document.documentElement.dataset.theme = theme;
     document.documentElement.style.colorScheme = theme;
   } catch {
+    document.documentElement.dataset.themeMode = "system";
     document.documentElement.dataset.theme = "light";
   }
 })();
@@ -39,7 +43,6 @@ export default function RootLayout({
         <AuthBootstrap />
         <MobileHeader />
         {children}
-        <ThemeToggle />
         <BottomNav />
         <Toaster position="top-center" richColors closeButton />
       </body>

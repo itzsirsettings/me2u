@@ -145,7 +145,7 @@ export default function Loans() {
 
   return (
     <motion.div 
-      className="app-mobile-screen mx-auto w-full max-w-md px-4 pt-20 md:max-w-4xl md:px-6 md:py-24"
+      className="app-mobile-screen mx-auto w-full max-w-md px-3.5 pt-[4.85rem] md:max-w-4xl md:px-6 md:py-24"
       variants={containerVariants}
       initial="hidden"
       animate="show"
@@ -160,22 +160,22 @@ export default function Loans() {
             My Loans
           </h1>
         </div>
-        <div className="mobile-soft-card rounded-[24px] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-4 py-3 shadow-[2px_2px_0px_var(--color-shadow)]">
+        <div className="mobile-soft-card rounded-[20px] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3.5 py-2.5 shadow-[2px_2px_0px_var(--color-shadow)] md:px-5 md:py-4">
           <p className="text-xs font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">Wallet Balance</p>
-          <p className="text-2xl font-display leading-none">₦{currentBalance.toLocaleString()}</p>
+          <p className="text-xl font-display leading-none md:text-2xl">₦{currentBalance.toLocaleString()}</p>
         </div>
       </motion.div>
 
       <motion.div variants={itemVariants}>
-        <Card className="mb-6 kinetic-border bg-[var(--color-bg-card)] p-5 shadow-[4px_4px_0px_var(--color-shadow)] md:mb-10 md:p-8">
-          <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+        <Card className="mb-4 kinetic-border bg-[var(--color-bg-card)] p-5 shadow-[4px_4px_0px_var(--color-shadow)] md:mb-10 md:p-8">
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div className="min-w-0 flex-1">
               <div className="mb-4 flex items-center gap-3">
                 <div className="flex h-11 w-11 items-center justify-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-accent-primary)]">
                   <Icons8Icon name="shield" size={24} />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-display leading-none md:text-3xl">
+                  <h2 className="text-xl font-display leading-none md:text-3xl">
                     Platform Loan
                   </h2>
                   <p className="mt-1 text-sm font-sans text-[var(--color-text-secondary)]">
@@ -196,7 +196,7 @@ export default function Loans() {
                     onChange={(event) => setLoanAmount(event.target.value)}
                     title="Loan Amount"
                     placeholder="Enter amount"
-                    className="h-14 w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 font-mono text-xl focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none"
+                    className="h-11 w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 font-mono text-base focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none md:h-14 md:p-4 md:text-xl"
                   />
                 </div>
                 {!requestDisabled ? (
@@ -210,7 +210,7 @@ export default function Loans() {
                 ) : (
                   <button
                     type="button"
-                    className="btn-primary h-14 w-full gap-2 md:w-auto opacity-60 cursor-not-allowed"
+                    className="btn-primary h-11 w-full cursor-not-allowed gap-2 opacity-60 md:h-14 md:w-auto"
                     disabled
                   >
                     <Icons8Icon name="cash" size={20} />
@@ -280,9 +280,9 @@ export default function Loans() {
                   </p>
                 </div>
                 
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end md:gap-6">
                   <div>
-                    <p className="text-4xl font-display leading-none md:text-5xl">₦{loan.amount.toLocaleString()}</p>
+                    <p className="text-2xl font-display leading-none md:text-5xl">₦{loan.amount.toLocaleString()}</p>
                     <p className="mt-3 font-sans text-[var(--color-text-secondary)]">
                       Rate: {loan.rate}% • Duration: {loan.days} days
                     </p>

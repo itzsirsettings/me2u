@@ -21,20 +21,20 @@ export default function BottomNav() {
   if (!showNav) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 px-2 pb-[calc(0.35rem+env(safe-area-inset-bottom))] md:hidden">
-      <div className="relative mx-auto grid max-w-md grid-cols-5 items-end gap-1 rounded-t-[28px] bg-[var(--mobile-surface)] px-2 pb-1.5 pt-2 shadow-[0_-12px_36px_rgba(0,64,107,0.10)]">
+    <div className="fixed bottom-0 left-0 right-0 z-50 px-2 pb-[calc(0.25rem+env(safe-area-inset-bottom))] md:hidden">
+      <div className="relative mx-auto grid max-w-md grid-cols-5 items-end gap-0.5 rounded-t-[22px] bg-[var(--mobile-surface)] px-2 pb-1 pt-1.5 shadow-[0_-10px_28px_rgba(0,64,107,0.09)]">
         {navItems.map((item) => {
           const isActive = activePath === item.path;
           const centerClasses = item.center
-            ? "-mt-7 min-h-[4.85rem] justify-start gap-0.5 text-[var(--mobile-pill-text)]"
-            : "min-h-[3.65rem] gap-0.5";
+            ? "-mt-5 min-h-[4.25rem] justify-start gap-0.5 text-[var(--mobile-pill-text)]"
+            : "min-h-[3.25rem] gap-0.5";
           return (
             <motion.button
               whileTap={{ scale: 0.94 }}
               key={item.path}
               onClick={() => router.push(item.path)}
               aria-current={isActive ? "page" : undefined}
-              className={`relative flex min-w-0 flex-col items-center rounded-[18px] px-1 text-center transition-colors ${centerClasses} ${
+              className={`relative flex min-w-0 flex-col items-center rounded-[16px] px-1 text-center transition-colors ${centerClasses} ${
                 item.center
                   ? ""
                   : isActive
@@ -45,13 +45,13 @@ export default function BottomNav() {
               <span
                 className={
                   item.center
-                    ? "grid h-[3.9rem] w-[3.9rem] place-items-center rounded-full border-[8px] border-[var(--mobile-app-bg)] bg-[var(--gradient-primary)] text-[var(--color-on-accent)] shadow-[0_14px_30px_rgba(0,64,107,0.20)]"
-                    : "grid h-7 w-7 place-items-center"
+                    ? "grid h-[3.35rem] w-[3.35rem] place-items-center rounded-full border-[6px] border-[var(--mobile-app-bg)] bg-[var(--gradient-primary)] text-[var(--color-on-accent)] shadow-[0_12px_24px_rgba(0,64,107,0.18)]"
+                    : "grid h-6 w-6 place-items-center"
                 }
               >
-                <Icons8Icon name={item.icon} size={item.center ? 26 : 20} />
+                <Icons8Icon name={item.icon} size={item.center ? 23 : 18} />
               </span>
-              <span className="w-full truncate text-[10px] font-extrabold tracking-normal font-sans">
+              <span className="w-full truncate text-[9px] font-extrabold tracking-normal font-sans">
                 {item.label}
               </span>
               {!item.center && isActive && (

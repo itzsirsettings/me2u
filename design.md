@@ -10,6 +10,7 @@ This document describes the visual system used by the me2u Next.js app. It is do
 - `components/BottomNav.tsx` for mobile navigation
 - `components/MobileHeader.tsx` for authenticated route headers
 - `components/NotificationBell.tsx` for alerts
+- `components/ThemeModeSelector.tsx` for the Profile theme preference
 - `components/Icons8Icon.tsx` for Icons8-sourced app icons
 
 ## Visual Direction
@@ -56,8 +57,8 @@ The mobile product shell has its own tactile layer:
 --mobile-surface-muted: #ededed;
 --mobile-pill: #c9c0f2;
 --mobile-pill-text: #07026f;
---mobile-radius-xl: 28px;
---mobile-radius-lg: 22px;
+--mobile-radius-xl: 22px;
+--mobile-radius-lg: 18px;
 ```
 
 Use these utilities for authenticated mobile screens:
@@ -82,16 +83,16 @@ Mobile finance hierarchy:
 
 ```tsx
 // Account greeting
-"text-[1.72rem] font-black leading-tight tracking-normal"
+"text-[1.15rem] font-black leading-tight tracking-normal"
 
 // Main balance
-"font-display text-[2.25rem] font-black leading-none tracking-normal"
+"font-display text-[1.92rem] font-black leading-none tracking-normal"
 
 // Card heading
-"text-[1.45rem] font-black leading-tight tracking-normal"
+"text-[1.02rem] font-black leading-tight tracking-normal"
 
 // Action label
-"text-[1rem] font-black leading-none"
+"text-[0.76rem] font-black leading-none"
 ```
 
 Do not scale fonts with viewport width. Use fixed mobile sizes, breakpoint-specific desktop sizes, and stable line heights.
@@ -101,7 +102,7 @@ Do not scale fonts with viewport width. Use fixed mobile sizes, breakpoint-speci
 Authenticated app routes should use the mobile shell first:
 
 ```tsx
-"app-mobile-screen mx-auto w-full max-w-md px-4 pt-20 md:max-w-..."
+"app-mobile-screen mx-auto w-full max-w-md px-3.5 pt-[4.85rem] md:max-w-..."
 ```
 
 Dashboard is the densest route and owns its top greeting, so `MobileHeader` is hidden on `/dashboard`. Other authenticated routes use the fixed mobile header with a back icon at the top-left.
@@ -110,12 +111,12 @@ Mobile screen rules:
 
 - Keep one primary column at `max-w-md`.
 - Reserve bottom space for the fixed nav with `app-mobile-screen`.
-- Use `px-4` and `pt-20` on non-dashboard mobile app routes so the fixed header does not waste vertical space.
+- Use `px-3.5` and `pt-[4.85rem]` on non-dashboard mobile app routes so the fixed header does not waste vertical space.
 - Use `mobile-soft-card` for grouped financial panels and forms.
 - Prefer pill CTAs for wallet, transfer, KYC, and loan actions.
 - Keep repeated action tiles stable in height to avoid layout shift.
 - Avoid nested cards. A panel can contain rows, but not another decorated card.
-- Keep mobile icon buttons compact but touch-safe: 48px for circular chrome, 46px minimum for pill buttons, and 48px minimum for inputs.
+- Keep mobile controls compact but touch-safe: 44px for circular chrome, pill buttons, and inputs.
 
 ## Desktop Layout
 
@@ -157,7 +158,7 @@ The authenticated mobile header lives in `components/MobileHeader.tsx`.
 - Uses a soft mobile background
 - Shows notifications on the right
 
-`ThemeToggle` is hidden on mobile to prevent floating controls from competing with the app chrome.
+Theme selection lives in Profile through `ThemeModeSelector` with `Light`, `Dark`, and `System` options. The root layout script applies the stored mode before hydration, so desktop and mobile render with the right theme immediately.
 
 ## Motion
 
@@ -185,7 +186,7 @@ Motion should clarify state and touch response. It should not slow down payments
 - `/kyc` - identity verification and bank details
 - `/marketplace` - create and accept lending listings
 - `/loans` - platform credit, active loans, and repayment
-- `/profile` - profile, referral, and account status
+- `/profile` - profile, referral, theme preference, and account status
 - `/admin` - operational dashboard
 
 ## Accessibility

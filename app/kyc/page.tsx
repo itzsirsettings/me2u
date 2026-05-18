@@ -44,17 +44,17 @@ export default function KYCPage() {
 
   if (user.kycVerified) {
     return (
-      <div className="app-mobile-screen mx-auto flex w-full max-w-lg flex-col items-center justify-center px-4 pt-20 text-center md:py-24">
+      <div className="app-mobile-screen mx-auto flex w-full max-w-lg flex-col items-center justify-center px-3.5 pt-[4.85rem] text-center md:py-24">
         <div className="mb-4 grid h-16 w-16 place-items-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-positive-bg)] text-[var(--color-positive-text)] shadow-[3px_3px_0px_var(--color-shadow)]">
           <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
         </div>
-        <h2 className="mb-2 font-display text-2xl font-bold text-[var(--color-text-primary)]">KYC Verified</h2>
+        <h2 className="mb-2 font-display text-xl font-bold text-[var(--color-text-primary)] md:text-2xl">KYC Verified</h2>
         <p className="max-w-md text-[var(--color-text-secondary)]">
           Your identity has been verified. You can now access all features of the platform.
         </p>
         <button
           onClick={() => router.push("/dashboard")}
-          className="btn-primary mt-8 h-12 px-6"
+          className="btn-primary mt-5 h-11 px-5 md:mt-8 md:h-12 md:px-6"
         >
           Go to Dashboard
         </button>
@@ -64,15 +64,15 @@ export default function KYCPage() {
 
   if (!user.registrationDepositPaid) {
     return (
-      <div className="app-mobile-screen mx-auto w-full max-w-lg px-4 pt-20 text-center md:pt-24">
-        <div className="rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-6 shadow-[4px_4px_0px_var(--color-shadow)] md:p-8">
+      <div className="app-mobile-screen mx-auto w-full max-w-lg px-3.5 pt-[4.85rem] text-center md:pt-24">
+        <div className="rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[4px_4px_0px_var(--color-shadow)] md:p-8">
           <h1 className="text-[2.75rem] font-display leading-[0.85] tracking-tight md:text-6xl">
             KYC Locked
           </h1>
           <p className="mt-4 text-base leading-relaxed text-[var(--color-text-secondary)]">
             Confirm your registration deposit first.
           </p>
-          <button className="btn-primary mt-6 h-12 w-full" onClick={() => router.push("/wallet")}>
+          <button className="btn-primary mt-5 h-11 w-full md:mt-6 md:h-12" onClick={() => router.push("/wallet")}>
             Complete Registration Deposit
           </button>
         </div>
@@ -137,7 +137,7 @@ export default function KYCPage() {
   };
 
   return (
-    <div className="app-mobile-screen mx-auto w-full max-w-lg px-4 pt-20 md:pt-24">
+    <div className="app-mobile-screen mx-auto w-full max-w-lg px-3.5 pt-[4.85rem] md:pt-24">
       <div className="mb-4 text-center md:mb-12">
         <h1 className="sr-only md:not-sr-only md:mb-4 md:text-7xl md:font-display md:leading-[0.85] md:tracking-tighter">
           Verify Identity
@@ -147,7 +147,7 @@ export default function KYCPage() {
         </p>
       </div>
 
-      <div className="space-y-8 rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-6 shadow-[4px_4px_0px_var(--color-shadow)] md:p-8 kinetic-border">
+      <div className="space-y-5 rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[4px_4px_0px_var(--color-shadow)] md:space-y-8 md:p-8 kinetic-border">
         {error && (
           <div className="flex items-center gap-3 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-negative-bg)] p-4 text-[var(--color-negative-text)]">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>

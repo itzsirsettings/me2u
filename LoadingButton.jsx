@@ -186,6 +186,21 @@ export default function LoadingButton({
           box-shadow: 0 22px 56px var(--color-shadow) !important;
         }
         .lb-root:active:not(:disabled) { transform: scale(.985) !important; }
+        @media (max-width: 767px) {
+          .lb-root {
+            height: 44px !important;
+            min-width: 0 !important;
+            width: 100%;
+            border-radius: 999px !important;
+            padding: 0 14px !important;
+            font-size: 14px !important;
+            box-shadow: none !important;
+          }
+          .lb-root:hover:not(:disabled) {
+            transform: none !important;
+            box-shadow: none !important;
+          }
+        }
       `}</style>
 
       <button

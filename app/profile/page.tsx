@@ -1,6 +1,7 @@
 "use client";
 
 import Icons8Icon from "@/components/Icons8Icon";
+import ThemeModeSelector from "@/components/ThemeModeSelector";
 import { useStore } from "@/lib/store";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -25,12 +26,14 @@ export default function Profile() {
   }, [mounted, isLoading, isAuthenticated, router]);
 
   if (!mounted || (!isAuthenticated && !isLoading)) return null;
+  const referralLink = mounted ? `${window.location.origin}/register?ref=${user?.username || ""}` : "";
+
   return (
-    <div className="app-mobile-screen mx-auto w-full max-w-md px-4 pt-20 md:p-6 md:py-24">
+    <div className="app-mobile-screen mx-auto w-full max-w-md px-3.5 pt-[4.85rem] md:max-w-3xl md:p-6 md:py-24">
       <h1 className="sr-only md:not-sr-only md:mb-8 md:text-3xl md:font-display md:font-bold md:leading-none">
         Profile
       </h1>
-      <div className="mobile-soft-card space-y-4 rounded-[5px] border border-[var(--color-border)] bg-card p-4 shadow-[4px_4px_0px_var(--color-shadow)] md:space-y-6 md:p-8">
+      <div className="mobile-soft-card space-y-3 rounded-[5px] border border-[var(--color-border)] bg-card p-3.5 shadow-[4px_4px_0px_var(--color-shadow)] md:space-y-6 md:p-8">
         <div className="flex items-start gap-3">
           <span className="inline-flex h-10 w-10 items-center justify-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-accent-primary)]">
             <Icons8Icon name="referral" size={22} />
@@ -39,15 +42,23 @@ export default function Profile() {
             <p className="text-xs font-bold uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Referral Link</p>
             <div className="mt-1 flex items-center gap-2">
               <p className="truncate font-mono text-sm bg-[var(--color-bg-secondary)] px-2 py-1 rounded-[5px] border border-[var(--color-border)]">
-                {mounted ? `${window.location.origin}/register?ref=${user?.username || ""}` : "..."}
+                {referralLink || "..."}
               </p>
               <button
                 onClick={() => {
-                  const link = `${window.location.origin}/register?ref=${user?.username || ""}`;
-                  navigator.clipboard.writeText(link);
-                  toast.success("Referral link copied!");
+                  if (!referralLink) return;
+                  if (!navigator.clipboard?.writeText) {
+                    toast.error("Copy is unavailable in this browser.");
+                    return;
+                  }
+
+                  void navigator.clipboard
+                    .writeText(referralLink)
+                    .then(() => toast.success("Referral link copied!"))
+                    .catch(() => toast.error("Unable to copy link."));
                 }}
-                className="shrink-0 text-[var(--color-accent-primary)] hover:opacity-80 p-1"
+                className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-[var(--color-accent-primary)] transition hover:bg-[var(--color-hover-soft)]"
+                aria-label="Copy referral link"
                 title="Copy Link"
               >
                 <Icons8Icon name="tap" size={20} />
@@ -89,11 +100,12 @@ export default function Profile() {
             </p>
           </div>
         </div>
-        <button className="btn-primary w-full h-14 text-base" disabled>
+        <ThemeModeSelector />
+        <button className="btn-primary h-11 w-full text-sm md:h-14 md:text-base" disabled>
           2FA Setup Coming Soon
         </button>
         <button
-          className="btn-ghost w-full h-12 text-base"
+          className="btn-ghost h-11 w-full text-sm md:h-12 md:text-base"
           onClick={async () => {
             await logout();
             router.push("/");

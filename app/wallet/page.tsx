@@ -122,7 +122,7 @@ export default function WalletPage() {
 
   return (
     <motion.div 
-      className="app-mobile-screen mx-auto flex w-full max-w-md flex-col items-center px-4 pt-20 md:max-w-3xl md:px-6 md:py-24"
+      className="app-mobile-screen mx-auto flex w-full max-w-md flex-col items-center px-3.5 pt-[4.85rem] md:max-w-3xl md:px-6 md:py-24"
       variants={containerVariants}
       initial="hidden"
       animate="show"
@@ -135,7 +135,7 @@ export default function WalletPage() {
         <Card className="kinetic-border p-5 shadow-[4px_4px_0px_var(--color-shadow)] bg-[var(--color-bg-card)] md:p-8">
           <div className="mb-5 flex items-start justify-between gap-4 border-b border-[var(--color-border)] pb-5">
             <div>
-              <h2 className="text-2xl font-display md:text-3xl">Registration Deposit</h2>
+              <h2 className="text-xl font-display md:text-3xl">Registration Deposit</h2>
               <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">
                 Pay ₦{registrationDepositAmount.toLocaleString()} to receive a ₦{onboardingCreditAmount.toLocaleString()} onboarding credit after approval. Withdrawals unlock after KYC.
               </p>
@@ -234,8 +234,8 @@ export default function WalletPage() {
         </Card>
 
         <Card className="kinetic-border p-5 shadow-[4px_4px_0px_var(--color-shadow)] bg-[var(--color-bg-card)] md:p-10">
-          <h2 className="mb-6 text-2xl font-display md:mb-8 md:text-3xl">Fund Wallet</h2>
-          <div className="mb-6 rounded-[5px] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 text-sm">
+          <h2 className="mb-4 text-xl font-display md:mb-8 md:text-3xl">Fund Wallet</h2>
+          <div className="mb-4 rounded-[5px] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3 text-sm md:p-4">
             {hasPlatformAccountDetails ? (
               <div className="grid gap-2">
                 <div className="flex items-center justify-between gap-3">
@@ -269,7 +269,7 @@ export default function WalletPage() {
             />
           </div>
 
-          <div className="mb-6 md:mb-8">
+          <div className="mb-4 md:mb-8">
             <label className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">Transfer Reference</label>
             <input
               type="text"
@@ -283,7 +283,7 @@ export default function WalletPage() {
             </p>
           </div>
           
-          <div className="mb-6 md:mb-8">
+          <div className="mb-4 md:mb-8">
             <label className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">Proof of Payment</label>
             <div className="relative">
               <input
