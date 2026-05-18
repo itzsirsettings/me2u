@@ -1,71 +1,279 @@
-"use client";
+import type { Metadata } from "next";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import LandingPageV2Interactions from "@/components/LandingPageV2Interactions";
 
-import { AuroraBackground } from "@/components/ui/aurora-background";
-import { Button } from "@/components/ui/button";
-import Icons8Icon, { type Icons8IconName } from "@/components/Icons8Icon";
-import { motion } from "framer-motion";
+const landingAssetBase = "/landing_page_v2";
+const landingSourcePath = path.join(process.cwd(), "landing_page_v2", "index.html");
 
-const features: Array<{ icon: Icons8IconName; label: string; text: string }> = [
-  { icon: "shield", label: "Protected onboarding", text: "₦1,000 registration deposit unlocks the first ₦2,000." },
-  { icon: "tap", label: "Peer matching", text: "Borrowers and lenders meet in a shared marketplace." },
-  { icon: "market", label: "Zero interest", text: "All platform and peer loans are interest-free." },
+export const metadata: Metadata = {
+  title: "Me2U - Interest-Free Peer Lending",
+  description:
+    "Me2U is a secure Nigerian peer-to-peer lending platform with wallet funding, KYC, marketplace lending, platform loans, onboarding credit, and referral rewards.",
+};
+
+const copyReplacements: ReadonlyArray<readonly [string, string]> = [
+  ["by PremiumTrust Bank", "Interest-free lending"],
+  ["Me2U ecosystem", "Me2U lending flow"],
+  [
+    "One app for spending, saving, shopping, and merchant growth.",
+    "One app for verified wallets, peer matching, platform loans, and repayments.",
+  ],
+  [">Get the app<", ">Create account<"],
+  [">Get Started<", ">Create account<"],
+  [">Learn more</button>", ">Create account</button>"],
+  [
+    '<button class="nav-link plain-button" data-open-demo>Demo</button>',
+    '<button class="nav-link plain-button" data-open-login>Login</button>',
+  ],
+  [
+    '<a href="#business"><span class="mega-icon">▣</span><strong>Me2U Business</strong><small>Connect your business with Me2U.</small></a>',
+    '<a href="#business"><span class="mega-icon">▣</span><strong>Peer Marketplace</strong><small>Create borrow requests and lending offers.</small></a>',
+  ],
+  [
+    '<a href="#payments"><span class="mega-icon">↗</span><strong>Payment</strong><small>Free transfers, bills, and instalment payments.</small></a>',
+    '<a href="#payments"><span class="mega-icon">↗</span><strong>Protected Onboarding</strong><small>Pay ₦1,000 and submit proof for approval.</small></a>',
+  ],
+  [
+    '<a href="#budget"><span class="mega-icon">◎</span><strong>Budget & Save</strong><small>Create savings plans and budgets.</small></a>',
+    '<a href="#budget"><span class="mega-icon">◎</span><strong>Wallet Funding</strong><small>Top up with a transfer reference and receipt.</small></a>',
+  ],
+  [
+    '<a href="#rewards"><span class="mega-icon">✦</span><strong>Refer & Earn</strong><small>Earn by referring friends and family.</small></a>',
+    '<a href="#rewards"><span class="mega-icon">✦</span><strong>Referral Rewards</strong><small>Earn ₦500 when direct referrals complete onboarding.</small></a>',
+  ],
+  [
+    '<a href="#insurance"><span class="mega-icon">◈</span><strong>Insurance</strong><small>Buy insurance, view certificates, and make claims.</small></a>',
+    '<a href="#insurance"><span class="mega-icon">◈</span><strong>KYC & Withdrawals</strong><small>Verify before withdrawing from your wallet.</small></a>',
+  ],
+  [
+    '<a href="#bnpl"><span class="mega-icon">⌁</span><strong>Buy a Car</strong><small>Pay in instalments or outright.</small></a>',
+    '<a href="#bnpl"><span class="mega-icon">⌁</span><strong>Platform Loans</strong><small>Request 0% credit from ₦10,000 after KYC.</small></a>',
+  ],
+  ["Products", "Product"],
+  ["Freedom to pay your way.", "Secure peer lending."],
+  [
+    "Spend, send, split payments, pay bills, save towards your goals, manage insurance, earn rewards, and bring your business online from one polished app experience.",
+    "Register and verify your wallet.<br />Borrow or lend at 0%.<br />₦2,000 credit after approval.",
+  ],
+  ["<b>0%</b> instalment interest option", "<b>₦2,000</b> onboarding credit"],
+  ["<b>Free</b> everyday transfers", "<b>0%</b> platform and peer loans"],
+  ["<b>Secure</b> card and account payments", "<b>1-14</b> day marketplace durations"],
+  ["Animated Me2U app preview", "Animated Me2U lending app preview"],
+  ["Wallet dashboard illustration", "Verified wallet dashboard illustration"],
+  ["Available balance", "Wallet balance"],
+  ["₦485,240.00", "₦12,000.00"],
+  ["<button>Send</button><button>Bills</button><button>BNPL</button><button>Save</button>", "<button>Fund</button><button>Market</button><button>Loans</button><button>KYC</button>"],
+  ["Free transfer", "Registration deposit"],
+  ["₦22,500", "₦1,000"],
+  ["Electricity bill", "Onboarding credit"],
+  ["₦18,000", "₦2,000"],
+  ["Reward earned", "Referral reward"],
+  ["₦750", "₦500"],
+  ["Instalment dashboard illustration", "Platform loan dashboard illustration"],
+  ["Buy now, pay later", "Platform loan"],
+  ["4 instalments", "0% interest"],
+  ["Goal reached", "KYC verified"],
+  ["Me2U Card", "Peer match"],
+  ["interest option", "interest"],
+  ["₦0", "₦2k"],
+  ["transfer charges", "credit"],
+  ["24/7", "14d"],
+  ["app access", "loan duration"],
+  ["Me2U feature carousel", "Me2U lending feature carousel"],
+  ["Unlimited Free Transfer", "Protected onboarding"],
+  ["Make seamless transfers without charges.", "Pay ₦1,000, submit proof, and wait for approval."],
+  ["Pay Bills without Charges", "₦2,000 onboarding credit"],
+  ["Airtime, data, electricity, and TV subscription.", "Credited after the registration deposit is approved."],
+  ["Buy Now, Pay Later", "0% platform loans"],
+  ["Buy products and spread payments.", "Request direct wallet credit from ₦10,000 after KYC."],
+  ["Premium Insurance", "KYC-gated withdrawals"],
+  ["Pay premium in instalments at 0% interest.", "Withdraw after deposit confirmation and KYC completion."],
+  ["Budget and Save", "Fund Wallet"],
+  ["Create budgets and save unspent portions.", "Top up by transfer and upload payment proof."],
+  ["Pay with Me2U Card", "Peer Marketplace"],
+  ["Seamless, secure, swift payments.", "Create or accept borrow and lending listings."],
+  ["Get Reward", "Referral Rewards"],
+  ["Earn when you transact and refer.", "Earn when direct referrals complete onboarding."],
+  ["Top Deals", "Loan Repayment"],
+  ["Partner merchant offers.", "Repay active loans directly from wallet balance."],
+  ["Online Business", "Admin Review"],
+  ["Get a customised webpage.", "Payment proof is reviewed before crediting wallets."],
+  ["Website Integration", "Trust Conditions"],
+  ["Add Me2U to your app or website.", "Active platform loans keep 50% retained in wallet."],
+  ["Transfer and pay bills completely free.", "Start with a protected wallet and verified onboarding."],
+  [
+    "Make daily payments feel effortless with a refined money movement experience for transfers, airtime, data, electricity, TV subscriptions, and recurring expenses.",
+    "Me2U turns account creation into a clear trust flow: registration deposit, payment proof, onboarding credit, KYC, and wallet access.",
+  ],
+  ["Unlimited Free Transfer", "Registration deposit"],
+  ["Send money through a clean, quick, and reassuring flow.", "Pay the fixed ₦1,000 deposit and upload your transfer reference plus receipt."],
+  ["Pay Bills Without Charges", "Onboarding credit"],
+  ["Pay for airtime, data plans, electricity, and TV subscription.", "Receive a ₦2,000 wallet credit after admin approval. It is not a loan and needs no repayment."],
+  ["Customise savings plans, create budgets, and save the unspent portion.", "Complete KYC after your deposit is confirmed to unlock withdrawals and platform loans."],
+  ["Payment analytics illustration", "Wallet activity illustration"],
+  ["Total paid this month", "Approved wallet activity"],
+  ["1245800", "12000"],
+  ["Transfer successful", "Deposit proof submitted"],
+  ["No additional transaction charge", "Awaiting platform approval"],
+  ["Buy now, pay later for real-life purchases.", "Access 0% loans from the platform or matched peers."],
+  [
+    "Split product payments at your convenience across categories such as power systems, gadgets, cars, furniture, and household equipment.",
+    "Use Me2U for direct platform loans and peer marketplace loans with transparent durations, wallet checks, and 0% interest.",
+  ],
+  ["Buy now pay later categories", "Me2U loan categories"],
+  ["Solar Panels, Inverters & Batteries", "Platform loan"],
+  ["Electronics, Phones & Gadgets", "Borrow request"],
+  ["Own your dream car", "Lending offer"],
+  ["Furniture & Household Equipment", "Repayment"],
+  ["Featured category", "Loan path"],
+  [
+    "With Me2U, renewable energy becomes easier to access through flexible payment options.",
+    "Request direct Me2U platform credit from ₦10,000 after your registration deposit and KYC are complete.",
+  ],
+  ["How pay in instalments works", "How platform loans work"],
+  ["Sign up on Me2U", "Create your account"],
+  ["Add product to cart", "Confirm deposit and KYC"],
+  ["Pay in instalments", "Keep 50% in wallet"],
+  ["Easy checkout", "Request and repay"],
+  ["Pay your insurance premium with ease.", "Withdraw only after the trust checks are complete."],
+  [
+    "Users can pay insurance premiums outright or in instalments, view certificates, and manage insurance actions inside a clear digital flow.",
+    "Withdrawals unlock after your registration deposit is confirmed and KYC is completed. Active platform loans require the retained 50% condition to remain in your wallet.",
+  ],
+  ["Insurance payment", "KYC status"],
+  ["Goal reached • 100% paid", "Verified profile • withdrawals enabled"],
+  ["Pay in instalments", "Deposit confirmed"],
+  ["Flexible repayment at no extra cost", "₦1,000 registration proof approved"],
+  ["Pay with cards", "Wallet funded"],
+  ["Secure Debit or Credit Card payment", "Transfer reference and receipt reviewed"],
+  ["Pay with accounts", "Retained balance"],
+  ["Make seamless payments", "50% platform-loan condition stays protected"],
+  ["Budget, save, earn, and plan the Me2U way.", "Wallet, marketplace, rewards, and repayment in one flow."],
+  [
+    "Explore the wider app experience built around practical lifestyle, commerce, and financial planning features.",
+    "Every major product action maps to the live app: fund the wallet, join the marketplace, request loans, repay, withdraw, and refer.",
+  ],
+  ["Budget and save", "Fund wallet"],
+  ["Save towards goals, create expense budgets, monitor spending, and protect what remains.", "Transfer to the platform account, enter the amount and reference, then upload proof."],
+  ["Transact, refer family and friends, and receive rewards from product engagement.", "Earn ₦500 when a direct referral completes the ₦1,000 registration deposit."],
+  ["Planner", "Platform loans"],
+  ["Secure documents, plan events, and receive helpful notifications from the app.", "Request 0% credit from ₦10,000 for up to 14 days after KYC."],
+  ["Pay with Me2U card", "Repay loans"],
+  ["Make secure, swift card-style payments with a refined confirmation experience.", "Repay active loans from wallet balance and clear the way for future platform requests."],
+  ["Get top deals on Me2U", "Withdraw safely"],
+  ["Discover partner merchant deals and offers across the Me2U product ecosystem.", "Withdraw only after deposit confirmation and KYC verification."],
+  ["Secure app flow", "Peer marketplace"],
+  ["Use clean confirmations, transparent states, and confidence-building transaction feedback.", "Publish borrow requests or lending offers with 0% interest and short durations."],
+  ["Me2U works for your business.", "A lending marketplace for both sides."],
+  [
+    "Boost your business online or in-store, offer pay-in-instalments, create a free digital shop, and integrate Me2U into your website or app.",
+    "Borrowers and lenders meet in one shared market. Listings stay interest-free, clear, and tied to wallet balances and trust signals.",
+  ],
+  ["Business tools", "Marketplace tools"],
+  ["Free online webpage", "Borrow request"],
+  ["Free shop on Me2U", "Lending offer"],
+  ["Offer instalments", "Fund a loan"],
+  ["Integrate Me2U", "Accept an offer"],
+  ["Get a free online webpage", "Create a borrow request"],
+  ["Create a customised webpage for your business so customers can browse products and make online purchases.", "Post the amount you need, keep the interest rate at 0%, and set a duration from 1 to 14 days."],
+  [">Sign up<", ">Create account<"],
+  ["Merchant Store", "Marketplace Board"],
+  ["Powered by Me2U", "Borrow and lend at 0%"],
+  ["Pay outright", "Fund this loan"],
+  ["Pay in instalments", "Accept offer"],
+  ["Complete Me2U feature matrix", "Complete Me2U lending feature matrix"],
+  ["Everything is connected in one product story.", "Everything supports a safer lending journey."],
+  ["Unlimited free transfers", "Registration deposit"],
+  ["Buy now pay later", "Onboarding credit"],
+  ["Buy products on the e-shop and spread your payments.", "₦2,000 wallet credit after admin approval."],
+  ["Insurance premiums", "KYC verification"],
+  ["Pay premiums in instalments at 0% interest rate.", "KYC unlocks withdrawals and platform loans."],
+  ["Pay bills", "Wallet funding"],
+  ["Pay airtime, data, electricity, and TV subscription without charges.", "Fund by transfer, reference, and uploaded proof."],
+  ["Budget & save", "Withdrawal rules"],
+  ["Create budgets, monitor spending, and save unspent funds.", "Withdraw after deposit confirmation and KYC."],
+  ["Earn when you transact and refer family or friends.", "Earn ₦500 when direct referrals complete onboarding."],
+  ["Access deals from partner merchants.", "Request direct credit from ₦10,000."],
+  ["Bring business online", "0% marketplace"],
+  ["Get a free store and customised business webpage.", "Borrowers and lenders match without interest."],
+  ["Offer instalments", "Peer details"],
+  ["Enable online or in-store pay-in-instalments.", "Accepted peer loans expose contact and bank details."],
+  ["Integrate checkout", "Admin review"],
+  ["Add Me2U to websites and apps.", "Payment proof is reviewed before wallet crediting."],
+  ["We’re building the smartest way to spend, send, and split payment anytime, anywhere. Zero stress.", "Register, complete your deposit, verify KYC, then use Me2U to fund your wallet, match with peers, and manage 0% loans."],
+  ["Ready to pay?", "Ready to borrow?"],
+  ["<button>Send</button><button>Bills</button><button>Shop</button><button>Save</button>", "<button>Fund</button><button>Market</button><button>Loans</button><button>KYC</button>"],
+  ["Answers before users ask.", "Answers before you sign up."],
+  [
+    "A polished landing page should reduce doubt quickly with clear answers, confident copy, and visible support routes.",
+    "Me2U keeps the lending flow understandable before users create an account.",
+  ],
+  ["What can I do with Me2U?", "What is Me2U?"],
+  [
+    "You can make transfers, pay bills, buy now and pay later, manage insurance payments, budget, save, earn rewards, and use business tools.",
+    "Me2U is a secure Nigerian peer-to-peer lending platform with wallets, KYC, marketplace listings, platform loans, repayments, withdrawals, and referral rewards.",
+  ],
+  ["Does this rebuild collect customer data?", "What happens after registration?"],
+  [
+    "No. This static rebuild has no login, credential collection, payment capture, or backend data submission.",
+    "You create an account, pay the ₦1,000 registration deposit, upload proof, and receive a ₦2,000 onboarding credit after approval.",
+  ],
+  ["Can official app links and brand assets be added?", "Are loans interest-free?"],
+  [
+    "Yes. Replace the placeholders with approved official assets and store links only if you have authorization.",
+    "Yes. Both platform and peer marketplace loans are 0% interest. Marketplace listings use durations from 1 to 14 days.",
+  ],
+  ["Tailor-made solutions that ensure a lifestyle of comfort.", "Secure peer-to-peer lending with wallet funding, onboarding credit, KYC, marketplace loans, and repayment tools."],
+  ["Licensed by the Central Bank of Nigeria", "Built for secure Nigerian peer-to-peer lending"],
+  ["Contact us", "Support"],
+  ["Security center", "Trust and security"],
+  ["contactpremium@premiumtrustbank.com", "Platform support details"],
+  [
+    "1612 Adeola Hopewell Street, Victoria Island, Lagos State, Nigeria",
+    "Support details, platform account information, and policy links are configured before launch.",
+  ],
+  ["0700PREMIUM (07007736486)<br />02013302777", "Use the in-app wallet, KYC, and admin review flows for account-specific actions."],
+  ["©2026 Me2U by Premium Trust Bank", "©2026 Me2U"],
+  ["Download Me2U", "Create your Me2U account"],
+  [
+    "Use official store buttons here when you are authorized to connect the final website to live app listings.",
+    "Register in the web app, then complete the wallet deposit and KYC flow.",
+  ],
+  ["<button class=\"store-badge\"><span>▶</span><small>Get it on</small><strong>Google Play</strong></button>", "<button class=\"store-badge\" data-open-register><span>↗</span><small>Start with</small><strong>Register</strong></button>"],
+  ["<button class=\"store-badge\"><span></span><small>Download on the</small><strong>App Store</strong></button>", "<button class=\"store-badge\" data-open-login><span>◎</span><small>Already joined?</small><strong>Login</strong></button>"],
+  ["Animated demo placeholder", "Deposit → Credit → KYC → Loans"],
+  ["Embed the approved Me2U product demo video here.", "The live app flow starts with registration, deposit proof, onboarding credit, KYC, then wallet, marketplace, and loan actions."],
+  ["Review Cookie Consent", "Review platform notices"],
+  ["Add your approved cookie consent script and policy details here before production deployment.", "Add approved cookie, privacy, and financial-service notices before production deployment."],
+  ["Accept", "Understood"],
+  ["<span>Get the app</span>", "<span>Create account</span>"],
 ];
 
+function applyLandingCopy(source: string) {
+  return copyReplacements.reduce((html, [from, to]) => html.replaceAll(from, to), source);
+}
+
+function getLandingMarkup() {
+  const source = readFileSync(landingSourcePath, "utf8");
+  const body = source.match(/<body[^>]*>([\s\S]*?)<\/body>/i)?.[1] ?? "";
+
+  return applyLandingCopy(body)
+    .replaceAll('src="assets/me2_logo.svg"', `src="${landingAssetBase}/assets/me2_logo.svg"`)
+    .replaceAll("data-open-download", "data-open-register")
+    .replace(/<script src="script\.js"><\/script>\s*/i, "");
+}
+
 export default function Landing() {
+  const landingMarkup = getLandingMarkup();
+
   return (
-    <AuroraBackground className="mobile-landing-shell h-[100svh] min-h-[100svh] items-stretch justify-start overflow-hidden bg-primary text-primary md:h-auto md:min-h-screen">
-      <nav className="relative z-10 mx-auto flex w-full max-w-7xl shrink-0 items-center justify-between gap-4 p-3 pr-16 md:p-6">
-        <h1 className="min-w-0 text-2xl font-display font-bold tracking-tight md:text-3xl">me2u</h1>
-      </nav>
-
-      <motion.section
-        initial={{ opacity: 0, y: 36 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{
-          delay: 0.15,
-          duration: 0.8,
-          ease: "easeInOut",
-        }}
-        className="relative z-10 mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col justify-center px-4 py-4 text-center md:px-6 md:py-24"
-      >
-        <h2 className="mb-4 text-[2.35rem] font-display font-bold leading-[0.95] tracking-tight md:mb-6 md:text-7xl md:leading-tight">
-          Peer-to-Peer Lending
-          <br />
-          Made Secure in Nigeria
-        </h2>
-        <p className="mx-auto mb-5 max-w-2xl text-sm leading-relaxed text-secondary md:mb-10 md:text-xl">
-          Create your account • Meet matched peers • Interest-free loans
-        </p>
-
-        <div className="mx-auto flex w-full max-w-xs flex-col gap-3 sm:max-w-md sm:flex-row">
-          <Button
-            variant="secondary"
-            className="min-h-12 w-full sm:flex-1"
-            onClick={() => (window.location.href = "/login")}
-          >
-            Login
-          </Button>
-          <Button
-            className="min-h-12 w-full sm:flex-1"
-            onClick={() => (window.location.href = "/register")}
-          >
-            Register
-          </Button>
-        </div>
-
-        <div className="mx-auto mt-6 grid w-full max-w-sm grid-cols-3 gap-2 text-center md:mt-16 md:max-w-5xl md:grid-cols-3 md:gap-4 md:text-left">
-          {features.map((feature) => (
-            <div
-              key={feature.label}
-              className="rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 shadow-[3px_3px_0px_var(--color-shadow)] backdrop-blur md:p-6 md:shadow-[4px_4px_0px_var(--color-shadow)]"
-            >
-              <Icons8Icon name={feature.icon} size={24} className="mx-auto mb-2 text-[var(--color-accent-primary)] md:mx-0 md:mb-4 md:size-7" />
-              <p className="text-[11px] font-sans font-semibold leading-tight md:text-base md:leading-normal">{feature.label}</p>
-              <p className="mt-2 hidden text-sm leading-relaxed text-secondary md:block">{feature.text}</p>
-            </div>
-          ))}
-        </div>
-      </motion.section>
-    </AuroraBackground>
+    <>
+      <link rel="preload" href={`${landingAssetBase}/styles.css`} as="style" />
+      <link rel="stylesheet" href={`${landingAssetBase}/styles.css`} />
+      <link rel="stylesheet" href={`${landingAssetBase}/brand-enhancements.css`} />
+      <div data-landing-v2-root dangerouslySetInnerHTML={{ __html: landingMarkup }} />
+      <LandingPageV2Interactions />
+    </>
   );
 }

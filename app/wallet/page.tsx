@@ -1,7 +1,7 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
-import { registrationDepositAmount, firstPlatformLoanAmount } from "@/lib/loans";
+import { onboardingCreditAmount, registrationDepositAmount } from "@/lib/loans";
 import { useStore } from "@/lib/store";
 import { useState, useEffect } from "react";
 import LoadingButton from "@/LoadingButton";
@@ -67,9 +67,7 @@ export default function WalletPage() {
       throw new Error("Unable to submit");
     }
 
-    toast.success(
-      "Receipt submitted! Awaiting platform approval to unlock your first loan.",
-    );
+    toast.success("Receipt submitted! Awaiting platform approval for your onboarding credit.");
     setRegistrationReference("");
     setRegReceiptFile(null);
   };
@@ -139,7 +137,7 @@ export default function WalletPage() {
             <div>
               <h2 className="text-2xl font-display md:text-3xl">Registration Deposit</h2>
               <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">
-                Pay ₦{registrationDepositAmount.toLocaleString()} to unlock your first ₦{firstPlatformLoanAmount.toLocaleString()} withdrawal.
+                Pay ₦{registrationDepositAmount.toLocaleString()} to receive a ₦{onboardingCreditAmount.toLocaleString()} onboarding credit after approval. Withdrawals unlock after KYC.
               </p>
             </div>
             <span className={`rounded-[5px] border border-[var(--color-border)] px-3 py-1 text-xs font-bold uppercase ${

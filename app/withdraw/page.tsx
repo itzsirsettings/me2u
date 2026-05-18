@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import LoadingButton from "@/LoadingButton";
 import { toast } from "sonner";
 import { useStore } from "@/lib/store";
-import { getActivePlatformLoanRetainedDeposit } from "@/lib/loans";
+import { getActivePlatformLoanRetainedDeposit, onboardingCreditAmount } from "@/lib/loans";
 import { getRequiredWithdrawalBalance } from "@/lib/withdrawal";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
@@ -56,6 +56,11 @@ export default function WithdrawPage() {
     if (!user.registrationDepositPaid) {
       toast.error("Confirm your registration deposit before withdrawal.");
       router.push("/wallet");
+      return;
+    }
+    if (!user.kycVerified) {
+      toast.error("Complete KYC before withdrawal.");
+      router.push("/kyc");
       return;
     }
     if (user.balance < requiredBalance) {
@@ -122,7 +127,7 @@ export default function WithdrawPage() {
               >
                 <div className="mb-6 p-4 rounded-[5px] bg-[var(--color-warning-bg)] border border-[var(--color-border)]">
                   <p className="text-sm font-sans text-[var(--color-warning-text)]">
-                    <span className="font-bold">Notice:</span> Confirm your registration deposit before withdrawal. The first ₦2,000 has no 50% condition; second and later platform loans require 50% of the active loan amount to remain in your wallet.
+                    <span className="font-bold">Notice:</span> Your ₦{onboardingCreditAmount.toLocaleString()} onboarding credit is withdrawable after KYC. Active platform loans require 50% of the loan amount to remain in your wallet.
                   </p>
                 </div>
                 
@@ -164,7 +169,11 @@ export default function WithdrawPage() {
                 )}
                 
                 <button onClick={handleRequest} className="btn-primary w-full h-14 text-lg" disabled={!amount || Number(amount) <= 0}>
-                  {user?.registrationDepositPaid ? "Continue" : "Complete Registration Deposit"}
+                  {!user?.registrationDepositPaid
+                    ? "Complete Registration Deposit"
+                    : !user?.kycVerified
+                      ? "Complete KYC"
+                      : "Continue"}
                 </button>
               </motion.div>
             ) : (

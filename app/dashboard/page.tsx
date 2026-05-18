@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import Icons8Icon, { type Icons8IconName } from "@/components/Icons8Icon";
-import { registrationDepositAmount, firstPlatformLoanAmount } from "@/lib/loans";
+import { onboardingCreditAmount, registrationDepositAmount } from "@/lib/loans";
 import { useStore } from "@/lib/store";
 import { motion, type Variants } from "framer-motion";
 
@@ -43,6 +43,15 @@ export default function Dashboard() {
   if (!mounted || (!isAuthenticated && !isLoading)) return null;
 
   const firstName = user?.name.trim().split(/\s+/)[0] || "Guest";
+  const visibleLoans = activeLoans.filter(
+    (loan) =>
+      !(
+        loan.role === "borrower" &&
+        loan.source === "platform" &&
+        loan.amount === onboardingCreditAmount &&
+        loan.rate === 0
+      ),
+  );
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -80,7 +89,7 @@ export default function Dashboard() {
               <div>
                 <p className="text-sm font-bold uppercase tracking-wider">Registration Deposit Required</p>
                 <p className="mt-2 text-sm leading-relaxed">
-                  Pay ₦{registrationDepositAmount.toLocaleString()} and submit your reference to unlock your first ₦{firstPlatformLoanAmount.toLocaleString()} withdrawal.
+                  Pay ₦{registrationDepositAmount.toLocaleString()} and submit your reference to receive your ₦{onboardingCreditAmount.toLocaleString()} onboarding credit after approval.
                 </p>
               </div>
               <button className="btn-primary h-12 w-full md:w-auto" onClick={() => router.push("/wallet")}>
@@ -113,7 +122,7 @@ export default function Dashboard() {
         <motion.div whileHover={{ y: -8, transition: { duration: 0.3, ease: 'easeOut' } }}>
           <Card className="kinetic-border p-5 shadow-[4px_4px_0px_var(--color-shadow)] bg-[var(--color-accent-primary)] text-[var(--color-on-accent)] md:p-6">
             <p className="opacity-90 font-sans">Active Loans</p>
-            <p className="mt-3 text-3xl font-display leading-none md:text-4xl">{activeLoans.filter((l) => l.status === "active").length}</p>
+            <p className="mt-3 text-3xl font-display leading-none md:text-4xl">{visibleLoans.filter((l) => l.status === "active").length}</p>
           </Card>
         </motion.div>
 

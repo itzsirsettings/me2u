@@ -25,6 +25,21 @@ export async function POST(request: Request) {
     const body = await request.json();
     const amount = readPositiveAmount(body.amount);
 
+    const { data: profile, error: profileError } = await auth.supabase
+      .from("profiles")
+      .select("registration_deposit_paid, kyc_verified")
+      .eq("id", auth.user.id)
+      .maybeSingle();
+
+    if (profileError) throw new Error(profileError.message);
+    if (!profile) throw new Error("Profile not found.");
+    if (!profile.registration_deposit_paid) {
+      throw new Error("Confirm your registration deposit before withdrawal.");
+    }
+    if (!profile.kyc_verified) {
+      throw new Error("Complete KYC before withdrawal.");
+    }
+
     const { data: wallet, error: walletError } = await auth.supabase
       .from("wallets")
       .select("balance")

@@ -6,8 +6,8 @@ import { Card } from "@/components/ui/card";
 import LoadingButton from "@/LoadingButton";
 import Icons8Icon from "@/components/Icons8Icon";
 import {
-  firstPlatformLoanAmount,
   getPlatformLoanRetainedDeposit,
+  onboardingCreditAmount,
   platformLoanDays,
   repeatPlatformLoanMinimum,
   registrationDepositAmount,
@@ -40,15 +40,20 @@ export default function Loans() {
 
   if (!mounted || (!isAuthenticated && !isLoading)) return null;
 
-  const platformLoans = activeLoans.filter((loan) => loan.role === "borrower" && loan.source === "platform");
-  const hasPlatformLoanHistory = platformLoans.length > 0;
+  const visibleLoans = activeLoans.filter(
+    (loan) =>
+      !(
+        loan.role === "borrower" &&
+        loan.source === "platform" &&
+        loan.amount === onboardingCreditAmount &&
+        loan.rate === 0
+      ),
+  );
+  const platformLoans = visibleLoans.filter((loan) => loan.role === "borrower" && loan.source === "platform");
   const activePlatformLoan = platformLoans.find((loan) => loan.status === "active");
-  const firstLoanLocked = !hasPlatformLoanHistory && !user?.registrationDepositPaid;
   const repeatLoanAmount = Number(loanAmount);
-  const requestedPlatformAmount = hasPlatformLoanHistory ? repeatLoanAmount : firstPlatformLoanAmount;
-  const retainedDeposit = hasPlatformLoanHistory
-    ? getPlatformLoanRetainedDeposit(requestedPlatformAmount)
-    : 0;
+  const requestedPlatformAmount = repeatLoanAmount;
+  const retainedDeposit = getPlatformLoanRetainedDeposit(requestedPlatformAmount);
   const currentBalance = user?.balance || 0;
   const depositShortfall = Math.max(0, retainedDeposit - currentBalance);
   const repeatAmountIsValid =
@@ -56,7 +61,10 @@ export default function Loans() {
   const requestDisabled =
     isRequestingLoan ||
     Boolean(activePlatformLoan) ||
-    (hasPlatformLoanHistory && (!repeatAmountIsValid || depositShortfall > 0));
+    !user?.registrationDepositPaid ||
+    !user?.kycVerified ||
+    !repeatAmountIsValid ||
+    depositShortfall > 0;
 
   const handleRequestLoan = async () => {
     if (!user) {
@@ -65,9 +73,15 @@ export default function Loans() {
       return;
     }
 
-    if (firstLoanLocked) {
+    if (!user.registrationDepositPaid) {
       toast.error(`Pay the ₦${registrationDepositAmount.toLocaleString()} registration deposit first.`);
       router.push("/wallet");
+      return;
+    }
+
+    if (!user.kycVerified) {
+      toast.error("Complete KYC before requesting a platform loan.");
+      router.push("/kyc");
       return;
     }
 
@@ -76,22 +90,20 @@ export default function Loans() {
       return;
     }
 
-    if (hasPlatformLoanHistory) {
-      if (!repeatAmountIsValid) {
-        toast.error("Second and later platform loans start from ₦10,000.");
-        return;
-      }
+    if (!repeatAmountIsValid) {
+      toast.error("Platform loans start from ₦10,000.");
+      return;
+    }
 
-      if (currentBalance < retainedDeposit) {
-        toast.error(
-          `Fund ₦${depositShortfall.toLocaleString()} first. The 50% deposit remains in your wallet.`,
-        );
-        return;
-      }
+    if (currentBalance < retainedDeposit) {
+      toast.error(
+        `Fund ₦${depositShortfall.toLocaleString()} first. The 50% deposit remains in your wallet.`,
+      );
+      return;
     }
 
     setIsRequestingLoan(true);
-    const result = await requestPlatformLoan(hasPlatformLoanHistory ? requestedPlatformAmount : undefined);
+    const result = await requestPlatformLoan(requestedPlatformAmount);
     setIsRequestingLoan(false);
 
     if (!result.ok) {
@@ -99,11 +111,7 @@ export default function Loans() {
       throw new Error("Unable to request");
     }
 
-    toast.success(
-      hasPlatformLoanHistory
-        ? `Loan of ₦${requestedPlatformAmount.toLocaleString()} has been added to your wallet.`
-        : "Your first ₦2,000 loan has been added to your wallet.",
-    );
+    toast.success(`Loan of ₦${requestedPlatformAmount.toLocaleString()} has been added to your wallet.`);
   };
 
   const handleRepay = async (loanId: string, amount: number, rate: number) => {
@@ -164,124 +172,99 @@ export default function Loans() {
             <div className="min-w-0 flex-1">
               <div className="mb-4 flex items-center gap-3">
                 <div className="flex h-11 w-11 items-center justify-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-accent-primary)]">
-                  <Icons8Icon name={hasPlatformLoanHistory ? "shield" : "moneyBag"} size={24} />
+                  <Icons8Icon name="shield" size={24} />
                 </div>
                 <div>
                   <h2 className="text-2xl font-display leading-none md:text-3xl">
-                    {hasPlatformLoanHistory ? "Next Platform Loan" : "First Platform Loan"}
+                    Platform Loan
                   </h2>
                   <p className="mt-1 text-sm font-sans text-[var(--color-text-secondary)]">
-                    {hasPlatformLoanHistory
-                      ? `Starts from ₦10,000 for up to ${platformLoanDays} days with 50% retained in your wallet.`
-                      : `Pay the ₦${registrationDepositAmount.toLocaleString()} registration deposit to unlock ₦2,000 for ${platformLoanDays} days.`}
+                    Starts from ₦10,000 for up to {platformLoanDays} days with 50% retained in your wallet.
                   </p>
                 </div>
               </div>
 
-              {hasPlatformLoanHistory ? (
-                <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
-                  <div>
-                    <label className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
-                      Loan Amount (₦)
-                    </label>
-                    <input
-                      type="number"
-                      min={repeatPlatformLoanMinimum}
-                      value={loanAmount}
-                      onChange={(event) => setLoanAmount(event.target.value)}
-                      title="Loan Amount"
-                      placeholder="Enter amount"
-                      className="h-14 w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 font-mono text-xl focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none"
-                    />
-                  </div>
-                  {!requestDisabled ? (
-                    <LoadingButton
-                      label="Request Loan"
-                      loadingText="Processing..."
-                      successText="Loan Granted!"
-                      icon={<Icons8Icon name="cash" size={20} />}
-                      onClick={handleRequestLoan}
-                    />
-                  ) : (
-                    <button
-                      type="button"
-                      className="btn-primary h-14 w-full gap-2 md:w-auto opacity-60 cursor-not-allowed"
-                      disabled
-                    >
-                      <Icons8Icon name="cash" size={20} />
-                      {activePlatformLoan
-                        ? "Repay Active Loan First"
-                        : depositShortfall > 0
-                          ? "Fund Wallet First"
-                          : "Request Loan"}
-                    </button>
-                  )}
+              <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
+                <div>
+                  <label className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
+                    Loan Amount (₦)
+                  </label>
+                  <input
+                    type="number"
+                    min={repeatPlatformLoanMinimum}
+                    value={loanAmount}
+                    onChange={(event) => setLoanAmount(event.target.value)}
+                    title="Loan Amount"
+                    placeholder="Enter amount"
+                    className="h-14 w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 font-mono text-xl focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none"
+                  />
                 </div>
-              ) : (
-                <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-                  <div>
-                    <p className="text-5xl font-display leading-none">₦{firstPlatformLoanAmount.toLocaleString()}</p>
-                    <p className="mt-2 text-sm font-sans text-[var(--color-text-secondary)]">
-                      Repay this first loan before requesting your next one.
-                    </p>
-                  </div>
-                  {!requestDisabled ? (
-                    <LoadingButton
-                      label="Get ₦2,000 Loan"
-                      loadingText="Processing..."
-                      successText="Loan Granted!"
-                      icon={<Icons8Icon name="cash" size={20} />}
-                      onClick={handleRequestLoan}
-                    />
-                  ) : (
-                    <button
-                      type="button"
-                      className="btn-primary h-14 w-full gap-2 md:w-auto opacity-60 cursor-not-allowed"
-                      disabled
-                    >
-                      <Icons8Icon name="cash" size={20} />
-                      {activePlatformLoan
-                        ? "Repay Active Loan First"
-                        : firstLoanLocked
-                          ? "Pay Registration Deposit"
-                        : "Get ₦2,000 Loan"}
-                    </button>
-                  )}
-                </div>
-              )}
+                {!requestDisabled ? (
+                  <LoadingButton
+                    label="Request Loan"
+                    loadingText="Processing..."
+                    successText="Loan Granted!"
+                    icon={<Icons8Icon name="cash" size={20} />}
+                    onClick={handleRequestLoan}
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    className="btn-primary h-14 w-full gap-2 md:w-auto opacity-60 cursor-not-allowed"
+                    disabled
+                  >
+                    <Icons8Icon name="cash" size={20} />
+                    {activePlatformLoan
+                      ? "Repay Active Loan First"
+                      : !user?.registrationDepositPaid
+                        ? "Pay Registration Deposit"
+                        : !user?.kycVerified
+                          ? "Complete KYC"
+                          : depositShortfall > 0
+                            ? "Fund Wallet First"
+                            : "Request Loan"}
+                  </button>
+                )}
+              </div>
 
-              {hasPlatformLoanHistory && (
-                <div className="mt-5 grid gap-3 rounded-[5px] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 text-sm md:grid-cols-3">
-                  <div>
-                    <p className="font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">Minimum</p>
-                    <p className="mt-1 font-mono text-lg text-[var(--color-text-primary)]">₦{repeatPlatformLoanMinimum.toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <p className="font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">50% Retained</p>
-                    <p className="mt-1 font-mono text-lg text-[var(--color-text-primary)]">₦{retainedDeposit.toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <p className="font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">Status</p>
-                    <p className={`mt-1 font-sans font-semibold ${depositShortfall > 0 || activePlatformLoan ? "text-[var(--color-warning-text)]" : "text-[var(--color-positive-text)]"}`}>
-                      {activePlatformLoan
-                        ? "Active loan pending"
-                        : depositShortfall > 0
-                          ? `Fund ₦${depositShortfall.toLocaleString()}`
-                          : "Ready"}
-                    </p>
-                  </div>
+              <div className="mt-5 grid gap-3 rounded-[5px] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 text-sm md:grid-cols-3">
+                <div>
+                  <p className="font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">Minimum</p>
+                  <p className="mt-1 font-mono text-lg text-[var(--color-text-primary)]">₦{repeatPlatformLoanMinimum.toLocaleString()}</p>
                 </div>
-              )}
+                <div>
+                  <p className="font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">50% Retained</p>
+                  <p className="mt-1 font-mono text-lg text-[var(--color-text-primary)]">₦{retainedDeposit.toLocaleString()}</p>
+                </div>
+                <div>
+                  <p className="font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">Status</p>
+                  <p className={`mt-1 font-sans font-semibold ${requestDisabled ? "text-[var(--color-warning-text)]" : "text-[var(--color-positive-text)]"}`}>
+                    {activePlatformLoan
+                      ? "Active loan pending"
+                      : !user?.registrationDepositPaid
+                        ? "Deposit required"
+                        : !user?.kycVerified
+                          ? "KYC required"
+                          : depositShortfall > 0
+                            ? `Fund ₦${depositShortfall.toLocaleString()}`
+                            : "Ready"}
+                  </p>
+                </div>
+              </div>
+
+              <p className="mt-4 text-sm font-sans text-[var(--color-text-secondary)]">
+                Your ₦{onboardingCreditAmount.toLocaleString()} onboarding credit is not a loan and does not need repayment.
+              </p>
             </div>
           </div>
         </Card>
       </motion.div>
 
       <motion.div variants={itemVariants} className="space-y-4 md:space-y-8">
-        {activeLoans.length === 0 ? (
+        {visibleLoans.length === 0 ? (
           <p className="text-base leading-relaxed font-sans italic opacity-90 text-[var(--color-text-secondary)] md:text-xl">You have no loans yet.</p>
         ) : (
-          activeLoans.map((loan) => (
+          visibleLoans.map((loan) => (
             <motion.div 
               key={loan.id} 
               variants={itemVariants}

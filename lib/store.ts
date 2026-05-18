@@ -524,12 +524,11 @@ export const useStore = create<AppStore>((set, get) => ({
     const platformLoans = get().activeLoans.filter(
       (loan) => loan.role === "borrower" && loan.source === "platform",
     );
-    const hasPlatformLoanHistory = platformLoans.length > 0;
 
-    if (!hasPlatformLoanHistory && !user.registrationDepositPaid) {
+    if (!user.registrationDepositPaid) {
       return {
         ok: false,
-        error: `Confirm your ₦${registrationDepositAmount.toLocaleString()} registration deposit before the first ₦2,000 loan.`,
+        error: `Confirm your ₦${registrationDepositAmount.toLocaleString()} registration deposit before requesting a platform loan.`,
       };
     }
 
@@ -540,17 +539,15 @@ export const useStore = create<AppStore>((set, get) => ({
       };
     }
 
-    if (hasPlatformLoanHistory) {
-      if (!Number.isFinite(amount) || Number(amount) < repeatPlatformLoanMinimum) {
-        return {
-          ok: false,
-          error: "Second and later platform loans start from ₦10,000.",
-        };
-      }
+    if (!Number.isFinite(amount) || Number(amount) < repeatPlatformLoanMinimum) {
+      return {
+        ok: false,
+        error: "Platform loans start from ₦10,000.",
+      };
     }
 
     const result = await postAuthenticatedJson("/api/loans/request", {
-      amount: hasPlatformLoanHistory ? amount : null,
+      amount,
     });
     if (result.ok) await get().loadCurrentUser();
     return result;

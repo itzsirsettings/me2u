@@ -1,6 +1,7 @@
 "use client";
 
 import Icons8Icon from "@/components/Icons8Icon";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 type Theme = "light" | "dark";
@@ -22,6 +23,7 @@ function applyTheme(theme: Theme) {
 }
 
 export default function ThemeToggle() {
+  const pathname = usePathname();
   const [theme, setTheme] = useState<Theme>("light");
   const isDark = theme === "dark";
 
@@ -37,6 +39,8 @@ export default function ThemeToggle() {
     window.localStorage.setItem(storageKey, nextTheme);
     applyTheme(nextTheme);
   };
+
+  if (pathname === "/") return null;
 
   return (
     <button
