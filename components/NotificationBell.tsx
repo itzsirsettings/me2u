@@ -34,7 +34,7 @@ export default function NotificationBell() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-40 bg-black/20"
+              className="fixed inset-0 z-40 bg-[var(--color-scrim)]"
               onClick={() => setIsOpen(false)}
             />
             <motion.div 
@@ -55,7 +55,7 @@ export default function NotificationBell() {
                   notifications.map((notif) => (
                     <div 
                       key={notif.id}
-                      className={`mb-2 rounded-lg p-3 text-sm transition-colors ${notif.isRead ? 'opacity-70 hover:bg-[var(--color-bg-secondary)]' : 'bg-[var(--color-bg-secondary)] border-l-2 border-[var(--color-accent-primary)]'}`}
+                      className={`mb-2 rounded-lg p-3 text-sm transition-colors ${notif.isRead ? 'opacity-70 hover:bg-[var(--color-bg-secondary)]' : 'border border-[var(--color-border)] bg-[var(--color-positive-bg)]'}`}
                     >
                       <p className="font-semibold text-[var(--color-text-primary)] mb-1">{notif.title}</p>
                       <p className="text-[var(--color-text-secondary)]">{notif.message}</p>

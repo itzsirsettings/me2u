@@ -29,25 +29,25 @@ const STYLES = {
     minWidth: "220px",
   },
   solid: {
-    background: "#0f0f0f",
-    color: "#fff",
-    boxShadow: "0 1px 3px rgba(0,0,0,.12), 0 4px 12px rgba(0,0,0,.08)",
+    background: "var(--gradient-primary)",
+    color: "var(--color-on-accent)",
+    boxShadow: "0 18px 42px var(--color-shadow)",
   },
   solidSuccess: {
-    background: "#1a6b3a",
-    color: "#fff",
-    boxShadow: "0 1px 3px rgba(0,0,0,.12), 0 4px 12px rgba(0,0,0,.08)",
+    background: "var(--gradient-premium)",
+    color: "var(--color-on-accent)",
+    boxShadow: "0 18px 42px var(--color-shadow)",
   },
   outline: {
     background: "transparent",
-    color: "#0f0f0f",
-    border: "1.5px solid rgba(0,0,0,0.2)",
+    color: "var(--color-text-primary)",
+    border: "1.5px solid var(--color-border)",
     boxShadow: "none",
   },
   outlineSuccess: {
-    background: "#f0faf4",
-    color: "#1a6b3a",
-    border: "1.5px solid #1a6b3a",
+    background: "var(--color-positive-bg)",
+    color: "var(--color-positive-text)",
+    border: "1.5px solid var(--color-border)",
     boxShadow: "none",
   },
 };
@@ -58,7 +58,7 @@ const PHASE_MESSAGES = [
   "Finishing up…",
 ];
 
-function ArcSpinner({ color = "#fff" }) {
+function ArcSpinner({ color = "var(--color-on-accent)", trackColor = "rgba(255,255,255,.22)" }) {
   return (
     <div style={{ width: 20, height: 20, flexShrink: 0 }}>
       <svg
@@ -66,7 +66,7 @@ function ArcSpinner({ color = "#fff" }) {
         fill="none"
         style={{ animation: "lb-spin 1s linear infinite" }}
       >
-        <circle cx="10" cy="10" r="8" strokeWidth="2.5" stroke={color === "#fff" ? "rgba(255,255,255,.2)" : "rgba(0,0,0,.15)"} />
+        <circle cx="10" cy="10" r="8" strokeWidth="2.5" stroke={trackColor} />
         <circle
           cx="10" cy="10" r="8"
           strokeWidth="2.5"
@@ -81,7 +81,7 @@ function ArcSpinner({ color = "#fff" }) {
   );
 }
 
-function CheckCircle({ color = "rgba(255,255,255,.2)", iconColor = "#fff" }) {
+function CheckCircle({ color = "rgba(255,255,255,.2)", iconColor = "var(--color-on-accent)" }) {
   return (
     <div style={{
       width: 22, height: 22, borderRadius: "50%",
@@ -125,9 +125,10 @@ export default function LoadingButton({
   const tickRef = useRef(null);
   const isOutline = variant === "outline";
 
-  const spinnerColor = isOutline ? "#0f0f0f" : "#fff";
-  const checkBg = isOutline ? "rgba(26,107,58,.15)" : "rgba(255,255,255,.18)";
-  const checkIcon = isOutline ? "#1a6b3a" : "#fff";
+  const spinnerColor = isOutline ? "var(--color-text-primary)" : "var(--color-on-accent)";
+  const spinnerTrack = isOutline ? "var(--color-glass-border)" : "rgba(255,255,255,.22)";
+  const checkBg = isOutline ? "var(--color-positive-bg)" : "rgba(255,255,255,.18)";
+  const checkIcon = isOutline ? "var(--color-positive-text)" : "var(--color-on-accent)";
 
   const btnStyle = {
     ...STYLES.base,
@@ -174,7 +175,7 @@ export default function LoadingButton({
 
   useEffect(() => () => clearInterval(tickRef.current), []);
 
-  const barColor = isOutline ? "rgba(26,107,58,.45)" : "rgba(255,255,255,.45)";
+  const barColor = isOutline ? "var(--color-accent-primary)" : "rgba(255,255,255,.48)";
 
   return (
     <>
@@ -182,7 +183,7 @@ export default function LoadingButton({
         @keyframes lb-spin { to { transform: rotate(360deg); } }
         .lb-root:hover:not(:disabled) {
           transform: translateY(-1px) !important;
-          box-shadow: 0 4px 8px rgba(0,0,0,.14), 0 12px 28px rgba(0,0,0,.1) !important;
+          box-shadow: 0 22px 56px var(--color-shadow) !important;
         }
         .lb-root:active:not(:disabled) { transform: scale(.985) !important; }
       `}</style>
@@ -204,7 +205,7 @@ export default function LoadingButton({
 
         {/* Loading */}
         <SlotContent visible={state === "loading"}>
-          <ArcSpinner color={spinnerColor} />
+          <ArcSpinner color={spinnerColor} trackColor={spinnerTrack} />
           <span style={{ fontSize: 14, fontWeight: 500, opacity: 0.92 }}>{currentMsg}</span>
         </SlotContent>
 

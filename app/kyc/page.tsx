@@ -44,15 +44,17 @@ export default function KYCPage() {
 
   if (user.kycVerified) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500 mb-4"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-        <h2 className="text-2xl font-bold font-bricolage mb-2 text-white">KYC Verified</h2>
-        <p className="text-slate-400 max-w-md">
+      <div className="mx-auto flex max-w-lg flex-col items-center justify-center px-4 py-20 text-center">
+        <div className="mb-4 grid h-16 w-16 place-items-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-positive-bg)] text-[var(--color-positive-text)] shadow-[3px_3px_0px_var(--color-shadow)]">
+          <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        </div>
+        <h2 className="mb-2 font-display text-2xl font-bold text-[var(--color-text-primary)]">KYC Verified</h2>
+        <p className="max-w-md text-[var(--color-text-secondary)]">
           Your identity has been verified. You can now access all features of the platform.
         </p>
         <button
           onClick={() => router.push("/dashboard")}
-          className="mt-8 rounded-full bg-emerald-500 px-6 py-2.5 font-semibold text-white transition-all hover:bg-emerald-600"
+          className="btn-primary mt-8 h-12 px-6"
         >
           Go to Dashboard
         </button>
@@ -147,7 +149,7 @@ export default function KYCPage() {
 
       <div className="space-y-8 rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-6 shadow-[4px_4px_0px_var(--color-shadow)] md:p-8 kinetic-border">
         {error && (
-          <div className="flex items-center gap-3 rounded-[5px] bg-red-500/10 p-4 text-red-500 border border-red-500/20">
+          <div className="flex items-center gap-3 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-negative-bg)] p-4 text-[var(--color-negative-text)]">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
             <p className="text-sm font-bold font-sans">{error}</p>
           </div>
@@ -171,7 +173,7 @@ export default function KYCPage() {
               value={bankName}
               onChange={(e) => setBankName(e.target.value)}
               title="Bank Name"
-              className="w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3 text-[var(--color-text-primary)] placeholder-slate-500 focus:border-[var(--color-accent-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-accent-primary)] transition-all font-sans"
+              className="w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3 text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)] focus:border-[var(--color-accent-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-accent-primary)] transition-all font-sans"
               placeholder="e.g. Access Bank"
             />
           </div>
@@ -185,7 +187,7 @@ export default function KYCPage() {
               value={accountNumber}
               onChange={(e) => setAccountNumber(e.target.value)}
               title="Account Number"
-              className="w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3 text-[var(--color-text-primary)] placeholder-slate-500 focus:border-[var(--color-accent-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-accent-primary)] transition-all font-mono"
+              className="w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3 text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)] focus:border-[var(--color-accent-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-accent-primary)] transition-all font-mono"
               placeholder="10 digit number"
               maxLength={10}
             />

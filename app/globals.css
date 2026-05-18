@@ -1,62 +1,84 @@
 @import "tailwindcss";
 
 :root {
-  --color-bg-primary: #F4F1EA;
-  --color-bg-secondary: #EBE7DF;
-  --color-bg-card: #FFFFFF;
-  --color-accent-primary: #0037af;
-  --color-text-primary: #121212;
-  --color-text-secondary: #4A4A4A;
-  --color-border: #121212;
-  --color-on-accent: #F8F5EC;
-  --color-shadow: rgba(18, 18, 18, 0.16);
-  --color-hover-soft: rgba(18, 18, 18, 0.05);
-  --color-glass-bg: rgba(244, 241, 234, 0.82);
-  --color-glass-border: rgba(18, 18, 18, 0.22);
-  --color-warning-bg: #FFF6D9;
-  --color-warning-text: #7A3F00;
-  --color-positive-bg: #E4F7E9;
-  --color-positive-text: #116239;
-  --color-negative-bg: #FFE8E8;
-  --color-negative-text: #B42318;
+  --brand-primary: #00406b;
+  --brand-accent: #007fff;
+  --brand-text: #5a5a5a;
+  --brand-surface: #f1f1f4;
+  --brand-background: #ffffff;
+  --color-bg-primary: var(--brand-background);
+  --color-bg-secondary: var(--brand-surface);
+  --color-bg-card: #ffffff;
+  --color-accent-primary: var(--brand-accent);
+  --color-accent-deep: var(--brand-primary);
+  --color-text-primary: var(--brand-primary);
+  --color-text-secondary: var(--brand-text);
+  --color-border: rgba(0, 64, 107, 0.16);
+  --color-on-accent: #ffffff;
+  --color-shadow: rgba(0, 64, 107, 0.14);
+  --color-hover-soft: rgba(0, 127, 255, 0.08);
+  --color-glass-bg: rgba(255, 255, 255, 0.78);
+  --color-glass-border: rgba(0, 71, 125, 0.18);
+  --color-scrim: rgba(0, 64, 107, 0.18);
+  --color-warning-bg: #fff4d8;
+  --color-warning-text: #7a4a00;
+  --color-positive-bg: rgba(0, 127, 255, 0.11);
+  --color-positive-text: #004f86;
+  --color-negative-bg: #ffe8e8;
+  --color-negative-text: #b42318;
+  --color-page-background:
+    radial-gradient(circle at 15% 20%, rgba(0, 127, 255, 0.06), transparent 35rem),
+    radial-gradient(circle at 85% 85%, rgba(0, 127, 255, 0.04), transparent 32rem),
+    radial-gradient(circle at 50% 0%, rgba(0, 64, 107, 0.03), transparent 40rem),
+    linear-gradient(180deg, #ffffff, #f1f1f4 45%, #f1f1f4 100%);
+  --gradient-primary: linear-gradient(135deg, var(--brand-primary), var(--brand-accent));
+  --gradient-premium: linear-gradient(145deg, var(--brand-accent), var(--brand-primary));
   --white: #ffffff;
-  --black: #000000;
+  --black: #00406b;
   --transparent: transparent;
-  --blue-500: #3b82f6;
-  --indigo-300: #a5b4fc;
-  --blue-300: #93c5fd;
-  --violet-200: #ddd6fe;
-  --blue-400: #60a5fa;
+  --blue-500: #007fff;
+  --indigo-300: #00406b;
+  --blue-300: #8ac8ff;
+  --violet-200: #f1f1f4;
+  --blue-400: #3ca0ff;
   --font-bricolage: Arial, "Helvetica Neue", sans-serif;
   --font-geologica: "Segoe UI", Arial, sans-serif;
 }
 
 html[data-theme="dark"] {
-  --color-bg-primary: #151611;
-  --color-bg-secondary: #22241B;
-  --color-bg-card: #292A20;
-  --color-accent-primary: #78A7FF;
-  --color-text-primary: #F4EEDC;
-  --color-text-secondary: #C6BFAE;
-  --color-border: #D7CBAE;
-  --color-on-accent: #111725;
-  --color-shadow: rgba(0, 0, 0, 0.42);
-  --color-hover-soft: rgba(244, 238, 220, 0.08);
-  --color-glass-bg: rgba(21, 22, 17, 0.82);
-  --color-glass-border: rgba(215, 203, 174, 0.28);
-  --color-warning-bg: #3A2C12;
-  --color-warning-text: #F2C66E;
-  --color-positive-bg: #183421;
-  --color-positive-text: #8DE0A6;
-  --color-negative-bg: #3A1816;
-  --color-negative-text: #FF9A91;
-  --white: #F4EEDC;
-  --black: #151611;
-  --blue-500: #78A7FF;
-  --indigo-300: #AEBEFF;
-  --blue-300: #7DBBEA;
-  --violet-200: #D1C3FF;
-  --blue-400: #91B5FF;
+  --color-bg-primary: #001f35;
+  --color-bg-secondary: #002f4f;
+  --color-bg-card: #003a60;
+  --color-accent-primary: #4da6ff;
+  --color-accent-deep: #8ac8ff;
+  --color-text-primary: #f5fbff;
+  --color-text-secondary: #b9d4e8;
+  --color-border: rgba(138, 200, 255, 0.28);
+  --color-on-accent: #001f35;
+  --color-shadow: rgba(0, 16, 28, 0.42);
+  --color-hover-soft: rgba(77, 166, 255, 0.12);
+  --color-glass-bg: rgba(0, 31, 53, 0.84);
+  --color-glass-border: rgba(138, 200, 255, 0.28);
+  --color-scrim: rgba(0, 16, 28, 0.48);
+  --color-warning-bg: #3b2f12;
+  --color-warning-text: #ffd887;
+  --color-positive-bg: rgba(77, 166, 255, 0.16);
+  --color-positive-text: #a7d6ff;
+  --color-negative-bg: #3a1816;
+  --color-negative-text: #ffb3ad;
+  --color-page-background:
+    radial-gradient(circle at 15% 20%, rgba(0, 127, 255, 0.18), transparent 34rem),
+    radial-gradient(circle at 85% 85%, rgba(77, 166, 255, 0.12), transparent 32rem),
+    linear-gradient(180deg, #001f35, #002f4f 52%, #001f35 100%);
+  --gradient-primary: linear-gradient(135deg, #0067b1, #4da6ff);
+  --gradient-premium: linear-gradient(145deg, #4da6ff, #00406b);
+  --white: #f5fbff;
+  --black: #001f35;
+  --blue-500: #4da6ff;
+  --indigo-300: #8ac8ff;
+  --blue-300: #bfe2ff;
+  --violet-200: #003a60;
+  --blue-400: #7abfff;
 }
 
 @theme inline {
@@ -87,7 +109,7 @@ html[data-theme="dark"] {
 }
 
 body {
-  background-color: var(--color-bg-primary);
+  background: var(--color-page-background);
   color: var(--color-text-primary);
   transition: background-color 180ms ease, color 180ms ease;
 }
@@ -166,7 +188,7 @@ body {
 /* Custom Buttons */
 .btn-primary {
   @apply inline-flex items-center justify-center rounded-[5px] border border-[var(--color-border)] text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background h-10 py-2 px-4 shadow-[2px_2px_0px_var(--color-shadow)];
-  background-color: var(--color-accent-primary);
+  background: var(--gradient-primary);
   color: var(--color-on-accent);
 }
 .btn-primary:hover {

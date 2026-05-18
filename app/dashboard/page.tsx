@@ -141,7 +141,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-2 gap-3 md:grid-cols-5 md:gap-8">
           {user?.role === "admin" && (
             <button
-              className="min-h-16 flex-col gap-2 text-center btn-ghost bg-red-500/10 text-red-600 hover:bg-red-500/20"
+              className="min-h-16 flex-col gap-2 text-center btn-ghost bg-[var(--color-negative-bg)] text-[var(--color-negative-text)] hover:bg-[var(--color-negative-bg)]"
               onClick={() => router.push("/admin")}
             >
               <Icons8Icon name="shield" size={24} />
