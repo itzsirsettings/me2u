@@ -56,8 +56,8 @@ The mobile product shell has its own tactile layer:
 --mobile-surface-muted: #ededed;
 --mobile-pill: #c9c0f2;
 --mobile-pill-text: #07026f;
---mobile-radius-xl: 34px;
---mobile-radius-lg: 28px;
+--mobile-radius-xl: 28px;
+--mobile-radius-lg: 22px;
 ```
 
 Use these utilities for authenticated mobile screens:
@@ -85,7 +85,7 @@ Mobile finance hierarchy:
 "text-[1.72rem] font-black leading-tight tracking-normal"
 
 // Main balance
-"font-display text-[2.85rem] font-black leading-none tracking-normal"
+"font-display text-[2.25rem] font-black leading-none tracking-normal"
 
 // Card heading
 "text-[1.45rem] font-black leading-tight tracking-normal"
@@ -101,7 +101,7 @@ Do not scale fonts with viewport width. Use fixed mobile sizes, breakpoint-speci
 Authenticated app routes should use the mobile shell first:
 
 ```tsx
-"app-mobile-screen mx-auto w-full max-w-md px-5 pt-24 md:max-w-..."
+"app-mobile-screen mx-auto w-full max-w-md px-4 pt-20 md:max-w-..."
 ```
 
 Dashboard is the densest route and owns its top greeting, so `MobileHeader` is hidden on `/dashboard`. Other authenticated routes use the fixed mobile header with a back icon at the top-left.
@@ -110,10 +110,12 @@ Mobile screen rules:
 
 - Keep one primary column at `max-w-md`.
 - Reserve bottom space for the fixed nav with `app-mobile-screen`.
+- Use `px-4` and `pt-20` on non-dashboard mobile app routes so the fixed header does not waste vertical space.
 - Use `mobile-soft-card` for grouped financial panels and forms.
 - Prefer pill CTAs for wallet, transfer, KYC, and loan actions.
 - Keep repeated action tiles stable in height to avoid layout shift.
 - Avoid nested cards. A panel can contain rows, but not another decorated card.
+- Keep mobile icon buttons compact but touch-safe: 48px for circular chrome, 46px minimum for pill buttons, and 48px minimum for inputs.
 
 ## Desktop Layout
 
@@ -144,7 +146,7 @@ Mobile navigation lives in `components/BottomNav.tsx`.
 
 - Fixed to the bottom
 - Five destinations: Home, Market, Wallet, Loans, Profile
-- Wallet is the raised center action
+- Wallet is the raised center action, kept compact enough not to cover form controls
 - Active non-center items show a brand blue dot
 - Hidden on public routes and routes outside the tab set
 

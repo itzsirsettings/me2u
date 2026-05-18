@@ -396,7 +396,7 @@ export default function AdminDashboard() {
 
   if (!overview) {
     return (
-      <main className="mx-auto max-w-3xl px-4 pb-24 pt-24">
+      <main className="mx-auto max-w-3xl px-4 pb-24 pt-20 md:pt-24">
         <div className="rounded-[6px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-6 shadow-[4px_4px_0px_var(--color-shadow)]">
           <h1 className="font-display text-3xl font-bold">Admin dashboard unavailable</h1>
           <p className="mt-3 text-[var(--color-text-secondary)]">
@@ -411,7 +411,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <main className="mx-auto min-h-screen max-w-7xl px-4 pb-28 pt-24 md:px-6">
+    <main className="mx-auto min-h-screen max-w-7xl px-4 pb-28 pt-20 md:px-6 md:pt-24">
       <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--color-text-secondary)]">

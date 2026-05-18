@@ -38,8 +38,8 @@
   --mobile-surface-muted: #ededed;
   --mobile-pill: #c9c0f2;
   --mobile-pill-text: #07026f;
-  --mobile-radius-xl: 34px;
-  --mobile-radius-lg: 28px;
+  --mobile-radius-xl: 28px;
+  --mobile-radius-lg: 22px;
   --white: #ffffff;
   --black: #00406b;
   --transparent: transparent;
@@ -231,7 +231,7 @@ body {
       radial-gradient(circle at 85% 0%, rgba(0, 127, 255, 0.08), transparent 18rem),
       var(--mobile-app-bg);
     color: var(--color-text-primary);
-    padding-bottom: calc(8.75rem + env(safe-area-inset-bottom));
+    padding-bottom: calc(6.85rem + env(safe-area-inset-bottom));
   }
 
   .mobile-card,
@@ -250,19 +250,19 @@ body {
     border-radius: var(--mobile-radius-xl);
     background: var(--mobile-surface);
     border: 1px solid rgba(255, 255, 255, 0.72);
-    box-shadow: 0 18px 48px rgba(0, 64, 107, 0.08);
+    box-shadow: 0 12px 32px rgba(0, 64, 107, 0.07);
   }
 
   .mobile-icon-button {
     display: inline-grid;
-    height: 58px;
-    width: 58px;
+    height: 48px;
+    width: 48px;
     place-items: center;
     border-radius: 999px;
     background: var(--mobile-surface);
     color: var(--color-text-primary);
     border: 1px solid rgba(255, 255, 255, 0.72);
-    box-shadow: 0 12px 32px rgba(0, 64, 107, 0.08);
+    box-shadow: 0 8px 24px rgba(0, 64, 107, 0.08);
     transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), background-color 180ms ease;
     touch-action: manipulation;
   }
@@ -274,7 +274,7 @@ body {
   .mobile-pill-button,
   .btn-primary,
   .btn-ghost {
-    min-height: 52px;
+    min-height: 46px;
     border-radius: 999px;
     border-color: transparent;
     box-shadow: none;
@@ -286,17 +286,17 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 8px;
     background: var(--mobile-pill);
     color: var(--mobile-pill-text);
-    padding: 0 20px;
+    padding: 0 16px;
   }
 
   .mobile-qr-pattern {
     background:
-      linear-gradient(90deg, #001f35 11px, transparent 11px 17px, #001f35 17px 26px, transparent 26px 33px, #001f35 33px 42px, transparent 42px),
-      linear-gradient(#001f35 10px, transparent 10px 18px, #001f35 18px 27px, transparent 27px 35px, #001f35 35px 44px, transparent 44px),
-      repeating-conic-gradient(from 90deg, #001f35 0 25%, transparent 0 50%) 0 0 / 22px 22px;
+      linear-gradient(90deg, #001f35 9px, transparent 9px 14px, #001f35 14px 22px, transparent 22px 28px, #001f35 28px 36px, transparent 36px),
+      linear-gradient(#001f35 9px, transparent 9px 15px, #001f35 15px 23px, transparent 23px 30px, #001f35 30px 38px, transparent 38px),
+      repeating-conic-gradient(from 90deg, #001f35 0 25%, transparent 0 50%) 0 0 / 18px 18px;
     background-color: #ffffff;
     image-rendering: pixelated;
   }
@@ -309,8 +309,8 @@ body {
   input,
   select,
   textarea {
-    min-height: 52px;
-    border-radius: 18px !important;
+    min-height: 48px;
+    border-radius: 16px !important;
     font-size: 16px;
   }
 

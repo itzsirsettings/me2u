@@ -7,6 +7,7 @@ import NotificationBell from "@/components/NotificationBell";
 import { onboardingCreditAmount, registrationDepositAmount } from "@/lib/loans";
 import { useStore, type Transaction } from "@/lib/store";
 import { motion, type Variants } from "framer-motion";
+import { toast } from "sonner";
 
 const serviceActions: Array<{
   label: string;
@@ -126,27 +127,27 @@ export default function Dashboard() {
 
   return (
     <motion.main
-      className="app-mobile-screen mx-auto w-full max-w-md px-5 pt-[calc(1.35rem+env(safe-area-inset-top))] md:max-w-7xl md:px-6 md:py-24"
+      className="app-mobile-screen mx-auto w-full max-w-md px-4 pt-[calc(1rem+env(safe-area-inset-top))] md:max-w-7xl md:px-6 md:py-24"
       variants={containerVariants}
       initial="hidden"
       animate="show"
     >
-      <motion.header variants={itemVariants} className="mb-7 flex items-center justify-between gap-4 md:mb-10">
-        <div className="flex min-w-0 items-center gap-3">
-          <div className="relative grid h-[4.6rem] w-[4.6rem] shrink-0 place-items-center rounded-full bg-[var(--color-accent-primary)] text-2xl font-black text-[var(--color-on-accent)] shadow-[0_14px_30px_rgba(0,64,107,0.16)]">
+      <motion.header variants={itemVariants} className="mb-5 flex items-center justify-between gap-3 md:mb-10">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <div className="relative grid h-[3.8rem] w-[3.8rem] shrink-0 place-items-center rounded-full bg-[var(--color-accent-primary)] text-xl font-black text-[var(--color-on-accent)] shadow-[0_10px_24px_rgba(0,64,107,0.15)]">
             {getInitials(user?.name)}
-            <span className="absolute -bottom-1 -right-1 grid h-8 w-8 place-items-center rounded-full border-2 border-[var(--mobile-app-bg)] bg-[var(--mobile-surface)] text-[var(--color-accent-deep)]">
-              <Icons8Icon name="shield" size={18} />
+            <span className="absolute -bottom-0.5 -right-0.5 grid h-7 w-7 place-items-center rounded-full border-2 border-[var(--mobile-app-bg)] bg-[var(--mobile-surface)] text-[var(--color-accent-deep)]">
+              <Icons8Icon name="shield" size={16} />
             </span>
           </div>
           <div className="min-w-0">
-            <p className="text-[1.35rem] font-medium leading-tight text-[var(--color-text-primary)]">Welcome</p>
-            <h1 className="truncate text-[1.72rem] font-black leading-tight tracking-normal text-[var(--color-text-primary)]">
+            <p className="text-[1.05rem] font-medium leading-tight text-[var(--color-text-primary)]">Welcome</p>
+            <h1 className="truncate text-[1.38rem] font-black leading-tight tracking-normal text-[var(--color-text-primary)]">
               @{username}
             </h1>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-3">
+        <div className="flex shrink-0 items-center gap-2">
           <button
             type="button"
             className="mobile-icon-button"
@@ -159,27 +160,27 @@ export default function Dashboard() {
         </div>
       </motion.header>
 
-      <div className="grid gap-5 md:grid-cols-[minmax(0,1.05fr)_minmax(360px,0.95fr)] md:items-start md:gap-6">
-        <div className="grid gap-5">
-          <motion.section variants={itemVariants} className="mobile-soft-card relative overflow-hidden p-6">
-            <div className="mb-6 flex items-start justify-between gap-3">
-              <p className="text-[1.55rem] font-extrabold leading-none tracking-normal">Main Balance</p>
-              <div className="max-w-[52%] rounded-full bg-[var(--mobile-surface-muted)] px-3 py-2 text-right text-xs font-black text-[var(--color-text-primary)]">
+      <div className="grid gap-4 md:grid-cols-[minmax(0,1.05fr)_minmax(360px,0.95fr)] md:items-start md:gap-6">
+        <div className="grid gap-4">
+          <motion.section variants={itemVariants} className="mobile-soft-card relative overflow-hidden p-4">
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <p className="text-[1.28rem] font-extrabold leading-none tracking-normal">Main Balance</p>
+              <div className="max-w-[54%] rounded-full bg-[var(--mobile-surface-muted)] px-3 py-1.5 text-right text-[10px] font-black leading-tight text-[var(--color-text-primary)]">
                 <span className="block truncate">{bankLabel}</span>
               </div>
             </div>
 
-            <div className="mb-7 flex items-center gap-3">
-              <p className="font-display text-[2.85rem] font-black leading-none tracking-normal text-[var(--color-text-primary)]">
+            <div className="mb-5 flex items-center gap-2">
+              <p className="min-w-0 truncate font-display text-[2.25rem] font-black leading-none tracking-normal text-[var(--color-text-primary)]">
                 {showBalance ? `₦${balance.toLocaleString()}` : "₦••••••"}
               </p>
               <button
                 type="button"
                 aria-label={showBalance ? "Hide balance" : "Show balance"}
-                className="grid h-11 w-11 place-items-center rounded-full text-[var(--color-text-primary)] transition active:scale-95"
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-[var(--color-text-primary)] transition active:scale-95"
                 onClick={() => setShowBalance((current) => !current)}
               >
-                <Icons8Icon name={showBalance ? "visible" : "invisible"} size={24} />
+                <Icons8Icon name={showBalance ? "visible" : "invisible"} size={22} />
               </button>
             </div>
 
@@ -197,25 +198,25 @@ export default function Dashboard() {
 
           <motion.section
             variants={itemVariants}
-            className="relative overflow-hidden rounded-[34px] bg-[linear-gradient(135deg,#9fd8ff_0%,#b8dcf4_42%,#8778ff_100%)] p-6 text-[#05021d] shadow-[0_18px_48px_rgba(0,64,107,0.10)]"
+            className="relative overflow-hidden rounded-[28px] bg-[linear-gradient(135deg,#9fd8ff_0%,#b8dcf4_42%,#8778ff_100%)] p-4 text-[#05021d] shadow-[0_12px_32px_rgba(0,64,107,0.10)]"
           >
-            <div className="relative z-10 max-w-[76%]">
-              <h2 className="text-[1.45rem] font-black leading-tight tracking-normal">{statusCard.title}</h2>
-              <p className="mt-3 text-[1.03rem] font-medium leading-relaxed">{statusCard.body}</p>
+            <div className="relative z-10 max-w-[78%]">
+              <h2 className="text-[1.18rem] font-black leading-tight tracking-normal">{statusCard.title}</h2>
+              <p className="mt-2 text-[0.9rem] font-medium leading-relaxed">{statusCard.body}</p>
               <button
-                className="mt-5 inline-flex min-h-12 items-center gap-3 rounded-full bg-white px-6 text-base font-black text-[#05021d] transition active:scale-95"
+                className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-5 text-sm font-black text-[#05021d] transition active:scale-95"
                 onClick={() => router.push(statusCard.path)}
               >
                 {statusCard.action}
-                <span className="text-2xl leading-none">→</span>
+                <span className="text-xl leading-none">→</span>
               </button>
             </div>
-            <div className="absolute -bottom-8 -right-6 grid h-36 w-36 place-items-center rounded-full bg-[rgba(0,64,107,0.92)] text-white">
-              <Icons8Icon name={user?.kycVerified ? "check" : "shield"} size={62} />
+            <div className="absolute -bottom-7 -right-6 grid h-28 w-28 place-items-center rounded-full bg-[rgba(0,64,107,0.92)] text-white">
+              <Icons8Icon name={user?.kycVerified ? "check" : "shield"} size={48} />
             </div>
           </motion.section>
 
-          <motion.section variants={itemVariants} className="mobile-soft-card grid grid-cols-4 overflow-hidden px-3 py-5">
+          <motion.section variants={itemVariants} className="mobile-soft-card grid grid-cols-4 overflow-hidden px-2 py-3.5">
             {serviceActions.map((action, index) => {
               const disabled =
                 (action.requiresDeposit && !user?.registrationDepositPaid) ||
@@ -225,17 +226,17 @@ export default function Dashboard() {
                 <button
                   key={action.path}
                   disabled={disabled}
-                  className={`flex min-h-[6rem] flex-col items-center justify-center gap-3 px-2 text-center transition active:scale-95 disabled:opacity-45 ${
+                  className={`flex min-h-[4.85rem] flex-col items-center justify-center gap-2 px-1.5 text-center transition active:scale-95 disabled:opacity-45 ${
                     index > 0 ? "border-l border-[var(--color-border)]" : ""
                   }`}
                   onClick={() => {
                     if (!disabled) router.push(action.path);
                   }}
                 >
-                  <span className={`grid h-[3.05rem] w-[3.05rem] place-items-center rounded-full ${action.tone}`}>
-                    <Icons8Icon name={action.icon} size={25} />
+                  <span className={`grid h-10 w-10 place-items-center rounded-full ${action.tone}`}>
+                    <Icons8Icon name={action.icon} size={21} />
                   </span>
-                  <span className="text-[1rem] font-black leading-none text-[var(--color-text-primary)]">
+                  <span className="text-[0.84rem] font-black leading-none text-[var(--color-text-primary)]">
                     {action.label}
                   </span>
                 </button>
@@ -243,24 +244,33 @@ export default function Dashboard() {
             })}
           </motion.section>
 
-          <motion.section variants={itemVariants} className="mobile-soft-card grid grid-cols-[38%_1fr] overflow-hidden">
-            <div className="grid place-items-center border-r border-[var(--color-border)] p-4">
-              <div className="mobile-qr-pattern h-36 w-full max-w-36 rounded-[22px] border border-[var(--color-border)] bg-white" />
+          <motion.section variants={itemVariants} className="mobile-soft-card grid grid-cols-[36%_1fr] overflow-hidden">
+            <div className="grid place-items-center border-r border-[var(--color-border)] p-3">
+              <div className="mobile-qr-pattern h-28 w-full max-w-28 rounded-[18px] border border-[var(--color-border)] bg-white" />
             </div>
-            <div className="flex flex-col justify-center p-5">
-              <h2 className="text-[1.5rem] font-black leading-tight tracking-normal">
+            <div className="flex flex-col justify-center p-4">
+              <h2 className="text-[1.18rem] font-black leading-tight tracking-normal">
                 Invite friends, earn rewards.
               </h2>
-              <div className="mt-5 grid grid-cols-2 gap-3">
+              <div className="mt-4 grid grid-cols-2 gap-2">
                 <button
-                  className="mobile-pill-button min-h-11 px-3 text-sm"
+                  className="mobile-pill-button min-h-10 px-3 text-xs"
                   onClick={() => {
-                    if (referralLink) navigator.clipboard.writeText(referralLink);
+                    if (!referralLink) return;
+                    if (!navigator.clipboard?.writeText) {
+                      toast.error("Copy is unavailable in this browser.");
+                      return;
+                    }
+
+                    void navigator.clipboard
+                      .writeText(referralLink)
+                      .then(() => toast.success("Referral link copied."))
+                      .catch(() => toast.error("Unable to copy link."));
                   }}
                 >
                   Copy Link
                 </button>
-                <button className="mobile-pill-button min-h-11 px-3 text-sm" onClick={() => router.push("/profile")}>
+                <button className="mobile-pill-button min-h-10 px-3 text-xs" onClick={() => router.push("/profile")}>
                   My Link
                 </button>
               </div>
@@ -268,12 +278,12 @@ export default function Dashboard() {
           </motion.section>
         </div>
 
-        <div className="grid gap-5">
-          <motion.section variants={itemVariants} className="relative overflow-hidden rounded-[34px] bg-[#020814] p-6 text-white">
-            <div className="mb-8 flex items-center justify-between gap-3">
+        <div className="grid gap-4">
+          <motion.section variants={itemVariants} className="relative overflow-hidden rounded-[28px] bg-[#020814] p-5 text-white">
+            <div className="mb-6 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <span className="grid h-9 w-9 place-items-center rounded-full bg-[var(--color-negative-text)] text-white">
-                  <Icons8Icon name="loans" size={20} />
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--color-negative-text)] text-white">
+                  <Icons8Icon name="loans" size={18} />
                 </span>
                 <p className="text-sm font-bold">Platform Credit</p>
               </div>
@@ -281,11 +291,11 @@ export default function Dashboard() {
                 {activeLoanCount} active
               </span>
             </div>
-            <h2 className="max-w-sm text-[1.55rem] font-black leading-tight tracking-normal">
+            <h2 className="max-w-sm text-[1.28rem] font-black leading-tight tracking-normal">
               Request 0% loans from ₦10,000 after KYC.
             </h2>
             <button
-              className="mt-6 rounded-full bg-white px-5 py-3 text-sm font-black text-[#020814] transition active:scale-95"
+              className="mt-5 rounded-full bg-white px-5 py-2.5 text-sm font-black text-[#020814] transition active:scale-95"
               onClick={() => router.push("/loans")}
             >
               View loans
@@ -296,22 +306,22 @@ export default function Dashboard() {
           {user?.role === "admin" && (
             <motion.button
               variants={itemVariants}
-              className="mobile-soft-card flex items-center justify-between gap-4 p-5 text-left transition active:scale-[0.99]"
+              className="mobile-soft-card flex items-center justify-between gap-4 p-4 text-left transition active:scale-[0.99]"
               onClick={() => router.push("/admin")}
             >
               <div>
                 <p className="text-sm font-bold text-[var(--color-text-secondary)]">Operations</p>
-                <p className="mt-1 text-xl font-black">Admin Dashboard</p>
+                <p className="mt-1 text-lg font-black">Admin Dashboard</p>
               </div>
-              <span className="mobile-icon-button h-12 w-12">
+              <span className="grid h-11 w-11 place-items-center rounded-full bg-[var(--mobile-surface-muted)] text-[var(--color-text-primary)]">
                 <Icons8Icon name="shield" size={22} />
               </span>
             </motion.button>
           )}
 
-          <motion.section variants={itemVariants} className="mobile-soft-card p-5">
+          <motion.section variants={itemVariants} className="mobile-soft-card p-4">
             <div className="mb-4 flex items-center justify-between gap-3">
-              <h2 className="text-[1.35rem] font-black tracking-normal">Recent Activity</h2>
+              <h2 className="text-[1.15rem] font-black tracking-normal">Recent Activity</h2>
               <button
                 className="text-sm font-black text-[var(--color-accent-primary)]"
                 onClick={() => router.push("/wallet")}
@@ -321,7 +331,7 @@ export default function Dashboard() {
             </div>
 
             {transactions.length === 0 ? (
-              <div className="rounded-[26px] bg-[var(--mobile-surface-muted)] p-5 text-sm font-medium text-[var(--color-text-secondary)]">
+              <div className="rounded-[22px] bg-[var(--mobile-surface-muted)] p-4 text-sm font-medium text-[var(--color-text-secondary)]">
                 No recent transactions yet. Fund your wallet to start.
               </div>
             ) : (
@@ -329,7 +339,7 @@ export default function Dashboard() {
                 {transactions.slice(0, 5).map((transaction) => (
                   <div
                     key={transaction.id}
-                    className="flex items-center justify-between gap-3 rounded-[24px] bg-[var(--mobile-surface-muted)] p-3"
+                    className="flex items-center justify-between gap-3 rounded-[20px] bg-[var(--mobile-surface-muted)] p-3"
                   >
                     <div className="min-w-0">
                       <p className="truncate text-sm font-black text-[var(--color-text-primary)]">

@@ -145,12 +145,12 @@ export default function Loans() {
 
   return (
     <motion.div 
-      className="app-mobile-screen mx-auto w-full max-w-md px-5 pt-24 md:max-w-4xl md:px-6 md:py-24"
+      className="app-mobile-screen mx-auto w-full max-w-md px-4 pt-20 md:max-w-4xl md:px-6 md:py-24"
       variants={containerVariants}
       initial="hidden"
       animate="show"
     >
-      <motion.div variants={itemVariants} className="mb-5 flex flex-col gap-4 md:mb-12 md:flex-row md:items-end md:justify-between">
+      <motion.div variants={itemVariants} className="mb-4 flex flex-col gap-3 md:mb-12 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="mb-2 hidden items-center gap-2 text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)] md:flex">
             <Icons8Icon name="requestMoney" size={18} />
@@ -160,7 +160,7 @@ export default function Loans() {
             My Loans
           </h1>
         </div>
-        <div className="mobile-soft-card rounded-[28px] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-5 py-4 shadow-[2px_2px_0px_var(--color-shadow)]">
+        <div className="mobile-soft-card rounded-[24px] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-4 py-3 shadow-[2px_2px_0px_var(--color-shadow)]">
           <p className="text-xs font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">Wallet Balance</p>
           <p className="text-2xl font-display leading-none">₦{currentBalance.toLocaleString()}</p>
         </div>

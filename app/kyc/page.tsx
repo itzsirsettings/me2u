@@ -44,7 +44,7 @@ export default function KYCPage() {
 
   if (user.kycVerified) {
     return (
-      <div className="app-mobile-screen mx-auto flex w-full max-w-lg flex-col items-center justify-center px-5 pt-24 text-center md:py-24">
+      <div className="app-mobile-screen mx-auto flex w-full max-w-lg flex-col items-center justify-center px-4 pt-20 text-center md:py-24">
         <div className="mb-4 grid h-16 w-16 place-items-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-positive-bg)] text-[var(--color-positive-text)] shadow-[3px_3px_0px_var(--color-shadow)]">
           <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
         </div>
@@ -64,7 +64,7 @@ export default function KYCPage() {
 
   if (!user.registrationDepositPaid) {
     return (
-      <div className="app-mobile-screen mx-auto w-full max-w-lg px-5 pt-24 text-center md:pt-24">
+      <div className="app-mobile-screen mx-auto w-full max-w-lg px-4 pt-20 text-center md:pt-24">
         <div className="rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-6 shadow-[4px_4px_0px_var(--color-shadow)] md:p-8">
           <h1 className="text-[2.75rem] font-display leading-[0.85] tracking-tight md:text-6xl">
             KYC Locked
@@ -137,8 +137,8 @@ export default function KYCPage() {
   };
 
   return (
-    <div className="app-mobile-screen mx-auto w-full max-w-lg px-5 pt-24 md:pt-24">
-      <div className="mb-5 text-center md:mb-12">
+    <div className="app-mobile-screen mx-auto w-full max-w-lg px-4 pt-20 md:pt-24">
+      <div className="mb-4 text-center md:mb-12">
         <h1 className="sr-only md:not-sr-only md:mb-4 md:text-7xl md:font-display md:leading-[0.85] md:tracking-tighter">
           Verify Identity
         </h1>

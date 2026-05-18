@@ -21,20 +21,20 @@ export default function BottomNav() {
   if (!showNav) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 px-3 pb-[calc(0.55rem+env(safe-area-inset-bottom))] md:hidden">
-      <div className="relative mx-auto grid max-w-md grid-cols-5 items-end gap-1 rounded-t-[34px] bg-[var(--mobile-surface)] px-3 pb-2 pt-3 shadow-[0_-18px_50px_rgba(0,64,107,0.10)]">
+    <div className="fixed bottom-0 left-0 right-0 z-50 px-2 pb-[calc(0.35rem+env(safe-area-inset-bottom))] md:hidden">
+      <div className="relative mx-auto grid max-w-md grid-cols-5 items-end gap-1 rounded-t-[28px] bg-[var(--mobile-surface)] px-2 pb-1.5 pt-2 shadow-[0_-12px_36px_rgba(0,64,107,0.10)]">
         {navItems.map((item) => {
           const isActive = activePath === item.path;
           const centerClasses = item.center
-            ? "-mt-10 min-h-[5.75rem] justify-start gap-1 text-[var(--mobile-pill-text)]"
-            : "min-h-[4.25rem] gap-1";
+            ? "-mt-7 min-h-[4.85rem] justify-start gap-0.5 text-[var(--mobile-pill-text)]"
+            : "min-h-[3.65rem] gap-0.5";
           return (
             <motion.button
               whileTap={{ scale: 0.94 }}
               key={item.path}
               onClick={() => router.push(item.path)}
               aria-current={isActive ? "page" : undefined}
-              className={`relative flex min-w-0 flex-col items-center rounded-[22px] px-1 text-center transition-colors ${centerClasses} ${
+              className={`relative flex min-w-0 flex-col items-center rounded-[18px] px-1 text-center transition-colors ${centerClasses} ${
                 item.center
                   ? ""
                   : isActive
@@ -45,17 +45,17 @@ export default function BottomNav() {
               <span
                 className={
                   item.center
-                    ? "grid h-[4.65rem] w-[4.65rem] place-items-center rounded-full border-[10px] border-[var(--mobile-app-bg)] bg-[var(--gradient-primary)] text-[var(--color-on-accent)] shadow-[0_18px_38px_rgba(0,64,107,0.22)]"
-                    : "grid h-8 w-8 place-items-center"
+                    ? "grid h-[3.9rem] w-[3.9rem] place-items-center rounded-full border-[8px] border-[var(--mobile-app-bg)] bg-[var(--gradient-primary)] text-[var(--color-on-accent)] shadow-[0_14px_30px_rgba(0,64,107,0.20)]"
+                    : "grid h-7 w-7 place-items-center"
                 }
               >
-                <Icons8Icon name={item.icon} size={item.center ? 30 : 22} />
+                <Icons8Icon name={item.icon} size={item.center ? 26 : 20} />
               </span>
-              <span className="w-full truncate text-[11px] font-extrabold tracking-normal font-sans">
+              <span className="w-full truncate text-[10px] font-extrabold tracking-normal font-sans">
                 {item.label}
               </span>
               {!item.center && isActive && (
-                <span className="mt-0.5 h-2 w-2 rounded-full bg-[var(--color-accent-primary)]" />
+                <span className="mt-0.5 h-1.5 w-1.5 rounded-full bg-[var(--color-accent-primary)]" />
               )}
             </motion.button>
           );

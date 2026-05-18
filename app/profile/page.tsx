@@ -26,11 +26,11 @@ export default function Profile() {
 
   if (!mounted || (!isAuthenticated && !isLoading)) return null;
   return (
-    <div className="app-mobile-screen mx-auto w-full max-w-md px-5 pt-24 md:p-6 md:py-24">
+    <div className="app-mobile-screen mx-auto w-full max-w-md px-4 pt-20 md:p-6 md:py-24">
       <h1 className="sr-only md:not-sr-only md:mb-8 md:text-3xl md:font-display md:font-bold md:leading-none">
         Profile
       </h1>
-      <div className="mobile-soft-card space-y-5 rounded-[5px] border border-[var(--color-border)] bg-card p-5 shadow-[4px_4px_0px_var(--color-shadow)] md:space-y-6 md:p-8">
+      <div className="mobile-soft-card space-y-4 rounded-[5px] border border-[var(--color-border)] bg-card p-4 shadow-[4px_4px_0px_var(--color-shadow)] md:space-y-6 md:p-8">
         <div className="flex items-start gap-3">
           <span className="inline-flex h-10 w-10 items-center justify-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-accent-primary)]">
             <Icons8Icon name="referral" size={22} />

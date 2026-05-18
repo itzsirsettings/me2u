@@ -40,20 +40,20 @@ export default function MobileHeader() {
 
   return (
     <header className="fixed left-0 right-0 top-0 z-50 bg-[var(--mobile-app-bg)]/95 backdrop-blur md:border-b md:border-[var(--color-glass-border)] md:bg-[var(--color-glass-bg)]">
-      <div className="mx-auto flex min-h-[5rem] max-w-7xl items-center justify-between gap-3 px-4 pr-4 pt-[env(safe-area-inset-top)] md:min-h-[4rem] md:px-3">
+      <div className="mx-auto flex min-h-[4.35rem] max-w-7xl items-center justify-between gap-3 px-4 pr-4 pt-[env(safe-area-inset-top)] md:min-h-[4rem] md:px-3">
         <div className="flex min-w-0 items-center gap-2">
           <button
             type="button"
             onClick={handleBack}
             aria-label="Go back"
             title="Go back"
-            className="mobile-icon-button grid h-12 w-12 shrink-0 place-items-center rounded-full text-[var(--color-text-primary)] transition hover:bg-[var(--color-bg-secondary)] md:h-11 md:w-11 md:rounded-[5px] md:border md:border-[var(--color-border)] md:bg-[var(--color-bg-card)] md:shadow-[2px_2px_0px_var(--color-shadow)]"
+            className="mobile-icon-button grid h-11 w-11 shrink-0 place-items-center rounded-full text-[var(--color-text-primary)] transition hover:bg-[var(--color-bg-secondary)] md:h-11 md:w-11 md:rounded-[5px] md:border md:border-[var(--color-border)] md:bg-[var(--color-bg-card)] md:shadow-[2px_2px_0px_var(--color-shadow)]"
           >
             <Icons8Icon name="back" size={20} />
           </button>
           <div className="min-w-0">
             <BrandLogo className="hidden h-8 w-28 sm:w-32 md:inline-flex" />
-            <p className="truncate text-[1.35rem] font-extrabold leading-none tracking-normal text-[var(--color-text-primary)] md:mt-1 md:text-xs md:font-semibold md:uppercase md:tracking-[0.1em] md:text-[var(--color-text-secondary)]">
+            <p className="truncate text-[1.15rem] font-extrabold leading-none tracking-normal text-[var(--color-text-primary)] md:mt-1 md:text-xs md:font-semibold md:uppercase md:tracking-[0.1em] md:text-[var(--color-text-secondary)]">
               {title}
             </p>
           </div>

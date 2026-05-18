@@ -106,12 +106,12 @@ export default function Marketplace() {
 
   return (
     <motion.div 
-      className="app-mobile-screen mx-auto w-full max-w-md px-5 pt-24 md:max-w-5xl md:px-6 md:py-24"
+      className="app-mobile-screen mx-auto w-full max-w-md px-4 pt-20 md:max-w-5xl md:px-6 md:py-24"
       variants={containerVariants}
       initial="hidden"
       animate="show"
     >
-      <motion.div variants={itemVariants} className="mb-5 flex flex-col gap-4 md:mb-12 md:flex-row md:items-center md:justify-between md:gap-6">
+      <motion.div variants={itemVariants} className="mb-4 flex flex-col gap-3 md:mb-12 md:flex-row md:items-center md:justify-between md:gap-6">
         <h1 className="sr-only md:not-sr-only md:text-7xl md:font-display md:leading-[0.85] md:tracking-tighter">Marketplace</h1>
         <button className={`${showForm ? "btn-ghost" : "btn-primary"} h-12 w-full md:w-auto`} onClick={() => setShowForm(!showForm)}>
           {showForm ? "Cancel" : "Create Listing"}
@@ -126,7 +126,7 @@ export default function Marketplace() {
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden"
           >
-            <Card className="mb-8 glass kinetic-border p-5 bg-[var(--color-bg-secondary)] md:mb-12 md:p-8">
+            <Card className="mb-5 glass kinetic-border p-4 bg-[var(--color-bg-secondary)] md:mb-12 md:p-8">
               <h2 className="mb-5 text-2xl font-display md:mb-6 md:text-3xl">Create New Listing</h2>
               <form onSubmit={(e) => { e.preventDefault(); handleCreate().catch(()=>{}); }} className="grid gap-4 md:grid-cols-2 md:gap-6">
                 <div>

@@ -101,7 +101,7 @@ export default function WithdrawPage() {
 
   return (
     <motion.div 
-      className="app-mobile-screen mx-auto flex w-full max-w-md flex-col items-center px-5 pt-24 md:max-w-3xl md:px-6 md:py-24"
+      className="app-mobile-screen mx-auto flex w-full max-w-md flex-col items-center px-4 pt-20 md:max-w-3xl md:px-6 md:py-24"
       variants={containerVariants}
       initial="hidden"
       animate="show"

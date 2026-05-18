@@ -122,7 +122,7 @@ export default function WalletPage() {
 
   return (
     <motion.div 
-      className="app-mobile-screen mx-auto flex w-full max-w-md flex-col items-center px-5 pt-24 md:max-w-3xl md:px-6 md:py-24"
+      className="app-mobile-screen mx-auto flex w-full max-w-md flex-col items-center px-4 pt-20 md:max-w-3xl md:px-6 md:py-24"
       variants={containerVariants}
       initial="hidden"
       animate="show"
@@ -131,7 +131,7 @@ export default function WalletPage() {
         Wallet
       </motion.h1>
       
-      <motion.div variants={itemVariants} className="w-full space-y-5 md:space-y-6">
+      <motion.div variants={itemVariants} className="w-full space-y-4 md:space-y-6">
         <Card className="kinetic-border p-5 shadow-[4px_4px_0px_var(--color-shadow)] bg-[var(--color-bg-card)] md:p-8">
           <div className="mb-5 flex items-start justify-between gap-4 border-b border-[var(--color-border)] pb-5">
             <div>
