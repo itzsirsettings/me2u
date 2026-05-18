@@ -126,6 +126,12 @@ body {
   transition: background-color 180ms ease, color 180ms ease;
 }
 
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 @media (max-width: 767px) {
   .mobile-landing-shell {
     height: 100svh;
@@ -226,12 +232,22 @@ body {
   }
 
   .app-mobile-screen {
+    width: 100%;
+    max-width: 100dvw;
     min-height: 100dvh;
+    overflow-x: clip;
     background:
       radial-gradient(circle at 85% 0%, rgba(0, 127, 255, 0.08), transparent 18rem),
       var(--mobile-app-bg);
     color: var(--color-text-primary);
     padding-bottom: calc(5.65rem + env(safe-area-inset-bottom));
+  }
+
+  .app-mobile-screen > *,
+  .app-mobile-screen section,
+  .app-mobile-screen form {
+    max-width: 100%;
+    min-width: 0;
   }
 
   .mobile-card,

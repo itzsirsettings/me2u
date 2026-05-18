@@ -112,6 +112,7 @@ Mobile screen rules:
 - Keep one primary column at `max-w-md`.
 - Reserve bottom space for the fixed nav with `app-mobile-screen`.
 - Use `px-3.5` and `pt-[4.85rem]` on non-dashboard mobile app routes so the fixed header does not waste vertical space.
+- Keep authenticated mobile shells capped to the viewport with no horizontal overflow after hydration. Loaded user data must truncate or wrap inside cards instead of widening the page.
 - Use `mobile-soft-card` for grouped financial panels and forms.
 - Prefer pill CTAs for wallet, transfer, KYC, and loan actions.
 - Keep repeated action tiles stable in height to avoid layout shift.

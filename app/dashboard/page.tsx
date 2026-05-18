@@ -128,12 +128,12 @@ export default function Dashboard() {
 
   return (
     <motion.main
-      className="app-mobile-screen mx-auto w-full max-w-md px-3.5 pt-[calc(0.75rem+env(safe-area-inset-top))] md:max-w-7xl md:px-6 md:py-24"
+      className="app-mobile-screen mx-auto w-full max-w-md overflow-x-hidden px-3.5 pt-[calc(0.75rem+env(safe-area-inset-top))] md:max-w-7xl md:px-6 md:py-24"
       variants={containerVariants}
       initial="hidden"
       animate="show"
     >
-      <motion.header variants={itemVariants} className="mb-3.5 flex items-center justify-between gap-2.5 md:mb-10">
+      <motion.header variants={itemVariants} className="mb-3.5 flex w-full min-w-0 items-center justify-between gap-2.5 md:mb-10">
         <div className="flex min-w-0 items-center gap-2">
           <div className="relative grid h-[3.15rem] w-[3.15rem] shrink-0 place-items-center rounded-full bg-[var(--color-accent-primary)] text-lg font-black text-[var(--color-on-accent)] shadow-[0_8px_18px_rgba(0,64,107,0.13)]">
             {getInitials(user?.name)}
@@ -161,18 +161,18 @@ export default function Dashboard() {
         </div>
       </motion.header>
 
-      <div className="grid gap-2.5 md:grid-cols-[minmax(0,1.05fr)_minmax(360px,0.95fr)] md:items-start md:gap-6">
-        <div className="grid gap-2.5">
-          <motion.section variants={itemVariants} className="mobile-soft-card relative overflow-hidden p-3">
+      <div className="grid min-w-0 gap-2.5 md:grid-cols-[minmax(0,1.05fr)_minmax(360px,0.95fr)] md:items-start md:gap-6">
+        <div className="grid min-w-0 gap-2.5">
+          <motion.section variants={itemVariants} className="mobile-soft-card relative min-w-0 overflow-hidden p-3">
             <div className="mb-2.5 flex items-start justify-between gap-2.5">
               <p className="text-[1rem] font-extrabold leading-none tracking-normal">Main Balance</p>
-              <div className="max-w-[55%] rounded-full bg-[var(--mobile-surface-muted)] px-2.5 py-1 text-right text-[9px] font-black leading-tight text-[var(--color-text-primary)]">
+              <div className="min-w-0 max-w-[55%] rounded-full bg-[var(--mobile-surface-muted)] px-2.5 py-1 text-right text-[9px] font-black leading-tight text-[var(--color-text-primary)]">
                 <span className="block truncate">{bankLabel}</span>
               </div>
             </div>
 
             <div className="mb-3 flex items-center gap-1.5">
-              <p className="min-w-0 truncate font-display text-[1.72rem] font-black leading-none tracking-normal text-[var(--color-text-primary)]">
+              <p className="min-w-0 max-w-[calc(100%-2.6rem)] truncate font-display text-[1.72rem] font-black leading-none tracking-normal text-[var(--color-text-primary)]">
                 {showBalance ? `₦${balance.toLocaleString()}` : "₦••••••"}
               </p>
               <button
@@ -199,7 +199,7 @@ export default function Dashboard() {
 
           <motion.section
             variants={itemVariants}
-            className="relative overflow-hidden rounded-[22px] bg-[linear-gradient(135deg,#9fd8ff_0%,#b8dcf4_42%,#8778ff_100%)] p-3 text-[#05021d] shadow-[0_8px_24px_rgba(0,64,107,0.09)]"
+            className="relative min-w-0 overflow-hidden rounded-[22px] bg-[linear-gradient(135deg,#9fd8ff_0%,#b8dcf4_42%,#8778ff_100%)] p-3 text-[#05021d] shadow-[0_8px_24px_rgba(0,64,107,0.09)]"
           >
             <div className="relative z-10 max-w-[82%]">
               <h2 className="text-[0.96rem] font-black leading-tight tracking-normal">{statusCard.title}</h2>
@@ -217,7 +217,7 @@ export default function Dashboard() {
             </div>
           </motion.section>
 
-          <motion.section variants={itemVariants} className="mobile-soft-card grid grid-cols-4 overflow-hidden px-1 py-2">
+          <motion.section variants={itemVariants} className="mobile-soft-card grid min-w-0 grid-cols-4 overflow-hidden px-1 py-2">
             {serviceActions.map((action, index) => {
               const disabled =
                 (action.requiresDeposit && !user?.registrationDepositPaid) ||
@@ -245,11 +245,11 @@ export default function Dashboard() {
             })}
           </motion.section>
 
-          <motion.section variants={itemVariants} className="mobile-soft-card grid grid-cols-[34%_1fr] overflow-hidden">
+          <motion.section variants={itemVariants} className="mobile-soft-card grid min-w-0 grid-cols-[5.75rem_minmax(0,1fr)] overflow-hidden">
             <div className="grid place-items-center border-r border-[var(--color-border)] p-2">
-              <ReferralQrCode value={referralLink} className="h-[5.25rem] w-[5.25rem] rounded-[12px]" />
+              <ReferralQrCode value={referralLink} className="h-20 w-20 rounded-[12px]" />
             </div>
-            <div className="flex flex-col justify-center p-3">
+            <div className="flex min-w-0 flex-col justify-center p-3">
               <h2 className="text-[0.96rem] font-black leading-tight tracking-normal">
                 Invite friends, earn rewards.
               </h2>
@@ -279,8 +279,8 @@ export default function Dashboard() {
           </motion.section>
         </div>
 
-        <div className="grid gap-3">
-          <motion.section variants={itemVariants} className="relative overflow-hidden rounded-[22px] bg-[#020814] p-4 text-white">
+        <div className="grid min-w-0 gap-3">
+          <motion.section variants={itemVariants} className="relative min-w-0 overflow-hidden rounded-[22px] bg-[#020814] p-4 text-white">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5">
                 <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--color-negative-text)] text-white">
@@ -288,7 +288,7 @@ export default function Dashboard() {
                 </span>
                 <p className="text-sm font-bold">Platform Credit</p>
               </div>
-              <span className="rounded-full border border-white/35 px-3 py-1 text-xs font-black">
+              <span className="shrink-0 rounded-full border border-white/35 px-3 py-1 text-xs font-black">
                 {activeLoanCount} active
               </span>
             </div>
@@ -307,7 +307,7 @@ export default function Dashboard() {
           {user?.role === "admin" && (
             <motion.button
               variants={itemVariants}
-              className="mobile-soft-card flex items-center justify-between gap-4 p-3.5 text-left transition active:scale-[0.99]"
+              className="mobile-soft-card flex min-w-0 items-center justify-between gap-4 p-3.5 text-left transition active:scale-[0.99]"
               onClick={() => router.push("/admin")}
             >
               <div>
@@ -320,7 +320,7 @@ export default function Dashboard() {
             </motion.button>
           )}
 
-          <motion.section variants={itemVariants} className="mobile-soft-card p-3.5">
+          <motion.section variants={itemVariants} className="mobile-soft-card min-w-0 p-3.5">
             <div className="mb-3 flex items-center justify-between gap-3">
               <h2 className="text-[1rem] font-black tracking-normal">Recent Activity</h2>
               <button
@@ -350,7 +350,7 @@ export default function Dashboard() {
                         {new Date(transaction.date).toLocaleString()}
                       </p>
                     </div>
-                    <p className={`shrink-0 text-sm font-black ${transactionAmountTone(transaction)}`}>
+                    <p className={`max-w-[42%] shrink-0 truncate text-right text-sm font-black ${transactionAmountTone(transaction)}`}>
                       {transactionPrefix(transaction)}₦{transaction.amount.toLocaleString()}
                     </p>
                   </div>
