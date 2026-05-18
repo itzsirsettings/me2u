@@ -127,7 +127,7 @@ export default function WithdrawPage() {
               >
                 <div className="mb-4 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-warning-bg)] p-3 md:mb-6 md:p-4">
                   <p className="text-sm font-sans text-[var(--color-warning-text)]">
-                    <span className="font-bold">Notice:</span> Your ₦{onboardingCreditAmount.toLocaleString()} onboarding credit is withdrawable after KYC. Active platform loans require 50% of the loan amount to remain in your wallet.
+                    <span className="font-bold">Notice:</span> Your ₦{onboardingCreditAmount.toLocaleString()} welcome bonus is withdrawable after KYC. Active loans can require 50% of the loan amount to remain in your wallet.
                   </p>
                 </div>
                 
@@ -146,7 +146,7 @@ export default function WithdrawPage() {
                   <div className="mb-4 grid gap-2.5 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3 text-sm md:mb-6 md:p-4">
                     {platformLoanDeposit > 0 && (
                       <div className="flex items-center justify-between gap-3">
-                        <span className="text-[var(--color-text-secondary)]">Active platform loan condition</span>
+                        <span className="text-[var(--color-text-secondary)]">Active loan condition</span>
                         <span className="font-mono font-semibold">₦{platformLoanDeposit.toLocaleString()}</span>
                       </div>
                     )}
@@ -157,7 +157,7 @@ export default function WithdrawPage() {
                     {shortfall > 0 ? (
                       <p className="rounded-[5px] bg-[var(--color-warning-bg)] p-3 text-[var(--color-warning-text)]">
                         {platformLoanDeposit > 0
-                          ? `Fund ₦${shortfall.toLocaleString()} first. The platform loan condition is retained in your wallet, not charged as a fee.`
+                          ? `Fund ₦${shortfall.toLocaleString()} first. The loan condition is retained in your wallet, not charged as a fee.`
                           : `Fund ₦${shortfall.toLocaleString()} first.`}
                       </p>
                     ) : (
@@ -196,7 +196,7 @@ export default function WithdrawPage() {
                       ₦{platformLoanDeposit.toLocaleString()}
                     </p>
                     <p className="mt-2 text-sm font-sans text-[var(--color-text-secondary)]">
-                      This only applies when an active second or later platform loan has a 50% condition.
+                      This only applies when an active second or later loan has a 50% condition.
                     </p>
                   </div>
 

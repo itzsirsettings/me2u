@@ -52,7 +52,7 @@ export function getLaunchReadinessChecks(): LaunchCheck[] {
     ok: hasPlatformAccountDetails || demoWalletFundingEnabled,
     severity: "required",
     message:
-      "Wallet funding can complete through the platform account details.",
+      "Wallet funding can complete through the payment account details.",
   });
 
   checks.push({
@@ -69,8 +69,8 @@ export function getLaunchReadinessChecks(): LaunchCheck[] {
     ok: hasPlatformAccountDetails,
     severity: "warning",
     message: hasPlatformAccountDetails
-      ? "Platform registration deposit account details are configured."
-      : "Platform registration deposit account details are not configured yet.",
+      ? "Registration deposit account details are configured."
+      : "Registration deposit account details are not configured yet.",
   });
 
   return checks;

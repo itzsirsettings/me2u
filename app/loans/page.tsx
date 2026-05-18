@@ -7,10 +7,9 @@ import LoadingButton from "@/LoadingButton";
 import Icons8Icon from "@/components/Icons8Icon";
 import {
   getPlatformLoanRetainedDeposit,
-  onboardingCreditAmount,
-  platformLoanDays,
   repeatPlatformLoanMinimum,
   registrationDepositAmount,
+  onboardingCreditAmount,
 } from "@/lib/loans";
 import { useStore } from "@/lib/store";
 import { toast } from "sonner";
@@ -80,18 +79,18 @@ export default function Loans() {
     }
 
     if (!user.kycVerified) {
-      toast.error("Complete KYC before requesting a platform loan.");
+      toast.error("Complete KYC before requesting a loan.");
       router.push("/kyc");
       return;
     }
 
     if (activePlatformLoan) {
-      toast.error("Repay your active platform loan before requesting another one.");
+      toast.error("Repay your active loan before requesting another one.");
       return;
     }
 
     if (!repeatAmountIsValid) {
-      toast.error("Platform loans start from ₦10,000.");
+      toast.error(`Loans start from ₦${repeatPlatformLoanMinimum.toLocaleString()}.`);
       return;
     }
 
@@ -154,7 +153,7 @@ export default function Loans() {
         <div>
           <p className="mb-2 hidden items-center gap-2 text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)] md:flex">
             <Icons8Icon name="requestMoney" size={18} />
-            Platform Credit
+            Credit
           </p>
           <h1 className="sr-only md:not-sr-only md:text-7xl md:font-display md:leading-[0.85]">
             My Loans
@@ -176,11 +175,8 @@ export default function Loans() {
                 </div>
                 <div>
                   <h2 className="text-xl font-display leading-none md:text-3xl">
-                    Platform Loan
+                    0% Interest Loan
                   </h2>
-                  <p className="mt-1 text-sm font-sans text-[var(--color-text-secondary)]">
-                    Starts from ₦10,000 for up to {platformLoanDays} days with 50% retained in your wallet.
-                  </p>
                 </div>
               </div>
 
@@ -252,9 +248,6 @@ export default function Loans() {
                 </div>
               </div>
 
-              <p className="mt-4 text-sm font-sans text-[var(--color-text-secondary)]">
-                Your ₦{onboardingCreditAmount.toLocaleString()} onboarding credit is not a loan and does not need repayment.
-              </p>
             </div>
           </div>
         </Card>
@@ -273,7 +266,7 @@ export default function Loans() {
               <Card className="kinetic-border p-5 shadow-[4px_4px_0px_var(--color-shadow)] bg-[var(--color-bg-card)] md:p-8">
                 <div className="mb-4 flex flex-col gap-2 border-b border-[var(--color-border)] pb-4 sm:flex-row sm:items-center sm:justify-between">
                   <p className={`font-sans font-semibold ${loan.status === "active" ? "text-[var(--color-accent-primary)]" : "text-[var(--color-text-secondary)]"}`}>
-                    {loan.status === "active" ? "Active" : "Completed"} - {loan.source === "platform" ? "Platform Loan" : loan.role === "borrower" ? "Borrowed" : "Lent"}
+                    {loan.status === "active" ? "Active" : "Completed"} - {loan.source === "platform" ? "Loan" : loan.role === "borrower" ? "Borrowed" : "Lent"}
                   </p>
                   <p className="text-sm font-sans text-[var(--color-text-secondary)]">
                     Due: {new Date(loan.dueDate).toLocaleDateString()}

@@ -24,7 +24,7 @@ export async function POST(request: Request) {
 
     if (!hasPlatformAccountDetails()) {
       return NextResponse.json(
-        { error: "Platform account details are not configured yet." },
+        { error: "Payment account details are not configured yet." },
         { status: 503 },
       );
     }

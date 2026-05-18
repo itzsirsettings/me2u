@@ -100,7 +100,7 @@ interface AppStore {
   notifications: AppNotification[];
   initialize: () => Promise<void>;
   loadCurrentUser: () => Promise<ActionResult>;
-  signInWithPassword: (email: string, password: string) => Promise<ActionResult>;
+  signInWithPassword: (identifier: string, password: string) => Promise<ActionResult>;
   logout: () => Promise<void>;
   fundWallet: (amount: number, reference: string, receiptFile?: File) => Promise<ActionResult>;
   confirmRegistrationDeposit: (reference: string, receiptFile?: File) => Promise<ActionResult>;
@@ -360,13 +360,31 @@ export const useStore = create<AppStore>((set, get) => ({
     }
   },
 
-  signInWithPassword: async (email, password) => {
+  signInWithPassword: async (identifier, password) => {
     if (!hasSupabaseConfig()) return missingSupabaseResult;
 
     try {
       const supabase = getSupabaseBrowserClient();
+      const normalizedIdentifier = identifier.trim().toLowerCase();
+      let loginEmail = normalizedIdentifier;
+
+      if (!normalizedIdentifier.includes("@")) {
+        const response = await fetch("/api/auth/resolve-username", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: normalizedIdentifier }),
+        });
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok || typeof data.email !== "string") {
+          throw new Error(typeof data.error === "string" ? data.error : "Username was not found.");
+        }
+
+        loginEmail = data.email.trim().toLowerCase();
+      }
+
       const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim().toLowerCase(),
+        email: loginEmail,
         password,
       });
 
@@ -528,21 +546,21 @@ export const useStore = create<AppStore>((set, get) => ({
     if (!user.registrationDepositPaid) {
       return {
         ok: false,
-        error: `Confirm your ₦${registrationDepositAmount.toLocaleString()} registration deposit before requesting a platform loan.`,
+        error: `Confirm your ₦${registrationDepositAmount.toLocaleString()} registration deposit before requesting a loan.`,
       };
     }
 
     if (platformLoans.some((loan) => loan.status === "active")) {
       return {
         ok: false,
-        error: "Repay your active platform loan before requesting another one.",
+        error: "Repay your active loan before requesting another one.",
       };
     }
 
     if (!Number.isFinite(amount) || Number(amount) < repeatPlatformLoanMinimum) {
       return {
         ok: false,
-        error: "Platform loans start from ₦10,000.",
+        error: `Loans start from ₦${repeatPlatformLoanMinimum.toLocaleString()}.`,
       };
     }
 

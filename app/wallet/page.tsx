@@ -67,7 +67,7 @@ export default function WalletPage() {
       throw new Error("Unable to submit");
     }
 
-    toast.success("Receipt submitted! Awaiting platform approval for your onboarding credit.");
+    toast.success("Receipt submitted! Awaiting approval for your welcome bonus.");
     setRegistrationReference("");
     setRegReceiptFile(null);
   };
@@ -100,7 +100,7 @@ export default function WalletPage() {
       throw new Error("Unable to submit request");
     }
 
-    toast.success("Receipt submitted! Awaiting platform approval to credit your wallet.");
+    toast.success("Receipt submitted! Awaiting approval to credit your wallet.");
     setAmount("");
     setFundingReference("");
     setFundReceiptFile(null);
@@ -132,28 +132,20 @@ export default function WalletPage() {
       </motion.h1>
       
       <motion.div variants={itemVariants} className="w-full space-y-4 md:space-y-6">
-        <Card className="kinetic-border p-5 shadow-[4px_4px_0px_var(--color-shadow)] bg-[var(--color-bg-card)] md:p-8">
-          <div className="mb-5 flex items-start justify-between gap-4 border-b border-[var(--color-border)] pb-5">
-            <div>
-              <h2 className="text-xl font-display md:text-3xl">Registration Deposit</h2>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">
-                Pay ₦{registrationDepositAmount.toLocaleString()} to receive a ₦{onboardingCreditAmount.toLocaleString()} onboarding credit after approval. Withdrawals unlock after KYC.
-              </p>
+        {!user?.registrationDepositPaid && (
+          <Card className="kinetic-border p-5 shadow-[4px_4px_0px_var(--color-shadow)] bg-[var(--color-bg-card)] md:p-8">
+            <div className="mb-5 flex items-start justify-between gap-4 border-b border-[var(--color-border)] pb-5">
+              <div>
+                <h2 className="text-xl font-display md:text-3xl">Registration Deposit</h2>
+                <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">
+                  Your ₦{onboardingCreditAmount.toLocaleString()} welcome bonus is waiting, activate with just ₦{registrationDepositAmount.toLocaleString()}.
+                </p>
+              </div>
+              <span className="rounded-[5px] border border-[var(--color-border)] bg-[var(--color-warning-bg)] px-3 py-1 text-xs font-bold uppercase text-[var(--color-warning-text)]">
+                Required
+              </span>
             </div>
-            <span className={`rounded-[5px] border border-[var(--color-border)] px-3 py-1 text-xs font-bold uppercase ${
-              user?.registrationDepositPaid
-                ? "bg-[var(--color-positive-bg)] text-[var(--color-positive-text)]"
-                : "bg-[var(--color-warning-bg)] text-[var(--color-warning-text)]"
-            }`}>
-              {user?.registrationDepositPaid ? "Confirmed" : "Required"}
-            </span>
-          </div>
 
-          {user?.registrationDepositPaid ? (
-            <div className="rounded-[5px] bg-[var(--color-positive-bg)] p-4 text-sm text-[var(--color-positive-text)]">
-              Your registration deposit is confirmed. Referral earnings are credited automatically when direct referrals complete onboarding.
-            </div>
-          ) : (
             <div className="space-y-4">
               <div className="rounded-[5px] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 text-sm">
                 {hasPlatformAccountDetails ? (
@@ -173,7 +165,7 @@ export default function WalletPage() {
                   </div>
                 ) : (
                   <p className="text-[var(--color-text-secondary)]">
-                    Platform account details will be shared soon. After payment, enter the transfer reference below.
+                    Payment account details will be shared soon. After payment, enter the transfer reference below.
                   </p>
                 )}
               </div>
@@ -230,8 +222,8 @@ export default function WalletPage() {
                 />
               </div>
             </div>
-          )}
-        </Card>
+          </Card>
+        )}
 
         <Card className="kinetic-border p-5 shadow-[4px_4px_0px_var(--color-shadow)] bg-[var(--color-bg-card)] md:p-10">
           <h2 className="mb-4 text-xl font-display md:mb-8 md:text-3xl">Fund Wallet</h2>
@@ -253,7 +245,7 @@ export default function WalletPage() {
               </div>
             ) : (
               <p className="text-[var(--color-text-secondary)]">
-                Platform account details are not configured yet.
+                Payment account details are not configured yet.
               </p>
             )}
           </div>
@@ -279,7 +271,7 @@ export default function WalletPage() {
               className="w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 font-sans text-base focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none"
             />
             <p className="mt-2 text-xs leading-relaxed text-[var(--color-text-secondary)]">
-              Transfer to the platform account first, then submit the amount and reference here.
+              Transfer to the payment account first, then submit the amount and reference here.
             </p>
           </div>
           

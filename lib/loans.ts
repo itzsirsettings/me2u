@@ -1,6 +1,6 @@
 export const onboardingCreditAmount = 2000;
 export const registrationDepositAmount = 1000;
-export const repeatPlatformLoanMinimum = 10000;
+export const repeatPlatformLoanMinimum = 5000;
 export const platformLoanRetainedDepositRate = 0.5;
 export const affiliateRewardRate = 0.5;
 export const affiliateRewardAmount = registrationDepositAmount * affiliateRewardRate;

@@ -6,9 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "test": "node --test tests/*.test.mjs",
     "typecheck": "tsc --noEmit",
     "audit:prod": "npm audit --omit=dev",
-    "check": "npm run typecheck && npm run build && npm run audit:prod"
+    "check": "npm run test && npm run typecheck && npm run build && npm run audit:prod"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.105.4",

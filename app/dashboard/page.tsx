@@ -101,7 +101,7 @@ export default function Dashboard() {
     if (!user?.registrationDepositPaid) {
       return {
         title: "Complete your registration deposit",
-        body: `Submit proof for ₦${registrationDepositAmount.toLocaleString()} to unlock your ₦${onboardingCreditAmount.toLocaleString()} onboarding credit.`,
+        body: `Your ₦${onboardingCreditAmount.toLocaleString()} welcome bonus is waiting.`,
         action: "Submit proof",
         path: "/wallet",
       };
@@ -286,14 +286,14 @@ export default function Dashboard() {
                 <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--color-negative-text)] text-white">
                   <Icons8Icon name="loans" size={18} />
                 </span>
-                <p className="text-sm font-bold">Platform Credit</p>
+                <p className="text-sm font-bold">Credit</p>
               </div>
               <span className="shrink-0 rounded-full border border-white/35 px-3 py-1 text-xs font-black">
                 {activeLoanCount} active
               </span>
             </div>
             <h2 className="max-w-sm text-[1.08rem] font-black leading-tight tracking-normal">
-              Request 0% loans from ₦10,000 after KYC.
+              0% interest loan from ₦5,000.
             </h2>
             <button
               className="mt-4 inline-flex min-h-11 items-center rounded-full bg-white px-4 text-xs font-black text-[#020814] transition active:scale-95"
@@ -340,17 +340,17 @@ export default function Dashboard() {
                 {transactions.slice(0, 5).map((transaction) => (
                   <div
                     key={transaction.id}
-                    className="flex items-center justify-between gap-3 rounded-[16px] bg-[var(--mobile-surface-muted)] p-2.5"
+                    className="flex min-w-0 items-center justify-between gap-2 overflow-hidden rounded-[16px] bg-[var(--mobile-surface-muted)] p-2.5"
                   >
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1 overflow-hidden">
                       <p className="truncate text-sm font-black text-[var(--color-text-primary)]">
                         {transaction.description}
                       </p>
-                      <p className="mt-1 text-xs font-medium text-[var(--color-text-secondary)]">
+                      <p className="mt-1 truncate text-xs font-medium text-[var(--color-text-secondary)]">
                         {new Date(transaction.date).toLocaleString()}
                       </p>
                     </div>
-                    <p className={`max-w-[42%] shrink-0 truncate text-right text-sm font-black ${transactionAmountTone(transaction)}`}>
+                    <p className={`max-w-[36%] shrink-0 truncate text-right text-xs font-black sm:text-sm ${transactionAmountTone(transaction)}`}>
                       {transactionPrefix(transaction)}₦{transaction.amount.toLocaleString()}
                     </p>
                   </div>

@@ -186,7 +186,7 @@ Motion should clarify state and touch response. It should not slow down payments
 - `/withdraw` - withdrawal request flow
 - `/kyc` - identity verification and bank details
 - `/marketplace` - create and accept lending listings
-- `/loans` - platform credit, active loans, and repayment
+- `/loans` - direct credit, active loans, and repayment
 - `/profile` - profile, referral, theme preference, and account status
 - `/admin` - operational dashboard
 

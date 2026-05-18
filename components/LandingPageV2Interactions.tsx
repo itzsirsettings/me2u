@@ -106,8 +106,8 @@ export default function LandingPageV2Interactions() {
 
     const categoryData: Record<string, CopyBlock> = {
       solar: {
-        title: "Platform loan",
-        text: "Request direct Me2U platform credit from ₦10,000 after your registration deposit and KYC are complete.",
+        title: "Direct loan",
+        text: "0% interest loan from ₦5,000 after your registration deposit and KYC are complete.",
       },
       gadgets: {
         title: "Borrow request",
@@ -119,7 +119,7 @@ export default function LandingPageV2Interactions() {
       },
       furniture: {
         title: "Repayment",
-        text: "Repay active loans from your wallet. A platform loan must be repaid before another platform request.",
+        text: "Repay active loans from your wallet before making another request.",
       },
     };
 
@@ -210,7 +210,7 @@ export default function LandingPageV2Interactions() {
       },
       terms: {
         title: "Terms & conditions",
-        text: "Add approved terms for registration deposits, onboarding credit, peer lending, platform loans, withdrawals, and repayments.",
+        text: "Add approved terms for registration deposits, welcome bonuses, peer lending, loans, withdrawals, and repayments.",
       },
       isms: {
         title: "ISMS policy",
@@ -218,7 +218,7 @@ export default function LandingPageV2Interactions() {
       },
       security: {
         title: "Security center",
-        text: "Me2U protects withdrawals and platform loans through confirmed deposits, KYC checks, and admin-reviewed payment proof.",
+        text: "Me2U protects withdrawals and loans through confirmed deposits, KYC checks, and admin-reviewed payment proof.",
       },
     };
 

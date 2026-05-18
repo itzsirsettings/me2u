@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const signInWithPassword = useStore((s) => s.signInWithPassword);
@@ -16,13 +16,13 @@ export default function Login() {
 
   const handleLogin = async () => {
     if (isSubmitting) return;
-    if (!email || !password) {
+    if (!identifier || !password) {
       toast.error("Please fill in all fields.");
       throw new Error("Empty fields");
     }
 
     setIsSubmitting(true);
-    const result = await signInWithPassword(email, password);
+    const result = await signInWithPassword(identifier, password);
     setIsSubmitting(false);
 
     if (!result.ok) {
@@ -50,17 +50,17 @@ export default function Login() {
             }
           }}
         >
-          <label htmlFor="login-email" className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-secondary">
-            Email
+          <label htmlFor="login-identifier" className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-secondary">
+            Email or username
           </label>
           <Input
-            id="login-email"
-            type="email"
-            placeholder="you@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            id="login-identifier"
+            type="text"
+            placeholder="you@example.com or username"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
             className="mb-4"
-            autoComplete="email"
+            autoComplete="username"
           />
           <label htmlFor="login-password" className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-secondary">
             Password

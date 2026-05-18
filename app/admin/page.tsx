@@ -415,7 +415,7 @@ export default function AdminDashboard() {
       <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--color-text-secondary)]">
-            Platform operations
+            Operations
           </p>
           <h1 className="mt-2 font-display text-[2.75rem] font-bold leading-[0.85] tracking-tight text-[var(--color-text-primary)] md:text-6xl">
             Admin Command Center
@@ -493,7 +493,7 @@ export default function AdminDashboard() {
         <MetricCard
           label="Loan Exposure"
           value={money(overview.summary.active_loan_exposure)}
-          detail={`${compactMoney(overview.summary.platform_loan_exposure)} active platform exposure`}
+          detail={`${compactMoney(overview.summary.platform_loan_exposure)} active direct exposure`}
           icon="loans"
         />
       </section>
@@ -675,7 +675,7 @@ export default function AdminDashboard() {
                     <div key={loan.id} className="rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3">
                       <div className="flex items-center justify-between gap-3">
                         <b>{money(Number(loan.amount))}</b>
-                        <StatusBadge status={loan.status}>{loan.lender_id ? "Peer" : "Platform"}</StatusBadge>
+                        <StatusBadge status={loan.status}>{loan.lender_id ? "Peer" : "Direct"}</StatusBadge>
                       </div>
                       <p className="mt-2 text-xs text-[var(--color-text-secondary)]">
                         Due {formatDate(loan.due_date)} • {loan.days} days • {Number(loan.rate)}%
