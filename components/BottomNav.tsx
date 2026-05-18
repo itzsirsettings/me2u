@@ -27,7 +27,7 @@ export default function BottomNav() {
           const isActive = activePath === item.path;
           const centerClasses = item.center
             ? "-mt-5 min-h-[4.25rem] justify-start gap-0.5 text-[var(--mobile-pill-text)]"
-            : "min-h-[3.25rem] gap-0.5";
+            : "min-h-[3rem] gap-0.5";
           return (
             <motion.button
               whileTap={{ scale: 0.94 }}
@@ -46,10 +46,10 @@ export default function BottomNav() {
                 className={
                   item.center
                     ? "grid h-[3.35rem] w-[3.35rem] place-items-center rounded-full border-[6px] border-[var(--mobile-app-bg)] bg-[var(--gradient-primary)] text-[var(--color-on-accent)] shadow-[0_12px_24px_rgba(0,64,107,0.18)]"
-                    : "grid h-6 w-6 place-items-center"
+                    : "grid h-5 w-5 place-items-center"
                 }
               >
-                <Icons8Icon name={item.icon} size={item.center ? 23 : 18} />
+                <Icons8Icon name={item.icon} size={item.center ? 23 : 17} />
               </span>
               <span className="w-full truncate text-[9px] font-extrabold tracking-normal font-sans">
                 {item.label}

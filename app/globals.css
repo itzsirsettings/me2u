@@ -309,15 +309,6 @@ body {
     line-height: 1.15;
   }
 
-  .mobile-qr-pattern {
-    background:
-      linear-gradient(90deg, #001f35 7px, transparent 7px 12px, #001f35 12px 18px, transparent 18px 24px, #001f35 24px 31px, transparent 31px),
-      linear-gradient(#001f35 7px, transparent 7px 13px, #001f35 13px 20px, transparent 20px 26px, #001f35 26px 33px, transparent 33px),
-      repeating-conic-gradient(from 90deg, #001f35 0 25%, transparent 0 50%) 0 0 / 15px 15px;
-    background-color: #ffffff;
-    image-rendering: pixelated;
-  }
-
   .btn-ghost {
     background: var(--mobile-surface);
     color: var(--color-text-primary);

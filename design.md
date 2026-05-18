@@ -11,6 +11,7 @@ This document describes the visual system used by the me2u Next.js app. It is do
 - `components/MobileHeader.tsx` for authenticated route headers
 - `components/NotificationBell.tsx` for alerts
 - `components/ThemeModeSelector.tsx` for the Profile theme preference
+- `components/ReferralQrCode.tsx` for scannable referral QR codes
 - `components/Icons8Icon.tsx` for Icons8-sourced app icons
 
 ## Visual Direction
@@ -68,7 +69,6 @@ app-mobile-screen
 mobile-soft-card
 mobile-icon-button
 mobile-pill-button
-mobile-qr-pattern
 ```
 
 ## Typography
@@ -180,7 +180,7 @@ Motion should clarify state and touch response. It should not slow down payments
 - `/` - public landing page
 - `/login` - demo login
 - `/register` - demo registration
-- `/dashboard` - mobile finance home with balance, onboarding status, quick actions, referral, loans, admin entry, and transactions
+- `/dashboard` - mobile finance home with balance, onboarding status, quick actions, scannable referral QR, loans, admin entry, and transactions
 - `/wallet` - fund wallet and transaction history
 - `/withdraw` - withdrawal request flow
 - `/kyc` - identity verification and bank details

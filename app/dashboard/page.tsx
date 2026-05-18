@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Icons8Icon, { type Icons8IconName } from "@/components/Icons8Icon";
 import NotificationBell from "@/components/NotificationBell";
+import ReferralQrCode from "@/components/ReferralQrCode";
 import { onboardingCreditAmount, registrationDepositAmount } from "@/lib/loans";
 import { useStore, type Transaction } from "@/lib/store";
 import { motion, type Variants } from "framer-motion";
@@ -160,18 +161,18 @@ export default function Dashboard() {
         </div>
       </motion.header>
 
-      <div className="grid gap-3 md:grid-cols-[minmax(0,1.05fr)_minmax(360px,0.95fr)] md:items-start md:gap-6">
-        <div className="grid gap-3">
-          <motion.section variants={itemVariants} className="mobile-soft-card relative overflow-hidden p-3.5">
-            <div className="mb-3 flex items-start justify-between gap-2.5">
-              <p className="text-[1.08rem] font-extrabold leading-none tracking-normal">Main Balance</p>
+      <div className="grid gap-2.5 md:grid-cols-[minmax(0,1.05fr)_minmax(360px,0.95fr)] md:items-start md:gap-6">
+        <div className="grid gap-2.5">
+          <motion.section variants={itemVariants} className="mobile-soft-card relative overflow-hidden p-3">
+            <div className="mb-2.5 flex items-start justify-between gap-2.5">
+              <p className="text-[1rem] font-extrabold leading-none tracking-normal">Main Balance</p>
               <div className="max-w-[55%] rounded-full bg-[var(--mobile-surface-muted)] px-2.5 py-1 text-right text-[9px] font-black leading-tight text-[var(--color-text-primary)]">
                 <span className="block truncate">{bankLabel}</span>
               </div>
             </div>
 
-            <div className="mb-4 flex items-center gap-1.5">
-              <p className="min-w-0 truncate font-display text-[1.92rem] font-black leading-none tracking-normal text-[var(--color-text-primary)]">
+            <div className="mb-3 flex items-center gap-1.5">
+              <p className="min-w-0 truncate font-display text-[1.72rem] font-black leading-none tracking-normal text-[var(--color-text-primary)]">
                 {showBalance ? `₦${balance.toLocaleString()}` : "₦••••••"}
               </p>
               <button
@@ -198,11 +199,11 @@ export default function Dashboard() {
 
           <motion.section
             variants={itemVariants}
-            className="relative overflow-hidden rounded-[22px] bg-[linear-gradient(135deg,#9fd8ff_0%,#b8dcf4_42%,#8778ff_100%)] p-3.5 text-[#05021d] shadow-[0_8px_24px_rgba(0,64,107,0.09)]"
+            className="relative overflow-hidden rounded-[22px] bg-[linear-gradient(135deg,#9fd8ff_0%,#b8dcf4_42%,#8778ff_100%)] p-3 text-[#05021d] shadow-[0_8px_24px_rgba(0,64,107,0.09)]"
           >
-            <div className="relative z-10 max-w-[80%]">
-              <h2 className="text-[1.02rem] font-black leading-tight tracking-normal">{statusCard.title}</h2>
-              <p className="mt-1.5 text-[0.82rem] font-medium leading-relaxed">{statusCard.body}</p>
+            <div className="relative z-10 max-w-[82%]">
+              <h2 className="text-[0.96rem] font-black leading-tight tracking-normal">{statusCard.title}</h2>
+              <p className="mt-1 text-[0.78rem] font-medium leading-relaxed">{statusCard.body}</p>
               <button
                 className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-4 text-xs font-black text-[#05021d] transition active:scale-95"
                 onClick={() => router.push(statusCard.path)}
@@ -211,12 +212,12 @@ export default function Dashboard() {
                 <span className="text-xl leading-none">→</span>
               </button>
             </div>
-            <div className="absolute -bottom-6 -right-5 grid h-24 w-24 place-items-center rounded-full bg-[rgba(0,64,107,0.92)] text-white">
-              <Icons8Icon name={user?.kycVerified ? "check" : "shield"} size={40} />
+            <div className="absolute -bottom-6 -right-5 grid h-20 w-20 place-items-center rounded-full bg-[rgba(0,64,107,0.92)] text-white">
+              <Icons8Icon name={user?.kycVerified ? "check" : "shield"} size={34} />
             </div>
           </motion.section>
 
-          <motion.section variants={itemVariants} className="mobile-soft-card grid grid-cols-4 overflow-hidden px-1.5 py-2.5">
+          <motion.section variants={itemVariants} className="mobile-soft-card grid grid-cols-4 overflow-hidden px-1 py-2">
             {serviceActions.map((action, index) => {
               const disabled =
                 (action.requiresDeposit && !user?.registrationDepositPaid) ||
@@ -226,17 +227,17 @@ export default function Dashboard() {
                 <button
                   key={action.path}
                   disabled={disabled}
-                  className={`flex min-h-[4.15rem] flex-col items-center justify-center gap-1.5 px-1 text-center transition active:scale-95 disabled:opacity-45 ${
+                  className={`flex min-h-[3.75rem] flex-col items-center justify-center gap-1 px-1 text-center transition active:scale-95 disabled:opacity-45 ${
                     index > 0 ? "border-l border-[var(--color-border)]" : ""
                   }`}
                   onClick={() => {
                     if (!disabled) router.push(action.path);
                   }}
                 >
-                  <span className={`grid h-9 w-9 place-items-center rounded-full ${action.tone}`}>
-                    <Icons8Icon name={action.icon} size={19} />
+                  <span className={`grid h-8 w-8 place-items-center rounded-full ${action.tone}`}>
+                    <Icons8Icon name={action.icon} size={17} />
                   </span>
-                  <span className="text-[0.76rem] font-black leading-none text-[var(--color-text-primary)]">
+                  <span className="text-[0.72rem] font-black leading-none text-[var(--color-text-primary)]">
                     {action.label}
                   </span>
                 </button>
@@ -245,11 +246,11 @@ export default function Dashboard() {
           </motion.section>
 
           <motion.section variants={itemVariants} className="mobile-soft-card grid grid-cols-[34%_1fr] overflow-hidden">
-            <div className="grid place-items-center border-r border-[var(--color-border)] p-2.5">
-              <div className="mobile-qr-pattern h-24 w-full max-w-24 rounded-[14px] border border-[var(--color-border)] bg-white" />
+            <div className="grid place-items-center border-r border-[var(--color-border)] p-2">
+              <ReferralQrCode value={referralLink} className="h-[5.25rem] w-[5.25rem] rounded-[12px]" />
             </div>
-            <div className="flex flex-col justify-center p-3.5">
-              <h2 className="text-[1.02rem] font-black leading-tight tracking-normal">
+            <div className="flex flex-col justify-center p-3">
+              <h2 className="text-[0.96rem] font-black leading-tight tracking-normal">
                 Invite friends, earn rewards.
               </h2>
               <div className="mt-3 grid grid-cols-2 gap-2">
