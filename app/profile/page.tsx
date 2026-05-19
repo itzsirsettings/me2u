@@ -47,7 +47,7 @@ export default function Profile() {
 
         <div className="flex min-w-0 items-center gap-3">
           <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-accent-primary)]">
-            <Icons8Icon name="mail" size={22} />
+            <Icons8Icon name="email" size={22} />
           </span>
           <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Email</p>
