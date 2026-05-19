@@ -8,26 +8,12 @@ import { useState, useEffect } from "react";
 import LoadingButton from "@/LoadingButton";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { motion, type Variants } from "framer-motion";
+import { motion, type Variants, AnimatePresence } from "framer-motion";
 
-const walletServices: Array<{ label: string; detail: string; icon: Icons8IconName }> = [
-  { label: "Airtime", detail: "Buy for yourself or contacts", icon: "phone" },
-  { label: "Data", detail: "Mobile bundles", icon: "globe" },
-  { label: "Electricity", detail: "Prepaid and postpaid bills", icon: "bill" },
-  { label: "Cable TV", detail: "Subscription renewals", icon: "receipt" },
-  { label: "Internet", detail: "Home and office access", icon: "globe" },
-  { label: "School Fees", detail: "Verified school payments", icon: "certificate" },
-  { label: "Merchant QR", detail: "Scan to pay locally", icon: "qr" },
-  { label: "Payment Links", detail: "Small business collections", icon: "deal" },
-];
-
-const savingsGoals = [
-  { label: "Emergency", amount: 25000, progress: 42 },
-  { label: "Rent", amount: 150000, progress: 18 },
-  { label: "School fees", amount: 80000, progress: 27 },
-  { label: "Business capital", amount: 120000, progress: 35 },
-  { label: "Locked savings", amount: 50000, progress: 60 },
-  { label: "Group savings", amount: 100000, progress: 22 },
+const walletServices: Array<{ id: string; label: string; detail: string; icon: Icons8IconName }> = [
+  { id: "airtime", label: "Airtime", detail: "Top up any network instantly", icon: "phone" },
+  { id: "data", label: "Data", detail: "Buy internet bundles", icon: "globe" },
+  { id: "electricity", label: "Electricity", detail: "Prepaid and postpaid tokens", icon: "bill" },
 ];
 
 export default function WalletPage() {
@@ -36,8 +22,15 @@ export default function WalletPage() {
   const [fundReceiptFile, setFundReceiptFile] = useState<File | null>(null);
   const [registrationReference, setRegistrationReference] = useState("");
   const [regReceiptFile, setRegReceiptFile] = useState<File | null>(null);
+  
+  const [selectedService, setSelectedService] = useState<string | null>(null);
+  const [servicePhone, setServicePhone] = useState("");
+  const [serviceAmount, setServiceAmount] = useState("");
+  const [serviceProvider, setServiceProvider] = useState("MTN");
+
   const fundWallet = useStore((state) => state.fundWallet);
   const confirmRegistrationDeposit = useStore((state) => state.confirmRegistrationDeposit);
+  const payBill = useStore((state) => state.payBill);
   const user = useStore((state) => state.user);
   const isAuthenticated = useStore((state) => state.isAuthenticated);
   const isLoading = useStore((state) => state.isLoading);
@@ -125,7 +118,32 @@ export default function WalletPage() {
     setAmount("");
     setFundingReference("");
     setFundReceiptFile(null);
-    // Don't push to dashboard, let them stay and see it's pending
+  };
+
+  const handlePayBill = async () => {
+    if (!user) return;
+    const numAmount = Number(serviceAmount);
+    if (!Number.isFinite(numAmount) || numAmount <= 0) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+    if (!servicePhone.trim()) {
+      toast.error("Please enter the required details");
+      return;
+    }
+    
+    const serviceName = walletServices.find(s => s.id === selectedService)?.label || "Bill";
+    const result = await payBill(numAmount, serviceName, `${serviceProvider} - ${servicePhone}`);
+    
+    if (!result.ok) {
+      toast.error(result.error || "Unable to complete transaction");
+      throw new Error("Transaction failed");
+    }
+    
+    toast.success(`${serviceName} purchase successful!`);
+    setSelectedService(null);
+    setServiceAmount("");
+    setServicePhone("");
   };
 
   const containerVariants: Variants = {
@@ -341,62 +359,114 @@ export default function WalletPage() {
         <Card className="kinetic-border bg-[var(--color-bg-card)] p-5 shadow-[4px_4px_0px_var(--color-shadow)] md:p-8">
           <div className="mb-4 flex min-w-0 items-start justify-between gap-3 md:mb-6">
             <div className="min-w-0">
-              <h2 className="text-xl font-display md:text-3xl">Bills and Daily Payments</h2>
+              <h2 className="text-xl font-display md:text-3xl">Pay Bills</h2>
               <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">
-                Keep the wallet useful beyond loans with everyday services.
+                Instantly buy airtime, data, or pay electricity bills directly from your wallet.
               </p>
             </div>
             <Icons8Icon name="bill" size={26} className="shrink-0 text-[var(--color-accent-primary)]" />
           </div>
-          <div className="grid gap-2 sm:grid-cols-2">
+          
+          <div className="grid gap-2 sm:grid-cols-3 mb-6">
             {walletServices.map((service) => (
               <button
-                key={service.label}
+                key={service.id}
                 type="button"
-                className="flex min-w-0 items-center gap-3 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3 text-left transition hover:bg-[var(--color-hover-soft)]"
-                onClick={() => toast.info(`${service.label} will open after payment providers are enabled.`)}
+                className={`flex min-w-0 items-center gap-3 rounded-[5px] border p-3 text-left transition ${
+                  selectedService === service.id 
+                    ? "border-[var(--color-accent-primary)] bg-[var(--color-hover-soft)] shadow-inner" 
+                    : "border-[var(--color-border)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-hover-soft)]"
+                }`}
+                onClick={() => {
+                  setSelectedService(service.id);
+                  setServiceProvider(service.id === "electricity" ? "Ikeja Electric" : "MTN");
+                }}
               >
                 <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[5px] bg-[var(--color-bg-card)] text-[var(--color-accent-primary)]">
                   <Icons8Icon name={service.icon} size={21} />
                 </span>
                 <span className="min-w-0">
                   <b className="block truncate text-sm">{service.label}</b>
-                  <span className="block truncate text-xs text-[var(--color-text-secondary)]">{service.detail}</span>
                 </span>
               </button>
             ))}
           </div>
-        </Card>
 
-        <Card className="kinetic-border bg-[var(--color-bg-card)] p-5 shadow-[4px_4px_0px_var(--color-shadow)] md:p-8">
-          <div className="mb-4 flex min-w-0 items-start justify-between gap-3 md:mb-6">
-            <div className="min-w-0">
-              <h2 className="text-xl font-display md:text-3xl">Savings Goals</h2>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">
-                Save small before you borrow, with clear goals and progress.
-              </p>
-            </div>
-            <Icons8Icon name="savings" size={26} className="shrink-0 text-[var(--color-positive-text)]" />
-          </div>
-          <div className="grid gap-3">
-            {savingsGoals.map((goal) => (
-              <button
-                key={goal.label}
-                type="button"
-                className="min-w-0 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3 text-left transition hover:bg-[var(--color-hover-soft)]"
-                onClick={() => toast.info(`${goal.label} savings setup is coming to your wallet.`)}
+          <AnimatePresence>
+            {selectedService && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
               >
-                <div className="mb-2 flex items-center justify-between gap-3">
-                  <b className="min-w-0 truncate text-sm">{goal.label}</b>
-                  <span className="shrink-0 font-mono text-xs font-bold">₦{goal.amount.toLocaleString()}</span>
+                <div className="space-y-4 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
+                  <div>
+                    <label className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
+                      Provider
+                    </label>
+                    <select
+                      className="h-11 w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 font-sans focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none"
+                      value={serviceProvider}
+                      onChange={(e) => setServiceProvider(e.target.value)}
+                    >
+                      {selectedService === "electricity" ? (
+                        <>
+                          <option value="Ikeja Electric">Ikeja Electric (IKEDC)</option>
+                          <option value="Eko Electric">Eko Electric (EKEDC)</option>
+                          <option value="Abuja Electric">Abuja Electric (AEDC)</option>
+                        </>
+                      ) : (
+                        <>
+                          <option value="MTN">MTN</option>
+                          <option value="Airtel">Airtel</option>
+                          <option value="Glo">Glo</option>
+                          <option value="9mobile">9mobile</option>
+                        </>
+                      )}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
+                      {selectedService === "electricity" ? "Meter Number" : "Phone Number"}
+                    </label>
+                    <input
+                      type="text"
+                      placeholder={selectedService === "electricity" ? "Enter meter number" : "Enter phone number"}
+                      value={servicePhone}
+                      onChange={(e) => setServicePhone(e.target.value)}
+                      className="w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 font-mono focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">Amount (₦)</label>
+                    <input
+                      type="number"
+                      placeholder="0.00"
+                      value={serviceAmount}
+                      onChange={(e) => setServiceAmount(e.target.value)}
+                      className="w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 font-mono focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none"
+                    />
+                  </div>
+                  
+                  <div className="pt-2 w-full [&>button]:w-full">
+                    <LoadingButton
+                      label={`Pay ₦${serviceAmount || "0"}`}
+                      loadingText="Processing..."
+                      successText="Successful!"
+                      disabled={!serviceAmount || !servicePhone || !user?.kycVerified}
+                      onClick={handlePayBill}
+                    />
+                    {!user?.kycVerified && (
+                      <p className="mt-2 text-xs text-center text-[var(--color-warning-text)]">Complete KYC to unlock bill payments.</p>
+                    )}
+                  </div>
                 </div>
-                <div className="h-2 overflow-hidden rounded-full bg-[var(--color-bg-card)]">
-                  <div className="h-full rounded-full bg-[var(--color-accent-primary)]" style={{ width: `${goal.progress}%` }} />
-                </div>
-                <p className="mt-2 text-xs font-semibold text-[var(--color-text-secondary)]">{goal.progress}% target progress</p>
-              </button>
-            ))}
-          </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </Card>
       </motion.div>
     </motion.div>

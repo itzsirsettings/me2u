@@ -134,6 +134,7 @@ interface AppStore {
   acceptMarketplaceItem: (itemId: string) => Promise<ActionResult>;
   requestPlatformLoan: (amount?: number) => Promise<ActionResult>;
   repayLoan: (loanId: string) => Promise<ActionResult>;
+  payBill: (amount: number, serviceLabel: string, detail: string) => Promise<ActionResult>;
 }
 
 const missingSupabaseResult = {
@@ -647,6 +648,18 @@ export const useStore = create<AppStore>((set, get) => ({
     }
 
     const result = await postAuthenticatedJson("/api/loans/repay", { loanId });
+    if (result.ok) await get().loadCurrentUser();
+    return result;
+  },
+
+  payBill: async (amount, serviceLabel, detail) => {
+    if (!hasSupabaseConfig()) return missingSupabaseResult;
+
+    const user = get().user;
+    if (!user) return { ok: false, error: "Please log in first." };
+    if (!user.kycVerified) return { ok: false, error: "Complete your KYC before transacting." };
+
+    const result = await postAuthenticatedJson("/api/wallet/pay-bill", { amount, serviceLabel, detail });
     if (result.ok) await get().loadCurrentUser();
     return result;
   },
