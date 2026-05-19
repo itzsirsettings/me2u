@@ -119,8 +119,8 @@ function RegisterContent() {
   const [googleEmail, setGoogleEmail] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [otpSent, setOtpSent] = useState(false);
-  const [showMockEmail, setShowMockEmail] = useState(false);
-  
+  const [otpToken, setOtpToken] = useState("");
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -226,33 +226,66 @@ function RegisterContent() {
     setGoogleStep("select_email");
   };
 
-  const handleGoogleEmailSubmit = (e: React.FormEvent) => {
+  const handleGoogleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isValidEmail(googleEmail)) {
       toast.error("Please enter a valid Google email address.");
       return;
     }
-    // Simulate sending OTP code
-    setOtpSent(true);
-    setGoogleStep("enter_otp");
-    setShowMockEmail(true);
-    toast.success("Verification code sent to your email!");
+    setIsSubmitting(true);
+    try {
+      const response = await fetch("/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: googleEmail, action: "register" }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        toast.error(data.error || "Failed to send verification code.");
+        return;
+      }
+      setOtpToken(data.token);
+      setOtpSent(true);
+      setGoogleStep("enter_otp");
+      if (data.loggedToConsole) {
+        toast.success("Verification code sent! (Check server console in development)");
+      } else {
+        toast.success("Verification code sent to your email!");
+      }
+    } catch (err) {
+      toast.error("Failed to send verification code.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const verifyGoogleOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (verificationCode !== "960077") {
-      toast.error("Incorrect verification code. Please try again.");
-      return;
-    }
-
-    // Auto-generate details for Google sign up
     setIsSubmitting(true);
-    const googleUser = googleEmail.split("@")[0].replace(/[^a-zA-Z0-9]/g, "");
-    const generatedUsername = `${googleUser}${Math.floor(100 + Math.random() * 900)}`;
-    const mockPassword = `GooglePass_${Math.random().toString(36).slice(-10)}`;
 
     try {
+      const verifyResponse = await fetch("/api/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: googleEmail,
+          code: verificationCode,
+          token: otpToken,
+          action: "register",
+        }),
+      });
+
+      const verifyData = await verifyResponse.json();
+      if (!verifyResponse.ok) {
+        toast.error(verifyData.error || "Incorrect verification code.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Auto-generate details for Google sign up
+      const googleUser = googleEmail.split("@")[0].replace(/[^a-zA-Z0-9]/g, "");
+      const generatedUsername = `${googleUser}${Math.floor(100 + Math.random() * 900)}`;
+
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -265,7 +298,8 @@ function RegisterContent() {
           countryCode: "NG",
           preferredLanguage: "en",
           referral: formData.referral,
-          password: mockPassword,
+          token: otpToken,
+          code: verificationCode,
         }),
       });
 
@@ -276,7 +310,7 @@ function RegisterContent() {
         return;
       }
 
-      const signInResult = await signInWithPassword(googleEmail, mockPassword);
+      const signInResult = await signInWithPassword(googleEmail, data.password);
       if (!signInResult.ok) {
         toast.error(signInResult.error || "Registration complete but login failed.");
         router.push("/login");
@@ -567,89 +601,6 @@ function RegisterContent() {
                 />
               </div>
             </form>
-
-            {/* Gmail Sandbox/Simulator Mockup matches user's screenshot exactly */}
-            {showMockEmail && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="overflow-hidden rounded-[16px] border border-slate-200 bg-white shadow-lg"
-              >
-                {/* Email Client Title Bar */}
-                <div className="flex items-center justify-between bg-slate-100 px-4 py-2 border-b border-slate-200 text-xs font-semibold text-slate-500">
-                  <span>Gmail Sandbox Simulator</span>
-                  <button 
-                    onClick={() => setShowMockEmail(false)}
-                    className="text-slate-400 hover:text-slate-600"
-                  >
-                    Close Preview
-                  </button>
-                </div>
-
-                {/* Email content matching Screenshot exactly */}
-                <div className="p-6 font-sans text-slate-800 leading-relaxed bg-[#f8f9fa]">
-                  <div className="max-w-[480px] mx-auto bg-white border border-slate-100 rounded-lg overflow-hidden shadow-sm">
-                    {/* Header Banner - tirra brand with green arrow */}
-                    <div className="bg-[#124e5e] p-6 flex items-center gap-3">
-                      <div className="flex items-center gap-2">
-                        {/* Green Arrow Logo */}
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#b4e600]">
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="3" stroke="#124e5e" className="h-6 w-6 transform rotate-45 -translate-y-0.5 translate-x-0.5">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
-                          </svg>
-                        </div>
-                        <span className="text-3xl font-black tracking-tight text-[#b4e600] font-sans">tirra</span>
-                      </div>
-                    </div>
-
-                    {/* Email Body */}
-                    <div className="p-8 space-y-6 text-[#2d3748]">
-                      <p className="text-base">Hi customer,</p>
-                      
-                      <p className="text-base text-slate-700">Your verification code is:</p>
-                      
-                      <p className="text-3xl font-bold font-mono tracking-wider text-slate-900 bg-slate-50 py-3 px-4 rounded border border-slate-100 inline-block">
-                        960077
-                      </p>
-                      
-                      <p className="text-sm text-slate-600">
-                        This code expires in 10 minutes. If you didn't request this, you can safely ignore this email — no one can access your account without this code.
-                      </p>
-
-                      <div className="pt-6 border-t border-slate-100 text-xs text-slate-500 space-y-2">
-                        <p className="font-semibold text-slate-700">For your security:</p>
-                        <p className="flex items-start gap-2">
-                          <span className="text-slate-400">•</span>
-                          <span>Never share this code with anyone</span>
-                        </p>
-                        <p className="flex items-start gap-2">
-                          <span className="text-slate-400">•</span>
-                          <span>Tirra will never ask you for this code over the phone or chat</span>
-                        </p>
-                        <p className="flex items-start gap-2">
-                          <span className="text-slate-400">•</span>
-                          <span>If you receive unexpected login codes, consider updating your password</span>
-                        </p>
-                      </div>
-
-                      <p className="text-sm text-slate-600 pt-2">
-                        If you need help, reach out to us anytime.
-                      </p>
-
-                      <div className="pt-4 text-sm text-slate-600">
-                        <p>Stay secure,</p>
-                        <p className="font-bold">The Tirra Team</p>
-                      </div>
-
-                      <div className="pt-4 border-t border-slate-100 text-[10px] text-slate-400">
-                        <p>---</p>
-                        <p>Tirra Inc.</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
           </div>
         )}
       </section>

@@ -7,6 +7,9 @@ import {
 import { getClientIp, isRateLimited } from "@/lib/rate-limit";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
+import { getGoogleUserPassword } from "@/lib/server/auth-helpers";
+import { createHmac } from "crypto";
+
 function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
@@ -61,11 +64,15 @@ export async function POST(request: Request) {
     const lastName = String(body.lastName || "").trim().replace(/\s+/g, " ");
     const username = String(body.username || "").trim().toLowerCase();
     const email = String(body.email || "").trim().toLowerCase();
-    const password = String(body.password || "");
+    let password = String(body.password || "");
     const phone = String(body.phone || "").trim();
     const referral = String(body.referral || "").trim();
     const countryCode = String(body.countryCode || "NG").trim().toUpperCase();
     const preferredLanguage = String(body.preferredLanguage || "en").trim().toLowerCase();
+
+    // Check for Google registration OTP token
+    const token = String(body.token || "").trim();
+    const code = String(body.code || "").trim();
 
     if (firstName.length < 2 || firstName.length > 80 || lastName.length < 2 || lastName.length > 80) {
       return NextResponse.json({ error: "Enter your first and last name." }, { status: 400 });
@@ -78,8 +85,8 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!email || !password) {
-      return NextResponse.json({ error: "Email and password are required." }, { status: 400 });
+    if (!email) {
+      return NextResponse.json({ error: "Email is required." }, { status: 400 });
     }
 
     if (!isValidEmail(email)) {
@@ -93,8 +100,32 @@ export async function POST(request: Request) {
       );
     }
 
-    if (password.length < 8) {
-      return NextResponse.json({ error: "Password must be at least 8 characters." }, { status: 400 });
+    if (token && code) {
+      // Split token into expiry and hash
+      const parts = token.split(".");
+      if (parts.length !== 2) {
+        return NextResponse.json({ error: "Invalid verification token." }, { status: 400 });
+      }
+      const [expiresAtStr, hash] = parts;
+      const expiresAt = Number(expiresAtStr);
+      if (isNaN(expiresAt) || Date.now() > expiresAt) {
+        return NextResponse.json({ error: "Verification code has expired. Please request a new one." }, { status: 400 });
+      }
+      const secret = process.env.SUPABASE_SERVICE_ROLE_KEY || "fallback_secret_for_dev_only";
+      const payload = `${email}:${code}:${expiresAt}`;
+      const expectedHash = createHmac("sha256", secret).update(payload).digest("hex");
+      if (hash !== expectedHash) {
+        return NextResponse.json({ error: "Incorrect verification code." }, { status: 400 });
+      }
+      // OTP is valid, generate deterministic password
+      password = getGoogleUserPassword(email);
+    } else {
+      if (!password) {
+        return NextResponse.json({ error: "Password is required." }, { status: 400 });
+      }
+      if (password.length < 8) {
+        return NextResponse.json({ error: "Password must be at least 8 characters." }, { status: 400 });
+      }
     }
 
     const phoneDigits = phone.replace(/\D/g, "");
@@ -221,6 +252,7 @@ export async function POST(request: Request) {
         firstName,
         lastName,
         username,
+        password: token && code ? password : undefined,
       },
       {
         headers: {
