@@ -290,7 +290,7 @@ export default function Dashboard() {
                       className="flex flex-col min-w-0 cursor-pointer overflow-hidden rounded-[16px] bg-[var(--mobile-surface-muted)] p-3 transition hover:bg-[var(--color-hover-soft)]"
                       onClick={() => setExpandedTxId(isExpanded ? null : transaction.id)}
                     >
-                      <div className="flex min-w-0 items-center justify-between gap-2">
+                      <div className="flex min-w-0 items-center justify-between gap-2 overflow-hidden">
                         <div className="min-w-0 flex-1 overflow-hidden">
                           <p className="truncate text-sm font-black text-[var(--color-text-primary)]">
                             {transaction.description}
