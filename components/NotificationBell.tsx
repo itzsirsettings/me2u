@@ -11,7 +11,7 @@ export default function NotificationBell() {
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
-    <div className="relative">
+    <div className="relative min-w-0">
       <button 
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Open notifications"
@@ -58,8 +58,8 @@ export default function NotificationBell() {
                       key={notif.id}
                       className={`mb-2 rounded-lg p-3 text-sm transition-colors ${notif.isRead ? 'opacity-70 hover:bg-[var(--color-bg-secondary)]' : 'border border-[var(--color-border)] bg-[var(--color-positive-bg)]'}`}
                     >
-                      <p className="font-semibold text-[var(--color-text-primary)] mb-1">{notif.title}</p>
-                      <p className="text-[var(--color-text-secondary)]">{notif.message}</p>
+                      <p className="overflow-anywhere mb-1 font-semibold text-[var(--color-text-primary)]">{notif.title}</p>
+                      <p className="overflow-anywhere text-[var(--color-text-secondary)]">{notif.message}</p>
                       <p className="mt-2 text-xs text-[var(--color-text-secondary)] opacity-60">
                         {new Date(notif.date).toLocaleString()}
                       </p>

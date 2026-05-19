@@ -134,14 +134,14 @@ export default function WalletPage() {
       <motion.div variants={itemVariants} className="w-full space-y-4 md:space-y-6">
         {!user?.registrationDepositPaid && (
           <Card className="kinetic-border p-5 shadow-[4px_4px_0px_var(--color-shadow)] bg-[var(--color-bg-card)] md:p-8">
-            <div className="mb-5 flex items-start justify-between gap-4 border-b border-[var(--color-border)] pb-5">
-              <div>
+            <div className="mb-5 flex min-w-0 items-start justify-between gap-4 border-b border-[var(--color-border)] pb-5">
+              <div className="min-w-0">
                 <h2 className="text-xl font-display md:text-3xl">Registration Deposit</h2>
                 <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">
                   Your ₦{onboardingCreditAmount.toLocaleString()} welcome bonus is waiting, activate with just ₦{registrationDepositAmount.toLocaleString()}.
                 </p>
               </div>
-              <span className="rounded-[5px] border border-[var(--color-border)] bg-[var(--color-warning-bg)] px-3 py-1 text-xs font-bold uppercase text-[var(--color-warning-text)]">
+              <span className="shrink-0 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-warning-bg)] px-3 py-1 text-xs font-bold uppercase text-[var(--color-warning-text)]">
                 Required
               </span>
             </div>
@@ -150,17 +150,17 @@ export default function WalletPage() {
               <div className="rounded-[5px] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 text-sm">
                 {hasPlatformAccountDetails ? (
                   <div className="grid gap-2">
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-[var(--color-text-secondary)]">Bank</span>
-                      <span className="font-semibold">{platformAccountBank}</span>
+                    <div className="flex min-w-0 items-center justify-between gap-3">
+                      <span className="shrink-0 text-[var(--color-text-secondary)]">Bank</span>
+                      <span className="overflow-anywhere min-w-0 text-right font-semibold">{platformAccountBank}</span>
                     </div>
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-[var(--color-text-secondary)]">Account Name</span>
-                      <span className="font-semibold">{platformAccountName}</span>
+                    <div className="flex min-w-0 items-center justify-between gap-3">
+                      <span className="shrink-0 text-[var(--color-text-secondary)]">Account Name</span>
+                      <span className="overflow-anywhere min-w-0 text-right font-semibold">{platformAccountName}</span>
                     </div>
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-[var(--color-text-secondary)]">Account Number</span>
-                      <span className="font-mono font-semibold">{platformAccountNumber}</span>
+                    <div className="flex min-w-0 items-center justify-between gap-3">
+                      <span className="shrink-0 text-[var(--color-text-secondary)]">Account Number</span>
+                      <span className="overflow-anywhere min-w-0 text-right font-mono font-semibold">{platformAccountNumber}</span>
                     </div>
                   </div>
                 ) : (
@@ -230,17 +230,17 @@ export default function WalletPage() {
           <div className="mb-4 rounded-[5px] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3 text-sm md:p-4">
             {hasPlatformAccountDetails ? (
               <div className="grid gap-2">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-[var(--color-text-secondary)]">Bank</span>
-                  <span className="font-semibold">{platformAccountBank}</span>
+                <div className="flex min-w-0 items-center justify-between gap-3">
+                  <span className="shrink-0 text-[var(--color-text-secondary)]">Bank</span>
+                  <span className="overflow-anywhere min-w-0 text-right font-semibold">{platformAccountBank}</span>
                 </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-[var(--color-text-secondary)]">Account Name</span>
-                  <span className="font-semibold">{platformAccountName}</span>
+                <div className="flex min-w-0 items-center justify-between gap-3">
+                  <span className="shrink-0 text-[var(--color-text-secondary)]">Account Name</span>
+                  <span className="overflow-anywhere min-w-0 text-right font-semibold">{platformAccountName}</span>
                 </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-[var(--color-text-secondary)]">Account Number</span>
-                  <span className="font-mono font-semibold">{platformAccountNumber}</span>
+                <div className="flex min-w-0 items-center justify-between gap-3">
+                  <span className="shrink-0 text-[var(--color-text-secondary)]">Account Number</span>
+                  <span className="overflow-anywhere min-w-0 text-right font-mono font-semibold">{platformAccountNumber}</span>
                 </div>
               </div>
             ) : (

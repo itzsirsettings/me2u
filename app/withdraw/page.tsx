@@ -145,14 +145,14 @@ export default function WithdrawPage() {
                 {withdrawalAmount > 0 && (
                   <div className="mb-4 grid gap-2.5 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3 text-sm md:mb-6 md:p-4">
                     {platformLoanDeposit > 0 && (
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="text-[var(--color-text-secondary)]">Active loan condition</span>
-                        <span className="font-mono font-semibold">₦{platformLoanDeposit.toLocaleString()}</span>
+                      <div className="flex min-w-0 items-center justify-between gap-3">
+                        <span className="min-w-0 text-[var(--color-text-secondary)]">Active loan condition</span>
+                        <span className="overflow-anywhere min-w-0 text-right font-mono font-semibold">₦{platformLoanDeposit.toLocaleString()}</span>
                       </div>
                     )}
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-[var(--color-text-secondary)]">Balance needed before withdrawal</span>
-                      <span className="font-mono font-semibold">₦{requiredBalance.toLocaleString()}</span>
+                    <div className="flex min-w-0 items-center justify-between gap-3">
+                      <span className="min-w-0 text-[var(--color-text-secondary)]">Balance needed before withdrawal</span>
+                      <span className="overflow-anywhere min-w-0 text-right font-mono font-semibold">₦{requiredBalance.toLocaleString()}</span>
                     </div>
                     {shortfall > 0 ? (
                       <p className="rounded-[5px] bg-[var(--color-warning-bg)] p-3 text-[var(--color-warning-text)]">

@@ -27,6 +27,8 @@ const STYLES = {
     overflow: "hidden",
     transition: "transform 0.15s cubic-bezier(.4,0,.2,1), box-shadow 0.2s, background 0.3s",
     minWidth: "220px",
+    maxWidth: "100%",
+    boxSizing: "border-box",
   },
   solid: {
     background: "var(--gradient-primary)",
@@ -100,6 +102,9 @@ function SlotContent({ visible, children }) {
     <div style={{
       position: "absolute", inset: 0,
       display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+      minWidth: 0,
+      overflow: "hidden",
+      padding: "0 10px",
       transition: "opacity 0.22s, transform 0.22s cubic-bezier(.4,0,.2,1)",
       opacity: visible ? 1 : 0,
       transform: visible ? "translateY(0)" : "translateY(6px)",

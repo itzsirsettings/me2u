@@ -34,14 +34,14 @@ export default function Profile() {
         Profile
       </h1>
       <div className="mobile-soft-card space-y-3 rounded-[5px] border border-[var(--color-border)] bg-card p-3.5 shadow-[4px_4px_0px_var(--color-shadow)] md:space-y-6 md:p-8">
-        <div className="flex items-start gap-3">
-          <span className="inline-flex h-10 w-10 items-center justify-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-accent-primary)]">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-accent-primary)]">
             <Icons8Icon name="referral" size={22} />
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-xs font-bold uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Referral Link</p>
-            <div className="mt-1 flex items-center gap-2">
-              <p className="truncate font-mono text-sm bg-[var(--color-bg-secondary)] px-2 py-1 rounded-[5px] border border-[var(--color-border)]">
+            <div className="mt-1 flex min-w-0 items-center gap-2">
+              <p className="min-w-0 flex-1 truncate rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-2 py-1 font-mono text-sm">
                 {referralLink || "..."}
               </p>
               <button
@@ -69,33 +69,33 @@ export default function Profile() {
             </p>
           </div>
         </div>
-        <div className="flex items-start gap-3">
-          <span className="inline-flex h-10 w-10 items-center justify-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-positive-bg)] text-[var(--color-positive-text)]">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-positive-bg)] text-[var(--color-positive-text)]">
             <Icons8Icon name="moneyBag" size={22} />
           </span>
           <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Affiliate Earnings</p>
-            <p className="break-words">₦{(user?.affiliateEarnings || 0).toLocaleString()}</p>
+            <p className="overflow-anywhere">₦{(user?.affiliateEarnings || 0).toLocaleString()}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="inline-flex h-10 w-10 items-center justify-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-positive-bg)] text-[var(--color-positive-text)]">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-positive-bg)] text-[var(--color-positive-text)]">
             <Icons8Icon name={user?.kycVerified ? "check" : "shield"} size={22} />
           </span>
-          <div>
+          <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">KYC</p>
             <p className={user?.kycVerified ? "font-medium text-[var(--color-positive-text)]" : "font-medium text-[var(--color-warning-text)]"}>
               {user?.kycVerified ? "Approved" : "Pending"}
             </p>
           </div>
         </div>
-        <div className="flex items-start gap-3">
-          <span className="inline-flex h-10 w-10 items-center justify-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-accent-primary)]">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-accent-primary)]">
             <Icons8Icon name="bank" size={22} />
           </span>
           <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Bank</p>
-            <p className="break-words">
+            <p className="overflow-anywhere">
               {user?.bankName || "Not added"} • {user?.accountNumber || "No account number"}
             </p>
           </div>

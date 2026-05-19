@@ -149,7 +149,7 @@ export default function KYCPage() {
 
       <div className="space-y-5 rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[4px_4px_0px_var(--color-shadow)] md:space-y-8 md:p-8 kinetic-border">
         {error && (
-          <div className="flex items-center gap-3 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-negative-bg)] p-4 text-[var(--color-negative-text)]">
+          <div className="flex min-w-0 items-center gap-3 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-negative-bg)] p-4 text-[var(--color-negative-text)]">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
             <p className="text-sm font-bold font-sans">{error}</p>
           </div>
@@ -157,7 +157,7 @@ export default function KYCPage() {
 
         {/* Bank Details */}
         <div className="space-y-4">
-          <h3 className="text-xl font-display leading-none text-[var(--color-text-primary)] flex items-center gap-2">
+          <h3 className="flex min-w-0 items-center gap-2 text-xl font-display leading-none text-[var(--color-text-primary)]">
             <span className="text-[var(--color-accent-primary)]">01.</span> Bank Details
           </h3>
           <p className="text-sm font-sans text-[var(--color-text-secondary)]">
@@ -198,7 +198,7 @@ export default function KYCPage() {
 
         {/* Passport Upload */}
         <div className="space-y-4">
-          <h3 className="text-xl font-display leading-none text-[var(--color-text-primary)] flex items-center gap-2">
+          <h3 className="flex min-w-0 items-center gap-2 text-xl font-display leading-none text-[var(--color-text-primary)]">
             <span className="text-[var(--color-accent-primary)]">02.</span> Passport Photo
           </h3>
           <p className="text-sm font-sans text-[var(--color-text-secondary)]">
@@ -220,7 +220,7 @@ export default function KYCPage() {
               {passportFile ? (
                 <>
                   <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--color-positive-text)]"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                  <span className="text-sm font-bold font-sans text-[var(--color-positive-text)]">
+                  <span className="overflow-anywhere text-center text-sm font-bold font-sans text-[var(--color-positive-text)]">
                     {passportFile.name}
                   </span>
                 </>
@@ -243,22 +243,22 @@ export default function KYCPage() {
 
         {/* Facial Recognition (Coming Soon) */}
         <div className="space-y-4">
-          <h3 className="text-xl font-display leading-none text-[var(--color-text-secondary)] flex items-center gap-2">
+          <h3 className="flex min-w-0 items-center gap-2 text-xl font-display leading-none text-[var(--color-text-secondary)]">
             <span className="opacity-50">03.</span> Face Scan
           </h3>
-          <div className="flex items-center justify-between rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 opacity-50">
-            <div className="flex items-center gap-3">
-              <div className="rounded-[5px] bg-[var(--color-bg-card)] p-2">
+          <div className="flex min-w-0 items-center justify-between gap-3 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 opacity-50">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="shrink-0 rounded-[5px] bg-[var(--color-bg-card)] p-2">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--color-text-secondary)]"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></svg>
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="font-bold font-sans text-[var(--color-text-primary)]">Live Face Scan</p>
                 <p className="text-xs font-sans text-[var(--color-text-secondary)]">
                   Enhanced biometric security
                 </p>
               </div>
             </div>
-            <span className="rounded-[5px] border border-[var(--color-border)] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
+            <span className="shrink-0 rounded-[5px] border border-[var(--color-border)] px-3 py-1 text-[10px] font-bold uppercase tracking-normal text-[var(--color-text-secondary)] sm:tracking-wider">
               Coming Soon
             </span>
           </div>

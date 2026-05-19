@@ -149,8 +149,8 @@ export default function Loans() {
       initial="hidden"
       animate="show"
     >
-      <motion.div variants={itemVariants} className="mb-4 flex flex-col gap-3 md:mb-12 md:flex-row md:items-end md:justify-between">
-        <div>
+      <motion.div variants={itemVariants} className="mb-4 flex min-w-0 flex-col gap-3 md:mb-12 md:flex-row md:items-end md:justify-between">
+        <div className="min-w-0">
           <p className="mb-2 hidden items-center gap-2 text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)] md:flex">
             <Icons8Icon name="requestMoney" size={18} />
             Credit
@@ -159,29 +159,29 @@ export default function Loans() {
             My Loans
           </h1>
         </div>
-        <div className="mobile-soft-card rounded-[20px] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3.5 py-2.5 shadow-[2px_2px_0px_var(--color-shadow)] md:px-5 md:py-4">
+        <div className="mobile-soft-card min-w-0 rounded-[20px] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3.5 py-2.5 shadow-[2px_2px_0px_var(--color-shadow)] md:px-5 md:py-4">
           <p className="text-xs font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">Wallet Balance</p>
-          <p className="text-xl font-display leading-none md:text-2xl">₦{currentBalance.toLocaleString()}</p>
+          <p className="overflow-anywhere text-xl font-display leading-none md:text-2xl">₦{currentBalance.toLocaleString()}</p>
         </div>
       </motion.div>
 
       <motion.div variants={itemVariants}>
         <Card className="mb-4 kinetic-border bg-[var(--color-bg-card)] p-5 shadow-[4px_4px_0px_var(--color-shadow)] md:mb-10 md:p-8">
-          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div className="flex min-w-0 flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div className="min-w-0 flex-1">
-              <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-accent-primary)]">
+              <div className="mb-4 flex min-w-0 items-center gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-accent-primary)]">
                   <Icons8Icon name="shield" size={24} />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <h2 className="text-xl font-display leading-none md:text-3xl">
                     0% Interest Loan
                   </h2>
                 </div>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
-                <div>
+              <div className="grid min-w-0 gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+                <div className="min-w-0">
                   <label className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
                     Loan Amount (₦)
                   </label>
@@ -224,15 +224,15 @@ export default function Loans() {
               </div>
 
               <div className="mt-5 grid gap-3 rounded-[5px] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 text-sm md:grid-cols-3">
-                <div>
+                <div className="min-w-0">
                   <p className="font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">Minimum</p>
-                  <p className="mt-1 font-mono text-lg text-[var(--color-text-primary)]">₦{repeatPlatformLoanMinimum.toLocaleString()}</p>
+                  <p className="overflow-anywhere mt-1 font-mono text-lg text-[var(--color-text-primary)]">₦{repeatPlatformLoanMinimum.toLocaleString()}</p>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">50% Retained</p>
-                  <p className="mt-1 font-mono text-lg text-[var(--color-text-primary)]">₦{retainedDeposit.toLocaleString()}</p>
+                  <p className="overflow-anywhere mt-1 font-mono text-lg text-[var(--color-text-primary)]">₦{retainedDeposit.toLocaleString()}</p>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">Status</p>
                   <p className={`mt-1 font-sans font-semibold ${requestDisabled ? "text-[var(--color-warning-text)]" : "text-[var(--color-positive-text)]"}`}>
                     {activePlatformLoan
@@ -264,18 +264,18 @@ export default function Loans() {
               whileHover={{ scale: 1.01, transition: { duration: 0.2 } }}
             >
               <Card className="kinetic-border p-5 shadow-[4px_4px_0px_var(--color-shadow)] bg-[var(--color-bg-card)] md:p-8">
-                <div className="mb-4 flex flex-col gap-2 border-b border-[var(--color-border)] pb-4 sm:flex-row sm:items-center sm:justify-between">
-                  <p className={`font-sans font-semibold ${loan.status === "active" ? "text-[var(--color-accent-primary)]" : "text-[var(--color-text-secondary)]"}`}>
+                <div className="mb-4 flex min-w-0 flex-col gap-2 border-b border-[var(--color-border)] pb-4 sm:flex-row sm:items-center sm:justify-between">
+                  <p className={`min-w-0 font-sans font-semibold ${loan.status === "active" ? "text-[var(--color-accent-primary)]" : "text-[var(--color-text-secondary)]"}`}>
                     {loan.status === "active" ? "Active" : "Completed"} - {loan.source === "platform" ? "Loan" : loan.role === "borrower" ? "Borrowed" : "Lent"}
                   </p>
-                  <p className="text-sm font-sans text-[var(--color-text-secondary)]">
+                  <p className="shrink-0 text-sm font-sans text-[var(--color-text-secondary)]">
                     Due: {new Date(loan.dueDate).toLocaleDateString()}
                   </p>
                 </div>
                 
-                <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end md:gap-6">
-                  <div>
-                    <p className="text-2xl font-display leading-none md:text-5xl">₦{loan.amount.toLocaleString()}</p>
+                <div className="flex min-w-0 flex-col justify-between gap-4 md:flex-row md:items-end md:gap-6">
+                  <div className="min-w-0">
+                    <p className="overflow-anywhere text-2xl font-display leading-none md:text-5xl">₦{loan.amount.toLocaleString()}</p>
                     <p className="mt-3 font-sans text-[var(--color-text-secondary)]">
                       Rate: {loan.rate}% • Duration: {loan.days} days
                     </p>

@@ -53,6 +53,43 @@ test("home recent activity rows cannot force horizontal overflow", () => {
   assert.match(dashboard, /max-w-\[36%\] shrink-0 truncate/);
 });
 
+test("admin dashboard uses overflow-safe grids and contained ledger scrolling", () => {
+  const admin = read("app/admin/page.tsx");
+  const globals = read("app/globals.css");
+
+  assert.match(admin, /max-w-\[100vw\] overflow-x-hidden/);
+  assert.match(admin, /xl:grid-cols-\[minmax\(0,1\.15fr\)_minmax\(0,0\.85fr\)\]/);
+  assert.match(admin, /xl:grid-cols-\[minmax\(0,0\.9fr\)_minmax\(0,1\.1fr\)\]/);
+  assert.match(admin, /scroll-x-contained mt-4/);
+  assert.match(admin, /max-w-full shrink-0 items-center justify-center/);
+  assert.match(globals, /overflow-x: clip/);
+  assert.match(globals, /:where\(main, section, article, aside, header, footer, nav, form, div\)/);
+  assert.match(globals, /\.overflow-anywhere/);
+});
+
+test("authenticated routes keep long financial data inside their containers", () => {
+  const globals = read("app/globals.css");
+  const loadingButton = read("LoadingButton.jsx");
+  const wallet = read("app/wallet/page.tsx");
+  const withdraw = read("app/withdraw/page.tsx");
+  const loans = read("app/loans/page.tsx");
+  const profile = read("app/profile/page.tsx");
+  const marketplace = read("app/marketplace/page.tsx");
+  const kyc = read("app/kyc/page.tsx");
+  const notifications = read("components/NotificationBell.tsx");
+
+  assert.match(globals, /:where\(button, input, select, textarea\)/);
+  assert.match(loadingButton, /maxWidth: "100%"/);
+  assert.match(wallet, /overflow-anywhere min-w-0 text-right font-semibold/);
+  assert.match(withdraw, /overflow-anywhere min-w-0 text-right font-mono font-semibold/);
+  assert.match(loans, /md:grid-cols-\[minmax\(0,1fr\)_auto\]/);
+  assert.match(loans, /overflow-anywhere text-2xl font-display/);
+  assert.match(profile, /min-w-0 flex-1 truncate/);
+  assert.match(marketplace, /overflow-anywhere mt-2 text-2xl font-display/);
+  assert.match(kyc, /flex min-w-0 items-center justify-between gap-3/);
+  assert.match(notifications, /overflow-anywhere .*notif\.title/);
+});
+
 test("username login and the new loan minimum are wired", () => {
   const login = read("app/login/page.tsx");
   const store = read("lib/store.ts");

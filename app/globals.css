@@ -129,7 +129,49 @@ body {
 html,
 body {
   max-width: 100%;
-  overflow-x: hidden;
+  overflow-x: clip;
+}
+
+@supports not (overflow: clip) {
+  html,
+  body {
+    overflow-x: hidden;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:where(main, section, article, aside, header, footer, nav, form, div) {
+  min-width: 0;
+}
+
+:where(p, h1, h2, h3, h4, h5, h6, span, b, strong, dt, dd, td, th, a, button, label) {
+  overflow-wrap: break-word;
+}
+
+:where(img, video, canvas, svg) {
+  max-width: 100%;
+}
+
+:where(button, input, select, textarea) {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.overflow-anywhere {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.scroll-x-contained {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 @media (max-width: 767px) {

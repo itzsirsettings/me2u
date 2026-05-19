@@ -111,7 +111,7 @@ export default function Marketplace() {
       initial="hidden"
       animate="show"
     >
-      <motion.div variants={itemVariants} className="mb-4 flex flex-col gap-3 md:mb-12 md:flex-row md:items-center md:justify-between md:gap-6">
+      <motion.div variants={itemVariants} className="mb-4 flex min-w-0 flex-col gap-3 md:mb-12 md:flex-row md:items-center md:justify-between md:gap-6">
         <h1 className="sr-only md:not-sr-only md:text-7xl md:font-display md:leading-[0.85] md:tracking-tighter">Marketplace</h1>
         <button className={`${showForm ? "btn-ghost" : "btn-primary"} h-11 w-full md:h-12 md:w-auto`} onClick={() => setShowForm(!showForm)}>
           {showForm ? "Cancel" : "Create Listing"}
@@ -199,19 +199,19 @@ export default function Marketplace() {
           <motion.div key={item.id} whileHover={{ y: -8, transition: { duration: 0.3 } }}>
             <Card className="kinetic-border p-5 h-full flex flex-col justify-between shadow-[4px_4px_0px_var(--color-shadow)] bg-[var(--color-bg-card)] md:p-8">
               <div>
-                <div className="mb-4 flex items-start justify-between gap-3 border-b border-[var(--color-border)] pb-3 md:mb-6 md:pb-4">
+                <div className="mb-4 flex min-w-0 items-start justify-between gap-3 border-b border-[var(--color-border)] pb-3 md:mb-6 md:pb-4">
                   <div className="min-w-0">
                     <p className={`font-sans font-bold uppercase tracking-wide text-sm ${item.type === "borrow_request" ? "text-[var(--color-warning-text)]" : "text-[var(--color-accent-primary)]"}`}>
                       {item.type === "borrow_request" ? "Borrow Request" : "Lending Offer"}
                     </p>
-                    <p className="mt-1 font-sans text-sm text-[var(--color-text-secondary)] italic">by {item.authorName}</p>
+                    <p className="overflow-anywhere mt-1 font-sans text-sm italic text-[var(--color-text-secondary)]">by {item.authorName}</p>
                   </div>
                   <div className="flex shrink-0 items-center gap-1 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-positive-bg)] px-2 py-1 text-[11px] font-bold font-mono text-[var(--color-positive-text)] shadow-[2px_2px_0px_var(--color-shadow)] md:px-3 md:text-xs">
                     <Icons8Icon name="shield" size={16} />
                     Trust: {item.trustScore}
                   </div>
                 </div>
-                <p className="mt-2 text-2xl font-display leading-none md:text-5xl">₦{item.amount.toLocaleString()}</p>
+                <p className="overflow-anywhere mt-2 text-2xl font-display leading-none md:text-5xl">₦{item.amount.toLocaleString()}</p>
                 <div className="mt-5 grid grid-cols-2 gap-3 text-sm font-sans text-[var(--color-text-secondary)] md:mt-6 md:gap-4">
                   <div className="p-3 bg-[var(--color-bg-primary)] rounded-[5px] kinetic-border border-dashed">
                     <p className="text-[10px] uppercase font-bold tracking-[0.1em] mb-1 md:tracking-[0.2em]">Interest</p>

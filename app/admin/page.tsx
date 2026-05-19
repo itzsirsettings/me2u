@@ -149,7 +149,7 @@ function StatusBadge({
   status: "pending" | "approved" | "rejected" | "active" | "completed" | "funded" | "cancelled";
 }) {
   return (
-    <span className={`inline-flex items-center rounded-[5px] px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.08em] ${statusClass(status)}`}>
+    <span className={`inline-flex max-w-full shrink-0 items-center justify-center rounded-[5px] px-2.5 py-1 text-center text-[11px] font-bold uppercase leading-tight tracking-normal sm:tracking-[0.08em] ${statusClass(status)}`}>
       {children}
     </span>
   );
@@ -167,19 +167,19 @@ function MetricCard({
   icon: "wallet" | "moneyBag" | "cash" | "requestMoney" | "market" | "profile" | "referral" | "loans";
 }) {
   return (
-    <div className="rounded-[6px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[3px_3px_0px_var(--color-shadow)]">
-      <div className="mb-4 flex items-start justify-between gap-3">
-        <p className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--color-text-secondary)]">
+    <div className="min-w-0 overflow-hidden rounded-[6px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[3px_3px_0px_var(--color-shadow)]">
+      <div className="mb-4 flex min-w-0 items-start justify-between gap-3">
+        <p className="min-w-0 text-xs font-bold uppercase tracking-normal text-[var(--color-text-secondary)] sm:tracking-[0.12em]">
           {label}
         </p>
-        <span className="grid h-9 w-9 place-items-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-accent-primary)]">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-accent-primary)]">
           <Icons8Icon name={icon} size={20} />
         </span>
       </div>
-      <p className="font-display text-2xl font-bold leading-none text-[var(--color-text-primary)] md:text-3xl">
+      <p className="overflow-anywhere font-display text-[1.45rem] font-bold leading-none text-[var(--color-text-primary)] md:text-3xl">
         {value}
       </p>
-      <p className="mt-3 text-sm leading-relaxed text-[var(--color-text-secondary)]">{detail}</p>
+      <p className="overflow-anywhere mt-3 text-sm leading-relaxed text-[var(--color-text-secondary)]">{detail}</p>
     </div>
   );
 }
@@ -201,8 +201,8 @@ function QueueActionButton({
       disabled={busy}
       className={
         variant === "danger"
-          ? "min-h-10 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-negative-bg)] px-3 text-xs font-bold uppercase tracking-[0.08em] text-[var(--color-negative-text)] transition disabled:opacity-50"
-          : "min-h-10 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-accent-primary)] px-3 text-xs font-bold uppercase tracking-[0.08em] text-[var(--color-on-accent)] shadow-[2px_2px_0px_var(--color-shadow)] transition disabled:opacity-50"
+          ? "min-h-10 max-w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-negative-bg)] px-3 text-xs font-bold uppercase leading-tight tracking-normal text-[var(--color-negative-text)] transition disabled:opacity-50 sm:tracking-[0.08em]"
+          : "min-h-10 max-w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-accent-primary)] px-3 text-xs font-bold uppercase leading-tight tracking-normal text-[var(--color-on-accent)] shadow-[2px_2px_0px_var(--color-shadow)] transition disabled:opacity-50 sm:tracking-[0.08em]"
       }
     >
       {busy ? "Working..." : label}
@@ -411,25 +411,25 @@ export default function AdminDashboard() {
   }
 
   return (
-    <main className="mx-auto min-h-screen max-w-7xl px-3.5 pb-28 pt-[4.85rem] md:px-6 md:pt-24">
-      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--color-text-secondary)]">
+    <main className="mx-auto min-h-screen w-full max-w-[100vw] overflow-x-hidden px-3.5 pb-28 pt-[4.85rem] md:max-w-7xl md:px-6 md:pt-24">
+      <div className="mb-6 flex min-w-0 flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="min-w-0">
+          <p className="text-xs font-bold uppercase tracking-normal text-[var(--color-text-secondary)] sm:tracking-[0.14em]">
             Operations
           </p>
-          <h1 className="mt-2 font-display text-[2.75rem] font-bold leading-[0.85] tracking-tight text-[var(--color-text-primary)] md:text-6xl">
+          <h1 className="mt-2 font-display text-[2.4rem] font-bold leading-[0.9] tracking-tight text-[var(--color-text-primary)] sm:text-[2.75rem] md:text-6xl">
             Admin Command Center
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-[var(--color-text-secondary)] md:text-base">
             Monitor users, wallets, revenue, approvals, loans, marketplace activity, and risk signals from one control surface.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           {(["operations", "users", "ledger"] as const).map((view) => (
             <button
               key={view}
               onClick={() => setActiveView(view)}
-              className={`min-h-11 rounded-[5px] border border-[var(--color-border)] px-4 text-sm font-bold capitalize transition ${
+              className={`min-h-11 min-w-0 rounded-[5px] border border-[var(--color-border)] px-3 text-sm font-bold capitalize transition sm:px-4 ${
                 activeView === view
                   ? "bg-[var(--color-accent-primary)] text-[var(--color-on-accent)] shadow-[2px_2px_0px_var(--color-shadow)]"
                   : "bg-[var(--color-bg-card)] text-[var(--color-text-primary)]"
@@ -444,7 +444,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <section className="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="mb-6 grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           label="Revenue"
           value={money(overview.summary.revenue)}
@@ -471,7 +471,7 @@ export default function AdminDashboard() {
         />
       </section>
 
-      <section className="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="mb-6 grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           label="Wallet Liability"
           value={money(overview.summary.wallet_liability)}
@@ -499,11 +499,11 @@ export default function AdminDashboard() {
       </section>
 
       {activeView === "operations" && (
-        <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
-          <section className="space-y-4">
-            <div className="rounded-[6px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[4px_4px_0px_var(--color-shadow)]">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <div>
+        <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+          <section className="min-w-0 space-y-4">
+            <div className="min-w-0 overflow-hidden rounded-[6px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[4px_4px_0px_var(--color-shadow)]">
+              <div className="mb-4 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
                   <h2 className="font-display text-2xl font-bold">Funding Approvals</h2>
                   <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
                     Confirm wallet funding and registration deposits after checking receipts.
@@ -521,36 +521,36 @@ export default function AdminDashboard() {
                   {[...pendingRegistrationProofs, ...pendingFundingProofs].map((proof) => (
                     <article
                       key={proof.id}
-                      className="grid gap-3 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3 md:grid-cols-[1fr_auto]"
+                      className="grid min-w-0 gap-3 overflow-hidden rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3 md:grid-cols-[minmax(0,1fr)_auto]"
                     >
                       <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="font-bold text-[var(--color-text-primary)]">{proof.user_name}</p>
+                        <div className="flex min-w-0 flex-wrap items-center gap-2">
+                          <p className="min-w-0 font-bold text-[var(--color-text-primary)]">{proof.user_name}</p>
                           <StatusBadge status={proof.status}>{proofTypeLabel(proof.type)}</StatusBadge>
                         </div>
-                        <p className="mt-1 text-sm text-[var(--color-text-secondary)]">{proof.user_email}</p>
-                        <div className="mt-3 grid gap-2 text-sm sm:grid-cols-3">
-                          <span>
+                        <p className="overflow-anywhere mt-1 text-sm text-[var(--color-text-secondary)]">{proof.user_email}</p>
+                        <div className="mt-3 grid min-w-0 gap-2 text-sm sm:grid-cols-3">
+                          <span className="min-w-0">
                             <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Amount</b>
                             {money(Number(proof.amount))}
                           </span>
-                          <span>
+                          <span className="min-w-0">
                             <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Reference</b>
                             <span className="break-all font-mono">{proof.reference}</span>
                           </span>
-                          <span>
+                          <span className="min-w-0">
                             <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Submitted</b>
                             {formatDate(proof.created_at)}
                           </span>
                         </div>
                       </div>
-                      <div className="flex flex-wrap items-center gap-2 md:justify-end">
+                      <div className="flex min-w-0 flex-wrap items-center gap-2 md:justify-end">
                         {proof.receipt_signed_url ? (
                           <a
                             href={proof.receipt_signed_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="min-h-10 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 py-2 text-xs font-bold uppercase tracking-[0.08em]"
+                            className="min-h-10 max-w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 py-2 text-xs font-bold uppercase leading-tight tracking-normal sm:tracking-[0.08em]"
                           >
                             View receipt
                           </a>
@@ -573,9 +573,9 @@ export default function AdminDashboard() {
               )}
             </div>
 
-            <div className="rounded-[6px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[4px_4px_0px_var(--color-shadow)]">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <div>
+            <div className="min-w-0 overflow-hidden rounded-[6px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[4px_4px_0px_var(--color-shadow)]">
+              <div className="mb-4 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
                   <h2 className="font-display text-2xl font-bold">Withdrawal Control</h2>
                   <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
                     Approvals debit wallets only after the admin decision passes balance and loan-retention checks.
@@ -593,36 +593,36 @@ export default function AdminDashboard() {
                   {pendingWithdrawals.map((withdrawal) => (
                     <article
                       key={withdrawal.id}
-                      className="grid gap-3 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3 md:grid-cols-[1fr_auto]"
+                      className="grid min-w-0 gap-3 overflow-hidden rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3 md:grid-cols-[minmax(0,1fr)_auto]"
                     >
-                      <div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="font-bold text-[var(--color-text-primary)]">{withdrawal.user_name}</p>
+                      <div className="min-w-0">
+                        <div className="flex min-w-0 flex-wrap items-center gap-2">
+                          <p className="min-w-0 font-bold text-[var(--color-text-primary)]">{withdrawal.user_name}</p>
                           <StatusBadge status={withdrawal.status}>Withdrawal</StatusBadge>
                         </div>
-                        <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+                        <p className="overflow-anywhere mt-1 text-sm text-[var(--color-text-secondary)]">
                           {withdrawal.user_email} {withdrawal.user_phone ? `• ${withdrawal.user_phone}` : ""}
                         </p>
-                        <div className="mt-3 grid gap-2 text-sm sm:grid-cols-4">
-                          <span>
+                        <div className="mt-3 grid min-w-0 gap-2 text-sm sm:grid-cols-4">
+                          <span className="min-w-0">
                             <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Amount</b>
                             {money(Number(withdrawal.amount))}
                           </span>
-                          <span>
+                          <span className="min-w-0">
                             <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Wallet</b>
                             {money(withdrawal.wallet_balance)}
                           </span>
-                          <span>
+                          <span className="min-w-0">
                             <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Bank</b>
                             {withdrawal.bank_name || "Not set"}
                           </span>
-                          <span>
+                          <span className="min-w-0">
                             <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Account</b>
-                            <span className="font-mono">{withdrawal.account_number || "Not set"}</span>
+                            <span className="overflow-anywhere font-mono">{withdrawal.account_number || "Not set"}</span>
                           </span>
                         </div>
                       </div>
-                      <div className="flex flex-wrap items-center gap-2 md:justify-end">
+                      <div className="flex min-w-0 flex-wrap items-center gap-2 md:justify-end">
                         <QueueActionButton
                           label="Approve"
                           busy={busyAction === `approve_withdrawal:${withdrawal.id}`}
@@ -642,30 +642,30 @@ export default function AdminDashboard() {
             </div>
           </section>
 
-          <aside className="space-y-4">
-            <div className="rounded-[6px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[4px_4px_0px_var(--color-shadow)]">
+          <aside className="min-w-0 space-y-4">
+            <div className="min-w-0 overflow-hidden rounded-[6px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[4px_4px_0px_var(--color-shadow)]">
               <h2 className="font-display text-2xl font-bold">Live Health</h2>
               <div className="mt-4 grid gap-3">
-                <div className="flex items-center justify-between gap-3 rounded-[5px] bg-[var(--color-bg-secondary)] p-3">
-                  <span className="text-sm text-[var(--color-text-secondary)]">Verified users</span>
-                  <b>{overview.summary.verified_users}/{overview.summary.users}</b>
+                <div className="flex min-w-0 items-center justify-between gap-3 rounded-[5px] bg-[var(--color-bg-secondary)] p-3">
+                  <span className="min-w-0 text-sm text-[var(--color-text-secondary)]">Verified users</span>
+                  <b className="shrink-0">{overview.summary.verified_users}/{overview.summary.users}</b>
                 </div>
-                <div className="flex items-center justify-between gap-3 rounded-[5px] bg-[var(--color-bg-secondary)] p-3">
-                  <span className="text-sm text-[var(--color-text-secondary)]">Active marketplace</span>
-                  <b>{overview.summary.marketplace_active}</b>
+                <div className="flex min-w-0 items-center justify-between gap-3 rounded-[5px] bg-[var(--color-bg-secondary)] p-3">
+                  <span className="min-w-0 text-sm text-[var(--color-text-secondary)]">Active marketplace</span>
+                  <b className="shrink-0">{overview.summary.marketplace_active}</b>
                 </div>
-                <div className="flex items-center justify-between gap-3 rounded-[5px] bg-[var(--color-bg-secondary)] p-3">
-                  <span className="text-sm text-[var(--color-text-secondary)]">Admins</span>
-                  <b>{overview.summary.admins}</b>
+                <div className="flex min-w-0 items-center justify-between gap-3 rounded-[5px] bg-[var(--color-bg-secondary)] p-3">
+                  <span className="min-w-0 text-sm text-[var(--color-text-secondary)]">Admins</span>
+                  <b className="shrink-0">{overview.summary.admins}</b>
                 </div>
                 <div className="rounded-[5px] bg-[var(--color-bg-secondary)] p-3">
                   <span className="text-sm text-[var(--color-text-secondary)]">Snapshot</span>
-                  <p className="mt-1 font-mono text-xs">{formatDate(overview.generated_at)}</p>
+                  <p className="overflow-anywhere mt-1 font-mono text-xs">{formatDate(overview.generated_at)}</p>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-[6px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[4px_4px_0px_var(--color-shadow)]">
+            <div className="min-w-0 overflow-hidden rounded-[6px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[4px_4px_0px_var(--color-shadow)]">
               <h2 className="font-display text-2xl font-bold">Active Loans</h2>
               <div className="mt-4 grid gap-2">
                 {activeLoans.length === 0 ? (
@@ -673,11 +673,11 @@ export default function AdminDashboard() {
                 ) : (
                   activeLoans.map((loan) => (
                     <div key={loan.id} className="rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <b>{money(Number(loan.amount))}</b>
+                      <div className="flex min-w-0 items-center justify-between gap-3">
+                        <b className="min-w-0 truncate">{money(Number(loan.amount))}</b>
                         <StatusBadge status={loan.status}>{loan.lender_id ? "Peer" : "Direct"}</StatusBadge>
                       </div>
-                      <p className="mt-2 text-xs text-[var(--color-text-secondary)]">
+                      <p className="overflow-anywhere mt-2 text-xs text-[var(--color-text-secondary)]">
                         Due {formatDate(loan.due_date)} • {loan.days} days • {Number(loan.rate)}%
                       </p>
                     </div>
@@ -690,10 +690,10 @@ export default function AdminDashboard() {
       )}
 
       {activeView === "users" && (
-        <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-          <section className="rounded-[6px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[4px_4px_0px_var(--color-shadow)]">
-            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
+        <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+          <section className="min-w-0 overflow-hidden rounded-[6px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[4px_4px_0px_var(--color-shadow)]">
+            <div className="mb-4 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
                 <h2 className="font-display text-2xl font-bold">User Profiles</h2>
                 <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
                   Search names, emails, phones, banks, and account numbers.
@@ -703,16 +703,16 @@ export default function AdminDashboard() {
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search users"
-                className="min-h-11 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 text-sm outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)]"
+                className="min-h-11 w-full min-w-0 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 text-sm outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)] sm:w-56"
               />
             </div>
 
-            <div className="grid max-h-[680px] gap-2 overflow-y-auto pr-1">
+            <div className="grid max-h-[680px] min-w-0 gap-2 overflow-y-auto pr-1">
               {filteredUsers.map((profile) => (
                 <button
                   key={profile.id}
                   onClick={() => setSelectedUserId(profile.id)}
-                  className={`grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-[5px] border p-3 text-left transition ${
+                  className={`grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-3 overflow-hidden rounded-[5px] border p-3 text-left transition sm:grid-cols-[auto_minmax(0,1fr)_auto] ${
                     selectedUser?.id === profile.id
                       ? "border-[var(--color-border)] bg-[var(--color-bg-secondary)] shadow-[2px_2px_0px_var(--color-shadow)]"
                       : "border-[var(--color-glass-border)] bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-secondary)]"
@@ -739,8 +739,8 @@ export default function AdminDashboard() {
                       {profile.role === "admin" ? <StatusBadge status="approved">Admin</StatusBadge> : null}
                     </span>
                   </span>
-                  <span className="text-right">
-                    <b className="block text-sm">{money(profile.wallet_balance)}</b>
+                  <span className="col-span-2 min-w-0 text-left sm:col-span-1 sm:text-right">
+                    <b className="block truncate text-sm">{money(profile.wallet_balance)}</b>
                     <span className="text-[11px] text-[var(--color-text-secondary)]">wallet</span>
                   </span>
                 </button>
@@ -748,10 +748,10 @@ export default function AdminDashboard() {
             </div>
           </section>
 
-          <section className="rounded-[6px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[4px_4px_0px_var(--color-shadow)]">
+          <section className="min-w-0 overflow-hidden rounded-[6px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[4px_4px_0px_var(--color-shadow)]">
             {selectedUser ? (
               <>
-                <div className="grid gap-4 border-b border-[var(--color-border)] pb-4 md:grid-cols-[auto_1fr]">
+                <div className="grid min-w-0 gap-4 border-b border-[var(--color-border)] pb-4 md:grid-cols-[auto_minmax(0,1fr)]">
                   {selectedUser.passport_signed_url ? (
                     <img
                       src={selectedUser.passport_signed_url}
@@ -764,8 +764,8 @@ export default function AdminDashboard() {
                     </span>
                   )}
                   <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="font-display text-3xl font-bold">{selectedUser.full_name}</h2>
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                      <h2 className="min-w-0 font-display text-2xl font-bold md:text-3xl">{selectedUser.full_name}</h2>
                       <StatusBadge status={selectedUser.kyc_verified ? "approved" : "pending"}>
                         {selectedUser.kyc_verified ? "Verified" : "Needs KYC"}
                       </StatusBadge>
@@ -776,16 +776,16 @@ export default function AdminDashboard() {
                       )}
                     </div>
                     <p className="mt-2 break-all text-sm text-[var(--color-text-secondary)]">{selectedUser.email}</p>
-                    <div className="mt-4 grid gap-2 text-sm sm:grid-cols-3">
-                      <span>
+                    <div className="mt-4 grid min-w-0 gap-2 text-sm sm:grid-cols-3">
+                      <span className="min-w-0">
                         <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Wallet</b>
                         {money(selectedUser.wallet_balance)}
                       </span>
-                      <span>
+                      <span className="min-w-0">
                         <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Locked</b>
                         {money(selectedUser.wallet_locked)}
                       </span>
-                      <span>
+                      <span className="min-w-0">
                         <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Trust</b>
                         {selectedUser.trust_score}/100
                       </span>
@@ -793,74 +793,74 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                <div className="mt-4 grid gap-3 md:grid-cols-2">
-                  <div className="rounded-[5px] bg-[var(--color-bg-secondary)] p-3">
+                <div className="mt-4 grid min-w-0 gap-3 md:grid-cols-2">
+                  <div className="min-w-0 overflow-hidden rounded-[5px] bg-[var(--color-bg-secondary)] p-3">
                     <h3 className="font-bold">Identity</h3>
                     <dl className="mt-3 grid gap-2 text-sm">
-                      <div className="flex justify-between gap-3">
-                        <dt className="text-[var(--color-text-secondary)]">Username</dt>
-                        <dd className="font-mono">{selectedUser.username || "Not set"}</dd>
+                      <div className="flex min-w-0 justify-between gap-3">
+                        <dt className="shrink-0 text-[var(--color-text-secondary)]">Username</dt>
+                        <dd className="overflow-anywhere min-w-0 text-right font-mono">{selectedUser.username || "Not set"}</dd>
                       </div>
-                      <div className="flex justify-between gap-3">
-                        <dt className="text-[var(--color-text-secondary)]">Phone</dt>
-                        <dd>{selectedUser.phone || "Not set"}</dd>
+                      <div className="flex min-w-0 justify-between gap-3">
+                        <dt className="shrink-0 text-[var(--color-text-secondary)]">Phone</dt>
+                        <dd className="overflow-anywhere min-w-0 text-right">{selectedUser.phone || "Not set"}</dd>
                       </div>
-                      <div className="flex justify-between gap-3">
-                        <dt className="text-[var(--color-text-secondary)]">NIN last 4</dt>
-                        <dd className="font-mono">{selectedUser.nin_last4 || "Not set"}</dd>
+                      <div className="flex min-w-0 justify-between gap-3">
+                        <dt className="shrink-0 text-[var(--color-text-secondary)]">NIN last 4</dt>
+                        <dd className="overflow-anywhere min-w-0 text-right font-mono">{selectedUser.nin_last4 || "Not set"}</dd>
                       </div>
-                      <div className="flex justify-between gap-3">
-                        <dt className="text-[var(--color-text-secondary)]">Joined</dt>
-                        <dd>{formatDate(selectedUser.created_at)}</dd>
+                      <div className="flex min-w-0 justify-between gap-3">
+                        <dt className="shrink-0 text-[var(--color-text-secondary)]">Joined</dt>
+                        <dd className="overflow-anywhere min-w-0 text-right">{formatDate(selectedUser.created_at)}</dd>
                       </div>
                     </dl>
                   </div>
-                  <div className="rounded-[5px] bg-[var(--color-bg-secondary)] p-3">
+                  <div className="min-w-0 overflow-hidden rounded-[5px] bg-[var(--color-bg-secondary)] p-3">
                     <h3 className="font-bold">Bank & Referral</h3>
                     <dl className="mt-3 grid gap-2 text-sm">
-                      <div className="flex justify-between gap-3">
-                        <dt className="text-[var(--color-text-secondary)]">Bank</dt>
-                        <dd>{selectedUser.bank_name || "Not set"}</dd>
+                      <div className="flex min-w-0 justify-between gap-3">
+                        <dt className="shrink-0 text-[var(--color-text-secondary)]">Bank</dt>
+                        <dd className="overflow-anywhere min-w-0 text-right">{selectedUser.bank_name || "Not set"}</dd>
                       </div>
-                      <div className="flex justify-between gap-3">
-                        <dt className="text-[var(--color-text-secondary)]">Account</dt>
-                        <dd className="font-mono">{selectedUser.account_number || "Not set"}</dd>
+                      <div className="flex min-w-0 justify-between gap-3">
+                        <dt className="shrink-0 text-[var(--color-text-secondary)]">Account</dt>
+                        <dd className="overflow-anywhere min-w-0 text-right font-mono">{selectedUser.account_number || "Not set"}</dd>
                       </div>
-                      <div className="flex justify-between gap-3">
-                        <dt className="text-[var(--color-text-secondary)]">Affiliate earnings</dt>
-                        <dd>{money(Number(selectedUser.affiliate_earnings))}</dd>
+                      <div className="flex min-w-0 justify-between gap-3">
+                        <dt className="shrink-0 text-[var(--color-text-secondary)]">Affiliate earnings</dt>
+                        <dd className="overflow-anywhere min-w-0 text-right">{money(Number(selectedUser.affiliate_earnings))}</dd>
                       </div>
-                      <div className="flex justify-between gap-3">
-                        <dt className="text-[var(--color-text-secondary)]">Referral code</dt>
-                        <dd className="font-mono">{selectedUser.referral_code || selectedUser.username || "Not set"}</dd>
+                      <div className="flex min-w-0 justify-between gap-3">
+                        <dt className="shrink-0 text-[var(--color-text-secondary)]">Referral code</dt>
+                        <dd className="overflow-anywhere min-w-0 text-right font-mono">{selectedUser.referral_code || selectedUser.username || "Not set"}</dd>
                       </div>
                     </dl>
                   </div>
                 </div>
 
-                <div className="mt-4 grid gap-3 xl:grid-cols-2">
-                  <div className="rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3">
+                <div className="mt-4 grid min-w-0 gap-3 xl:grid-cols-2">
+                  <div className="min-w-0 overflow-hidden rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3">
                     <h3 className="font-bold">Recent Transactions</h3>
                     <div className="mt-3 grid gap-2">
                       {selectedUserActivity.transactions.length === 0 ? (
                         <p className="text-sm text-[var(--color-text-secondary)]">No transactions.</p>
                       ) : (
                         selectedUserActivity.transactions.map((transaction) => (
-                          <div key={transaction.id} className="flex items-center justify-between gap-3 rounded-[5px] bg-[var(--color-bg-card)] p-2 text-sm">
-                            <span className="min-w-0">
+                          <div key={transaction.id} className="flex min-w-0 items-center justify-between gap-2 overflow-hidden rounded-[5px] bg-[var(--color-bg-card)] p-2 text-sm">
+                            <span className="min-w-0 flex-1 overflow-hidden">
                               <b className="block truncate capitalize">{transactionLabel(transaction.type)}</b>
                               <span className="block truncate text-xs text-[var(--color-text-secondary)]">
                                 {transaction.description}
                               </span>
                             </span>
-                            <b>{money(Number(transaction.amount))}</b>
+                            <b className="max-w-[42%] shrink-0 truncate text-right">{money(Number(transaction.amount))}</b>
                           </div>
                         ))
                       )}
                     </div>
                   </div>
 
-                  <div className="rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3">
+                  <div className="min-w-0 overflow-hidden rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3">
                     <h3 className="font-bold">Proofs & Withdrawals</h3>
                     <div className="mt-3 grid gap-2">
                       {[...selectedUserActivity.proofs, ...selectedUserActivity.withdrawals].length === 0 ? (
@@ -868,19 +868,19 @@ export default function AdminDashboard() {
                       ) : (
                         <>
                           {selectedUserActivity.proofs.map((proof) => (
-                            <div key={proof.id} className="flex items-center justify-between gap-3 rounded-[5px] bg-[var(--color-bg-card)] p-2 text-sm">
-                              <span>
+                            <div key={proof.id} className="flex min-w-0 items-center justify-between gap-2 overflow-hidden rounded-[5px] bg-[var(--color-bg-card)] p-2 text-sm">
+                              <span className="min-w-0 flex-1 overflow-hidden">
                                 <b className="block">{proofTypeLabel(proof.type)}</b>
-                                <span className="text-xs text-[var(--color-text-secondary)]">{formatDate(proof.created_at)}</span>
+                                <span className="block truncate text-xs text-[var(--color-text-secondary)]">{formatDate(proof.created_at)}</span>
                               </span>
                               <StatusBadge status={proof.status}>{money(Number(proof.amount))}</StatusBadge>
                             </div>
                           ))}
                           {selectedUserActivity.withdrawals.map((withdrawal) => (
-                            <div key={withdrawal.id} className="flex items-center justify-between gap-3 rounded-[5px] bg-[var(--color-bg-card)] p-2 text-sm">
-                              <span>
+                            <div key={withdrawal.id} className="flex min-w-0 items-center justify-between gap-2 overflow-hidden rounded-[5px] bg-[var(--color-bg-card)] p-2 text-sm">
+                              <span className="min-w-0 flex-1 overflow-hidden">
                                 <b className="block">Withdrawal</b>
-                                <span className="text-xs text-[var(--color-text-secondary)]">{formatDate(withdrawal.created_at)}</span>
+                                <span className="block truncate text-xs text-[var(--color-text-secondary)]">{formatDate(withdrawal.created_at)}</span>
                               </span>
                               <StatusBadge status={withdrawal.status}>{money(Number(withdrawal.amount))}</StatusBadge>
                             </div>
@@ -899,11 +899,11 @@ export default function AdminDashboard() {
       )}
 
       {activeView === "ledger" && (
-        <div className="grid gap-4 xl:grid-cols-[1fr_0.85fr]">
-          <section className="rounded-[6px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[4px_4px_0px_var(--color-shadow)]">
+        <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)]">
+          <section className="min-w-0 overflow-hidden rounded-[6px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[4px_4px_0px_var(--color-shadow)]">
             <h2 className="font-display text-2xl font-bold">Recent Ledger</h2>
-            <div className="mt-4 overflow-x-auto">
-              <table className="w-full min-w-[760px] text-left text-sm">
+            <div className="scroll-x-contained mt-4">
+              <table className="w-full min-w-[620px] text-left text-sm sm:min-w-[760px]">
                 <thead className="border-b border-[var(--color-border)] text-xs uppercase tracking-[0.08em] text-[var(--color-text-secondary)]">
                   <tr>
                     <th className="px-3 py-3">Type</th>
@@ -919,7 +919,7 @@ export default function AdminDashboard() {
                     return (
                       <tr key={transaction.id} className="border-b border-[var(--color-glass-border)]">
                         <td className="px-3 py-3 capitalize">{transactionLabel(transaction.type)}</td>
-                        <td className="px-3 py-3">{owner?.full_name || "Unknown"}</td>
+                        <td className="max-w-[150px] truncate px-3 py-3">{owner?.full_name || "Unknown"}</td>
                         <td className="px-3 py-3 font-mono font-bold">{money(Number(transaction.amount))}</td>
                         <td className="max-w-[280px] truncate px-3 py-3 text-[var(--color-text-secondary)]">
                           {transaction.description}
@@ -933,8 +933,8 @@ export default function AdminDashboard() {
             </div>
           </section>
 
-          <aside className="space-y-4">
-            <div className="rounded-[6px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[4px_4px_0px_var(--color-shadow)]">
+          <aside className="min-w-0 space-y-4">
+            <div className="min-w-0 overflow-hidden rounded-[6px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[4px_4px_0px_var(--color-shadow)]">
               <h2 className="font-display text-2xl font-bold">Marketplace Monitor</h2>
               <div className="mt-4 grid gap-2">
                 {activeMarketplace.length === 0 ? (
@@ -942,11 +942,11 @@ export default function AdminDashboard() {
                 ) : (
                   activeMarketplace.map((item) => (
                     <div key={item.id} className="rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <b className="capitalize">{item.type.replaceAll("_", " ")}</b>
+                      <div className="flex min-w-0 items-center justify-between gap-3">
+                        <b className="min-w-0 truncate capitalize">{item.type.replaceAll("_", " ")}</b>
                         <StatusBadge status={item.status}>{money(Number(item.amount))}</StatusBadge>
                       </div>
-                      <p className="mt-2 text-xs text-[var(--color-text-secondary)]">
+                      <p className="overflow-anywhere mt-2 text-xs text-[var(--color-text-secondary)]">
                         {item.author_name} • {item.days} days • trust {item.trust_score}/100
                       </p>
                     </div>
@@ -955,15 +955,15 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            <div className="rounded-[6px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[4px_4px_0px_var(--color-shadow)]">
+            <div className="min-w-0 overflow-hidden rounded-[6px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[4px_4px_0px_var(--color-shadow)]">
               <h2 className="font-display text-2xl font-bold">Approval History</h2>
               <div className="mt-4 grid gap-2">
                 {[...overview.payment_proofs, ...overview.withdrawal_requests]
                   .filter((item) => item.status !== "pending")
                   .slice(0, 10)
                   .map((item) => (
-                    <div key={item.id} className="flex items-center justify-between gap-3 rounded-[5px] bg-[var(--color-bg-secondary)] p-3 text-sm">
-                      <span className="min-w-0">
+                    <div key={item.id} className="flex min-w-0 items-center justify-between gap-2 overflow-hidden rounded-[5px] bg-[var(--color-bg-secondary)] p-3 text-sm">
+                      <span className="min-w-0 flex-1 overflow-hidden">
                         <b className="block truncate">
                           {"type" in item ? proofTypeLabel(item.type) : "Withdrawal"}
                         </b>
