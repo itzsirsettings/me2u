@@ -7,10 +7,12 @@ import type {
   MarketplaceRow,
   PaymentProofRow,
   ProfileRow,
+  RevenueEventRow,
   TransactionRow,
   WalletRow,
   WithdrawalRequestRow,
 } from "@/lib/supabase/types";
+import { platformLoanRetainedDepositRate } from "@/lib/loans";
 
 const signedImageTtlSeconds = 10 * 60;
 
@@ -75,6 +77,7 @@ export async function GET(request: Request) {
       paymentProofsResponse,
       affiliateRewardsResponse,
       withdrawalRequestsResponse,
+      revenueEventsResponse,
     ] = await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: false }).limit(500),
       supabase.from("wallets").select("*").limit(500),
@@ -84,6 +87,7 @@ export async function GET(request: Request) {
       supabase.from("payment_proofs").select("*").order("created_at", { ascending: false }).limit(250),
       supabase.from("affiliate_rewards").select("*").order("created_at", { ascending: false }).limit(250),
       supabase.from("withdrawal_requests").select("*").order("created_at", { ascending: false }).limit(250),
+      supabase.from("revenue_events").select("*").order("created_at", { ascending: false }).limit(250),
     ]);
 
     const error =
@@ -94,7 +98,8 @@ export async function GET(request: Request) {
       marketplaceResponse.error ||
       paymentProofsResponse.error ||
       affiliateRewardsResponse.error ||
-      withdrawalRequestsResponse.error;
+      withdrawalRequestsResponse.error ||
+      revenueEventsResponse.error;
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
@@ -108,6 +113,7 @@ export async function GET(request: Request) {
     const paymentProofs = (paymentProofsResponse.data || []) as PaymentProofRow[];
     const affiliateRewards = (affiliateRewardsResponse.data || []) as AffiliateRewardRow[];
     const withdrawalRequests = (withdrawalRequestsResponse.data || []) as WithdrawalRequestRow[];
+    const revenueEvents = (revenueEventsResponse.data || []) as RevenueEventRow[];
     const profilesById = new Map(profiles.map((profile) => [profile.id, profile]));
     const walletsByUserId = new Map(wallets.map((wallet) => [wallet.user_id, wallet]));
 
@@ -173,10 +179,28 @@ export async function GET(request: Request) {
     const approvedWithdrawals = withdrawalRequests.filter((requestRow) => requestRow.status === "approved");
     const activeLoans = loans.filter((loan) => loan.status === "active");
     const platformLoans = loans.filter((loan) => loan.lender_id === null);
+    const retainedFloat = sumBy(
+      platformLoans.filter((loan) => loan.status === "active"),
+      (loan) => moneyValue(loan.amount) * platformLoanRetainedDepositRate,
+    );
+    const revenueEventTotal = sumBy(revenueEvents, (event) => moneyValue(event.amount));
+    const revenueEventsThisMonth = revenueEvents.filter((event) => sameMonth(event.created_at));
+    const withdrawalFeeRevenue = sumBy(
+      revenueEvents.filter((event) => event.type === "withdrawal_fee"),
+      (event) => moneyValue(event.amount),
+    );
+    const marketplaceBoostRevenue = sumBy(
+      revenueEvents.filter((event) => event.type === "marketplace_boost"),
+      (event) => moneyValue(event.amount),
+    );
+    const treasuryPartnerRevenue = sumBy(
+      revenueEvents.filter((event) => event.type === "partner_treasury_share"),
+      (event) => moneyValue(event.amount),
+    );
     const onboardingCredits = transactions.filter(
       (transaction) =>
         transaction.type === "deposit" &&
-        /onboarding credit|reversal of old onboarding credit/i.test(transaction.description),
+        /welcome bonus|onboarding credit|reversal of old onboarding credit/i.test(transaction.description),
     );
 
     const summary = {
@@ -184,15 +208,20 @@ export async function GET(request: Request) {
       verified_users: profiles.filter((profile) => profile.kyc_verified).length,
       admins: profiles.filter((profile) => profile.role === "admin").length,
       wallet_liability: sumBy(wallets, (wallet) => moneyValue(wallet.balance) + moneyValue(wallet.locked)),
-      revenue: sumBy(
-        approvedProofs.filter((proof) => proof.type === "registration_deposit"),
-        (proof) => moneyValue(proof.amount),
-      ),
-      income: sumBy(approvedProofs, (proof) => moneyValue(proof.amount)),
+      revenue:
+        sumBy(
+          approvedProofs.filter((proof) => proof.type === "registration_deposit"),
+          (proof) => moneyValue(proof.amount),
+        ) + revenueEventTotal,
+      income: sumBy(approvedProofs, (proof) => moneyValue(proof.amount)) + revenueEventTotal,
       expenses:
         sumBy(approvedWithdrawals, (requestRow) => moneyValue(requestRow.amount)) +
         sumBy(affiliateRewards, (reward) => moneyValue(reward.amount)) +
         sumBy(onboardingCredits, (transaction) => moneyValue(transaction.amount)),
+      withdrawal_fee_revenue: withdrawalFeeRevenue,
+      marketplace_boost_revenue: marketplaceBoostRevenue,
+      treasury_partner_revenue: treasuryPartnerRevenue,
+      partner_leads: profiles.filter((profile) => Boolean(profile.partner_offer_consent_at)).length,
       affiliate_funding: sumBy(affiliateRewards, (reward) => moneyValue(reward.amount)),
       pending_funding_amount: sumBy(
         pendingProofs.filter((proof) => proof.type === "wallet_funding"),
@@ -203,20 +232,22 @@ export async function GET(request: Request) {
         (proof) => moneyValue(proof.amount),
       ),
       pending_withdrawal_amount: sumBy(pendingWithdrawals, (requestRow) => moneyValue(requestRow.amount)),
+      pending_withdrawal_fees: sumBy(pendingWithdrawals, (requestRow) => moneyValue(requestRow.fee_amount)),
       active_loan_exposure: sumBy(activeLoans, (loan) => moneyValue(loan.amount)),
       platform_loan_exposure: sumBy(
         platformLoans.filter((loan) => loan.status === "active"),
         (loan) => moneyValue(loan.amount),
       ),
       marketplace_active: marketplaceItems.filter((item) => item.status === "active").length,
+      retained_float: retainedFloat,
       month_revenue: sumBy(
         approvedProofs.filter((proof) => proof.type === "registration_deposit" && sameMonth(proof.created_at)),
         (proof) => moneyValue(proof.amount),
-      ),
+      ) + sumBy(revenueEventsThisMonth, (event) => moneyValue(event.amount)),
       month_income: sumBy(
         approvedProofs.filter((proof) => sameMonth(proof.created_at)),
         (proof) => moneyValue(proof.amount),
-      ),
+      ) + sumBy(revenueEventsThisMonth, (event) => moneyValue(event.amount)),
       month_expenses:
         sumBy(
           approvedWithdrawals.filter((requestRow) => sameMonth(requestRow.created_at)),
@@ -242,6 +273,7 @@ export async function GET(request: Request) {
       loans,
       marketplace_items: marketplaceItems,
       affiliate_rewards: affiliateRewards,
+      revenue_events: revenueEvents,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to load admin overview.";

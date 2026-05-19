@@ -6,6 +6,7 @@ import LoadingButton from "@/LoadingButton";
 import { toast } from "sonner";
 import { useStore } from "@/lib/store";
 import { getActivePlatformLoanRetainedDeposit, onboardingCreditAmount } from "@/lib/loans";
+import { getWithdrawalDebitAmount, withdrawalFeeAmount } from "@/lib/revenue";
 import { getRequiredWithdrawalBalance } from "@/lib/withdrawal";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
@@ -37,10 +38,11 @@ export default function WithdrawPage() {
   const currentBalance = user?.balance || 0;
   const platformLoanDeposit = getActivePlatformLoanRetainedDeposit(activeLoans);
   const requiredBalance = getRequiredWithdrawalBalance(withdrawalAmount, platformLoanDeposit);
+  const withdrawalDebit = getWithdrawalDebitAmount(withdrawalAmount);
   const shortfall = Math.max(0, requiredBalance - currentBalance);
   const balanceAfterWithdrawal =
     Number.isFinite(withdrawalAmount) && withdrawalAmount > 0
-      ? Math.max(0, currentBalance - withdrawalAmount)
+      ? Math.max(0, currentBalance - withdrawalDebit)
       : currentBalance;
 
   const handleRequest = () => {
@@ -65,8 +67,8 @@ export default function WithdrawPage() {
     }
     if (user.balance < requiredBalance) {
       toast.error(platformLoanDeposit > 0
-        ? `Fund ₦${shortfall.toLocaleString()} first. ₦${platformLoanDeposit.toLocaleString()} must remain in your wallet.`
-        : "Insufficient balance."
+        ? `Fund ₦${shortfall.toLocaleString()} first. ₦${platformLoanDeposit.toLocaleString()} must remain in your wallet, plus the ₦${withdrawalFeeAmount.toLocaleString()} fee.`
+        : `Insufficient balance for the withdrawal and ₦${withdrawalFeeAmount.toLocaleString()} processing fee.`
       );
       return;
     }
@@ -127,7 +129,7 @@ export default function WithdrawPage() {
               >
                 <div className="mb-4 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-warning-bg)] p-3 md:mb-6 md:p-4">
                   <p className="text-sm font-sans text-[var(--color-warning-text)]">
-                    <span className="font-bold">Notice:</span> Your ₦{onboardingCreditAmount.toLocaleString()} welcome bonus is withdrawable after KYC. Active loans can require 50% of the loan amount to remain in your wallet.
+                    <span className="font-bold">Notice:</span> Your ₦{onboardingCreditAmount.toLocaleString()} welcome bonus unlocks after KYC. Withdrawals include a flat ₦{withdrawalFeeAmount.toLocaleString()} processing fee, and active loans can require 50% of the loan amount to remain in your wallet.
                   </p>
                 </div>
                 
@@ -150,6 +152,14 @@ export default function WithdrawPage() {
                         <span className="overflow-anywhere min-w-0 text-right font-mono font-semibold">₦{platformLoanDeposit.toLocaleString()}</span>
                       </div>
                     )}
+                    <div className="flex min-w-0 items-center justify-between gap-3">
+                      <span className="min-w-0 text-[var(--color-text-secondary)]">Processing fee</span>
+                      <span className="overflow-anywhere min-w-0 text-right font-mono font-semibold">₦{withdrawalFeeAmount.toLocaleString()}</span>
+                    </div>
+                    <div className="flex min-w-0 items-center justify-between gap-3">
+                      <span className="min-w-0 text-[var(--color-text-secondary)]">Total wallet debit</span>
+                      <span className="overflow-anywhere min-w-0 text-right font-mono font-semibold">₦{withdrawalDebit.toLocaleString()}</span>
+                    </div>
                     <div className="flex min-w-0 items-center justify-between gap-3">
                       <span className="min-w-0 text-[var(--color-text-secondary)]">Balance needed before withdrawal</span>
                       <span className="overflow-anywhere min-w-0 text-right font-mono font-semibold">₦{requiredBalance.toLocaleString()}</span>
@@ -189,6 +199,17 @@ export default function WithdrawPage() {
                   <p className="mb-4 rounded-[5px] bg-[var(--color-warning-bg)] p-3 text-sm text-[var(--color-warning-text)]">
                     This creates a pending request. An admin must approve it before your wallet is debited.
                   </p>
+
+                  <div className="grid gap-2 border-t border-dashed border-[var(--color-border)] pt-4 text-sm">
+                    <div className="flex min-w-0 items-center justify-between gap-3">
+                      <span className="min-w-0 text-[var(--color-text-secondary)]">Processing fee</span>
+                      <span className="overflow-anywhere min-w-0 text-right font-mono font-semibold">₦{withdrawalFeeAmount.toLocaleString()}</span>
+                    </div>
+                    <div className="flex min-w-0 items-center justify-between gap-3">
+                      <span className="min-w-0 text-[var(--color-text-secondary)]">Total wallet debit</span>
+                      <span className="overflow-anywhere min-w-0 text-right font-mono font-semibold">₦{withdrawalDebit.toLocaleString()}</span>
+                    </div>
+                  </div>
                   
                   <div className="pt-4 border-t border-dashed border-[var(--color-border)]">
                     <p className="text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-warning-text)] mb-1">Retained In Wallet</p>

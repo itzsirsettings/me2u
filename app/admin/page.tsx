@@ -12,6 +12,7 @@ import type {
   MarketplaceRow,
   PaymentProofRow,
   ProfileRow,
+  RevenueEventRow,
   TransactionRow,
   WalletRow,
   WithdrawalRequestRow,
@@ -52,13 +53,19 @@ type AdminOverview = {
     revenue: number;
     income: number;
     expenses: number;
+    withdrawal_fee_revenue: number;
+    marketplace_boost_revenue: number;
+    treasury_partner_revenue: number;
+    partner_leads: number;
     affiliate_funding: number;
     pending_funding_amount: number;
     pending_registration_amount: number;
     pending_withdrawal_amount: number;
+    pending_withdrawal_fees: number;
     active_loan_exposure: number;
     platform_loan_exposure: number;
     marketplace_active: number;
+    retained_float: number;
     month_revenue: number;
     month_income: number;
     month_expenses: number;
@@ -70,6 +77,7 @@ type AdminOverview = {
   loans: LoanRow[];
   marketplace_items: MarketplaceRow[];
   affiliate_rewards: AffiliateRewardRow[];
+  revenue_events: RevenueEventRow[];
 };
 
 type AdminAction =
@@ -448,13 +456,34 @@ export default function AdminDashboard() {
         <MetricCard
           label="Revenue"
           value={money(overview.summary.revenue)}
-          detail={`${money(overview.summary.month_revenue)} registration revenue this month`}
+          detail={`${money(overview.summary.month_revenue)} total tracked revenue this month`}
           icon="moneyBag"
         />
         <MetricCard
+          label="Withdrawal Fees"
+          value={money(overview.summary.withdrawal_fee_revenue)}
+          detail={`${money(overview.summary.pending_withdrawal_fees)} pending fee value in the queue`}
+          icon="requestMoney"
+        />
+        <MetricCard
+          label="Boost Revenue"
+          value={money(overview.summary.marketplace_boost_revenue)}
+          detail="Optional visibility fees from promoted borrow requests"
+          icon="market"
+        />
+        <MetricCard
+          label="Partner Leads"
+          value={numberFormatter.format(overview.summary.partner_leads)}
+          detail={`${money(overview.summary.treasury_partner_revenue)} partner revenue recorded`}
+          icon="profile"
+        />
+      </section>
+
+      <section className="mb-6 grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
           label="Income"
           value={money(overview.summary.income)}
-          detail={`${money(overview.summary.month_income)} approved inflow this month`}
+          detail={`${money(overview.summary.month_income)} approved inflow and fees this month`}
           icon="cash"
         />
         <MetricCard
@@ -469,9 +498,6 @@ export default function AdminDashboard() {
           detail={`${numberFormatter.format(overview.affiliate_rewards.length)} referral payouts recorded`}
           icon="referral"
         />
-      </section>
-
-      <section className="mb-6 grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           label="Wallet Liability"
           value={money(overview.summary.wallet_liability)}
@@ -484,6 +510,9 @@ export default function AdminDashboard() {
           detail={`${pendingFundingProofs.length} wallet funding proofs need review`}
           icon="cash"
         />
+      </section>
+
+      <section className="mb-6 grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           label="Pending Withdrawals"
           value={money(overview.summary.pending_withdrawal_amount)}
@@ -491,10 +520,22 @@ export default function AdminDashboard() {
           icon="requestMoney"
         />
         <MetricCard
+          label="Retained Float"
+          value={money(overview.summary.retained_float)}
+          detail="Estimated protected active-loan balance with licensed partners"
+          icon="wallet"
+        />
+        <MetricCard
           label="Loan Exposure"
           value={money(overview.summary.active_loan_exposure)}
           detail={`${compactMoney(overview.summary.platform_loan_exposure)} active direct exposure`}
           icon="loans"
+        />
+        <MetricCard
+          label="Active Market"
+          value={numberFormatter.format(overview.summary.marketplace_active)}
+          detail="Live 0% listings across borrowers and lenders"
+          icon="market"
         />
       </section>
 
@@ -603,10 +644,14 @@ export default function AdminDashboard() {
                         <p className="overflow-anywhere mt-1 text-sm text-[var(--color-text-secondary)]">
                           {withdrawal.user_email} {withdrawal.user_phone ? `• ${withdrawal.user_phone}` : ""}
                         </p>
-                        <div className="mt-3 grid min-w-0 gap-2 text-sm sm:grid-cols-4">
+                        <div className="mt-3 grid min-w-0 gap-2 text-sm sm:grid-cols-2 lg:grid-cols-5">
                           <span className="min-w-0">
                             <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Amount</b>
                             {money(Number(withdrawal.amount))}
+                          </span>
+                          <span className="min-w-0">
+                            <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Fee</b>
+                            {money(Number(withdrawal.fee_amount))}
                           </span>
                           <span className="min-w-0">
                             <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Wallet</b>

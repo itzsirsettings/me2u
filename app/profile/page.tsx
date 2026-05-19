@@ -65,7 +65,7 @@ export default function Profile() {
               </button>
             </div>
             <p className="mt-2 text-xs text-[var(--color-text-secondary)]">
-              Earn 500 naira for telling your friend about me2u.
+              Earn 500 naira after your referred friend completes verified onboarding.
             </p>
           </div>
         </div>

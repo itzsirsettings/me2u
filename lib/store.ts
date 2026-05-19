@@ -5,6 +5,7 @@ import {
   repeatPlatformLoanMinimum,
 } from "@/lib/loans";
 import { getSupabaseBrowserClient, hasSupabaseConfig } from "@/lib/supabase/client";
+import { isMarketplaceBoostActive, withdrawalFeeAmount } from "@/lib/revenue";
 import { uploadPrivateImage } from "@/lib/uploads";
 import { getRequiredWithdrawalBalance } from "@/lib/withdrawal";
 import type {
@@ -39,7 +40,19 @@ export interface MarketplaceItem {
   days: number;
   authorName: string;
   trustScore: number;
+  boostedAt: string | null;
+  boostedUntil: string | null;
+  boostFeeAmount: number;
+  createdAt: string;
 }
+
+export type MarketplaceDraft = {
+  type: "borrow_request" | "lending_offer";
+  amount: number;
+  rate: number;
+  days: number;
+  boost?: boolean;
+};
 
 export interface ActiveLoan {
   id: string;
@@ -48,6 +61,7 @@ export interface ActiveLoan {
   days: number;
   role: "borrower" | "lender";
   source: "platform" | "peer";
+  fundingSource?: LoanRow["funding_source"];
   status: "active" | "completed";
   startDate: string;
   dueDate: string;
@@ -71,8 +85,11 @@ export interface User {
   registrationDepositAmount: number;
   registrationDepositReference: string | null;
   registrationDepositConfirmedAt: string | null;
+  welcomeBonusUnlockedAt: string | null;
   referredBy: string | null;
   affiliateEarnings: number;
+  partnerOfferConsentAt: string | null;
+  partnerOfferConsentVersion: string | null;
   passportPhotoUrl: string | null;
   role: "user" | "admin";
 }
@@ -105,9 +122,7 @@ interface AppStore {
   fundWallet: (amount: number, reference: string, receiptFile?: File) => Promise<ActionResult>;
   confirmRegistrationDeposit: (reference: string, receiptFile?: File) => Promise<ActionResult>;
   withdraw: (amount: number) => Promise<ActionResult>;
-  createMarketplaceItem: (
-    item: Omit<MarketplaceItem, "id" | "authorName" | "trustScore">,
-  ) => Promise<ActionResult>;
+  createMarketplaceItem: (item: MarketplaceDraft) => Promise<ActionResult>;
   acceptMarketplaceItem: (itemId: string) => Promise<ActionResult>;
   requestPlatformLoan: (amount?: number) => Promise<ActionResult>;
   repayLoan: (loanId: string) => Promise<ActionResult>;
@@ -216,7 +231,22 @@ function toMarketplaceItem(row: MarketplaceRow): MarketplaceItem {
     days: row.days,
     authorName: row.author_name,
     trustScore: row.trust_score,
+    boostedAt: row.boosted_at,
+    boostedUntil: row.boosted_until,
+    boostFeeAmount: Number(row.boost_fee_amount || 0),
+    createdAt: row.created_at,
   };
+}
+
+function sortMarketplaceItems(items: MarketplaceItem[]) {
+  const now = Date.now();
+  return [...items].sort((left, right) => {
+    const rightBoost = isMarketplaceBoostActive(right, now) ? 1 : 0;
+    const leftBoost = isMarketplaceBoostActive(left, now) ? 1 : 0;
+    if (rightBoost !== leftBoost) return rightBoost - leftBoost;
+
+    return new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime();
+  });
 }
 
 function toLoan(row: any, userId: string): ActiveLoan {
@@ -230,6 +260,7 @@ function toLoan(row: any, userId: string): ActiveLoan {
     days: row.days,
     role: isBorrower ? "borrower" : "lender",
     source: row.lender_id ? "peer" : "platform",
+    fundingSource: row.funding_source,
     status: row.status,
     startDate: row.start_date,
     dueDate: row.due_date,
@@ -255,8 +286,11 @@ function toUser(profile: ProfileRow, wallet: WalletRow | null): User {
     registrationDepositAmount: Number(profile.registration_deposit_amount || 0),
     registrationDepositReference: profile.registration_payment_reference,
     registrationDepositConfirmedAt: profile.registration_deposit_confirmed_at,
+    welcomeBonusUnlockedAt: profile.welcome_bonus_unlocked_at,
     referredBy: profile.referred_by,
     affiliateEarnings: Number(profile.affiliate_earnings || 0),
+    partnerOfferConsentAt: profile.partner_offer_consent_at,
+    partnerOfferConsentVersion: profile.partner_offer_consent_version,
     passportPhotoUrl: profile.passport_photo_url,
     role: profile.role,
   };
@@ -348,7 +382,9 @@ export const useStore = create<AppStore>((set, get) => ({
         isLoading: false,
         transactions: readOptionalRows<TransactionRow>(transactionsResponse, "Transactions").map(toTransaction),
         activeLoans: readOptionalRows<any>(loansResponse, "Loans").map((loan) => toLoan(loan, authUser.id)),
-        marketplace: readOptionalRows<MarketplaceRow>(marketplaceResponse, "Marketplace").map(toMarketplaceItem),
+        marketplace: sortMarketplaceItems(
+          readOptionalRows<MarketplaceRow>(marketplaceResponse, "Marketplace").map(toMarketplaceItem),
+        ),
         notifications: readOptionalRows<NotificationRow>(notificationsResponse, "Notifications").map(toNotification),
       });
 
@@ -498,8 +534,8 @@ export const useStore = create<AppStore>((set, get) => ({
         ok: false,
         error:
           platformLoanDeposit > 0
-            ? `Fund ₦${shortfall.toLocaleString()} first. ₦${platformLoanDeposit.toLocaleString()} must remain in your wallet after withdrawal.`
-            : "Insufficient balance.",
+            ? `Fund ₦${shortfall.toLocaleString()} first. ₦${platformLoanDeposit.toLocaleString()} must remain in your wallet, plus the ₦${withdrawalFeeAmount.toLocaleString()} fee.`
+            : `Insufficient balance for the withdrawal and ₦${withdrawalFeeAmount.toLocaleString()} processing fee.`,
       };
     }
 
@@ -591,4 +627,5 @@ export const useStore = create<AppStore>((set, get) => ({
     if (result.ok) await get().loadCurrentUser();
     return result;
   },
+
 }));

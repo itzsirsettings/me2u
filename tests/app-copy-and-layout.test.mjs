@@ -16,6 +16,18 @@ const visibleFiles = [
   "lib/server/launch-readiness.ts",
 ];
 
+const customerVisibleFiles = [
+  "app/dashboard/page.tsx",
+  "app/wallet/page.tsx",
+  "app/loans/page.tsx",
+  "app/marketplace/page.tsx",
+  "app/profile/page.tsx",
+  "app/withdraw/page.tsx",
+  "app/kyc/page.tsx",
+  "app/page.tsx",
+  "components/LandingPageV2Interactions.tsx",
+];
+
 function read(path) {
   return readFileSync(path, "utf8");
 }
@@ -103,4 +115,49 @@ test("username login and the new loan minimum are wired", () => {
   assert.match(loans, /repeatPlatformLoanMinimum = 5000/);
   assert.match(migration, /Loans start from NGN 5,000/);
   assert.match(migration, /amount >= 5000\.00/);
+});
+
+test("licensed partner revenue model is backend-enforced", () => {
+  const revenue = read("lib/revenue.ts");
+  const withdrawal = read("app/api/wallet/withdraw/route.ts");
+  const kyc = read("app/api/onboarding/kyc/route.ts");
+  const marketplace = read("app/api/marketplace/create/route.ts");
+  const migration = read("supabase/migrations/20260519152449_licensed_partner_revenue_model.sql");
+  const adminOverview = read("app/api/admin/overview/route.ts");
+
+  assert.match(revenue, /withdrawalFeeAmount = 100/);
+  assert.match(withdrawal, /fee_amount: withdrawalFeeAmount/);
+  assert.match(kyc, /me2u_unlock_welcome_bonus/);
+  assert.match(marketplace, /p_boost: boost/);
+  assert.match(migration, /create table if not exists public\.revenue_events/);
+  assert.match(migration, /welcome_bonus_unlocked_at/);
+  assert.match(migration, /boosted_until/);
+  assert.match(migration, /partner_offer_consent_at/);
+  assert.match(migration, /'withdrawal_fee'/);
+  assert.match(migration, /'marketplace_boost'/);
+  assert.match(adminOverview, /withdrawal_fee_revenue/);
+  assert.match(adminOverview, /marketplace_boost_revenue/);
+  assert.match(adminOverview, /retained_float/);
+});
+
+test("customer UI does not expose platform revenue or investor-side benefits", () => {
+  const source = customerVisibleFiles.map(read).join("\n");
+  const hiddenFromCustomers = [
+    "partner-backed",
+    "cooperative wallet",
+    "Me2U balance sheet",
+    "licensed partner",
+    "licensed partners",
+    "Retained Float",
+    "Boost Revenue",
+    "Partner Leads",
+    "partner revenue",
+    "retained float",
+    "treasury",
+    "Partner Offers",
+  ];
+
+  for (const phrase of hiddenFromCustomers) {
+    assert.equal(source.includes(phrase), false, `Customer UI exposes platform-side copy: ${phrase}`);
+  }
 });

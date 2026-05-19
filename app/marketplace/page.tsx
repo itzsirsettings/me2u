@@ -9,6 +9,11 @@ import { toast } from "sonner";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { loanDurationMaxDays, loanDurationMinDays } from "@/lib/loans";
+import {
+  isMarketplaceBoostActive,
+  marketplaceBoostDurationHours,
+  marketplaceBoostFeeAmount,
+} from "@/lib/revenue";
 
 type ListingType = "borrow_request" | "lending_offer";
 
@@ -28,6 +33,7 @@ export default function Marketplace() {
     amount: 10000,
     rate: 0,
     days: loanDurationMaxDays,
+    boost: false,
   });
 
   useEffect(() => {
@@ -57,6 +63,11 @@ export default function Marketplace() {
       return;
     }
 
+    if (formData.boost && user.balance < marketplaceBoostFeeAmount) {
+      toast.error(`Fund your wallet first. The listing boost costs ₦${marketplaceBoostFeeAmount.toLocaleString()}.`);
+      return;
+    }
+
     setIsCreating(true);
     try {
       const result = await createMarketplaceItem({ ...formData, rate: 0 });
@@ -67,6 +78,7 @@ export default function Marketplace() {
 
       toast.success("Listing created successfully!");
       setShowForm(false);
+      setFormData((current) => ({ ...current, boost: false }));
     } finally {
       setIsCreating(false);
     }
@@ -138,7 +150,7 @@ export default function Marketplace() {
                     onChange={(e) => {
                       const nextType = e.target.value;
                       if (nextType === "borrow_request" || nextType === "lending_offer") {
-                        setFormData({ ...formData, type: nextType });
+                        setFormData({ ...formData, type: nextType, boost: nextType === "borrow_request" ? formData.boost : false });
                       }
                     }}
                   >
@@ -180,6 +192,20 @@ export default function Marketplace() {
                     }
                   />
                 </div>
+                {formData.type === "borrow_request" && (
+                  <label className="md:col-span-2 flex min-w-0 cursor-pointer items-start gap-3 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3">
+                    <input
+                      type="checkbox"
+                      checked={formData.boost}
+                      onChange={(e) => setFormData({ ...formData, boost: e.target.checked })}
+                      className="mt-1 h-4 w-4 shrink-0 accent-[var(--color-accent-primary)]"
+                    />
+                    <span className="min-w-0 text-sm leading-relaxed text-[var(--color-text-secondary)]">
+                      <b className="block text-[var(--color-text-primary)]">Promote for ₦{marketplaceBoostFeeAmount.toLocaleString()}</b>
+                      Keep this borrow request near the top for {marketplaceBoostDurationHours} hours. Promotion improves visibility but does not guarantee funding.
+                    </span>
+                  </label>
+                )}
                 <div className="md:col-span-2 mt-4">
                   <LoadingButton
                     label="Publish Listing"
@@ -201,9 +227,16 @@ export default function Marketplace() {
               <div>
                 <div className="mb-4 flex min-w-0 items-start justify-between gap-3 border-b border-[var(--color-border)] pb-3 md:mb-6 md:pb-4">
                   <div className="min-w-0">
-                    <p className={`font-sans font-bold uppercase tracking-wide text-sm ${item.type === "borrow_request" ? "text-[var(--color-warning-text)]" : "text-[var(--color-accent-primary)]"}`}>
-                      {item.type === "borrow_request" ? "Borrow Request" : "Lending Offer"}
-                    </p>
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                      <p className={`font-sans font-bold uppercase tracking-wide text-sm ${item.type === "borrow_request" ? "text-[var(--color-warning-text)]" : "text-[var(--color-accent-primary)]"}`}>
+                        {item.type === "borrow_request" ? "Borrow Request" : "Lending Offer"}
+                      </p>
+                      {isMarketplaceBoostActive(item) && (
+                        <span className="shrink-0 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-warning-bg)] px-2 py-0.5 text-[10px] font-black uppercase tracking-normal text-[var(--color-warning-text)]">
+                          Promoted
+                        </span>
+                      )}
+                    </div>
                     <p className="overflow-anywhere mt-1 font-sans text-sm italic text-[var(--color-text-secondary)]">by {item.authorName}</p>
                   </div>
                   <div className="flex shrink-0 items-center gap-1 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-positive-bg)] px-2 py-1 text-[11px] font-bold font-mono text-[var(--color-positive-text)] shadow-[2px_2px_0px_var(--color-shadow)] md:px-3 md:text-xs">

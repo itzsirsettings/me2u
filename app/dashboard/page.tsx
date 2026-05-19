@@ -101,7 +101,7 @@ export default function Dashboard() {
     if (!user?.registrationDepositPaid) {
       return {
         title: "Complete your registration deposit",
-        body: `Your ₦${onboardingCreditAmount.toLocaleString()} welcome bonus is waiting.`,
+        body: `Your ₦${onboardingCreditAmount.toLocaleString()} welcome bonus is waiting after deposit approval and KYC.`,
         action: "Submit proof",
         path: "/wallet",
       };
@@ -110,7 +110,7 @@ export default function Dashboard() {
     if (!user?.kycVerified) {
       return {
         title: "Verify your identity",
-        body: "Add your bank details and passport photo to unlock withdrawals, loans, and marketplace access.",
+        body: "Add your bank details and passport photo to unlock your bonus, withdrawals, loans, and marketplace access.",
         action: "Continue",
         path: "/kyc",
       };
@@ -118,7 +118,7 @@ export default function Dashboard() {
 
     return {
       title: "Your wallet is verified",
-      body: "You can fund, borrow, lend, repay, withdraw, and earn referral rewards from one account.",
+      body: "You can fund, borrow, lend, repay, and withdraw from one verified Me2U wallet.",
       action: "Explore loans",
       path: "/loans",
     };

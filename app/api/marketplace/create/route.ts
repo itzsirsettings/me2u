@@ -7,6 +7,7 @@ import {
   tooManyRequestsResponse,
 } from "@/lib/server/auth";
 import { loanDurationMaxDays, loanDurationMinDays } from "@/lib/loans";
+import { marketplaceBoostFeeAmount } from "@/lib/revenue";
 import type { MarketplaceRow } from "@/lib/supabase/types";
 
 const listingTypes = new Set<MarketplaceRow["type"]>(["borrow_request", "lending_offer"]);
@@ -29,6 +30,7 @@ export async function POST(request: Request) {
     const amount = readPositiveAmount(body.amount);
     const rate = 0;
     const days = Number(body.days);
+    const boost = Boolean(body.boost);
 
     if (!listingTypes.has(type)) {
       throw new Error("Choose a valid listing type.");
@@ -38,12 +40,17 @@ export async function POST(request: Request) {
       throw new Error(`Duration must be between ${loanDurationMinDays} and ${loanDurationMaxDays} days.`);
     }
 
+    if (boost && type !== "borrow_request") {
+      throw new Error(`Only borrow requests can be promoted. The boost fee is ₦${marketplaceBoostFeeAmount.toLocaleString()}.`);
+    }
+
     const { error } = await auth.supabase.rpc("me2u_create_marketplace_item", {
       p_user_id: auth.user.id,
       p_type: type,
       p_amount: amount,
       p_rate: rate,
       p_days: days,
+      p_boost: boost,
     });
 
     if (error) throw new Error(error.message);

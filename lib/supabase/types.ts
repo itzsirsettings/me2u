@@ -24,8 +24,11 @@ export type ProfileRow = {
   registration_deposit_paid: boolean;
   registration_deposit_amount: number;
   registration_deposit_confirmed_at: string | null;
+  welcome_bonus_unlocked_at: string | null;
   referred_by: string | null;
   affiliate_earnings: number;
+  partner_offer_consent_at: string | null;
+  partner_offer_consent_version: string | null;
   passport_photo_url: string | null;
   role: "user" | "admin";
   created_at: string;
@@ -65,8 +68,13 @@ export type MarketplaceRow = {
   author_name: string;
   trust_score: number;
   status: "active" | "funded" | "cancelled";
+  boosted_at: string | null;
+  boosted_until: string | null;
+  boost_fee_amount: number;
   created_at: string;
 };
+
+export type LoanFundingSource = "me2u_balance_sheet" | "peer_lender" | "partner_bank";
 
 export type LoanRow = {
   id: string;
@@ -76,9 +84,20 @@ export type LoanRow = {
   rate: number;
   days: number;
   role?: "borrower" | "lender";
+  funding_source: LoanFundingSource;
   status: "active" | "completed";
   start_date: string;
   due_date: string;
+  created_at: string;
+};
+
+export type RevenueEventRow = {
+  id: string;
+  type: "withdrawal_fee" | "marketplace_boost" | "partner_treasury_share" | "partner_referral";
+  amount: number;
+  user_id: string | null;
+  source_id: string | null;
+  description: string;
   created_at: string;
 };
 
@@ -106,6 +125,7 @@ export type WithdrawalRequestRow = {
   id: string;
   user_id: string;
   amount: number;
+  fee_amount: number;
   bank_name: string | null;
   account_number: string | null;
   status: "pending" | "approved" | "rejected";
@@ -175,6 +195,9 @@ export interface Database {
           author_name: string;
           trust_score: number;
           status?: MarketplaceRow["status"];
+          boosted_at?: string | null;
+          boosted_until?: string | null;
+          boost_fee_amount?: number;
           created_at?: string;
         };
         Update: Partial<Omit<MarketplaceRow, "id" | "author_id" | "created_at">>;
@@ -190,11 +213,26 @@ export interface Database {
           rate: number;
           days: number;
           status?: LoanRow["status"];
+          funding_source?: LoanFundingSource;
           start_date?: string;
           due_date: string;
           created_at?: string;
         };
         Update: Partial<Omit<LoanRow, "id" | "borrower_id" | "lender_id" | "created_at">>;
+        Relationships: [];
+      };
+      revenue_events: {
+        Row: RevenueEventRow;
+        Insert: {
+          id?: string;
+          type: RevenueEventRow["type"];
+          amount: number;
+          user_id?: string | null;
+          source_id?: string | null;
+          description: string;
+          created_at?: string;
+        };
+        Update: Partial<Omit<RevenueEventRow, "id" | "created_at">>;
         Relationships: [];
       };
       affiliate_rewards: {
@@ -231,6 +269,7 @@ export interface Database {
           id?: string;
           user_id: string;
           amount: number;
+          fee_amount?: number;
           bank_name?: string | null;
           account_number?: string | null;
           status?: WithdrawalRequestRow["status"];
@@ -281,6 +320,13 @@ export interface Database {
           p_amount: number;
           p_rate: number;
           p_days: number;
+          p_boost?: boolean;
+        };
+        Returns: undefined;
+      };
+      me2u_unlock_welcome_bonus: {
+        Args: {
+          p_user_id: string;
         };
         Returns: undefined;
       };
@@ -342,8 +388,10 @@ export interface Database {
       marketplace_item_type: MarketplaceRow["type"];
       marketplace_status: MarketplaceRow["status"];
       loan_status: LoanRow["status"];
+      loan_funding_source: LoanFundingSource;
       payment_proof_status: PaymentProofRow["status"];
       payment_proof_type: PaymentProofRow["type"];
+      revenue_event_type: RevenueEventRow["type"];
       withdrawal_request_status: WithdrawalRequestRow["status"];
     };
     CompositeTypes: Record<string, never>;

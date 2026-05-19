@@ -7,6 +7,7 @@ import {
   tooManyRequestsResponse,
 } from "@/lib/server/auth";
 import { getPlatformLoanRetainedDeposit, repeatPlatformLoanMinimum } from "@/lib/loans";
+import { withdrawalFeeAmount } from "@/lib/revenue";
 import { getRequiredWithdrawalBalance } from "@/lib/withdrawal";
 
 export async function POST(request: Request) {
@@ -73,11 +74,11 @@ export async function POST(request: Request) {
       const shortfall = Math.max(0, requiredBalance - balance);
       if (platformLoanDeposit > 0) {
         throw new Error(
-          `Fund ₦${shortfall.toLocaleString()} first. ₦${platformLoanDeposit.toLocaleString()} must remain in your wallet after withdrawal.`,
+          `Fund ₦${shortfall.toLocaleString()} first. ₦${platformLoanDeposit.toLocaleString()} must remain in your wallet after withdrawal and the ₦${withdrawalFeeAmount.toLocaleString()} processing fee.`,
         );
       }
 
-      throw new Error("Insufficient balance.");
+      throw new Error(`Insufficient balance for the withdrawal and ₦${withdrawalFeeAmount.toLocaleString()} processing fee.`);
     }
 
     const { data: pendingRequest, error: pendingRequestError } = await auth.supabase
@@ -98,6 +99,7 @@ export async function POST(request: Request) {
       .insert({
         user_id: auth.user.id,
         amount,
+        fee_amount: withdrawalFeeAmount,
         bank_name: profile.bank_name,
         account_number: profile.account_number,
         status: "pending",

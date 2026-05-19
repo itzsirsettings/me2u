@@ -168,8 +168,11 @@ export async function POST(request: Request) {
       registration_deposit_paid: false,
       registration_deposit_amount: 0,
       registration_deposit_confirmed_at: null,
+      welcome_bonus_unlocked_at: null,
       referred_by: referredBy,
       affiliate_earnings: 0,
+      partner_offer_consent_at: null,
+      partner_offer_consent_version: null,
       passport_photo_url: null,
       role: "user",
     });

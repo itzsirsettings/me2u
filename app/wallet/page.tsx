@@ -67,7 +67,7 @@ export default function WalletPage() {
       throw new Error("Unable to submit");
     }
 
-    toast.success("Receipt submitted! Awaiting approval for your welcome bonus.");
+    toast.success("Receipt submitted! After approval, complete KYC to unlock your welcome bonus.");
     setRegistrationReference("");
     setRegReceiptFile(null);
   };
@@ -138,7 +138,7 @@ export default function WalletPage() {
               <div className="min-w-0">
                 <h2 className="text-xl font-display md:text-3xl">Registration Deposit</h2>
                 <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">
-                  Your ₦{onboardingCreditAmount.toLocaleString()} welcome bonus is waiting, activate with just ₦{registrationDepositAmount.toLocaleString()}.
+                  Your ₦{onboardingCreditAmount.toLocaleString()} welcome bonus is waiting. Submit the ₦{registrationDepositAmount.toLocaleString()} deposit proof, then complete KYC to unlock it.
                 </p>
               </div>
               <span className="shrink-0 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-warning-bg)] px-3 py-1 text-xs font-bold uppercase text-[var(--color-warning-text)]">
