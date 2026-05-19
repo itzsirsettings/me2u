@@ -25,10 +25,11 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const amount = readPositiveAmount(body.amount);
+    const pin = typeof body.pin === "string" ? body.pin.trim() : "";
 
     const { data: profile, error: profileError } = await auth.supabase
       .from("profiles")
-      .select("registration_deposit_paid, kyc_verified, bank_name, account_number")
+      .select("registration_deposit_paid, kyc_verified, bank_name, account_number, transaction_pin")
       .eq("id", auth.user.id)
       .maybeSingle();
 
@@ -44,6 +45,31 @@ export async function POST(request: Request) {
       throw new Error("Complete your bank details before withdrawal.");
     }
 
+    // Verify PIN
+    if (!profile.transaction_pin) {
+      throw new Error("Please set a transaction PIN in your security settings first.");
+    }
+    if (profile.transaction_pin !== pin) {
+      throw new Error("Incorrect transaction PIN.");
+    }
+
+    // Block if there are outstanding borrower loans (excluding onboarding credit of 2000)
+    const { data: activeLoans, error: activeLoansError } = await auth.supabase
+      .from("loans")
+      .select("amount, lender_id")
+      .eq("borrower_id", auth.user.id)
+      .eq("status", "active");
+
+    if (activeLoansError) throw new Error(activeLoansError.message);
+
+    const hasOutstandingLoan = (activeLoans || []).some(
+      (loan) => !(Number(loan.amount) === 2000 && loan.lender_id === null)
+    );
+
+    if (hasOutstandingLoan) {
+      throw new Error("You must repay all outstanding loans before you can withdraw your capital.");
+    }
+
     const { data: wallet, error: walletError } = await auth.supabase
       .from("wallets")
       .select("balance")
@@ -53,21 +79,31 @@ export async function POST(request: Request) {
     if (walletError) throw new Error(walletError.message);
     if (!wallet) throw new Error("Wallet not found.");
 
-    const { data: activeLoans, error: activeLoansError } = await auth.supabase
+    const { data: platformLoans, error: platformLoansError } = await auth.supabase
       .from("loans")
-      .select("id")
+      .select("amount")
       .eq("borrower_id", auth.user.id)
-      .eq("status", "active");
+      .is("lender_id", null)
+      .eq("status", "active")
+      .gte("amount", repeatPlatformLoanMinimum);
 
-    if (activeLoansError) throw new Error(activeLoansError.message);
-    if (activeLoans && activeLoans.length > 0) {
-      throw new Error("You must repay all outstanding loans before you can withdraw.");
-    }
+    if (platformLoansError) throw new Error(platformLoansError.message);
 
-    const requiredBalance = getRequiredWithdrawalBalance(amount, 0);
+    const platformLoanDeposit = (platformLoans || []).reduce(
+      (total, loan) => total + getPlatformLoanRetainedDeposit(Number(loan.amount)),
+      0,
+    );
+    const requiredBalance = getRequiredWithdrawalBalance(amount, platformLoanDeposit);
     const balance = Number(wallet.balance || 0);
 
     if (balance < requiredBalance) {
+      const shortfall = Math.max(0, requiredBalance - balance);
+      if (platformLoanDeposit > 0) {
+        throw new Error(
+          `Fund ₦${shortfall.toLocaleString()} first. ₦${platformLoanDeposit.toLocaleString()} must remain in your wallet after withdrawal and the ₦${withdrawalFeeAmount.toLocaleString()} processing fee.`,
+        );
+      }
+
       throw new Error(`Insufficient balance for the withdrawal and ₦${withdrawalFeeAmount.toLocaleString()} processing fee.`);
     }
 

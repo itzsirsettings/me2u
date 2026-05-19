@@ -233,90 +233,42 @@ export const financialEducationLessons = [
     title: "How peer lending works",
     duration: "3 min",
     outcome: "Understand borrower, lender, marketplace, and repayment roles before accepting money.",
-    tips: [
-      "Keep all agreements inside the Me2U records.",
-      "Check every term carefully before accepting.",
-      "All peer-to-peer loans on Me2U are strictly 0% interest.",
-      "Communicate clearly with your lender in case of delay."
-    ]
   },
   {
     title: "How to avoid loan scams",
     duration: "4 min",
     outcome: "Spot fake agents, off-app pressure, advance-fee tricks, and suspicious links.",
-    tips: [
-      "Never pay upfront fees to get a loan approved.",
-      "Avoid anyone requesting that you move the transaction off-app.",
-      "Support will never ask for your 4-digit PIN or password.",
-      "Verify the identities of your counterparties."
-    ]
   },
   {
     title: "How to repay on time",
     duration: "3 min",
     outcome: "Use reminders, due dates, wallet funding, and smaller commitments to protect your trust score.",
-    tips: [
-      "Fund your wallet a day before the repayment is due.",
-      "Only borrow what you are certain you can repay.",
-      "Set calendar reminders for your repayment date.",
-      "Contact support if you face an extreme emergency."
-    ]
   },
   {
     title: "How to build trust score",
     duration: "4 min",
     outcome: "Improve KYC, wallet activity, referrals, repayment history, account age, and community ratings.",
-    tips: [
-      "Verify your email, phone, and complete your KYC.",
-      "Repay your outstanding loans promptly.",
-      "Maintain active wallet usage for bills and utilities.",
-      "Invite high-quality, verified referrals."
-    ]
   },
   {
     title: "How to manage money",
     duration: "5 min",
     outcome: "Plan cash flow, separate needs from wants, and avoid borrowing for avoidable expenses.",
-    tips: [
-      "Track every expense for at least one month.",
-      "Follow the 50/30/20 rule: needs, wants, and savings.",
-      "Avoid taking debt for non-essential purchases.",
-      "Build a buffer before spending discretionary income."
-    ]
   },
   {
     title: "How to save for emergencies",
     duration: "3 min",
     outcome: "Build a small emergency wallet before relying on loans.",
-    tips: [
-      "Set aside 10% of your earnings into savings.",
-      "Keep emergency savings separate from daily cash.",
-      "Automate small weekly savings deposits.",
-      "Build at least 3 months of living expenses."
-    ]
   },
   {
     title: "How to protect your wallet",
     duration: "4 min",
     outcome: "Use PINs, device checks, recovery steps, and fraud reporting when something feels wrong.",
-    tips: [
-      "Create a strong, unique 4-digit transaction PIN.",
-      "Never leave your app logged in on a public device.",
-      "Monitor device login alerts in the Security Center.",
-      "Use the Freeze Wallet feature if you suspect compromise."
-    ]
   },
   {
     title: "Borrowing mistakes to avoid",
     duration: "4 min",
     outcome: "Avoid hidden side agreements, over-borrowing, missed deadlines, and sharing login details.",
-    tips: [
-      "Never agree to side-payments or off-app interest rates.",
-      "Avoid borrowing from multiple sources at the same time.",
-      "Never miss a deadline without alerting the lender first.",
-      "Do not borrow on behalf of someone else."
-    ]
-  }
+  },
 ] as const;
 
 export const visibleSecurityFeatures = [

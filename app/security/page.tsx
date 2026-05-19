@@ -12,9 +12,12 @@ export default function SecurityPage() {
   const isAuthenticated = useStore((state) => state.isAuthenticated);
   const isLoading = useStore((state) => state.isLoading);
   const user = useStore((state) => state.user);
+  const setTransactionPin = useStore((state) => state.setTransactionPin);
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [walletFrozen, setWalletFrozen] = useState(false);
+  const [pinInput, setPinInput] = useState("");
+  const [pinLoading, setPinLoading] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -67,6 +70,74 @@ export default function SecurityPage() {
             >
               {walletFrozen ? "Unfreeze Wallet" : "Freeze Wallet"}
             </button>
+          </article>
+
+          <article className="mobile-soft-card min-w-0 p-4">
+            <div className="mb-4 flex min-w-0 items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="text-lg font-black leading-tight tracking-normal">Transaction PIN</h2>
+                <p className="mt-1 text-sm leading-relaxed text-[var(--color-text-secondary)]">
+                  Protect withdrawals, bill payments, and transfers with a 4-digit security code.
+                </p>
+              </div>
+              <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-full ${
+                user?.transactionPin ? "bg-[var(--color-positive-bg)] text-[var(--color-positive-text)]" : "bg-[var(--color-warning-bg)] text-[var(--color-warning-text)]"
+              }`}>
+                <Icons8Icon name={user?.transactionPin ? "lock" : "shield"} size={24} />
+              </span>
+            </div>
+
+            <div className="mb-3 rounded-[8px] bg-[var(--mobile-surface-muted)] p-3">
+              <div className="flex items-center gap-2">
+                <span className={`inline-block h-2 w-2 rounded-full ${user?.transactionPin ? "bg-[var(--color-positive-text)]" : "bg-[var(--color-warning-text)]"}`} />
+                <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
+                  {user?.transactionPin ? "4-Digit PIN is Active" : "No PIN Set"}
+                </span>
+              </div>
+            </div>
+
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (pinInput.length !== 4 || !/^\d+$/.test(pinInput)) {
+                  toast.error("PIN must be exactly 4 digits.");
+                  return;
+                }
+                setPinLoading(true);
+                const res = await setTransactionPin(pinInput);
+                setPinLoading(false);
+                if (res.ok) {
+                  toast.success("Transaction PIN updated successfully.");
+                  setPinInput("");
+                } else {
+                  toast.error(res.error || "Failed to update PIN.");
+                }
+              }}
+              className="space-y-3"
+            >
+              <div>
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={4}
+                  placeholder={user?.transactionPin ? "Enter new 4-digit PIN" : "Create 4-digit PIN"}
+                  value={pinInput}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, "");
+                    if (val.length <= 4) setPinInput(val);
+                  }}
+                  className="w-full rounded-[8px] border border-[var(--color-border)] bg-[var(--mobile-surface-muted)] px-3.5 py-2.5 font-mono text-center text-lg tracking-[0.4em] focus:border-[var(--color-accent-primary)] focus:outline-none"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={pinLoading || pinInput.length !== 4}
+                className="btn-primary min-h-11 w-full text-sm font-bold disabled:opacity-50"
+              >
+                {pinLoading ? "Updating..." : user?.transactionPin ? "Change PIN" : "Set PIN"}
+              </button>
+            </form>
           </article>
 
           <article className="mobile-soft-card min-w-0 p-4">

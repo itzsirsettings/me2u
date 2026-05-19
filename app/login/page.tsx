@@ -35,7 +35,7 @@ export default function Login() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-primary p-4">
-      <div className="w-full max-w-md rounded-[50px] border border-[var(--color-border)] bg-card p-8 md:p-10 shadow-[4px_4px_0px_var(--color-shadow)]">
+      <div className="w-full max-w-md rounded-[5px] border border-[var(--color-border)] bg-card p-8 shadow-[4px_4px_0px_var(--color-shadow)]">
         <h1 className="mb-8 text-center text-3xl font-display font-bold">Welcome Back</h1>
         <form
           onSubmit={(event) => {

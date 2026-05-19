@@ -99,8 +99,8 @@ export interface User {
   partnerOfferConsentVersion: string | null;
   passportPhotoUrl: string | null;
   role: "user" | "admin";
+  transactionPin: string | null;
   createdAt: string;
-  hasTransactionPin: boolean;
 }
 
 export interface AppNotification {
@@ -130,16 +130,15 @@ interface AppStore {
   logout: () => Promise<void>;
   fundWallet: (amount: number, reference: string, receiptFile?: File) => Promise<ActionResult>;
   confirmRegistrationDeposit: (reference: string, receiptFile?: File) => Promise<ActionResult>;
-  withdraw: (amount: number) => Promise<ActionResult>;
+  withdraw: (amount: number, pin?: string) => Promise<ActionResult>;
   createMarketplaceItem: (item: MarketplaceDraft) => Promise<ActionResult>;
   acceptMarketplaceItem: (itemId: string) => Promise<ActionResult>;
   requestPlatformLoan: (amount?: number) => Promise<ActionResult>;
   repayLoan: (loanId: string) => Promise<ActionResult>;
-  payBill: (amount: number, serviceLabel: string, detail: string) => Promise<ActionResult>;
-  clearNotifications: () => Promise<ActionResult>;
+  payBill: (amount: number, serviceLabel: string, detail: string, pin?: string) => Promise<ActionResult>;
+  setTransactionPin: (pin: string) => Promise<ActionResult>;
   deleteNotification: (id: string) => Promise<ActionResult>;
-  setPin: (pin: string) => Promise<ActionResult>;
-  verifyPin: (pin: string) => Promise<ActionResult>;
+  clearAllNotifications: () => Promise<ActionResult>;
 }
 
 const missingSupabaseResult = {
@@ -315,8 +314,8 @@ function toUser(profile: ProfileRow, wallet: WalletRow | null, affiliateRewards:
     partnerOfferConsentVersion: profile.partner_offer_consent_version,
     passportPhotoUrl: profile.passport_photo_url,
     role: profile.role,
+    transactionPin: profile.transaction_pin,
     createdAt: profile.created_at,
-    hasTransactionPin: !!profile.transaction_pin,
   };
 }
 
@@ -542,7 +541,7 @@ export const useStore = create<AppStore>((set, get) => ({
     return result;
   },
 
-  withdraw: async (amount) => {
+  withdraw: async (amount, pin) => {
     if (!hasSupabaseConfig()) return missingSupabaseResult;
 
     const user = get().user;
@@ -569,7 +568,7 @@ export const useStore = create<AppStore>((set, get) => ({
       };
     }
 
-    const result = await postAuthenticatedJson("/api/wallet/withdraw", { amount });
+    const result = await postAuthenticatedJson("/api/wallet/withdraw", { amount, pin });
     if (result.ok) await get().loadCurrentUser();
     return result;
   },
@@ -658,51 +657,37 @@ export const useStore = create<AppStore>((set, get) => ({
     return result;
   },
 
-  payBill: async (amount, serviceLabel, detail) => {
+  payBill: async (amount, serviceLabel, detail, pin) => {
     if (!hasSupabaseConfig()) return missingSupabaseResult;
 
     const user = get().user;
     if (!user) return { ok: false, error: "Please log in first." };
     if (!user.kycVerified) return { ok: false, error: "Complete your KYC before transacting." };
 
-    const result = await postAuthenticatedJson("/api/wallet/pay-bill", { amount, serviceLabel, detail });
+    const result = await postAuthenticatedJson("/api/wallet/pay-bill", { amount, serviceLabel, detail, pin });
     if (result.ok) await get().loadCurrentUser();
     return result;
   },
 
-  clearNotifications: async () => {
+  setTransactionPin: async (pin) => {
     if (!hasSupabaseConfig()) return missingSupabaseResult;
-    const user = get().user;
-    if (!user) return { ok: false, error: "Please log in first." };
-
-    const supabase = getSupabaseBrowserClient();
-    const { error } = await supabase.from("notifications").delete().eq("user_id", user.id);
-    if (error) return { ok: false, error: error.message };
-
-    await get().loadCurrentUser();
-    return { ok: true };
+    const result = await postAuthenticatedJson("/api/security/pin", { pin });
+    if (result.ok) await get().loadCurrentUser();
+    return result;
   },
 
   deleteNotification: async (id) => {
     if (!hasSupabaseConfig()) return missingSupabaseResult;
-    const supabase = getSupabaseBrowserClient();
-    const { error } = await supabase.from("notifications").delete().eq("id", id);
-    if (error) return { ok: false, error: error.message };
-
-    await get().loadCurrentUser();
-    return { ok: true };
-  },
-
-  setPin: async (pin) => {
-    if (!hasSupabaseConfig()) return missingSupabaseResult;
-    const result = await postAuthenticatedJson("/api/user/pin", { action: "set", pin });
+    const result = await postAuthenticatedJson("/api/notifications/clear", { id });
     if (result.ok) await get().loadCurrentUser();
     return result;
   },
 
-  verifyPin: async (pin) => {
+  clearAllNotifications: async () => {
     if (!hasSupabaseConfig()) return missingSupabaseResult;
-    return await postAuthenticatedJson("/api/user/pin", { action: "verify", pin });
+    const result = await postAuthenticatedJson("/api/notifications/clear", { clearAll: true });
+    if (result.ok) await get().loadCurrentUser();
+    return result;
   },
 
 }));

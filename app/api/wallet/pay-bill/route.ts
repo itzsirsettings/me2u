@@ -24,10 +24,11 @@ export async function POST(request: Request) {
     const amount = readPositiveAmount(body.amount);
     const serviceLabel = typeof body.serviceLabel === "string" ? body.serviceLabel : "Bill Payment";
     const detail = typeof body.detail === "string" ? body.detail : "";
+    const pin = typeof body.pin === "string" ? body.pin.trim() : "";
 
     const { data: profile, error: profileError } = await auth.supabase
       .from("profiles")
-      .select("kyc_verified")
+      .select("kyc_verified, transaction_pin")
       .eq("id", auth.user.id)
       .maybeSingle();
 
@@ -35,6 +36,14 @@ export async function POST(request: Request) {
     if (!profile) throw new Error("Profile not found.");
     if (!profile.kyc_verified) {
       throw new Error("Complete KYC before paying bills.");
+    }
+
+    // Verify PIN
+    if (!profile.transaction_pin) {
+      throw new Error("Please set a transaction PIN in your security settings first.");
+    }
+    if (profile.transaction_pin !== pin) {
+      throw new Error("Incorrect transaction PIN.");
     }
 
     // 1. Get current balance

@@ -232,7 +232,7 @@ export default function Marketplace() {
                 <div>
                   <label className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">Type</label>
                   <select
-                    className="h-11 w-full rounded-[50px] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-6 font-sans focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none md:h-12"
+                    className="h-11 w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 font-sans focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none md:h-12"
                     value={formData.type}
                     title="Listing Type"
                     onChange={(e) => {
@@ -251,7 +251,7 @@ export default function Marketplace() {
                   <input
                     type="number"
                     min="1000"
-                    className="h-11 w-full rounded-[50px] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-6 font-mono focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none md:h-12"
+                    className="h-11 w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 font-mono focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none md:h-12"
                     value={formData.amount}
                     title="Amount"
                     placeholder="Enter amount"
@@ -260,7 +260,7 @@ export default function Marketplace() {
                     }
                   />
                 </div>
-                <div className="rounded-[50px] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 px-6">
+                <div className="rounded-[5px] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-card)] p-3">
                   <p className="mb-1 text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">Interest</p>
                   <p className="font-mono text-xl text-[var(--color-positive-text)]">0%</p>
                   <p className="mt-1 text-xs text-[var(--color-text-secondary)]">All me2u loans are interest-free.</p>
@@ -271,7 +271,7 @@ export default function Marketplace() {
                     type="number"
                     min={loanDurationMinDays}
                     max={loanDurationMaxDays}
-                    className="h-11 w-full rounded-[50px] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-6 font-mono focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none md:h-12"
+                    className="h-11 w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 font-mono focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none md:h-12"
                     value={formData.days}
                     title="Duration in Days"
                     placeholder="Days"
@@ -281,7 +281,7 @@ export default function Marketplace() {
                   />
                 </div>
                 {formData.type === "borrow_request" && (
-                  <label className="md:col-span-2 flex min-w-0 cursor-pointer items-start gap-3 rounded-[50px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 px-6">
+                  <label className="md:col-span-2 flex min-w-0 cursor-pointer items-start gap-3 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3">
                     <input
                       type="checkbox"
                       checked={formData.boost}
@@ -321,8 +321,8 @@ export default function Marketplace() {
           </div>
           <div className="grid gap-2">
             {protectionSteps.map((step) => (
-              <div key={step.title} className="flex min-w-0 items-start gap-3 rounded-[50px] bg-[var(--color-bg-secondary)] p-4 px-6">
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--color-bg-card)] text-[var(--color-accent-primary)]">
+              <div key={step.title} className="flex min-w-0 items-start gap-3 rounded-[5px] bg-[var(--color-bg-secondary)] p-3">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[5px] bg-[var(--color-bg-card)] text-[var(--color-accent-primary)]">
                   <Icons8Icon name={step.icon} size={19} />
                 </span>
                 <span className="min-w-0">
@@ -349,7 +349,7 @@ export default function Marketplace() {
               <button
                 key={circle}
                 type="button"
-                className="min-h-11 rounded-[50px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-5 py-3 text-left text-xs font-bold transition hover:bg-[var(--color-hover-soft)]"
+                className="min-h-11 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 text-left text-xs font-bold transition hover:bg-[var(--color-hover-soft)]"
                 onClick={() => toast.info(`${circle} setup will open when group lending is enabled.`)}
               >
                 {circle}
@@ -371,25 +371,25 @@ export default function Marketplace() {
                         {item.type === "borrow_request" ? "Borrow Request" : "Lending Offer"}
                       </p>
                       {isMarketplaceBoostActive(item) && (
-                        <span className="shrink-0 rounded-[50px] border border-[var(--color-border)] bg-[var(--color-warning-bg)] px-3 py-0.5 text-[10px] font-black uppercase tracking-normal text-[var(--color-warning-text)]">
+                        <span className="shrink-0 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-warning-bg)] px-2 py-0.5 text-[10px] font-black uppercase tracking-normal text-[var(--color-warning-text)]">
                           Promoted
                         </span>
                       )}
                     </div>
                     <p className="overflow-anywhere mt-1 font-sans text-sm italic text-[var(--color-text-secondary)]">by {item.authorName}</p>
                   </div>
-                  <div className="flex shrink-0 items-center gap-1 rounded-[50px] border border-[var(--color-border)] bg-[var(--color-positive-bg)] px-4 py-2 text-[11px] font-bold font-mono text-[var(--color-positive-text)] shadow-[2px_2px_0px_var(--color-shadow)] md:text-xs">
+                  <div className="flex shrink-0 items-center gap-1 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-positive-bg)] px-2 py-1 text-[11px] font-bold font-mono text-[var(--color-positive-text)] shadow-[2px_2px_0px_var(--color-shadow)] md:px-3 md:text-xs">
                     <Icons8Icon name="shield" size={16} />
                     Trust: {item.trustScore}
                   </div>
                 </div>
                 <p className="overflow-anywhere mt-2 text-2xl font-display leading-none md:text-5xl">₦{item.amount.toLocaleString()}</p>
                 <div className="mt-5 grid grid-cols-2 gap-3 text-sm font-sans text-[var(--color-text-secondary)] md:mt-6 md:gap-4">
-                  <div className="p-4 bg-[var(--color-bg-primary)] rounded-[50px] kinetic-border border-dashed">
+                  <div className="p-3 bg-[var(--color-bg-primary)] rounded-[5px] kinetic-border border-dashed">
                     <p className="text-[10px] uppercase font-bold tracking-[0.1em] mb-1 md:tracking-[0.2em]">Interest</p>
                     <p className="text-xl font-mono text-[var(--color-positive-text)]">0%</p>
                   </div>
-                  <div className="p-4 bg-[var(--color-bg-primary)] rounded-[50px] kinetic-border border-dashed">
+                  <div className="p-3 bg-[var(--color-bg-primary)] rounded-[5px] kinetic-border border-dashed">
                     <p className="text-[10px] uppercase font-bold tracking-[0.1em] mb-1 md:tracking-[0.2em]">Duration</p>
                     <p className="text-xl font-mono text-[var(--color-text-primary)]">{item.days}d</p>
                   </div>
@@ -426,7 +426,7 @@ export default function Marketplace() {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="w-full max-w-md rounded-[50px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-6 shadow-[0_18px_48px_rgba(0,64,107,0.22)] md:rounded-[50px] md:p-8"
+              className="w-full max-w-md rounded-[22px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[0_18px_48px_rgba(0,64,107,0.22)] md:rounded-[8px] md:p-6"
               initial={{ y: 40, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 40, opacity: 0 }}
@@ -451,7 +451,7 @@ export default function Marketplace() {
                 </button>
               </div>
 
-              <dl className="grid gap-2 rounded-[50px] bg-[var(--color-bg-secondary)] p-6 text-sm">
+              <dl className="grid gap-2 rounded-[5px] bg-[var(--color-bg-secondary)] p-3 text-sm">
                 <div className="flex min-w-0 justify-between gap-3">
                   <dt className="shrink-0 text-[var(--color-text-secondary)]">Listing</dt>
                   <dd className="min-w-0 text-right font-bold capitalize">{pendingAgreement.type.replaceAll("_", " ")}</dd>
@@ -490,7 +490,7 @@ export default function Marketplace() {
                 </div>
               </dl>
 
-              <label className="mt-4 flex min-w-0 cursor-pointer items-start gap-3 rounded-[50px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 px-6 text-sm leading-relaxed">
+              <label className="mt-4 flex min-w-0 cursor-pointer items-start gap-3 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 text-sm leading-relaxed">
                 <input
                   type="checkbox"
                   checked={agreementAccepted}

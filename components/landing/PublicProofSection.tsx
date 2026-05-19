@@ -37,7 +37,7 @@ const proofCards = [
 
 export default function PublicProofSection() {
   return (
-    <section className="py-24 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] border-t border-[var(--color-border)]">
+    <section className="py-24 bg-slate-900 text-white border-t border-slate-800">
       <div className="container mx-auto px-4 md:px-6">
         <div className="max-w-3xl mb-16">
           <motion.div
@@ -45,13 +45,13 @@ export default function PublicProofSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <span className="inline-block px-4 py-2 bg-[var(--color-positive-bg)] text-[var(--color-positive-text)] font-bold text-sm rounded-[50px] mb-6">
+            <span className="inline-block px-4 py-2 bg-white/10 text-emerald-400 font-bold text-sm rounded-full mb-6">
               Public proof
             </span>
-            <h2 className="text-3xl md:text-5xl font-display font-extrabold mb-6 tracking-tight text-[var(--color-text-primary)]">
+            <h2 className="text-3xl md:text-5xl font-extrabold mb-6 tracking-tight">
               Real trust numbers, never inflated.
             </h2>
-            <p className="text-lg text-[var(--color-text-secondary)] font-sans font-medium">
+            <p className="text-lg text-slate-400 font-medium">
               Me2U should publish only live, audited app totals. If a number is not connected yet, it stays marked as a live total requirement.
             </p>
           </motion.div>
@@ -65,14 +65,14 @@ export default function PublicProofSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.05 }}
-              className="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[50px] p-8 shadow-[2px_2px_0px_var(--color-shadow)] transition-all hover:-translate-y-1 hover:shadow-none"
+              className="bg-white/5 border border-white/10 rounded-3xl p-8 hover:bg-white/10 transition-colors"
             >
-              <span className="text-[var(--color-accent-primary)] font-bold text-xl mb-4 block">
+              <span className="text-blue-400 font-bold text-xl mb-4 block">
                 {String(index + 1).padStart(2, "0")}
               </span>
-              <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">{card.label}</h3>
-              <p className="text-[var(--color-positive-text)] font-bold mb-4">{card.value}</p>
-              <p className="text-sm text-[var(--color-text-secondary)] font-medium">{card.detail}</p>
+              <h3 className="text-xl font-bold text-white mb-2">{card.label}</h3>
+              <p className="text-emerald-400 font-bold mb-4">{card.value}</p>
+              <p className="text-sm text-slate-400 font-medium">{card.detail}</p>
             </motion.div>
           ))}
         </div>
@@ -82,13 +82,13 @@ export default function PublicProofSection() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[50px] p-10 md:p-12 shadow-[2px_2px_0px_var(--color-shadow)]"
+            className="bg-white/5 border border-white/10 rounded-[2.5rem] p-10 md:p-12"
           >
-            <span className="inline-block px-4 py-2 bg-[var(--color-hover-soft)] text-[var(--color-accent-primary)] font-bold text-sm rounded-[50px] mb-6">
+            <span className="inline-block px-4 py-2 bg-blue-500/20 text-blue-400 font-bold text-sm rounded-full mb-6">
               Success stories
             </span>
-            <h2 className="text-3xl font-display font-extrabold text-[var(--color-text-primary)] mb-6">Testimonials only after real consent.</h2>
-            <p className="text-[var(--color-text-secondary)] font-sans font-medium leading-relaxed">
+            <h2 className="text-3xl font-extrabold mb-6">Testimonials only after real consent.</h2>
+            <p className="text-slate-400 font-medium leading-relaxed">
               User stories should come from verified borrowers, lenders, referrers, and savers who agree to be featured. Until then, Me2U should leave this section as a consent-based publishing queue instead of inventing quotes.
             </p>
           </motion.div>
@@ -98,20 +98,20 @@ export default function PublicProofSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[50px] p-10 md:p-12 shadow-[2px_2px_0px_var(--color-shadow)]"
+            className="bg-white/5 border border-white/10 rounded-[2.5rem] p-10 md:p-12"
           >
-            <span className="inline-block px-4 py-2 bg-[var(--color-positive-bg)] text-[var(--color-positive-text)] font-bold text-sm rounded-[50px] mb-6">
+            <span className="inline-block px-4 py-2 bg-emerald-500/20 text-emerald-400 font-bold text-sm rounded-full mb-6">
               Native app readiness
             </span>
-            <h2 className="text-3xl font-display font-extrabold text-[var(--color-text-primary)] mb-6">Install now, stores when approved.</h2>
-            <p className="text-[var(--color-text-secondary)] font-sans font-medium leading-relaxed mb-8">
+            <h2 className="text-3xl font-extrabold mb-6">Install now, stores when approved.</h2>
+            <p className="text-slate-400 font-medium leading-relaxed mb-8">
               Me2U is PWA-ready for supported browsers. Android, iPhone, push notifications, ratings, and store listings should launch only when the production app, compliance notices, and approved store assets are ready.
             </p>
             <div className="flex flex-wrap gap-4">
-              <button className="px-6 py-3 bg-[var(--color-accent-primary)] text-[var(--color-on-accent)] hover:opacity-90 rounded-[50px] font-bold transition-opacity flex items-center gap-3">
+              <button className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold transition-colors flex items-center gap-3">
                 <span>↗</span> Start with Web app
               </button>
-              <button className="px-6 py-3 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[var(--color-text-secondary)] cursor-not-allowed rounded-[50px] font-bold flex items-center gap-3">
+              <button className="px-6 py-3 bg-white/5 border border-white/10 text-slate-500 cursor-not-allowed rounded-xl font-bold flex items-center gap-3">
                 <span>◎</span> Prepare for App stores
               </button>
             </div>

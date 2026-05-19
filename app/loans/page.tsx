@@ -15,7 +15,6 @@ import {
 import { useStore } from "@/lib/store";
 import { toast } from "sonner";
 import { motion, type Variants } from "framer-motion";
-import TransactionPinPrompt from "@/components/TransactionPinPrompt";
 
 export default function Loans() {
   const activeLoans = useStore((state) => state.activeLoans);
@@ -29,12 +28,6 @@ export default function Loans() {
   const [mounted, setMounted] = useState(false);
   const [loanAmount, setLoanAmount] = useState(String(repeatPlatformLoanMinimum));
   const [isRequestingLoan, setIsRequestingLoan] = useState(false);
-  const [pinState, setPinState] = useState<{ isOpen: boolean; action: any; title: string; description: string }>({
-    isOpen: false,
-    action: null,
-    title: "",
-    description: "",
-  });
 
   useEffect(() => {
     setMounted(true);
@@ -110,24 +103,16 @@ export default function Loans() {
       return;
     }
 
-    setPinState({
-      isOpen: true,
-      action: async () => {
-        setIsRequestingLoan(true);
-        const result = await requestPlatformLoan(requestedPlatformAmount);
-        setIsRequestingLoan(false);
+    setIsRequestingLoan(true);
+    const result = await requestPlatformLoan(requestedPlatformAmount);
+    setIsRequestingLoan(false);
 
-        if (!result.ok) {
-          toast.error(result.error || "Unable to request loan.");
-          return;
-        }
+    if (!result.ok) {
+      toast.error(result.error || "Unable to request loan.");
+      throw new Error("Unable to request");
+    }
 
-        toast.success(`Loan of ₦${requestedPlatformAmount.toLocaleString()} has been added to your wallet.`);
-        setPinState((prev) => ({ ...prev, isOpen: false }));
-      },
-      title: "Request Loan",
-      description: `Enter PIN to confirm loan request for ₦${requestedPlatformAmount.toLocaleString()}`,
-    });
+    toast.success(`Loan of ₦${requestedPlatformAmount.toLocaleString()} has been added to your wallet.`);
   };
 
   const handleRepay = async (loanId: string, amount: number, rate: number) => {
@@ -135,23 +120,15 @@ export default function Loans() {
     const totalRepayment = amount + (amount * rate) / 100;
     if (user.balance < totalRepayment) {
       toast.error("Insufficient balance to repay this loan.");
-      return;
+      throw new Error("Insufficient balance");
     }
-    
-    setPinState({
-      isOpen: true,
-      action: async () => {
-        const result = await repayLoan(loanId);
-        if (!result.ok) {
-          toast.error(result.error || "Unable to repay this loan.");
-          return;
-        }
-        toast.success("Loan repaid successfully!");
-        setPinState((prev) => ({ ...prev, isOpen: false }));
-      },
-      title: "Repay Loan",
-      description: `Enter PIN to confirm repayment of ₦${totalRepayment.toLocaleString()}`,
-    });
+    const result = await repayLoan(loanId);
+    if (!result.ok) {
+      toast.error(result.error || "Unable to repay this loan.");
+      throw new Error("Unable to repay");
+    }
+
+    toast.success("Loan repaid successfully!");
   };
 
   const containerVariants: Variants = {
@@ -184,7 +161,7 @@ export default function Loans() {
             My Loans
           </h1>
         </div>
-        <div className="mobile-soft-card min-w-0 rounded-[50px] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-5 py-3 shadow-[2px_2px_0px_var(--color-shadow)] md:px-6 md:py-4">
+        <div className="mobile-soft-card min-w-0 rounded-[20px] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3.5 py-2.5 shadow-[2px_2px_0px_var(--color-shadow)] md:px-5 md:py-4">
           <p className="text-xs font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">Wallet Balance</p>
           <p className="overflow-anywhere text-xl font-display leading-none md:text-2xl">₦{currentBalance.toLocaleString()}</p>
         </div>
@@ -197,7 +174,7 @@ export default function Loans() {
           <div className="flex min-w-0 flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div className="min-w-0 flex-1">
               <div className="mb-4 flex min-w-0 items-center gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-accent-primary)]">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-accent-primary)]">
                   <Icons8Icon name="shield" size={24} />
                 </div>
                 <div className="min-w-0">
@@ -219,7 +196,7 @@ export default function Loans() {
                     onChange={(event) => setLoanAmount(event.target.value)}
                     title="Loan Amount"
                     placeholder="Enter amount"
-                    className="w-full rounded-[50px] border border-[var(--color-border)] bg-[var(--color-bg-card)] py-4 px-6 font-mono text-base focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none md:text-xl"
+                    className="h-11 w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 font-mono text-base focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none md:h-14 md:p-4 md:text-xl"
                   />
                 </div>
                 {!requestDisabled ? (
@@ -250,7 +227,7 @@ export default function Loans() {
                 )}
               </div>
 
-              <div className="mt-5 grid gap-3 rounded-[50px] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-5 text-sm md:grid-cols-3">
+              <div className="mt-5 grid gap-3 rounded-[5px] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 text-sm md:grid-cols-3">
                 <div className="min-w-0">
                   <p className="font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">Minimum</p>
                   <p className="overflow-anywhere mt-1 font-mono text-lg text-[var(--color-text-primary)]">₦{repeatPlatformLoanMinimum.toLocaleString()}</p>
@@ -338,14 +315,6 @@ export default function Loans() {
           ))
         )}
       </motion.div>
-
-      <TransactionPinPrompt
-        isOpen={pinState.isOpen}
-        onSuccess={() => pinState.action?.()}
-        onCancel={() => setPinState((prev) => ({ ...prev, isOpen: false }))}
-        title={pinState.title}
-        description={pinState.description}
-      />
     </motion.div>
   );
 }

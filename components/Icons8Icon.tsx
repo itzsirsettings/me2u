@@ -44,9 +44,6 @@ export const icons8Icons = {
   download: "https://img.icons8.com/material-outlined/96/download.png",
   mobile: "https://img.icons8.com/material-outlined/96/iphone.png",
   bell: "https://img.icons8.com/material-outlined/96/appointment-reminders.png",
-  chevronDown: "https://img.icons8.com/material-outlined/96/chevron-down.png",
-  cancel: "https://img.icons8.com/material-outlined/96/cancel.png",
-  clearSymbol: "https://img.icons8.com/material-outlined/96/backspace.png",
 } as const;
 
 export type Icons8IconName = keyof typeof icons8Icons;
