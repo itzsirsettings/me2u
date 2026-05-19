@@ -525,15 +525,17 @@ h3 { font-size: .88rem; }
 .accordion-content p { padding: 0 22px 22px; color: var(--muted); }
 
 .site-footer { color: white; background: #00406b; padding: 74px 0 26px; }
-.footer-grid { display: grid; grid-template-columns: 1.3fr .7fr .9fr 1fr; gap: 34px; }
+.footer-grid { display: grid; grid-template-columns: 1.15fr 1fr .9fr 1fr; gap: 34px; }
 .site-footer .brand-text small { color: rgba(255,255,255,.55); }
 .footer-brand p { max-width: 340px; margin-top: 18px; color: rgba(255,255,255,.66); }
 .footer-brand .license { color: white; font-weight: 900; }
 .site-footer h3 { color: white; margin-bottom: 18px; font-size: .65rem; letter-spacing: -.02em; }
 .site-footer a, .site-footer p { display: block; color: rgba(255,255,255,.66); margin-bottom: 10px; font-size: .94rem; }
 .site-footer a:hover { color: white; }
+.footer-disclaimer { margin-top: 44px; padding: 18px 0 0; border-top: 1px solid rgba(255,255,255,.1); }
+.footer-disclaimer p { max-width: 980px; margin: 0; color: rgba(255,255,255,.66); font-size: .88rem; line-height: 1.7; }
 .footer-bottom { display: flex; justify-content: space-between; gap: 20px; align-items: center; margin-top: 54px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,.1); color: rgba(255,255,255,.56); }
-.footer-bottom button { color: white; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); padding: 10px 14px; border-radius: 999px; }
+.footer-bottom button, .footer-bottom a { color: white; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); padding: 10px 14px; border-radius: 999px; }
 
 .modal { width: min(620px, calc(100% - 28px)); border: 0; border-radius: 34px; padding: 0; margin: auto; background: transparent; color: var(--text); }
 .modal::backdrop { background: rgba(0,64,107,.64); backdrop-filter: blur(8px); }

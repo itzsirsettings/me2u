@@ -1,6 +1,7 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
+import Icons8Icon, { type Icons8IconName } from "@/components/Icons8Icon";
 import { onboardingCreditAmount, registrationDepositAmount } from "@/lib/loans";
 import { useStore } from "@/lib/store";
 import { useState, useEffect } from "react";
@@ -8,6 +9,26 @@ import LoadingButton from "@/LoadingButton";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { motion, type Variants } from "framer-motion";
+
+const walletServices: Array<{ label: string; detail: string; icon: Icons8IconName }> = [
+  { label: "Airtime", detail: "Buy for yourself or contacts", icon: "phone" },
+  { label: "Data", detail: "Mobile bundles", icon: "globe" },
+  { label: "Electricity", detail: "Prepaid and postpaid bills", icon: "bill" },
+  { label: "Cable TV", detail: "Subscription renewals", icon: "receipt" },
+  { label: "Internet", detail: "Home and office access", icon: "globe" },
+  { label: "School Fees", detail: "Verified school payments", icon: "certificate" },
+  { label: "Merchant QR", detail: "Scan to pay locally", icon: "qr" },
+  { label: "Payment Links", detail: "Small business collections", icon: "deal" },
+];
+
+const savingsGoals = [
+  { label: "Emergency", amount: 25000, progress: 42 },
+  { label: "Rent", amount: 150000, progress: 18 },
+  { label: "School fees", amount: 80000, progress: 27 },
+  { label: "Business capital", amount: 120000, progress: 35 },
+  { label: "Locked savings", amount: 50000, progress: 60 },
+  { label: "Group savings", amount: 100000, progress: 22 },
+];
 
 export default function WalletPage() {
   const [amount, setAmount] = useState("");
@@ -314,6 +335,67 @@ export default function WalletPage() {
               disabled={!fundingProofReady}
               onClick={handleFund}
             />
+          </div>
+        </Card>
+
+        <Card className="kinetic-border bg-[var(--color-bg-card)] p-5 shadow-[4px_4px_0px_var(--color-shadow)] md:p-8">
+          <div className="mb-4 flex min-w-0 items-start justify-between gap-3 md:mb-6">
+            <div className="min-w-0">
+              <h2 className="text-xl font-display md:text-3xl">Bills and Daily Payments</h2>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">
+                Keep the wallet useful beyond loans with everyday services.
+              </p>
+            </div>
+            <Icons8Icon name="bill" size={26} className="shrink-0 text-[var(--color-accent-primary)]" />
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {walletServices.map((service) => (
+              <button
+                key={service.label}
+                type="button"
+                className="flex min-w-0 items-center gap-3 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3 text-left transition hover:bg-[var(--color-hover-soft)]"
+                onClick={() => toast.info(`${service.label} will open after payment providers are enabled.`)}
+              >
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[5px] bg-[var(--color-bg-card)] text-[var(--color-accent-primary)]">
+                  <Icons8Icon name={service.icon} size={21} />
+                </span>
+                <span className="min-w-0">
+                  <b className="block truncate text-sm">{service.label}</b>
+                  <span className="block truncate text-xs text-[var(--color-text-secondary)]">{service.detail}</span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </Card>
+
+        <Card className="kinetic-border bg-[var(--color-bg-card)] p-5 shadow-[4px_4px_0px_var(--color-shadow)] md:p-8">
+          <div className="mb-4 flex min-w-0 items-start justify-between gap-3 md:mb-6">
+            <div className="min-w-0">
+              <h2 className="text-xl font-display md:text-3xl">Savings Goals</h2>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">
+                Save small before you borrow, with clear goals and progress.
+              </p>
+            </div>
+            <Icons8Icon name="savings" size={26} className="shrink-0 text-[var(--color-positive-text)]" />
+          </div>
+          <div className="grid gap-3">
+            {savingsGoals.map((goal) => (
+              <button
+                key={goal.label}
+                type="button"
+                className="min-w-0 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3 text-left transition hover:bg-[var(--color-hover-soft)]"
+                onClick={() => toast.info(`${goal.label} savings setup is coming to your wallet.`)}
+              >
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <b className="min-w-0 truncate text-sm">{goal.label}</b>
+                  <span className="shrink-0 font-mono text-xs font-bold">₦{goal.amount.toLocaleString()}</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-[var(--color-bg-card)]">
+                  <div className="h-full rounded-full bg-[var(--color-accent-primary)]" style={{ width: `${goal.progress}%` }} />
+                </div>
+                <p className="mt-2 text-xs font-semibold text-[var(--color-text-secondary)]">{goal.progress}% target progress</p>
+              </button>
+            ))}
           </div>
         </Card>
       </motion.div>

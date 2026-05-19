@@ -4,8 +4,19 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Icons8Icon, { type Icons8IconName } from "@/components/Icons8Icon";
 import NotificationBell from "@/components/NotificationBell";
+import PwaInstallButton from "@/components/PwaInstallButton";
 import ReferralQrCode from "@/components/ReferralQrCode";
 import { onboardingCreditAmount, registrationDepositAmount } from "@/lib/loans";
+import {
+  getCountryConfig,
+  getCreditBuilderBadges,
+  getCreditLevel,
+  getReferralProgramProgress,
+  getTrustScoreBreakdown,
+  growthFeatureModules,
+  mobileAppReadiness,
+  referralProgramLevels,
+} from "@/lib/product-features";
 import { useStore, type Transaction } from "@/lib/store";
 import { motion, type Variants } from "framer-motion";
 import { toast } from "sonner";
@@ -22,6 +33,18 @@ const serviceActions: Array<{
   { label: "Market", path: "/marketplace", icon: "market", tone: "bg-[#ffdfad] text-[#7a3f00]", requiresKyc: true },
   { label: "Loans", path: "/loans", icon: "loans", tone: "bg-[#e0a9f0] text-[#07026f]", requiresKyc: true },
   { label: "KYC", path: "/kyc", icon: "shield", tone: "bg-[#9adbc4] text-[#00406b]", requiresDeposit: true },
+];
+
+const growthShortcuts: Array<{
+  label: string;
+  path: string;
+  icon: Icons8IconName;
+  tone: string;
+}> = [
+  { label: "Trust", path: "/profile", icon: "shield", tone: "bg-[#dcecff] text-[#00406b]" },
+  { label: "Refer", path: "/profile", icon: "trophy", tone: "bg-[#fff4d8] text-[#7a4a00]" },
+  { label: "Learn", path: "/learn", icon: "book", tone: "bg-[#e8f7f0] text-[#005f46]" },
+  { label: "Secure", path: "/security", icon: "security", tone: "bg-[#eee9ff] text-[#07026f]" },
 ];
 
 function getInitials(name?: string | null) {
@@ -96,6 +119,16 @@ export default function Dashboard() {
       ? "Wallet account ready"
       : "Verify to add bank";
   const referralLink = mounted ? `${window.location.origin}/register?ref=${user?.username || ""}` : "";
+  const trustScore = Math.max(0, Math.min(100, user?.trustScore || 0));
+  const trustLevel = getCreditLevel(trustScore);
+  const trustBreakdown = getTrustScoreBreakdown(user, transactions, activeLoans);
+  const creditBadges = getCreditBuilderBadges(user, transactions, activeLoans);
+  const country = getCountryConfig(user?.countryCode);
+  const countryStatus =
+    country.lendingStatus === "active" ? "Lending enabled" : "Wallet profile ready";
+  const referralProgress = getReferralProgramProgress(user);
+  const currentReferralLevel = referralProgress.currentLevel?.name || "Starter";
+  const nextReferralLevel = referralProgress.nextLevel;
 
   const statusCard = useMemo(() => {
     if (!user?.registrationDepositPaid) {
@@ -245,14 +278,108 @@ export default function Dashboard() {
             })}
           </motion.section>
 
+          <motion.section variants={itemVariants} className="mobile-soft-card grid min-w-0 grid-cols-4 overflow-hidden px-1 py-2">
+            {growthShortcuts.map((action, index) => (
+              <button
+                key={action.label}
+                className={`flex min-h-[3.75rem] flex-col items-center justify-center gap-1 px-1 text-center transition active:scale-95 ${
+                  index > 0 ? "border-l border-[var(--color-border)]" : ""
+                }`}
+                onClick={() => router.push(action.path)}
+              >
+                <span className={`grid h-8 w-8 place-items-center rounded-full ${action.tone}`}>
+                  <Icons8Icon name={action.icon} size={17} />
+                </span>
+                <span className="text-[0.72rem] font-black leading-none text-[var(--color-text-primary)]">
+                  {action.label}
+                </span>
+              </button>
+            ))}
+          </motion.section>
+
+          <motion.section variants={itemVariants} className="mobile-soft-card min-w-0 overflow-hidden p-3.5">
+            <div className="flex min-w-0 items-center gap-3">
+              <div
+                className="grid h-[5.3rem] w-[5.3rem] shrink-0 place-items-center rounded-full p-2"
+                style={{
+                  background: `conic-gradient(var(--color-accent-primary) ${trustScore * 3.6}deg, var(--mobile-surface-muted) 0deg)`,
+                }}
+              >
+                <div className="grid h-full w-full place-items-center rounded-full bg-[var(--mobile-surface)] text-center">
+                  <span className="font-display text-[1.45rem] font-black leading-none">{trustScore}</span>
+                  <span className="text-[9px] font-black uppercase leading-none text-[var(--color-text-secondary)]">Score</span>
+                </div>
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex min-w-0 items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <h2 className="text-[1rem] font-black leading-tight tracking-normal">Me2U Trust Score</h2>
+                    <p className={`mt-1 text-xs font-black ${trustLevel.color}`}>
+                      {trustLevel.name} trust • {trustLevel.next}
+                    </p>
+                  </div>
+                  <span className="shrink-0 rounded-full bg-[var(--mobile-surface-muted)] px-2.5 py-1 text-[9px] font-black">
+                    {country.currency}
+                  </span>
+                </div>
+                <div className="mt-3 grid gap-1.5">
+                  {trustBreakdown.slice(0, 4).map((signal) => (
+                    <div key={signal.label} className="min-w-0">
+                      <div className="mb-1 flex items-center justify-between gap-2 text-[10px] font-black">
+                        <span className="truncate">{signal.label}</span>
+                        <span className="shrink-0 text-[var(--color-text-secondary)]">{signal.earned}/{signal.weight}</span>
+                      </div>
+                      <div className="h-1.5 overflow-hidden rounded-full bg-[var(--mobile-surface-muted)]">
+                        <div
+                          className="h-full rounded-full bg-[var(--color-accent-primary)]"
+                          style={{ width: `${Math.round((signal.earned / signal.weight) * 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </motion.section>
+
+          <motion.section variants={itemVariants} className="mobile-soft-card min-w-0 p-3.5">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="text-[1rem] font-black leading-tight tracking-normal">Credit Builder</h2>
+                <p className="mt-1 text-xs font-medium text-[var(--color-text-secondary)]">
+                  Build your financial reputation through verified behavior.
+                </p>
+              </div>
+              <Icons8Icon name="certificate" size={24} className="shrink-0 text-[var(--color-accent-primary)]" />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {creditBadges.map((badge) => (
+                <div
+                  key={badge.label}
+                  className={`min-w-0 rounded-[16px] p-2.5 ${
+                    badge.active
+                      ? "bg-[var(--color-positive-bg)] text-[var(--color-positive-text)]"
+                      : "bg-[var(--mobile-surface-muted)] text-[var(--color-text-secondary)]"
+                  }`}
+                >
+                  <p className="truncate text-[11px] font-black text-[var(--color-text-primary)]">{badge.label}</p>
+                  <p className="mt-1 truncate text-[10px] font-bold">{badge.value}</p>
+                </div>
+              ))}
+            </div>
+          </motion.section>
+
           <motion.section variants={itemVariants} className="mobile-soft-card grid min-w-0 grid-cols-[5.75rem_minmax(0,1fr)] overflow-hidden">
             <div className="grid place-items-center border-r border-[var(--color-border)] p-2">
               <ReferralQrCode value={referralLink} className="h-20 w-20 rounded-[12px]" />
             </div>
             <div className="flex min-w-0 flex-col justify-center p-3">
               <h2 className="text-[0.96rem] font-black leading-tight tracking-normal">
-                Invite friends, earn rewards.
+                Refer and rise from Bronze to Gold.
               </h2>
+              <p className="mt-1 text-xs font-bold text-[var(--color-text-secondary)]">
+                {referralProgress.verifiedReferralCount} verified • {currentReferralLevel} track
+              </p>
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <button
                   className="mobile-pill-button min-h-10 px-3 text-xs"
@@ -274,6 +401,49 @@ export default function Dashboard() {
                 <button className="mobile-pill-button min-h-10 px-3 text-xs" onClick={() => router.push("/profile")}>
                   My Link
                 </button>
+              </div>
+            </div>
+          </motion.section>
+
+          <motion.section variants={itemVariants} className="mobile-soft-card min-w-0 p-3.5">
+            <div className="mb-3 flex min-w-0 items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="text-[1rem] font-black leading-tight tracking-normal">Gamified Referrals</h2>
+                <p className="mt-1 text-xs font-medium text-[var(--color-text-secondary)]">
+                  Weekly rewards, ambassador badges, and leaderboard paths.
+                </p>
+              </div>
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--color-warning-bg)] text-[var(--color-warning-text)]">
+                <Icons8Icon name="trophy" size={21} />
+              </span>
+            </div>
+            <div className="mb-3 rounded-[16px] bg-[var(--mobile-surface-muted)] p-3">
+              <div className="mb-2 flex items-center justify-between gap-3 text-xs font-black">
+                <span>{nextReferralLevel ? `Next: ${nextReferralLevel.name}` : "Top referral level"}</span>
+                <span>{referralProgress.nextProgressPercent}%</span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-[var(--mobile-surface)]">
+                <div
+                  className="h-full rounded-full bg-[var(--color-accent-primary)]"
+                  style={{ width: `${referralProgress.nextProgressPercent}%` }}
+                />
+              </div>
+              <p className="mt-2 text-xs font-semibold text-[var(--color-text-secondary)]">
+                Invite 5 friends and unlock bonus: {referralProgress.inviteFiveProgress}/5
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-[14px] bg-[var(--mobile-surface-muted)] p-2.5">
+                <p className="truncate text-[11px] font-black">Weekly challenge</p>
+                <p className="mt-1 truncate text-[10px] font-bold text-[var(--color-text-secondary)]">
+                  {referralProgress.weeklyVerifiedReferralCount} verified this week
+                </p>
+              </div>
+              <div className="rounded-[14px] bg-[var(--mobile-surface-muted)] p-2.5">
+                <p className="truncate text-[11px] font-black">Ambassador badge</p>
+                <p className="mt-1 truncate text-[10px] font-bold text-[var(--color-text-secondary)]">
+                  {referralProgress.currentLevel?.badge || "Bronze"} track
+                </p>
               </div>
             </div>
           </motion.section>
@@ -302,6 +472,105 @@ export default function Dashboard() {
               View loans
             </button>
             <div className="absolute -bottom-16 -right-12 h-40 w-40 rounded-full bg-[rgba(0,127,255,0.34)] blur-sm" />
+          </motion.section>
+
+          <motion.section variants={itemVariants} className="mobile-soft-card min-w-0 p-3.5">
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="text-[1rem] font-black tracking-normal">Global Wallet Profile</h2>
+                <p className="mt-1 text-sm font-medium text-[var(--color-text-secondary)]">
+                  {country.name} • {country.currency} • {country.primaryLanguage}
+                </p>
+              </div>
+              <span className="shrink-0 rounded-full bg-[var(--mobile-surface-muted)] px-3 py-1 text-[10px] font-black uppercase text-[var(--color-text-primary)]">
+                {countryStatus}
+              </span>
+            </div>
+            <p className="text-xs leading-relaxed text-[var(--color-text-secondary)]">
+              {country.kycSummary} Lending only opens in each country after the required local setup is ready.
+            </p>
+          </motion.section>
+
+          <motion.section variants={itemVariants} className="mobile-soft-card min-w-0 p-3.5">
+            <div className="mb-3 flex min-w-0 items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="text-[1rem] font-black tracking-normal">Referral Leaderboards</h2>
+                <p className="mt-1 text-sm font-medium text-[var(--color-text-secondary)]">
+                  City, state, campus, and business tracks use verified referral counts only.
+                </p>
+              </div>
+              <Icons8Icon name="medal" size={24} className="shrink-0 text-[var(--color-accent-primary)]" />
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {["City/State", "Campus", "Business", "Weekly Top"].map((board) => (
+                <div key={board} className="rounded-[16px] bg-[var(--mobile-surface-muted)] p-3">
+                  <p className="truncate text-sm font-black">{board}</p>
+                  <p className="mt-1 text-xs font-semibold text-[var(--color-text-secondary)]">
+                    {referralProgress.verifiedReferralCount > 0 ? `${referralProgress.verifiedReferralCount} verified from your link` : "Opens after verified referrals"}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 overflow-hidden rounded-[16px] border border-[var(--color-border)]">
+              {referralProgramLevels.map((level) => (
+                <div key={level.name} className="grid grid-cols-[0.8fr_1fr_1fr] gap-2 border-b border-[var(--color-border)] p-2.5 text-[10px] last:border-b-0">
+                  <span className="truncate font-black">{level.name}</span>
+                  <span className="truncate text-[var(--color-text-secondary)]">{level.summary}</span>
+                  <span className="truncate text-right font-bold">{level.reward}</span>
+                </div>
+              ))}
+            </div>
+          </motion.section>
+
+          <motion.section variants={itemVariants} className="mobile-soft-card min-w-0 p-3.5">
+            <div className="mb-3 flex min-w-0 items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="text-[1rem] font-black tracking-normal">Learn, Secure, Install</h2>
+                <p className="mt-1 text-sm font-medium text-[var(--color-text-secondary)]">
+                  Responsible borrowing, visible security, and app install readiness.
+                </p>
+              </div>
+              <Icons8Icon name="mobile" size={24} className="shrink-0 text-[var(--color-accent-primary)]" />
+            </div>
+            <div className="mb-3 grid grid-cols-2 gap-2">
+              <button className="mobile-pill-button min-h-10 px-3 text-xs" onClick={() => router.push("/learn")}>
+                Learn
+                <Icons8Icon name="book" size={16} />
+              </button>
+              <button className="mobile-pill-button min-h-10 px-3 text-xs" onClick={() => router.push("/security")}>
+                Security
+                <Icons8Icon name="security" size={16} />
+              </button>
+            </div>
+            <PwaInstallButton className="mobile-pill-button min-h-10 w-full px-3 text-xs" />
+            <div className="mt-3 grid gap-2">
+              {mobileAppReadiness.slice(1).map((item) => (
+                <div key={item.title} className="flex min-w-0 justify-between gap-3 rounded-[14px] bg-[var(--mobile-surface-muted)] p-2.5 text-xs">
+                  <span className="min-w-0 truncate font-black">{item.title}</span>
+                  <span className="shrink-0 font-bold text-[var(--color-text-secondary)]">{item.status}</span>
+                </div>
+              ))}
+            </div>
+          </motion.section>
+
+          <motion.section variants={itemVariants} className="mobile-soft-card min-w-0 p-3.5">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h2 className="text-[1rem] font-black tracking-normal">Growth Features</h2>
+              <Icons8Icon name="star" size={22} className="text-[var(--color-accent-primary)]" />
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {growthFeatureModules.slice(3).map((feature) => (
+                <article key={feature.title} className="min-w-0 rounded-[16px] bg-[var(--mobile-surface-muted)] p-3">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <h3 className="min-w-0 truncate text-sm font-black">{feature.title}</h3>
+                    <span className="shrink-0 rounded-full bg-[var(--mobile-surface)] px-2 py-0.5 text-[9px] font-black uppercase text-[var(--color-text-secondary)]">
+                      {feature.status}
+                    </span>
+                  </div>
+                  <p className="text-xs leading-relaxed text-[var(--color-text-secondary)]">{feature.body}</p>
+                </article>
+              ))}
+            </div>
           </motion.section>
 
           {user?.role === "admin" && (

@@ -3,6 +3,7 @@
 import Icons8Icon, { type Icons8IconName } from "@/components/Icons8Icon";
 import LoadingButton from "@/LoadingButton";
 import { Input } from "@/components/ui/input";
+import { getCountryConfig, globalCountryOptions, languageOptions } from "@/lib/product-features";
 import { useStore } from "@/lib/store";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type InputHTMLAttributes, useState, useEffect, Suspense } from "react";
@@ -96,6 +97,8 @@ function RegisterContent() {
     username: "",
     email: "",
     phone: "",
+    countryCode: "NG",
+    preferredLanguage: "en",
     referral: searchParams.get("ref") || "",
     password: "",
   });
@@ -110,6 +113,7 @@ function RegisterContent() {
   const updateField = (field: keyof typeof formData) => (value: string) => {
     setFormData((current) => ({ ...current, [field]: value }));
   };
+  const selectedCountry = getCountryConfig(formData.countryCode);
 
   const validate = () => {
     if (formData.firstName.trim().length < 2 || formData.lastName.trim().length < 2) {
@@ -156,6 +160,8 @@ function RegisterContent() {
           username: formData.username.trim().toLowerCase(),
           email: formData.email.trim(),
           phone: formData.phone.trim(),
+          countryCode: formData.countryCode,
+          preferredLanguage: formData.preferredLanguage,
           referral: formData.referral.trim(),
           password: formData.password,
         }),
@@ -256,6 +262,56 @@ function RegisterContent() {
             inputMode="tel"
             onChange={updateField("phone")}
           />
+          <div>
+            <label htmlFor="register-country" className="mb-3 block text-base font-sans font-bold text-[var(--color-text-primary)]">
+              Country
+            </label>
+            <select
+              id="register-country"
+              value={formData.countryCode}
+              onChange={(event) => {
+                const country = getCountryConfig(event.target.value);
+                setFormData((current) => ({
+                  ...current,
+                  countryCode: country.code,
+                }));
+              }}
+              className="h-14 w-full rounded-[8px] border border-transparent bg-[var(--color-bg-secondary)] px-4 text-base text-[var(--color-text-primary)] shadow-none focus:border-[var(--color-border)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)]"
+              title="Country"
+            >
+              {globalCountryOptions.map((country) => (
+                <option key={country.code} value={country.code}>
+                  {country.name} - {country.currency}
+                </option>
+              ))}
+            </select>
+            <p className="mt-3 text-sm leading-relaxed text-[var(--color-text-secondary)]">
+              {selectedCountry.lendingStatus === "active"
+                ? `${selectedCountry.name} wallets and lending are available with local KYC checks.`
+                : `${selectedCountry.name} profiles can be created now. Lending opens only after local terms, KYC rules, and payment setup are ready.`}
+            </p>
+          </div>
+          <div>
+            <label htmlFor="register-language" className="mb-3 block text-base font-sans font-bold text-[var(--color-text-primary)]">
+              Preferred Language
+            </label>
+            <select
+              id="register-language"
+              value={formData.preferredLanguage}
+              onChange={(event) => updateField("preferredLanguage")(event.target.value)}
+              className="h-14 w-full rounded-[8px] border border-transparent bg-[var(--color-bg-secondary)] px-4 text-base text-[var(--color-text-primary)] shadow-none focus:border-[var(--color-border)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)]"
+              title="Preferred Language"
+            >
+              {languageOptions.map((language) => (
+                <option key={language.code} value={language.code}>
+                  {language.name}
+                </option>
+              ))}
+            </select>
+            <p className="mt-3 text-sm leading-relaxed text-[var(--color-text-secondary)]">
+              Me2U can localize currency, terms, support text, and KYC guidance as each country is enabled.
+            </p>
+          </div>
           <RegistrationField
             id="register-referral"
             label="Referral (Optional)"

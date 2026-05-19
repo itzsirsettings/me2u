@@ -15,6 +15,9 @@ export type ProfileRow = {
   phone: string | null;
   nin_hash: string | null;
   nin_last4: string | null;
+  country_code: string;
+  preferred_currency: string;
+  preferred_language: string;
   kyc_verified: boolean;
   trust_score: number;
   bank_name: string | null;

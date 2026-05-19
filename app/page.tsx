@@ -7,13 +7,13 @@ const landingAssetBase = "/landing_page_v2";
 const landingSourcePath = path.join(process.cwd(), "landing_page_v2", "index.html");
 
 export const metadata: Metadata = {
-  title: "Me2U - Interest-Free Peer Lending",
+  title: "Me2U - Trust-Based Interest-Free Peer Lending",
   description:
-    "Me2U is a secure Nigerian peer-to-peer lending app with wallet funding, KYC, marketplace lending, interest-free loans, welcome bonuses, and referral rewards.",
+    "Me2U is a secure peer-to-peer lending app with trust scores, credit builder tools, verified wallets, KYC, marketplace lending, savings goals, daily wallet services, welcome bonuses, and referral rewards.",
 };
 
 const copyReplacements: ReadonlyArray<readonly [string, string]> = [
-  ["by PremiumTrust Bank", "Interest-free lending"],
+  ["by PremiumTrust Bank", "by Merenity Systems"],
   ["Me2U ecosystem", "Me2U lending flow"],
   [
     "One app for spending, saving, shopping, and merchant growth.",
@@ -81,10 +81,10 @@ const copyReplacements: ReadonlyArray<readonly [string, string]> = [
   ["24/7", "14d"],
   ["app access", "loan duration"],
   ["Me2U feature carousel", "Me2U lending feature carousel"],
-  ["Unlimited Free Transfer", "Protected onboarding"],
-  ["Make seamless transfers without charges.", "Your ₦2,000 welcome bonus is waiting."],
-  ["Pay Bills without Charges", "₦2,000 welcome bonus"],
-  ["Airtime, data, electricity, and TV subscription.", "Unlocked after deposit approval and KYC."],
+  ["Unlimited Free Transfer", "Me2U Trust Score"],
+  ["Make seamless transfers without charges.", "Build trust from KYC, repayments, wallet activity, referrals, and dispute-free lending."],
+  ["Pay Bills without Charges", "Credit Builder"],
+  ["Airtime, data, electricity, and TV subscription.", "Earn repayment badges, monthly reports, and higher-limit eligibility."],
   ["Buy Now, Pay Later", "0% interest loans"],
   ["Buy products and spread payments.", "0% interest loan from ₦5,000."],
   ["Premium Insurance", "KYC-gated withdrawals"],
@@ -183,24 +183,24 @@ const copyReplacements: ReadonlyArray<readonly [string, string]> = [
   ["Pay outright", "Fund this loan"],
   ["Pay in instalments", "Accept offer"],
   ["Complete Me2U feature matrix", "Complete Me2U lending feature matrix"],
-  ["Everything is connected in one product story.", "Everything supports a safer lending journey."],
+  ["Everything is connected in one product story.", "Everything builds trust before users borrow, lend, save, pay bills, or support family."],
   ["Unlimited free transfers", "Registration deposit"],
   ["Buy now pay later", "Welcome bonus"],
   ["Buy products on the e-shop and spread your payments.", "₦2,000 wallet bonus after KYC approval."],
-  ["Insurance premiums", "KYC verification"],
-  ["Pay premiums in instalments at 0% interest rate.", "KYC unlocks withdrawals and loans."],
-  ["Pay bills", "Wallet funding"],
-  ["Pay airtime, data, electricity, and TV subscription without charges.", "Fund by transfer, reference, and uploaded proof."],
-  ["Budget & save", "Withdrawal rules"],
-  ["Create budgets, monitor spending, and save unspent funds.", "Withdraw after deposit confirmation and KYC."],
+  ["Insurance premiums", "Me2U Trust Score"],
+  ["Pay premiums in instalments at 0% interest rate.", "Improve limits through KYC, repayments, wallet activity, referrals, and account age."],
+  ["Pay bills", "Bills and utilities"],
+  ["Pay airtime, data, electricity, and TV subscription without charges.", "Use the wallet for airtime, data, electricity, cable TV, school fees, QR payments, and payment links."],
+  ["Budget & save", "Savings goals"],
+  ["Create budgets, monitor spending, and save unspent funds.", "Create emergency, rent, school fee, business capital, locked, and group savings goals."],
   ["Earn when you transact and refer family or friends.", "Earn ₦500 when direct referrals complete onboarding."],
-  ["Access in-app deals.", "0% interest loan from ₦5,000."],
-  ["Bring business online", "0% marketplace"],
-  ["Get a free store and customised business webpage.", "Borrowers and lenders match without interest."],
-  ["Offer instalments", "Peer details"],
-  ["Enable online or in-store pay-in-instalments.", "Accepted peer loans expose contact and bank details."],
-  ["Integrate checkout", "Admin review"],
-  ["Add Me2U to websites and apps.", "Payment proof is reviewed before wallet crediting."],
+  ["Access in-app deals.", "Merchant deals from verified food, pharmacy, transport, school, phone, and training businesses."],
+  ["Bring business online", "Me2U Circles"],
+  ["Get a free store and customised business webpage.", "Create private lending groups for families, schools, churches, traders, and businesses."],
+  ["Offer instalments", "Protected lending"],
+  ["Enable online or in-store pay-in-instalments.", "Review agreement summaries, repayment countdowns, receipts, and dispute evidence."],
+  ["Integrate checkout", "Global profile"],
+  ["Add Me2U to websites and apps.", "Choose country, currency, and language while lending remains country-gated until local setup is ready."],
   ["We’re building the smartest way to spend, send, and split payment anytime, anywhere. Zero stress.", "Register, complete your deposit, verify KYC, then use Me2U to fund your wallet, match with peers, and manage 0% loans."],
   ["Ready to pay?", "Ready to borrow?"],
   ["<button>Send</button><button>Bills</button><button>Shop</button><button>Save</button>", "<button>Fund</button><button>Market</button><button>Loans</button><button>KYC</button>"],
@@ -224,17 +224,17 @@ const copyReplacements: ReadonlyArray<readonly [string, string]> = [
     "Yes. Replace the placeholders with approved official assets and store links only if you have authorization.",
     "Yes. Both direct and peer marketplace loans are 0% interest. Marketplace listings use durations from 1 to 14 days.",
   ],
-  ["Tailor-made solutions that ensure a lifestyle of comfort.", "Secure peer-to-peer lending with wallet funding, welcome bonuses, KYC, marketplace loans, and repayment tools."],
-  ["Licensed by the Central Bank of Nigeria", "Built for secure Nigerian peer-to-peer lending"],
+  ["Tailor-made solutions that ensure a lifestyle of comfort.", "Secure peer-to-peer lending with trust scores, credit builder tools, global-ready wallets, savings goals, circles, merchant deals, and repayment tools."],
+  ["Licensed by the Central Bank of Nigeria", "Owned by Merenity Systems"],
   ["Contact us", "Support"],
   ["Security center", "Trust and security"],
-  ["contactpremium@premiumtrustbank.com", "Support details"],
+  ["contactpremium@premiumtrustbank.com", "menenityhub@gmail.com"],
   [
     "1612 Adeola Hopewell Street, Victoria Island, Lagos State, Nigeria",
-    "Support details, payment account information, and policy links are configured before launch.",
+    "Me2U is legally owned by Merenity Systems and operates support through the official contacts listed here.",
   ],
-  ["0700PREMIUM (07007736486)<br />02013302777", "Use the in-app wallet, KYC, and admin review flows for account-specific actions."],
-  ["©2026 Me2U by Premium Trust Bank", "©2026 Me2U"],
+  ["0700PREMIUM (07007736486)<br />02013302777", "+234 903 4162 902<br />+234 806 5117 689<br />+234 815 1583 421"],
+  ["©2026 Me2U by Premium Trust Bank", "©2026 Me2U by Merenity Systems"],
   ["Download Me2U", "Create your Me2U account"],
   [
     "Use official store buttons here when you are authorized to connect the final website to live app listings.",
@@ -254,6 +254,86 @@ function applyLandingCopy(source: string) {
   return copyReplacements.reduce((html, [from, to]) => html.replaceAll(from, to), source);
 }
 
+function renderPublicProofSection() {
+  const proofCards = [
+    {
+      label: "Processed safely",
+      value: "Live total required",
+      detail: "Requires an audited aggregate before a currency total is published.",
+    },
+    {
+      label: "Verified wallets created",
+      value: "Live total required",
+      detail: "KYC-approved profiles, not marketing estimates.",
+    },
+    {
+      label: "Loans completed",
+      value: "Live total required",
+      detail: "Completed loan records from the app ledger.",
+    },
+    {
+      label: "Users rewarded",
+      value: "Live total required",
+      detail: "Requires distinct rewarded-user aggregation before publishing.",
+    },
+    {
+      label: "Referrals paid",
+      value: "Live total required",
+      detail: "Verified referral reward payouts.",
+    },
+    {
+      label: "Successful repayments",
+      value: "Live total required",
+      detail: "Repayment records confirmed in wallet history.",
+    },
+  ];
+
+  return `
+    <section class="section more-section" id="public-proof" aria-labelledby="public-proof-title">
+      <div class="container">
+        <div class="section-heading reveal reveal-up">
+          <span class="eyebrow">Public proof</span>
+          <h2 id="public-proof-title">Real trust numbers, never inflated.</h2>
+          <p>Me2U should publish only live, audited app totals. If a number is not connected yet, it stays marked as a live total requirement.</p>
+        </div>
+        <div class="feature-grid">
+          ${proofCards
+            .map(
+              (card, index) => `
+                <article class="feature-tile reveal reveal-up">
+                  <span>${String(index + 1).padStart(2, "0")}</span>
+                  <h3>${card.label}</h3>
+                  <p><strong>${card.value}</strong></p>
+                  <p>${card.detail}</p>
+                </article>
+              `,
+            )
+            .join("")}
+        </div>
+        <div class="section-copy reveal reveal-up" style="margin-top: 48px;">
+          <span class="eyebrow">Success stories</span>
+          <h2>Testimonials only after real consent.</h2>
+          <p>User stories should come from verified borrowers, lenders, referrers, and savers who agree to be featured. Until then, Me2U should leave this section as a consent-based publishing queue instead of inventing quotes.</p>
+        </div>
+        <div class="section-copy reveal reveal-up" style="margin-top: 48px;">
+          <span class="eyebrow">Native app readiness</span>
+          <h2>Install now, stores when approved.</h2>
+          <p>Me2U is PWA-ready for supported browsers. Android, iPhone, push notifications, ratings, and store listings should launch only when the production app, compliance notices, and approved store assets are ready.</p>
+          <div class="store-buttons">
+            <button class="store-badge" data-open-register><span>↗</span><small>Start with</small><strong>Web app</strong></button>
+            <button class="store-badge" data-open-register><span>◎</span><small>Prepare for</small><strong>App stores</strong></button>
+          </div>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function addPublicProofSection(markup: string) {
+  const section = renderPublicProofSection();
+  return markup.includes("</main>") ? markup.replace("</main>", `${section}</main>`) : `${markup}${section}`;
+}
+
 function getLandingMarkup() {
   const source = readFileSync(landingSourcePath, "utf8");
   const body = source.match(/<body[^>]*>([\s\S]*?)<\/body>/i)?.[1] ?? "";
@@ -265,7 +345,7 @@ function getLandingMarkup() {
 }
 
 export default function Landing() {
-  const landingMarkup = getLandingMarkup();
+  const landingMarkup = addPublicProofSection(getLandingMarkup());
 
   return (
     <>

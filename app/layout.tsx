@@ -29,6 +29,7 @@ export const metadata: Metadata = {
   title: "me2u - Peer to Peer Lending",
   description: "Secure P2P Lending in Nigeria",
   icons: { icon: "/icon.svg" },
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({

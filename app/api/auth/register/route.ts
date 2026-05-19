@@ -1,4 +1,9 @@
 import { NextResponse } from "next/server";
+import {
+  getCountryConfig,
+  isSupportedCountryCode,
+  isSupportedLanguageCode,
+} from "@/lib/product-features";
 import { getClientIp, isRateLimited } from "@/lib/rate-limit";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
@@ -59,6 +64,8 @@ export async function POST(request: Request) {
     const password = String(body.password || "");
     const phone = String(body.phone || "").trim();
     const referral = String(body.referral || "").trim();
+    const countryCode = String(body.countryCode || "NG").trim().toUpperCase();
+    const preferredLanguage = String(body.preferredLanguage || "en").trim().toLowerCase();
 
     if (firstName.length < 2 || firstName.length > 80 || lastName.length < 2 || lastName.length > 80) {
       return NextResponse.json({ error: "Enter your first and last name." }, { status: 400 });
@@ -99,6 +106,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Referral code is too long." }, { status: 400 });
     }
 
+    if (!isSupportedCountryCode(countryCode)) {
+      return NextResponse.json({ error: "Choose a supported country." }, { status: 400 });
+    }
+
+    if (!isSupportedLanguageCode(preferredLanguage)) {
+      return NextResponse.json({ error: "Choose a supported language." }, { status: 400 });
+    }
+
+    const country = getCountryConfig(countryCode);
     const supabase = getSupabaseAdminClient();
     let referredBy: string | null = null;
 
@@ -138,11 +154,13 @@ export async function POST(request: Request) {
         password,
         email_confirm: true,
         user_metadata: {
-          first_name: firstName,
-          last_name: lastName,
-          username,
-        },
-      });
+        first_name: firstName,
+        last_name: lastName,
+        username,
+        country_code: country.code,
+        preferred_language: preferredLanguage,
+      },
+    });
 
     if (createUserError || !authData.user) {
       throw createUserError || new Error("Unable to create user.");
@@ -159,6 +177,9 @@ export async function POST(request: Request) {
       phone: phone || null,
       nin_hash: null,
       nin_last4: null,
+      country_code: country.code,
+      preferred_currency: country.currency,
+      preferred_language: preferredLanguage,
       kyc_verified: false,
       trust_score: 50,
       bank_name: null,

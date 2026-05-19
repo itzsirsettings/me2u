@@ -11,12 +11,14 @@ import {
   registrationDepositAmount,
   onboardingCreditAmount,
 } from "@/lib/loans";
+import { getCreditBuilderBadges, getCreditLevel } from "@/lib/product-features";
 import { useStore } from "@/lib/store";
 import { toast } from "sonner";
 import { motion, type Variants } from "framer-motion";
 
 export default function Loans() {
   const activeLoans = useStore((state) => state.activeLoans);
+  const transactions = useStore((state) => state.transactions);
   const requestPlatformLoan = useStore((state) => state.requestPlatformLoan);
   const repayLoan = useStore((state) => state.repayLoan);
   const user = useStore((state) => state.user);
@@ -64,6 +66,9 @@ export default function Loans() {
     !user?.kycVerified ||
     !repeatAmountIsValid ||
     depositShortfall > 0;
+  const trustScore = Math.max(0, Math.min(100, user?.trustScore || 0));
+  const trustLevel = getCreditLevel(trustScore);
+  const creditBadges = getCreditBuilderBadges(user, transactions, visibleLoans);
 
   const handleRequestLoan = async () => {
     if (!user) {
@@ -166,6 +171,38 @@ export default function Loans() {
       </motion.div>
 
       <motion.div variants={itemVariants}>
+        <Card className="mb-4 kinetic-border bg-[var(--color-bg-card)] p-5 shadow-[4px_4px_0px_var(--color-shadow)] md:mb-10 md:p-8">
+          <div className="grid min-w-0 gap-4 md:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] md:items-center">
+            <div className="min-w-0">
+              <p className="mb-2 flex items-center gap-2 text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
+                <Icons8Icon name="certificate" size={18} />
+                Credit Builder
+              </p>
+              <h2 className="text-2xl font-display leading-none md:text-4xl">
+                {trustLevel.name} trust level
+              </h2>
+              <p className="mt-3 text-sm leading-relaxed text-[var(--color-text-secondary)]">
+                Repay on time to earn certificates, improve marketplace confidence, and unlock better limit eligibility.
+              </p>
+            </div>
+            <div className="grid min-w-0 gap-2 sm:grid-cols-2">
+              {creditBadges.map((badge) => (
+                <div
+                  key={badge.label}
+                  className={`min-w-0 rounded-[5px] border border-[var(--color-border)] p-3 ${
+                    badge.active ? "bg-[var(--color-positive-bg)]" : "bg-[var(--color-bg-secondary)]"
+                  }`}
+                >
+                  <p className="truncate text-sm font-bold text-[var(--color-text-primary)]">{badge.label}</p>
+                  <p className={badge.active ? "mt-1 text-xs font-bold text-[var(--color-positive-text)]" : "mt-1 text-xs font-bold text-[var(--color-text-secondary)]"}>
+                    {badge.value}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Card>
+
         <Card className="mb-4 kinetic-border bg-[var(--color-bg-card)] p-5 shadow-[4px_4px_0px_var(--color-shadow)] md:mb-10 md:p-8">
           <div className="flex min-w-0 flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div className="min-w-0 flex-1">

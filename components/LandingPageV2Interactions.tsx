@@ -205,20 +205,20 @@ export default function LandingPageV2Interactions() {
 
     const policyContent: Record<string, CopyBlock> = {
       privacy: {
-        title: "Privacy policy",
-        text: "Add the approved privacy policy for account creation, KYC documents, wallet records, and loan activity before production launch.",
+        title: "Privacy Policy",
+        text: "Me2U privacy terms cover account creation, KYC documents, wallet records, loan activity, referrals, support messages, device data, cookies, and usage data.",
       },
       terms: {
-        title: "Terms & conditions",
-        text: "Add approved terms for registration deposits, welcome bonuses, peer lending, loans, withdrawals, and repayments.",
+        title: "Terms of Use",
+        text: "Me2U terms cover registration deposits, welcome bonuses, peer lending, direct loans, retained wallet balances, repayments, withdrawals, referrals, fees, prohibited use, and disputes.",
       },
       isms: {
-        title: "ISMS policy",
-        text: "Add approved information security guidance for private uploads, payment proof handling, and account protection.",
+        title: "Security Policy",
+        text: "Me2U protects private uploads, payment proof, wallet activity, KYC records, and account access through verification, admin review, monitoring, and incident response controls.",
       },
       security: {
-        title: "Security center",
-        text: "Me2U protects withdrawals and loans through confirmed deposits, KYC checks, and admin-reviewed payment proof.",
+        title: "Trust & Security",
+        text: "Me2U protects withdrawals and loans through confirmed deposits, KYC checks, admin-reviewed payment proof, retained balance rules, and fraud monitoring.",
       },
     };
 

@@ -15,6 +15,7 @@ import type {
   TransactionRow,
   WalletRow,
   NotificationRow,
+  AffiliateRewardRow,
 } from "@/lib/supabase/types";
 
 export interface Transaction {
@@ -73,6 +74,10 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  phone: string | null;
+  countryCode: string;
+  preferredCurrency: string;
+  preferredLanguage: string;
   bankName: string | null;
   accountNumber: string | null;
   balance: number;
@@ -88,10 +93,13 @@ export interface User {
   welcomeBonusUnlockedAt: string | null;
   referredBy: string | null;
   affiliateEarnings: number;
+  verifiedReferralCount: number;
+  weeklyVerifiedReferralCount: number;
   partnerOfferConsentAt: string | null;
   partnerOfferConsentVersion: string | null;
   passportPhotoUrl: string | null;
   role: "user" | "admin";
+  createdAt: string;
 }
 
 export interface AppNotification {
@@ -269,11 +277,17 @@ function toLoan(row: any, userId: string): ActiveLoan {
   };
 }
 
-function toUser(profile: ProfileRow, wallet: WalletRow | null): User {
+function toUser(profile: ProfileRow, wallet: WalletRow | null, affiliateRewards: AffiliateRewardRow[] = []): User {
+  const weekAgo = Date.now() - 7 * 86_400_000;
+
   return {
     id: profile.id,
     name: profile.first_name,
     email: profile.email,
+    phone: profile.phone,
+    countryCode: profile.country_code,
+    preferredCurrency: profile.preferred_currency,
+    preferredLanguage: profile.preferred_language,
     bankName: profile.bank_name,
     accountNumber: profile.account_number,
     balance: Number(wallet?.balance || 0),
@@ -289,10 +303,13 @@ function toUser(profile: ProfileRow, wallet: WalletRow | null): User {
     welcomeBonusUnlockedAt: profile.welcome_bonus_unlocked_at,
     referredBy: profile.referred_by,
     affiliateEarnings: Number(profile.affiliate_earnings || 0),
+    verifiedReferralCount: affiliateRewards.length,
+    weeklyVerifiedReferralCount: affiliateRewards.filter((reward) => new Date(reward.created_at).getTime() >= weekAgo).length,
     partnerOfferConsentAt: profile.partner_offer_consent_at,
     partnerOfferConsentVersion: profile.partner_offer_consent_version,
     passportPhotoUrl: profile.passport_photo_url,
     role: profile.role,
+    createdAt: profile.created_at,
   };
 }
 
@@ -362,6 +379,11 @@ export const useStore = create<AppStore>((set, get) => ({
             .select("*")
             .eq("user_id", authUser.id)
             .order("created_at", { ascending: false }),
+          supabase
+            .from("affiliate_rewards")
+            .select("*")
+            .eq("referrer_id", authUser.id)
+            .order("created_at", { ascending: false }),
         ]),
       ]);
 
@@ -373,11 +395,12 @@ export const useStore = create<AppStore>((set, get) => ({
         throw new Error("Profile not found. Please complete registration again.");
       }
 
-      const [transactionsResponse, loansResponse, marketplaceResponse, notificationsResponse] =
+      const [transactionsResponse, loansResponse, marketplaceResponse, notificationsResponse, affiliateRewardsResponse] =
         optionalResponses;
+      const affiliateRewards = readOptionalRows<AffiliateRewardRow>(affiliateRewardsResponse, "Referral rewards");
 
       set({
-        user: toUser(profile, walletResponse.data),
+        user: toUser(profile, walletResponse.data, affiliateRewards),
         isAuthenticated: true,
         isLoading: false,
         transactions: readOptionalRows<TransactionRow>(transactionsResponse, "Transactions").map(toTransaction),

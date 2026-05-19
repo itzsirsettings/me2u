@@ -1,0 +1,20 @@
+{
+  "name": "Me2U",
+  "short_name": "Me2U",
+  "description": "Verified wallets, 0% peer lending, trust scores, referrals, savings, and wallet tools.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f7fbff",
+  "theme_color": "#00406b",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "productivity", "utilities"]
+}

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import LoadingButton from "@/LoadingButton";
-import Icons8Icon from "@/components/Icons8Icon";
+import Icons8Icon, { type Icons8IconName } from "@/components/Icons8Icon";
 import { useStore } from "@/lib/store";
 import { toast } from "sonner";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
@@ -17,6 +17,23 @@ import {
 
 type ListingType = "borrow_request" | "lending_offer";
 
+const protectionSteps: Array<{ title: string; detail: string; icon: Icons8IconName }> = [
+  { title: "Agreement summary", detail: "Review amount, 0% interest, duration, and role before acceptance.", icon: "receipt" },
+  { title: "Locked funding record", detail: "Funding, repayment, and wallet movements stay traceable in the app.", icon: "shield" },
+  { title: "Repayment countdown", detail: "Due dates and reminders keep both sides aligned.", icon: "loans" },
+  { title: "Dispute evidence", detail: "Receipts and proof uploads support admin review if a loan goes wrong.", icon: "certificate" },
+  { title: "Downloadable summary", detail: "Save a clear copy of the loan terms before confirmation.", icon: "download" },
+];
+
+const circleTypes = [
+  "Family Circle",
+  "Business Circle",
+  "Student Circle",
+  "Church Circle",
+  "Trader Circle",
+  "Freelancer Circle",
+];
+
 export default function Marketplace() {
   const marketplace = useStore((state) => state.marketplace);
   const acceptMarketplaceItem = useStore((state) => state.acceptMarketplaceItem);
@@ -28,6 +45,8 @@ export default function Marketplace() {
   const [mounted, setMounted] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [pendingAgreementId, setPendingAgreementId] = useState<string | null>(null);
+  const [agreementAccepted, setAgreementAccepted] = useState(false);
   const [formData, setFormData] = useState({
     type: "borrow_request" as ListingType,
     amount: 10000,
@@ -47,6 +66,35 @@ export default function Marketplace() {
   }, [mounted, isLoading, isAuthenticated, router]);
 
   if (!mounted || (!isAuthenticated && !isLoading)) return null;
+  const pendingAgreement = marketplace.find((item) => item.id === pendingAgreementId) || null;
+  const isFundingBorrowRequest = pendingAgreement?.type === "borrow_request";
+  const lenderName = pendingAgreement
+    ? isFundingBorrowRequest
+      ? user?.name || "You"
+      : pendingAgreement.authorName
+    : "";
+  const borrowerName = pendingAgreement
+    ? isFundingBorrowRequest
+      ? pendingAgreement.authorName
+      : user?.name || "You"
+    : "";
+  const lenderTrustScore = pendingAgreement
+    ? isFundingBorrowRequest
+      ? user?.trustScore || 0
+      : pendingAgreement.trustScore
+    : 0;
+  const borrowerTrustScore = pendingAgreement
+    ? isFundingBorrowRequest
+      ? pendingAgreement.trustScore
+      : user?.trustScore || 0
+    : 0;
+  const repaymentDate = pendingAgreement
+    ? new Date(Date.now() + pendingAgreement.days * 86_400_000).toLocaleDateString("en-NG", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      })
+    : "";
 
   const handleCreate = async () => {
     if (isCreating) return;
@@ -101,6 +149,46 @@ export default function Marketplace() {
     }
 
     toast.success("Transaction successful!");
+  };
+
+  const confirmAgreement = async () => {
+    if (!pendingAgreement) return;
+    if (!agreementAccepted) {
+      toast.error("Review and accept the loan agreement summary first.");
+      return;
+    }
+
+    await handleAccept(pendingAgreement.id, pendingAgreement.amount, pendingAgreement.type);
+    setPendingAgreementId(null);
+    setAgreementAccepted(false);
+  };
+
+  const downloadAgreementSummary = () => {
+    if (!pendingAgreement) return;
+
+    const lines = [
+      "Me2U Loan Agreement Summary",
+      `Listing: ${pendingAgreement.type.replaceAll("_", " ")}`,
+      `Amount: NGN ${pendingAgreement.amount.toLocaleString()}`,
+      "Interest: 0%",
+      `Duration: ${pendingAgreement.days} days`,
+      `Repayment date: ${repaymentDate}`,
+      "Wallet retention rule: borrower keeps the required retained balance while the loan is active.",
+      "Late repayment consequence: late repayment may reduce trust score, limit marketplace access, and trigger review.",
+      `Lender: ${lenderName} (${lenderTrustScore}/100 trust)`,
+      `Borrower: ${borrowerName} (${borrowerTrustScore}/100 trust)`,
+      "Agreement: both parties should keep lending, repayment, receipts, and disputes inside Me2U.",
+    ];
+    const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `me2u-loan-agreement-${pendingAgreement.id}.txt`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+    toast.success("Agreement summary downloaded.");
   };
 
   const containerVariants: Variants = {
@@ -220,6 +308,57 @@ export default function Marketplace() {
         )}
       </AnimatePresence>
 
+      <motion.div variants={itemVariants} className="mb-4 grid gap-4 md:mb-8 md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+        <Card className="kinetic-border bg-[var(--color-bg-card)] p-5 shadow-[4px_4px_0px_var(--color-shadow)] md:p-6">
+          <div className="mb-4 flex min-w-0 items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h2 className="text-xl font-display leading-none md:text-3xl">Protected Peer Lending</h2>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">
+                Review the terms, keep records, and handle repayment or disputes inside one flow.
+              </p>
+            </div>
+            <Icons8Icon name="shield" size={28} className="shrink-0 text-[var(--color-accent-primary)]" />
+          </div>
+          <div className="grid gap-2">
+            {protectionSteps.map((step) => (
+              <div key={step.title} className="flex min-w-0 items-start gap-3 rounded-[5px] bg-[var(--color-bg-secondary)] p-3">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[5px] bg-[var(--color-bg-card)] text-[var(--color-accent-primary)]">
+                  <Icons8Icon name={step.icon} size={19} />
+                </span>
+                <span className="min-w-0">
+                  <b className="block truncate text-sm">{step.title}</b>
+                  <span className="block text-xs leading-relaxed text-[var(--color-text-secondary)]">{step.detail}</span>
+                </span>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <Card className="kinetic-border bg-[var(--color-bg-card)] p-5 shadow-[4px_4px_0px_var(--color-shadow)] md:p-6">
+          <div className="mb-4 flex min-w-0 items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h2 className="text-xl font-display leading-none md:text-3xl">Me2U Circles</h2>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">
+                Create private lending groups for trusted communities and improve group trust over time.
+              </p>
+            </div>
+            <Icons8Icon name="group" size={28} className="shrink-0 text-[var(--color-accent-primary)]" />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {circleTypes.map((circle) => (
+              <button
+                key={circle}
+                type="button"
+                className="min-h-11 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 text-left text-xs font-bold transition hover:bg-[var(--color-hover-soft)]"
+                onClick={() => toast.info(`${circle} setup will open when group lending is enabled.`)}
+              >
+                {circle}
+              </button>
+            ))}
+          </div>
+        </Card>
+      </motion.div>
+
       <motion.div variants={itemVariants} className="grid gap-4 md:grid-cols-2 md:gap-8">
         {marketplace.map((item) => (
           <motion.div key={item.id} whileHover={{ y: -8, transition: { duration: 0.3 } }}>
@@ -257,13 +396,16 @@ export default function Marketplace() {
                 </div>
               </div>
               <div className="mt-6 md:mt-8">
-                <LoadingButton
-                  variant={item.type === "borrow_request" ? "solid" : "outline"}
-                  label={item.type === "borrow_request" ? "Fund this Loan" : "Accept Offer"}
-                  loadingText="Processing..."
-                  successText="Success!"
-                  onClick={() => handleAccept(item.id, item.amount, item.type)}
-                />
+                <button
+                  type="button"
+                  className={`${item.type === "borrow_request" ? "btn-primary" : "btn-ghost"} min-h-11 w-full`}
+                  onClick={() => {
+                    setPendingAgreementId(item.id);
+                    setAgreementAccepted(false);
+                  }}
+                >
+                  {item.type === "borrow_request" ? "Fund this Loan" : "Accept Offer"}
+                </button>
               </div>
             </Card>
           </motion.div>
@@ -274,6 +416,124 @@ export default function Marketplace() {
           </div>
         )}
       </motion.div>
+
+      <AnimatePresence>
+        {pendingAgreement && (
+          <motion.div
+            className="fixed inset-0 z-[70] grid place-items-end bg-[var(--color-scrim)] px-3.5 pb-3.5 md:place-items-center md:p-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="w-full max-w-md rounded-[22px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[0_18px_48px_rgba(0,64,107,0.22)] md:rounded-[8px] md:p-6"
+              initial={{ y: 40, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 40, opacity: 0 }}
+            >
+              <div className="mb-4 flex min-w-0 items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h2 className="text-xl font-display leading-none">Loan Agreement Summary</h2>
+                  <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
+                    Confirm the protected terms before creating an active loan.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--color-bg-secondary)] text-sm font-black"
+                  onClick={() => {
+                    setPendingAgreementId(null);
+                    setAgreementAccepted(false);
+                  }}
+                  aria-label="Close agreement summary"
+                >
+                  x
+                </button>
+              </div>
+
+              <dl className="grid gap-2 rounded-[5px] bg-[var(--color-bg-secondary)] p-3 text-sm">
+                <div className="flex min-w-0 justify-between gap-3">
+                  <dt className="shrink-0 text-[var(--color-text-secondary)]">Listing</dt>
+                  <dd className="min-w-0 text-right font-bold capitalize">{pendingAgreement.type.replaceAll("_", " ")}</dd>
+                </div>
+                <div className="flex min-w-0 justify-between gap-3">
+                  <dt className="shrink-0 text-[var(--color-text-secondary)]">Amount</dt>
+                  <dd className="min-w-0 text-right font-mono font-bold">₦{pendingAgreement.amount.toLocaleString()}</dd>
+                </div>
+                <div className="flex min-w-0 justify-between gap-3">
+                  <dt className="shrink-0 text-[var(--color-text-secondary)]">Interest</dt>
+                  <dd className="min-w-0 text-right font-mono font-bold text-[var(--color-positive-text)]">0%</dd>
+                </div>
+                <div className="flex min-w-0 justify-between gap-3">
+                  <dt className="shrink-0 text-[var(--color-text-secondary)]">Duration</dt>
+                  <dd className="min-w-0 text-right font-mono font-bold">{pendingAgreement.days} days</dd>
+                </div>
+                <div className="flex min-w-0 justify-between gap-3">
+                  <dt className="shrink-0 text-[var(--color-text-secondary)]">Repayment date</dt>
+                  <dd className="min-w-0 text-right font-bold">{repaymentDate}</dd>
+                </div>
+                <div className="flex min-w-0 justify-between gap-3">
+                  <dt className="shrink-0 text-[var(--color-text-secondary)]">Lender</dt>
+                  <dd className="min-w-0 text-right font-bold">{lenderName} • {lenderTrustScore}/100</dd>
+                </div>
+                <div className="flex min-w-0 justify-between gap-3">
+                  <dt className="shrink-0 text-[var(--color-text-secondary)]">Borrower</dt>
+                  <dd className="min-w-0 text-right font-bold">{borrowerName} • {borrowerTrustScore}/100</dd>
+                </div>
+                <div className="flex min-w-0 justify-between gap-3">
+                  <dt className="shrink-0 text-[var(--color-text-secondary)]">Wallet rule</dt>
+                  <dd className="min-w-0 text-right font-bold">Retained balance applies</dd>
+                </div>
+                <div className="flex min-w-0 justify-between gap-3">
+                  <dt className="shrink-0 text-[var(--color-text-secondary)]">Late repayment</dt>
+                  <dd className="min-w-0 text-right font-bold">Score and access review</dd>
+                </div>
+              </dl>
+
+              <label className="mt-4 flex min-w-0 cursor-pointer items-start gap-3 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 text-sm leading-relaxed">
+                <input
+                  type="checkbox"
+                  checked={agreementAccepted}
+                  onChange={(event) => setAgreementAccepted(event.target.checked)}
+                  className="mt-1 h-4 w-4 shrink-0 accent-[var(--color-accent-primary)]"
+                />
+                <span className="min-w-0 text-[var(--color-text-secondary)]">
+                  I understand this creates an active 0% loan with wallet records, repayment tracking, receipts, and dispute review if needed.
+                </span>
+              </label>
+
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  className="btn-ghost min-h-11"
+                  onClick={() => {
+                    setPendingAgreementId(null);
+                    setAgreementAccepted(false);
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn-ghost min-h-11"
+                  onClick={downloadAgreementSummary}
+                >
+                  Download
+                </button>
+              </div>
+              <button
+                type="button"
+                className="btn-primary mt-2 min-h-11 w-full"
+                onClick={() => {
+                  confirmAgreement().catch(() => {});
+                }}
+              >
+                Confirm
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
