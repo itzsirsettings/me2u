@@ -53,6 +53,52 @@ function transactionPrefix(transaction: Transaction) {
     : "-";
 }
 
+function TransactionRowItem({ transaction }: { transaction: Transaction }) {
+  const [expanded, setExpanded] = useState(false);
+  
+  return (
+    <div className="overflow-hidden rounded-[50px] bg-[var(--mobile-surface-muted)] transition-colors">
+      <button 
+        type="button"
+        className="flex w-full min-w-0 items-center justify-between gap-2 p-2.5 text-left focus:outline-none"
+        onClick={() => setExpanded(!expanded)}
+      >
+        <div className="min-w-0 flex-1 overflow-hidden">
+          <p className="truncate text-sm font-black text-[var(--color-text-primary)]">
+            {transaction.description}
+          </p>
+          <p className="mt-1 truncate text-xs font-medium text-[var(--color-text-secondary)]">
+            {new Date(transaction.date).toLocaleDateString()}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <p className={`shrink-0 truncate text-right text-xs font-black sm:text-sm ${transactionAmountTone(transaction)}`}>
+            {transactionPrefix(transaction)}₦{transaction.amount.toLocaleString()}
+          </p>
+          <motion.div
+            animate={{ rotate: expanded ? 180 : 0 }}
+            className="text-[var(--color-text-secondary)]"
+          >
+            <Icons8Icon name="chevronDown" size={16} />
+          </motion.div>
+        </div>
+      </button>
+      
+      <motion.div
+        initial={false}
+        animate={{ height: expanded ? "auto" : 0, opacity: expanded ? 1 : 0 }}
+        className="overflow-hidden px-3"
+      >
+        <div className="border-t border-[var(--color-border)] py-3 text-xs text-[var(--color-text-secondary)]">
+          <p className="mb-1"><strong>ID:</strong> {transaction.id}</p>
+          <p className="mb-1"><strong>Date:</strong> {new Date(transaction.date).toLocaleString()}</p>
+          <p className="mb-1"><strong>Type:</strong> <span className="uppercase">{transaction.type.replace('_', ' ')}</span></p>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const user = useStore((state) => state.user);
   const activeLoans = useStore((state) => state.activeLoans);
@@ -169,7 +215,7 @@ export default function Dashboard() {
                 <Icons8Icon name="cash" size={18} />
               </button>
               <button className="mobile-pill-button" onClick={() => router.push("/withdraw")}>
-                Send
+                Withdraw
                 <Icons8Icon name="requestMoney" size={18} />
               </button>
             </div>
@@ -224,7 +270,7 @@ export default function Dashboard() {
         </div>
 
         <div className="grid min-w-0 gap-3">
-          <motion.section variants={itemVariants} className="relative min-w-0 overflow-hidden rounded-[22px] bg-[#020814] p-4 text-white">
+          <motion.section variants={itemVariants} className="relative min-w-0 overflow-hidden rounded-[50px] bg-[#020814] p-5 text-white">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5">
                 <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--color-negative-text)] text-white">
@@ -276,28 +322,13 @@ export default function Dashboard() {
             </div>
 
             {transactions.length === 0 ? (
-              <div className="rounded-[18px] bg-[var(--mobile-surface-muted)] p-3.5 text-sm font-medium text-[var(--color-text-secondary)]">
+              <div className="rounded-[50px] bg-[var(--mobile-surface-muted)] p-5 text-sm font-medium text-[var(--color-text-secondary)]">
                 No recent transactions yet. Fund your wallet to start.
               </div>
             ) : (
               <div className="grid gap-3">
                 {transactions.slice(0, 5).map((transaction) => (
-                  <div
-                    key={transaction.id}
-                    className="flex min-w-0 items-center justify-between gap-2 overflow-hidden rounded-[16px] bg-[var(--mobile-surface-muted)] p-2.5"
-                  >
-                    <div className="min-w-0 flex-1 overflow-hidden">
-                      <p className="truncate text-sm font-black text-[var(--color-text-primary)]">
-                        {transaction.description}
-                      </p>
-                      <p className="mt-1 truncate text-xs font-medium text-[var(--color-text-secondary)]">
-                        {new Date(transaction.date).toLocaleString()}
-                      </p>
-                    </div>
-                    <p className={`max-w-[36%] shrink-0 truncate text-right text-xs font-black sm:text-sm ${transactionAmountTone(transaction)}`}>
-                      {transactionPrefix(transaction)}₦{transaction.amount.toLocaleString()}
-                    </p>
-                  </div>
+                  <TransactionRowItem key={transaction.id} transaction={transaction} />
                 ))}
               </div>
             )}

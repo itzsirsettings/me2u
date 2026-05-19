@@ -7,8 +7,7 @@ import Icons8Icon, { type Icons8IconName } from "@/components/Icons8Icon";
 const navItems: Array<{ label: string; icon: Icons8IconName; path: string; center?: boolean }> = [
   { label: "Home", icon: "home", path: "/dashboard" },
   { label: "Market", icon: "market", path: "/marketplace" },
-  { label: "Wallet", icon: "wallet", path: "/wallet", center: true },
-  { label: "Loans", icon: "loans", path: "/loans" },
+  { label: "Loans", icon: "loans", path: "/loans", center: true },
   { label: "Profile", icon: "profile", path: "/profile" },
 ];
 
@@ -22,7 +21,7 @@ export default function BottomNav() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 px-2 pb-[calc(0.25rem+env(safe-area-inset-bottom))] md:hidden">
-      <div className="relative mx-auto grid max-w-md grid-cols-5 items-end gap-0.5 rounded-t-[22px] bg-[var(--mobile-surface)] px-2 pb-1 pt-1.5 shadow-[0_-10px_28px_rgba(0,64,107,0.09)]">
+      <div className="relative mx-auto grid max-w-md grid-cols-4 items-end gap-0.5 rounded-t-[50px] bg-[var(--mobile-surface)] px-2 pb-1 pt-1.5 shadow-[0_-10px_28px_rgba(0,64,107,0.09)]">
         {navItems.map((item) => {
           const isActive = activePath === item.path;
           const centerClasses = item.center

@@ -57,14 +57,14 @@ const features = [
 
 export default function FeaturesSection() {
   return (
-    <section className="py-24 bg-slate-50">
+    <section className="py-24 bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)]">
       <div className="container mx-auto px-4 md:px-6">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <motion.h2 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-3xl md:text-5xl font-extrabold text-slate-900 mb-6 tracking-tight"
+            className="text-3xl md:text-5xl font-display font-extrabold text-[var(--color-text-primary)] mb-6 tracking-tight"
           >
             Everything builds trust before you borrow or lend.
           </motion.h2>
@@ -73,7 +73,7 @@ export default function FeaturesSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-lg text-slate-600 font-medium"
+            className="text-lg text-[var(--color-text-secondary)] font-sans font-medium"
           >
             Me2U turns account creation into a clear trust flow: registration deposit, payment proof, KYC, welcome bonus, and wallet access.
           </motion.p>
@@ -87,13 +87,13 @@ export default function FeaturesSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: idx * 0.05 }}
-              className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 hover:shadow-md hover:border-blue-100 transition-all group"
+              className="bg-[var(--color-bg-card)] rounded-[50px] p-8 shadow-[2px_2px_0px_var(--color-shadow)] border border-[var(--color-border)] transition-all group"
             >
-              <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-2xl mb-6 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+              <div className="w-14 h-14 rounded-[50px] bg-[var(--color-hover-soft)] text-[var(--color-accent-primary)] flex items-center justify-center text-2xl mb-6 group-hover:bg-[var(--color-accent-primary)] group-hover:text-[var(--color-on-accent)] transition-colors">
                 {feature.icon}
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3">{feature.title}</h3>
-              <p className="text-slate-600 font-medium leading-relaxed">{feature.description}</p>
+              <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-3">{feature.title}</h3>
+              <p className="text-[var(--color-text-secondary)] font-medium leading-relaxed">{feature.description}</p>
             </motion.div>
           ))}
         </div>

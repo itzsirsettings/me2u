@@ -38,8 +38,8 @@
   --mobile-surface-muted: #ededed;
   --mobile-pill: #c9c0f2;
   --mobile-pill-text: #07026f;
-  --mobile-radius-xl: 22px;
-  --mobile-radius-lg: 18px;
+  --mobile-radius-xl: 50px;
+  --mobile-radius-lg: 50px;
   --white: #ffffff;
   --black: #00406b;
   --transparent: transparent;
@@ -100,14 +100,14 @@ html[data-theme="dark"] {
   --font-sans: var(--font-geologica);
   --font-serif-italic: var(--font-geologica);
   --font-mono: var(--font-geologica);
-  --radius-xs: 5px;
-  --radius-sm: 5px;
-  --radius-md: 5px;
-  --radius-lg: 5px;
-  --radius-xl: 5px;
-  --radius-2xl: 5px;
-  --radius-3xl: 5px;
-  --radius-4xl: 5px;
+  --radius-xs: 50px;
+  --radius-sm: 50px;
+  --radius-md: 50px;
+  --radius-lg: 50px;
+  --radius-xl: 50px;
+  --radius-2xl: 50px;
+  --radius-3xl: 50px;
+  --radius-4xl: 50px;
   --animate-aurora: aurora 60s linear infinite;
 }
 
@@ -230,24 +230,24 @@ body {
 }
 
 [data-sonner-toaster] {
-  --border-radius: 5px;
+  --border-radius: 50px;
 }
 
 [data-sonner-toast][data-styled="true"] [data-button],
 [data-sonner-toast][data-styled="true"] [data-close-button],
 .sonner-loading-bar {
-  border-radius: 5px !important;
+  border-radius: 50px !important;
 }
 
 /* Kinetic Borders */
 .kinetic-border {
   border: 1px solid var(--color-border);
-  border-radius: 5px;
+  border-radius: 50px;
 }
 
 /* Custom Buttons */
 .btn-primary {
-  @apply inline-flex items-center justify-center rounded-[5px] border border-[var(--color-border)] text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background h-10 py-2 px-4 shadow-[2px_2px_0px_var(--color-shadow)];
+  @apply inline-flex items-center justify-center rounded-[50px] border border-[var(--color-border)] text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background h-10 py-2 px-4 shadow-[2px_2px_0px_var(--color-shadow)];
   background: var(--gradient-primary);
   color: var(--color-on-accent);
 }
@@ -258,7 +258,7 @@ body {
 }
 
 .btn-ghost {
-  @apply inline-flex items-center justify-center rounded-[5px] border border-[var(--color-border)] text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background h-10 py-2 px-4 shadow-[2px_2px_0px_var(--color-shadow)];
+  @apply inline-flex items-center justify-center rounded-[50px] border border-[var(--color-border)] text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background h-10 py-2 px-4 shadow-[2px_2px_0px_var(--color-shadow)];
   background-color: transparent;
   color: var(--color-text-primary);
 }
@@ -376,7 +376,7 @@ body {
   select,
   textarea {
     min-height: 44px;
-    border-radius: 14px !important;
+    border-radius: 50px !important;
     font-size: 16px;
   }
 

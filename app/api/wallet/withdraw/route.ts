@@ -53,31 +53,21 @@ export async function POST(request: Request) {
     if (walletError) throw new Error(walletError.message);
     if (!wallet) throw new Error("Wallet not found.");
 
-    const { data: platformLoans, error: platformLoansError } = await auth.supabase
+    const { data: activeLoans, error: activeLoansError } = await auth.supabase
       .from("loans")
-      .select("amount")
+      .select("id")
       .eq("borrower_id", auth.user.id)
-      .is("lender_id", null)
-      .eq("status", "active")
-      .gte("amount", repeatPlatformLoanMinimum);
+      .eq("status", "active");
 
-    if (platformLoansError) throw new Error(platformLoansError.message);
+    if (activeLoansError) throw new Error(activeLoansError.message);
+    if (activeLoans && activeLoans.length > 0) {
+      throw new Error("You must repay all outstanding loans before you can withdraw.");
+    }
 
-    const platformLoanDeposit = (platformLoans || []).reduce(
-      (total, loan) => total + getPlatformLoanRetainedDeposit(Number(loan.amount)),
-      0,
-    );
-    const requiredBalance = getRequiredWithdrawalBalance(amount, platformLoanDeposit);
+    const requiredBalance = getRequiredWithdrawalBalance(amount, 0);
     const balance = Number(wallet.balance || 0);
 
     if (balance < requiredBalance) {
-      const shortfall = Math.max(0, requiredBalance - balance);
-      if (platformLoanDeposit > 0) {
-        throw new Error(
-          `Fund ₦${shortfall.toLocaleString()} first. ₦${platformLoanDeposit.toLocaleString()} must remain in your wallet after withdrawal and the ₦${withdrawalFeeAmount.toLocaleString()} processing fee.`,
-        );
-      }
-
       throw new Error(`Insufficient balance for the withdrawal and ₦${withdrawalFeeAmount.toLocaleString()} processing fee.`);
     }
 

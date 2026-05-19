@@ -34,6 +34,7 @@ export type ProfileRow = {
   partner_offer_consent_version: string | null;
   passport_photo_url: string | null;
   role: "user" | "admin";
+  transaction_pin: string | null;
   created_at: string;
   updated_at: string;
 };

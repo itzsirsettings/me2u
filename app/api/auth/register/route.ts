@@ -196,6 +196,7 @@ export async function POST(request: Request) {
       partner_offer_consent_version: null,
       passport_photo_url: null,
       role: "user",
+      transaction_pin: null,
     });
 
     if (profileError) {

@@ -100,6 +100,7 @@ export interface User {
   passportPhotoUrl: string | null;
   role: "user" | "admin";
   createdAt: string;
+  hasTransactionPin: boolean;
 }
 
 export interface AppNotification {
@@ -135,6 +136,10 @@ interface AppStore {
   requestPlatformLoan: (amount?: number) => Promise<ActionResult>;
   repayLoan: (loanId: string) => Promise<ActionResult>;
   payBill: (amount: number, serviceLabel: string, detail: string) => Promise<ActionResult>;
+  clearNotifications: () => Promise<ActionResult>;
+  deleteNotification: (id: string) => Promise<ActionResult>;
+  setPin: (pin: string) => Promise<ActionResult>;
+  verifyPin: (pin: string) => Promise<ActionResult>;
 }
 
 const missingSupabaseResult = {
@@ -311,6 +316,7 @@ function toUser(profile: ProfileRow, wallet: WalletRow | null, affiliateRewards:
     passportPhotoUrl: profile.passport_photo_url,
     role: profile.role,
     createdAt: profile.created_at,
+    hasTransactionPin: !!profile.transaction_pin,
   };
 }
 
@@ -662,6 +668,41 @@ export const useStore = create<AppStore>((set, get) => ({
     const result = await postAuthenticatedJson("/api/wallet/pay-bill", { amount, serviceLabel, detail });
     if (result.ok) await get().loadCurrentUser();
     return result;
+  },
+
+  clearNotifications: async () => {
+    if (!hasSupabaseConfig()) return missingSupabaseResult;
+    const user = get().user;
+    if (!user) return { ok: false, error: "Please log in first." };
+
+    const supabase = getSupabaseBrowserClient();
+    const { error } = await supabase.from("notifications").delete().eq("user_id", user.id);
+    if (error) return { ok: false, error: error.message };
+
+    await get().loadCurrentUser();
+    return { ok: true };
+  },
+
+  deleteNotification: async (id) => {
+    if (!hasSupabaseConfig()) return missingSupabaseResult;
+    const supabase = getSupabaseBrowserClient();
+    const { error } = await supabase.from("notifications").delete().eq("id", id);
+    if (error) return { ok: false, error: error.message };
+
+    await get().loadCurrentUser();
+    return { ok: true };
+  },
+
+  setPin: async (pin) => {
+    if (!hasSupabaseConfig()) return missingSupabaseResult;
+    const result = await postAuthenticatedJson("/api/user/pin", { action: "set", pin });
+    if (result.ok) await get().loadCurrentUser();
+    return result;
+  },
+
+  verifyPin: async (pin) => {
+    if (!hasSupabaseConfig()) return missingSupabaseResult;
+    return await postAuthenticatedJson("/api/user/pin", { action: "verify", pin });
   },
 
 }));

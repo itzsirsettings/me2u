@@ -22,19 +22,19 @@ export default function LandingHeader() {
     <>
       <header
         className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
-          scrolled ? "bg-white/80 backdrop-blur-md shadow-sm py-3" : "bg-transparent py-5"
+          scrolled ? "bg-[var(--color-glass-bg)] backdrop-blur-md shadow-sm py-3 border-b border-[var(--color-glass-border)]" : "bg-transparent py-5"
         }`}
       >
         <div className="container mx-auto px-4 md:px-6 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xl group-hover:bg-blue-700 transition-colors">
+            <div className="w-10 h-10 rounded-[50px] bg-[var(--color-accent-primary)] flex items-center justify-center text-[var(--color-on-accent)] font-bold text-xl group-hover:opacity-90 transition-colors">
               M
             </div>
             <div className="flex flex-col">
-              <span className="font-extrabold text-xl leading-tight text-slate-900 group-hover:text-blue-700 transition-colors">
+              <span className="font-extrabold text-xl leading-tight text-[var(--color-text-primary)] group-hover:text-[var(--color-accent-primary)] transition-colors">
                 Me2U
               </span>
-              <span className="text-[10px] font-semibold tracking-wider uppercase text-slate-500">
+              <span className="text-[10px] font-semibold tracking-wider uppercase text-[var(--color-text-secondary)]">
                 by {companyInfo.tradingName}
               </span>
             </div>
@@ -47,7 +47,7 @@ export default function LandingHeader() {
               onMouseEnter={() => setProductsOpen(true)}
               onMouseLeave={() => setProductsOpen(false)}
             >
-              <button className="flex items-center gap-1 font-medium text-slate-700 hover:text-blue-600 transition-colors py-2">
+              <button className="flex items-center gap-1 font-medium text-[var(--color-text-primary)] hover:text-[var(--color-accent-primary)] transition-colors py-2">
                 Products
                 <svg className={`w-4 h-4 transition-transform duration-200 ${productsOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -61,72 +61,72 @@ export default function LandingHeader() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute top-full left-1/2 -translate-x-1/2 w-[600px] bg-white rounded-2xl shadow-xl border border-slate-100 p-6 grid grid-cols-2 gap-6"
+                    className="absolute top-full left-1/2 -translate-x-1/2 w-[600px] bg-[var(--color-bg-card)] rounded-[50px] shadow-[0_20px_50px_var(--color-shadow)] border border-[var(--color-border)] p-6 grid grid-cols-2 gap-6"
                   >
-                    <div className="col-span-2 p-4 bg-blue-50 rounded-xl">
-                      <h3 className="font-bold text-blue-900 mb-1">Me2U Lending Flow</h3>
-                      <p className="text-sm text-blue-700 mb-3">One app for verified wallets, peer matching, interest-free loans, and repayments.</p>
-                      <Link href="/register" className="text-sm font-semibold text-blue-600 hover:text-blue-800">Create an account &rarr;</Link>
+                    <div className="col-span-2 p-6 bg-[var(--color-hover-soft)] rounded-[50px]">
+                      <h3 className="font-bold text-[var(--color-accent-deep)] mb-1">Me2U Lending Flow</h3>
+                      <p className="text-sm text-[var(--color-text-primary)] mb-3">One app for verified wallets, peer matching, interest-free loans, and repayments.</p>
+                      <Link href="/register" className="text-sm font-semibold text-[var(--color-accent-primary)] hover:underline">Create an account &rarr;</Link>
                     </div>
                     <div>
-                      <Link href="/#loans" className="block group p-2 -m-2 rounded-lg hover:bg-slate-50">
-                        <div className="font-semibold text-slate-900 group-hover:text-blue-600 mb-1 flex items-center gap-2">
-                          <span className="text-lg">⌁</span> 0% Loans
+                      <Link href="/#loans" className="block group p-4 -m-2 rounded-[50px] hover:bg-[var(--color-bg-secondary)] transition-colors">
+                        <div className="font-semibold text-[var(--color-text-primary)] group-hover:text-[var(--color-accent-primary)] mb-1 flex items-center gap-2">
+                          <span className="text-lg">⌁</span> Direct Loans
                         </div>
-                        <p className="text-xs text-slate-500">Access 0% interest loans from ₦5,000.</p>
+                        <p className="text-xs text-[var(--color-text-secondary)]">Access direct loans from ₦5,000.</p>
                       </Link>
                     </div>
                     <div>
-                      <Link href="/#marketplace" className="block group p-2 -m-2 rounded-lg hover:bg-slate-50">
-                        <div className="font-semibold text-slate-900 group-hover:text-blue-600 mb-1 flex items-center gap-2">
+                      <Link href="/#marketplace" className="block group p-4 -m-2 rounded-[50px] hover:bg-[var(--color-bg-secondary)] transition-colors">
+                        <div className="font-semibold text-[var(--color-text-primary)] group-hover:text-[var(--color-accent-primary)] mb-1 flex items-center gap-2">
                           <span className="text-lg">▣</span> Peer Marketplace
                         </div>
-                        <p className="text-xs text-slate-500">Create borrow requests and lending offers.</p>
+                        <p className="text-xs text-[var(--color-text-secondary)]">Create borrow requests and lending offers.</p>
                       </Link>
                     </div>
                     <div>
-                      <Link href="/#trust" className="block group p-2 -m-2 rounded-lg hover:bg-slate-50">
-                        <div className="font-semibold text-slate-900 group-hover:text-blue-600 mb-1 flex items-center gap-2">
+                      <Link href="/#trust" className="block group p-4 -m-2 rounded-[50px] hover:bg-[var(--color-bg-secondary)] transition-colors">
+                        <div className="font-semibold text-[var(--color-text-primary)] group-hover:text-[var(--color-accent-primary)] mb-1 flex items-center gap-2">
                           <span className="text-lg">◈</span> Trust Score
                         </div>
-                        <p className="text-xs text-slate-500">Build trust from KYC and repayments.</p>
+                        <p className="text-xs text-[var(--color-text-secondary)]">Build trust from KYC and repayments.</p>
                       </Link>
                     </div>
                     <div>
-                      <Link href="/#rewards" className="block group p-2 -m-2 rounded-lg hover:bg-slate-50">
-                        <div className="font-semibold text-slate-900 group-hover:text-blue-600 mb-1 flex items-center gap-2">
+                      <Link href="/#rewards" className="block group p-4 -m-2 rounded-[50px] hover:bg-[var(--color-bg-secondary)] transition-colors">
+                        <div className="font-semibold text-[var(--color-text-primary)] group-hover:text-[var(--color-accent-primary)] mb-1 flex items-center gap-2">
                           <span className="text-lg">✦</span> Referral Rewards
                         </div>
-                        <p className="text-xs text-slate-500">Earn ₦500 per verified referral.</p>
+                        <p className="text-xs text-[var(--color-text-secondary)]">Earn ₦500 per verified referral.</p>
                       </Link>
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
-            <Link href="/security" className="font-medium text-slate-700 hover:text-blue-600 transition-colors">
+            <Link href="/security" className="font-medium text-[var(--color-text-primary)] hover:text-[var(--color-accent-primary)] transition-colors">
               Security
             </Link>
-            <Link href="/#faqs" className="font-medium text-slate-700 hover:text-blue-600 transition-colors">
+            <Link href="/#faqs" className="font-medium text-[var(--color-text-primary)] hover:text-[var(--color-accent-primary)] transition-colors">
               FAQs
             </Link>
-            <Link href="/support" className="font-medium text-slate-700 hover:text-blue-600 transition-colors">
+            <Link href="/support" className="font-medium text-[var(--color-text-primary)] hover:text-[var(--color-accent-primary)] transition-colors">
               Support
             </Link>
           </nav>
 
           <div className="hidden lg:flex items-center gap-4">
-            <Link href="/login" className="font-medium text-slate-700 hover:text-blue-600 transition-colors">
+            <Link href="/login" className="font-medium text-[var(--color-text-primary)] hover:text-[var(--color-accent-primary)] transition-colors px-4 py-2">
               Login
             </Link>
-            <Link href="/register" className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-all shadow-sm hover:shadow active:scale-95">
+            <Link href="/register" className="px-5 py-2.5 bg-[var(--color-accent-primary)] text-[var(--color-on-accent)] font-semibold rounded-[50px] transition-all shadow-[2px_2px_0px_var(--color-shadow)] hover:opacity-90 active:translate-y-[2px] active:shadow-none">
               Create Account
             </Link>
           </div>
 
           {/* Mobile Toggle */}
           <button 
-            className="lg:hidden p-2 text-slate-600"
+            className="lg:hidden p-2 text-[var(--color-text-primary)]"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -147,26 +147,26 @@ export default function LandingHeader() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="fixed inset-x-0 top-[72px] bg-white border-b border-slate-100 shadow-xl z-40 lg:hidden overflow-hidden"
+            className="fixed inset-x-0 top-[72px] bg-[var(--color-bg-primary)] border-b border-[var(--color-border)] shadow-xl z-40 lg:hidden overflow-hidden"
           >
             <div className="p-4 flex flex-col gap-4">
-              <div className="p-4 bg-blue-50 rounded-xl">
-                <h3 className="font-bold text-blue-900 mb-1">Products</h3>
-                <div className="grid grid-cols-1 gap-3 mt-3">
-                  <Link href="/#loans" className="text-sm font-medium text-blue-800" onClick={() => setMobileMenuOpen(false)}>0% Loans</Link>
-                  <Link href="/#marketplace" className="text-sm font-medium text-blue-800" onClick={() => setMobileMenuOpen(false)}>Peer Marketplace</Link>
-                  <Link href="/#trust" className="text-sm font-medium text-blue-800" onClick={() => setMobileMenuOpen(false)}>Trust Score</Link>
+              <div className="p-4 bg-[var(--color-hover-soft)] rounded-[50px]">
+                <h3 className="font-bold text-[var(--color-accent-deep)] mb-1 px-4">Products</h3>
+                <div className="grid grid-cols-1 gap-3 mt-3 px-4">
+                  <Link href="/#loans" className="text-sm font-medium text-[var(--color-accent-primary)]" onClick={() => setMobileMenuOpen(false)}>Direct Loans</Link>
+                  <Link href="/#marketplace" className="text-sm font-medium text-[var(--color-accent-primary)]" onClick={() => setMobileMenuOpen(false)}>Peer Marketplace</Link>
+                  <Link href="/#trust" className="text-sm font-medium text-[var(--color-accent-primary)]" onClick={() => setMobileMenuOpen(false)}>Trust Score</Link>
                 </div>
               </div>
-              <Link href="/security" className="p-3 font-medium text-slate-800 border-b border-slate-50" onClick={() => setMobileMenuOpen(false)}>Security</Link>
-              <Link href="/#faqs" className="p-3 font-medium text-slate-800 border-b border-slate-50" onClick={() => setMobileMenuOpen(false)}>FAQs</Link>
-              <Link href="/support" className="p-3 font-medium text-slate-800" onClick={() => setMobileMenuOpen(false)}>Support</Link>
+              <Link href="/security" className="p-4 font-medium text-[var(--color-text-primary)] border-b border-[var(--color-border)]" onClick={() => setMobileMenuOpen(false)}>Security</Link>
+              <Link href="/#faqs" className="p-4 font-medium text-[var(--color-text-primary)] border-b border-[var(--color-border)]" onClick={() => setMobileMenuOpen(false)}>FAQs</Link>
+              <Link href="/support" className="p-4 font-medium text-[var(--color-text-primary)]" onClick={() => setMobileMenuOpen(false)}>Support</Link>
               
               <div className="grid grid-cols-2 gap-3 mt-4">
-                <Link href="/login" className="px-4 py-3 bg-slate-100 text-center font-medium rounded-xl text-slate-800" onClick={() => setMobileMenuOpen(false)}>
+                <Link href="/login" className="px-4 py-4 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-center font-bold rounded-[50px] text-[var(--color-text-primary)]" onClick={() => setMobileMenuOpen(false)}>
                   Login
                 </Link>
-                <Link href="/register" className="px-4 py-3 bg-blue-600 text-center font-medium rounded-xl text-white" onClick={() => setMobileMenuOpen(false)}>
+                <Link href="/register" className="px-4 py-4 bg-[var(--color-accent-primary)] text-center font-bold rounded-[50px] text-[var(--color-on-accent)]" onClick={() => setMobileMenuOpen(false)}>
                   Create Account
                 </Link>
               </div>

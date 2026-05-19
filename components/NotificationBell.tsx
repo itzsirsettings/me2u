@@ -42,25 +42,46 @@ export default function NotificationBell() {
               initial={{ opacity: 0, y: -10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              className="absolute right-0 top-full z-50 mt-2 w-[min(19rem,calc(100vw-1.5rem))] overflow-hidden rounded-[24px] border border-[var(--color-border)] bg-[var(--color-bg-card)] shadow-[4px_4px_0px_var(--color-shadow)] md:w-80 md:rounded-xl"
+              className="absolute right-0 top-full z-50 mt-2 w-[min(19rem,calc(100vw-1.5rem))] overflow-hidden rounded-[50px] border border-[var(--color-border)] bg-[var(--color-bg-card)] shadow-[4px_4px_0px_var(--color-shadow)] md:w-80 md:rounded-[50px]"
             >
-              <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-4 py-3">
+              <div className="flex items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-5 py-3.5">
                 <h3 className="font-display font-semibold text-[var(--color-text-primary)]">Notifications</h3>
+                {notifications.length > 0 && (
+                  <button 
+                    onClick={() => useStore.getState().clearNotifications()}
+                    className="text-xs font-black text-[var(--color-accent-primary)] hover:underline"
+                  >
+                    Clear All
+                  </button>
+                )}
               </div>
-              <div className="max-h-[60vh] overflow-y-auto p-2">
+              <div className="max-h-[60vh] overflow-y-auto p-3">
                 {notifications.length === 0 ? (
-                  <div className="p-4 text-center text-sm text-[var(--color-text-secondary)] italic">
+                  <div className="p-5 text-center text-xs font-semibold text-[var(--color-text-secondary)] italic">
                     No notifications yet.
                   </div>
                 ) : (
                   notifications.map((notif) => (
                     <div 
                       key={notif.id}
-                      className={`mb-2 rounded-lg p-3 text-sm transition-colors ${notif.isRead ? 'opacity-70 hover:bg-[var(--color-bg-secondary)]' : 'border border-[var(--color-border)] bg-[var(--color-positive-bg)]'}`}
+                      className="relative mb-2.5 rounded-[50px] border border-[var(--color-border)] bg-[var(--mobile-surface-muted)] py-3 pl-5 pr-9 text-xs transition-colors"
                     >
-                      <p className="overflow-anywhere mb-1 font-semibold text-[var(--color-text-primary)]">{notif.title}</p>
-                      <p className="overflow-anywhere text-[var(--color-text-secondary)]">{notif.message}</p>
-                      <p className="mt-2 text-xs text-[var(--color-text-secondary)] opacity-60">
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          await useStore.getState().deleteNotification(notif.id);
+                        }}
+                        className="absolute right-4.5 top-3 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] focus:outline-none"
+                        aria-label="Delete notification"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="18" y1="6" x2="6" y2="18"></line>
+                          <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                      </button>
+                      <p className="overflow-anywhere mb-0.5 font-black text-[var(--color-text-primary)]">{notif.title}</p>
+                      <p className="overflow-anywhere font-medium text-[var(--color-text-secondary)]">{notif.message}</p>
+                      <p className="mt-1.5 text-[10px] font-semibold text-[var(--color-text-secondary)] opacity-60">
                         {new Date(notif.date).toLocaleString()}
                       </p>
                     </div>

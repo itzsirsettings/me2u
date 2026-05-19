@@ -9,6 +9,7 @@ import LoadingButton from "@/LoadingButton";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { motion, type Variants, AnimatePresence } from "framer-motion";
+import TransactionPinPrompt from "@/components/TransactionPinPrompt";
 
 const walletServices: Array<{ id: string; label: string; detail: string; icon: Icons8IconName }> = [
   { id: "airtime", label: "Airtime", detail: "Top up any network instantly", icon: "phone" },
@@ -36,6 +37,7 @@ export default function WalletPage() {
   const isLoading = useStore((state) => state.isLoading);
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
+  const [isPinPromptOpen, setIsPinPromptOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -120,7 +122,7 @@ export default function WalletPage() {
     setFundReceiptFile(null);
   };
 
-  const handlePayBill = async () => {
+  const handlePayBillClick = () => {
     if (!user) return;
     const numAmount = Number(serviceAmount);
     if (!Number.isFinite(numAmount) || numAmount <= 0) {
@@ -131,19 +133,26 @@ export default function WalletPage() {
       toast.error("Please enter the required details");
       return;
     }
+    setIsPinPromptOpen(true);
+  };
+
+  const executePayBill = async () => {
+    if (!user) return;
+    const numAmount = Number(serviceAmount);
     
     const serviceName = walletServices.find(s => s.id === selectedService)?.label || "Bill";
     const result = await payBill(numAmount, serviceName, `${serviceProvider} - ${servicePhone}`);
     
     if (!result.ok) {
       toast.error(result.error || "Unable to complete transaction");
-      throw new Error("Transaction failed");
+      return;
     }
     
     toast.success(`${serviceName} purchase successful!`);
     setSelectedService(null);
     setServiceAmount("");
     setServicePhone("");
+    setIsPinPromptOpen(false);
   };
 
   const containerVariants: Variants = {
@@ -180,13 +189,13 @@ export default function WalletPage() {
                   Your ₦{onboardingCreditAmount.toLocaleString()} welcome bonus is waiting. Submit the ₦{registrationDepositAmount.toLocaleString()} deposit proof, then complete KYC to unlock it.
                 </p>
               </div>
-              <span className="shrink-0 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-warning-bg)] px-3 py-1 text-xs font-bold uppercase text-[var(--color-warning-text)]">
+              <span className="shrink-0 rounded-[50px] border border-[var(--color-border)] bg-[var(--color-warning-bg)] px-3 py-1 text-xs font-bold uppercase text-[var(--color-warning-text)]">
                 Required
               </span>
             </div>
 
             <div className="space-y-4">
-              <div className="rounded-[5px] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 text-sm">
+              <div className="rounded-[50px] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] py-4.5 px-6 text-sm">
                 {hasPlatformAccountDetails ? (
                   <div className="grid gap-2">
                     <div className="flex min-w-0 items-center justify-between gap-3">
@@ -216,7 +225,7 @@ export default function WalletPage() {
                   placeholder="Bank transfer reference"
                   value={registrationReference}
                   onChange={(e) => setRegistrationReference(e.target.value)}
-                  className="w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 font-sans text-base focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none"
+                  className="w-full rounded-[50px] border border-[var(--color-border)] bg-[var(--color-bg-card)] py-4 px-6 font-sans text-base focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none"
                 />
               </div>
 
@@ -236,7 +245,7 @@ export default function WalletPage() {
                   />
                   <label
                     htmlFor="reg-receipt-upload"
-                    className="flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] py-4 transition-colors hover:bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+                    className="flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-[50px] border border-[var(--color-border)] bg-[var(--color-bg-card)] py-4 transition-colors hover:bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
                   >
                     {regReceiptFile ? (
                       <span className="text-sm font-medium text-[var(--color-positive-text)]">
@@ -266,7 +275,7 @@ export default function WalletPage() {
 
         <Card className="kinetic-border p-5 shadow-[4px_4px_0px_var(--color-shadow)] bg-[var(--color-bg-card)] md:p-10">
           <h2 className="mb-4 text-xl font-display md:mb-8 md:text-3xl">Fund Wallet</h2>
-          <div className="mb-4 rounded-[5px] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3 text-sm md:p-4">
+          <div className="mb-4 rounded-[50px] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] py-4 px-6 text-sm md:p-4">
             {hasPlatformAccountDetails ? (
               <div className="grid gap-2">
                 <div className="flex min-w-0 items-center justify-between gap-3">
@@ -296,7 +305,7 @@ export default function WalletPage() {
               placeholder="0.00"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 font-mono text-xl focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none md:text-2xl"
+              className="w-full rounded-[50px] border border-[var(--color-border)] bg-[var(--color-bg-card)] py-4 px-6 font-mono text-xl focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none md:text-2xl"
             />
           </div>
 
@@ -307,7 +316,7 @@ export default function WalletPage() {
               placeholder="Bank or Opay receipt reference"
               value={fundingReference}
               onChange={(e) => setFundingReference(e.target.value)}
-              className="w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 font-sans text-base focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none"
+              className="w-full rounded-[50px] border border-[var(--color-border)] bg-[var(--color-bg-card)] py-4 px-6 font-sans text-base focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none"
             />
             <p className="mt-2 text-xs leading-relaxed text-[var(--color-text-secondary)]">
               Transfer to the payment account first, then submit the amount and reference here.
@@ -330,7 +339,7 @@ export default function WalletPage() {
               />
               <label
                 htmlFor="fund-receipt-upload"
-                className="flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] py-4 transition-colors hover:bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+                className="flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-[50px] border border-[var(--color-border)] bg-[var(--color-bg-card)] py-4 transition-colors hover:bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
               >
                 {fundReceiptFile ? (
                   <span className="text-sm font-medium text-[var(--color-positive-text)]">
@@ -372,7 +381,7 @@ export default function WalletPage() {
               <button
                 key={service.id}
                 type="button"
-                className={`flex min-w-0 items-center gap-3 rounded-[5px] border p-3 text-left transition ${
+                className={`flex min-w-0 items-center gap-3 rounded-[50px] border py-3.5 pl-6 pr-4 text-left transition ${
                   selectedService === service.id 
                     ? "border-[var(--color-accent-primary)] bg-[var(--color-hover-soft)] shadow-inner" 
                     : "border-[var(--color-border)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-hover-soft)]"
@@ -382,7 +391,7 @@ export default function WalletPage() {
                   setServiceProvider(service.id === "electricity" ? "Ikeja Electric" : "MTN");
                 }}
               >
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[5px] bg-[var(--color-bg-card)] text-[var(--color-accent-primary)]">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--color-bg-card)] text-[var(--color-accent-primary)]">
                   <Icons8Icon name={service.icon} size={21} />
                 </span>
                 <span className="min-w-0">
@@ -400,13 +409,13 @@ export default function WalletPage() {
                 exit={{ opacity: 0, height: 0 }}
                 className="overflow-hidden"
               >
-                <div className="space-y-4 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
+                <div className="space-y-4 rounded-[50px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6">
                   <div>
                     <label className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
                       Provider
                     </label>
                     <select
-                      className="h-11 w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 font-sans focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none"
+                      className="h-11 w-full rounded-[50px] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-6 font-sans focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none"
                       value={serviceProvider}
                       onChange={(e) => setServiceProvider(e.target.value)}
                     >
@@ -436,7 +445,7 @@ export default function WalletPage() {
                       placeholder={selectedService === "electricity" ? "Enter meter number" : "Enter phone number"}
                       value={servicePhone}
                       onChange={(e) => setServicePhone(e.target.value)}
-                      className="w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 font-mono focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none"
+                      className="w-full rounded-[50px] border border-[var(--color-border)] bg-[var(--color-bg-card)] py-4 px-6 font-mono focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none"
                     />
                   </div>
 
@@ -447,7 +456,7 @@ export default function WalletPage() {
                       placeholder="0.00"
                       value={serviceAmount}
                       onChange={(e) => setServiceAmount(e.target.value)}
-                      className="w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 font-mono focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none"
+                      className="w-full rounded-[50px] border border-[var(--color-border)] bg-[var(--color-bg-card)] py-4 px-6 font-mono focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none"
                     />
                   </div>
                   
@@ -457,7 +466,7 @@ export default function WalletPage() {
                       loadingText="Processing..."
                       successText="Successful!"
                       disabled={!serviceAmount || !servicePhone || !user?.kycVerified}
-                      onClick={handlePayBill}
+                      onClick={handlePayBillClick}
                     />
                     {!user?.kycVerified && (
                       <p className="mt-2 text-xs text-center text-[var(--color-warning-text)]">Complete KYC to unlock bill payments.</p>
@@ -469,6 +478,14 @@ export default function WalletPage() {
           </AnimatePresence>
         </Card>
       </motion.div>
+
+      <TransactionPinPrompt
+        isOpen={isPinPromptOpen}
+        onSuccess={executePayBill}
+        onCancel={() => setIsPinPromptOpen(false)}
+        title="Pay Bill"
+        description={`Enter PIN to confirm ₦${serviceAmount} payment for ${walletServices.find(s => s.id === selectedService)?.label}.`}
+      />
     </motion.div>
   );
 }

@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN transaction_pin text;

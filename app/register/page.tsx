@@ -62,7 +62,7 @@ function RegistrationField({
           inputMode={inputMode}
           maxLength={maxLength}
           onChange={(event) => onChange(event.target.value)}
-          className={`h-14 rounded-[8px] border-transparent bg-[var(--color-bg-secondary)] pl-14 pr-5 shadow-none focus:border-[var(--color-border)] ${
+          className={`h-14 rounded-[50px] border-transparent bg-[var(--color-bg-secondary)] pl-14 pr-6 shadow-none focus:border-[var(--color-border)] ${
             action ? "pr-14" : ""
           }`}
         />
@@ -211,7 +211,7 @@ function RegisterContent() {
               setIsSubmitting(false);
             });
           }}
-          className="space-y-6 rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-5 shadow-[4px_4px_0px_var(--color-shadow)] md:p-8"
+          className="space-y-6 rounded-[50px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-8 shadow-[4px_4px_0px_var(--color-shadow)] md:p-10"
         >
           <RegistrationField
             id="register-first-name"
@@ -276,7 +276,7 @@ function RegisterContent() {
                   countryCode: country.code,
                 }));
               }}
-              className="h-14 w-full rounded-[8px] border border-transparent bg-[var(--color-bg-secondary)] px-4 text-base text-[var(--color-text-primary)] shadow-none focus:border-[var(--color-border)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)]"
+              className="h-14 w-full rounded-[50px] border border-transparent bg-[var(--color-bg-secondary)] px-6 text-base text-[var(--color-text-primary)] shadow-none focus:border-[var(--color-border)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)]"
               title="Country"
             >
               {globalCountryOptions.map((country) => (
@@ -299,7 +299,7 @@ function RegisterContent() {
               id="register-language"
               value={formData.preferredLanguage}
               onChange={(event) => updateField("preferredLanguage")(event.target.value)}
-              className="h-14 w-full rounded-[8px] border border-transparent bg-[var(--color-bg-secondary)] px-4 text-base text-[var(--color-text-primary)] shadow-none focus:border-[var(--color-border)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)]"
+              className="h-14 w-full rounded-[50px] border border-transparent bg-[var(--color-bg-secondary)] px-6 text-base text-[var(--color-text-primary)] shadow-none focus:border-[var(--color-border)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)]"
               title="Preferred Language"
             >
               {languageOptions.map((language) => (
@@ -337,7 +337,7 @@ function RegisterContent() {
                 type="button"
                 aria-label={showPassword ? "Hide password" : "Show password"}
                 aria-pressed={showPassword}
-                className="absolute right-4 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-[8px] text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-hover-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)]"
+                className="absolute right-4 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-hover-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)]"
                 onClick={() => setShowPassword((current) => !current)}
               >
                 <Icons8Icon name={showPassword ? "invisible" : "visible"} size={22} />
