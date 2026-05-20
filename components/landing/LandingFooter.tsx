@@ -68,7 +68,7 @@ export default function LandingFooter() {
 
         <div className="border-t border-slate-200 pt-8 pb-8">
           <p className="text-sm text-slate-500 font-medium leading-relaxed">
-            Me2U is a peer-to-peer lending and wallet technology platform. Loan access, welcome bonuses, withdrawals, referrals, wallet activity, and marketplace features are subject to registration, deposit confirmation, KYC, fraud checks, admin review, wallet rules, and approval. Loans require repayment. Terms apply.
+            Me2U is a peer-to-peer lending, wallet, and cooperative group platform. Loan access, welcome bonuses, withdrawals, referrals, wallet activity, and marketplace features are subject to registration, deposit confirmation, KYC, fraud checks, admin review, wallet rules, and approval. External airtime/data/electricity/remittance and app-store integrations require partner credentials and compliance validation. Loans require repayment. Terms apply.
           </p>
         </div>
 

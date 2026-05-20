@@ -293,7 +293,7 @@ export const legalDocuments: PolicyDocument[] = [
         title: "Overview",
         paragraphs: [
           `This Privacy Policy explains how Me2U, legally owned by ${companyInfo.legalName}, protects your privacy when you use our website, app, wallet, lending marketplace, referral system, KYC process, support channels, and related services.`,
-          "Me2U is built for secure peer-to-peer lending, verified wallets, 0% interest loan access, repayments, referrals, and wallet withdrawals subject to verification and approval.",
+          "Me2U is built for secure peer-to-peer lending, cooperatives, verified wallets, 0% interest loan access, repayments, referrals, and wallet withdrawals subject to verification and approval.",
         ],
       },
       {

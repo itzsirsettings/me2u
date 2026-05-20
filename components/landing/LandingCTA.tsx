@@ -21,10 +21,10 @@ export default function LandingCTA() {
 
           <div className="relative z-10">
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-6 tracking-tight">
-              Secure peer lending.
+              Secure peer lending for individuals and cooperatives.
             </h2>
             <p className="text-xl md:text-2xl text-blue-100 font-medium max-w-2xl mx-auto mb-12 leading-relaxed">
-              Register, complete your deposit, verify KYC, then use Me2U to fund your wallet, match with peers, and manage 0% loans.
+              Register, complete your deposit, verify KYC, then use Me2U to fund your wallet, match with peers, manage 0% loans, and support cooperative groups.
             </p>
             
             <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
