@@ -35,7 +35,7 @@ export default function LandingHeader() {
                 Me2U
               </span>
               <span className="text-[10px] font-semibold tracking-wider uppercase text-slate-500">
-                by {companyInfo.tradingName}
+                by {companyInfo.legalName}
               </span>
             </div>
           </Link>

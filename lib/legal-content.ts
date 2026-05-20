@@ -409,10 +409,11 @@ export const legalDocuments: PolicyDocument[] = [
         bullets: [
           `Legal Entity: ${companyInfo.legalName}`,
           `Trading Name: ${companyInfo.tradingName}`,
-          "Registration Number: To be provided by Merenity Systems",
+          `Ownership: Me2U is legally owned by ${companyInfo.legalName}`,
           `Registered Address: ${companyInfo.address}`,
           `Support Email: ${companyInfo.email}`,
           `Legal Email: ${companyInfo.email}`,
+          `Phone/WhatsApp: ${companyInfo.phones.join(", ")}`,
         ],
       },
       {
@@ -1267,7 +1268,7 @@ export const legalFooterGroups = [
     title: "Help & Security",
     links: [
       { label: "Support", href: "/support" },
-      { label: "Trust & Security", href: "/legal/security-policy" },
+      { label: "Trust & Security", href: "/security" },
       { label: "Report Fraud", href: "/support/report-fraud" },
       { label: "Account Safety", href: "/support/account-safety" },
       { label: "KYC Help", href: "/support/kyc-help" },

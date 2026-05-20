@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { companyInfo, legalFooterGroups } from "@/lib/legal-content";
 
+function isExternal(href: string) {
+  return href.startsWith("mailto:") || href.startsWith("tel:");
+}
+
 export default function LandingFooter() {
   return (
     <footer className="bg-slate-50 pt-20 pb-10 border-t border-slate-200">
@@ -20,7 +24,7 @@ export default function LandingFooter() {
                   Me2U
                 </span>
                 <span className="text-[10px] font-semibold tracking-wider uppercase text-slate-500">
-                  by {companyInfo.tradingName}
+                  by {companyInfo.legalName}
                 </span>
               </div>
             </Link>
@@ -41,38 +45,23 @@ export default function LandingFooter() {
                 <ul className="space-y-4">
                   {group.links.map((link, linkIdx) => (
                     <li key={linkIdx}>
-                      <Link 
-                        href={link.href}
-                        className="text-slate-500 hover:text-blue-600 font-medium transition-colors"
-                      >
-                        {link.label}
-                      </Link>
+                      {isExternal(link.href) ? (
+                        <a href={link.href} className="text-slate-500 hover:text-blue-600 font-medium transition-colors">
+                          {link.label}
+                        </a>
+                      ) : (
+                        <Link
+                          href={link.href}
+                          className="text-slate-500 hover:text-blue-600 font-medium transition-colors"
+                        >
+                          {link.label}
+                        </Link>
+                      )}
                     </li>
                   ))}
                 </ul>
               </div>
             ))}
-            
-            <div>
-              <h3 className="font-bold text-slate-900 mb-6">Contact</h3>
-              <ul className="space-y-4">
-                <li>
-                  <a href={`mailto:${companyInfo.email}`} className="text-slate-500 hover:text-blue-600 font-medium transition-colors">
-                    {companyInfo.email}
-                  </a>
-                </li>
-                {companyInfo.phones.map((phone, pIdx) => (
-                  <li key={pIdx}>
-                    <a href={`tel:${phone.replace(/\s+/g, '')}`} className="text-slate-500 hover:text-blue-600 font-medium transition-colors block">
-                      {phone}
-                    </a>
-                  </li>
-                ))}
-                <li className="text-slate-500 font-medium pt-2">
-                  Nigeria
-                </li>
-              </ul>
-            </div>
           </div>
           
         </div>
@@ -85,7 +74,7 @@ export default function LandingFooter() {
 
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm font-bold text-slate-400">
-            ©{new Date().getFullYear()} Me2U by {companyInfo.tradingName}
+            ©{new Date().getFullYear()} Me2U by {companyInfo.legalName}
           </p>
           <Link href="/legal/cookie-policy" className="text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors">
             Review Cookie Policy
