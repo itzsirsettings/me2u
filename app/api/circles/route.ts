@@ -6,6 +6,32 @@ import {
   tooManyRequestsResponse,
   readPositiveAmount,
 } from "@/lib/server/auth";
+import { verifyTransactionPin } from "@/lib/server/pin";
+
+async function readCircleProfile(db: any, userId: string) {
+  const { data: profile, error } = await db
+    .from("profiles")
+    .select("group_lending_enabled, kyc_verified, transaction_pin")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  if (!profile) throw new Error("Profile not found.");
+  return profile;
+}
+
+async function assertWalletNotFrozen(db: any, userId: string) {
+  const { data, error } = await db
+    .from("user_security_settings")
+    .select("wallet_frozen")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  if (data?.wallet_frozen) {
+    throw new Error("Your wallet is frozen. Unfreeze it from Security Center before using circles.");
+  }
+}
 
 export async function GET(request: Request) {
   try {
@@ -18,58 +44,18 @@ export async function GET(request: Request) {
     if ("response" in auth) return auth.response;
 
     const db = auth.supabase as any;
+    const profile = await readCircleProfile(db, auth.user.id);
 
-    // Fetch circles
-    let { data: circles, error: fetchError } = await db
+    if (!profile.group_lending_enabled) {
+      return NextResponse.json({ ok: true, circles: [] });
+    }
+
+    const { data: circles, error: fetchError } = await db
       .from("circles")
       .select("*")
       .order("created_at", { ascending: true });
 
     if (fetchError) throw new Error(fetchError.message);
-
-    // If no circles exist, seed some default ones automatically
-    if (!circles || circles.length === 0) {
-      const { data: newCircle, error: insertError } = await db
-        .from("circles")
-        .insert({
-          name: "Family Circle",
-          creator_id: auth.user.id,
-          pool_balance: 150000,
-        })
-        .select()
-        .single();
-
-      if (!insertError && newCircle) {
-        await db.from("circle_members").insert({
-          circle_id: newCircle.id,
-          user_id: auth.user.id,
-        });
-
-        const { data: secondaryCircle, error: secInsertError } = await db
-          .from("circles")
-          .insert({
-            name: "Co-workers Pool",
-            creator_id: auth.user.id,
-            pool_balance: 320000,
-          })
-          .select()
-          .single();
-
-        if (!secInsertError && secondaryCircle) {
-          await db.from("circle_members").insert({
-            circle_id: secondaryCircle.id,
-            user_id: auth.user.id,
-          });
-        }
-
-        // Fetch again
-        const { data: reFetched } = await db
-          .from("circles")
-          .select("*")
-          .order("created_at", { ascending: true });
-        circles = reFetched || [];
-      }
-    }
 
     return NextResponse.json({ ok: true, circles });
   } catch (error) {
@@ -88,6 +74,10 @@ export async function POST(request: Request) {
     if ("response" in auth) return auth.response;
 
     const db = auth.supabase as any;
+    const profile = await readCircleProfile(db, auth.user.id);
+    if (!profile.group_lending_enabled) {
+      throw new Error("Enable group lending before using Me2U Circles.");
+    }
 
     const body = await request.json();
     const action = String(body.action || "").trim().toLowerCase();
@@ -119,13 +109,18 @@ export async function POST(request: Request) {
     if (action === "contribute") {
       const circleId = String(body.circleId || "").trim();
       const amount = readPositiveAmount(body.amount, "Contribution amount");
+      const pin = typeof body.pin === "string" ? body.pin.trim() : "";
 
       if (!circleId) throw new Error("Circle ID is required.");
+      if (!profile.kyc_verified) throw new Error("Complete KYC before contributing to a circle.");
+      if (!profile.transaction_pin) throw new Error("Set a transaction PIN before contributing to a circle.");
+      if (!verifyTransactionPin(profile.transaction_pin, auth.user.id, pin)) throw new Error("Incorrect transaction PIN.");
+      await assertWalletNotFrozen(db, auth.user.id);
 
       // Check user wallet balance
       const { data: wallet, error: walletError } = await db
         .from("wallets")
-        .select("balance")
+        .select("balance, locked")
         .eq("user_id", auth.user.id)
         .single();
 
@@ -145,12 +140,16 @@ export async function POST(request: Request) {
 
       // Deduct from wallet
       const newWalletBalance = wallet.balance - amount;
-      const { error: walletUpdateErr } = await db
+      const { data: updatedWallet, error: walletUpdateErr } = await db
         .from("wallets")
         .update({ balance: newWalletBalance })
-        .eq("user_id", auth.user.id);
+        .eq("user_id", auth.user.id)
+        .gte("balance", amount)
+        .select("balance")
+        .maybeSingle();
 
       if (walletUpdateErr) throw new Error(walletUpdateErr.message);
+      if (!updatedWallet) throw new Error("Insufficient wallet balance for contribution.");
 
       // Add to circle pool
       const newPoolBalance = Number(circle.pool_balance) + amount;
@@ -175,8 +174,13 @@ export async function POST(request: Request) {
     if (action === "borrow") {
       const circleId = String(body.circleId || "").trim();
       const amount = readPositiveAmount(body.amount, "Borrow amount");
+      const pin = typeof body.pin === "string" ? body.pin.trim() : "";
 
       if (!circleId) throw new Error("Circle ID is required.");
+      if (!profile.kyc_verified) throw new Error("Complete KYC before borrowing from a circle.");
+      if (!profile.transaction_pin) throw new Error("Set a transaction PIN before borrowing from a circle.");
+      if (!verifyTransactionPin(profile.transaction_pin, auth.user.id, pin)) throw new Error("Incorrect transaction PIN.");
+      await assertWalletNotFrozen(db, auth.user.id);
 
       // Check circle exists and has enough pool balance
       const { data: circle, error: circleError } = await db
@@ -201,12 +205,16 @@ export async function POST(request: Request) {
 
       // Deduct from circle pool
       const newPoolBalance = Number(circle.pool_balance) - amount;
-      const { error: circleUpdateErr } = await db
+      const { data: updatedCircle, error: circleUpdateErr } = await db
         .from("circles")
         .update({ pool_balance: newPoolBalance })
-        .eq("id", circleId);
+        .eq("id", circleId)
+        .gte("pool_balance", amount)
+        .select("pool_balance")
+        .maybeSingle();
 
       if (circleUpdateErr) throw new Error(circleUpdateErr.message);
+      if (!updatedCircle) throw new Error("Insufficient funds in circle pool to fulfill this borrow request.");
 
       // Add to user wallet
       const newWalletBalance = wallet.balance + amount;

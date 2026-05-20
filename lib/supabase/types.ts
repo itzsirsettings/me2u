@@ -150,6 +150,81 @@ export type NotificationRow = {
   created_at: string;
 };
 
+export type SavingsGoalRow = {
+  id: string;
+  user_id: string;
+  name: string;
+  target_amount: number;
+  current_amount: number;
+  locked: boolean;
+  status: "active" | "completed" | "withdrawn";
+  created_at: string;
+  updated_at: string;
+};
+
+export type MerchantDealRow = {
+  id: string;
+  merchant_name: string;
+  category: string;
+  title: string;
+  description: string;
+  discount_percent: number;
+  country_code: string;
+  active: boolean;
+  created_at: string;
+};
+
+export type MerchantDealClaimRow = {
+  id: string;
+  user_id: string;
+  deal_id: string;
+  status: "claimed" | "redeemed" | "expired";
+  created_at: string;
+};
+
+export type LearningProgressRow = {
+  user_id: string;
+  lesson_key: string;
+  completed_at: string;
+};
+
+export type SecurityEventRow = {
+  id: string;
+  user_id: string;
+  type:
+    | "wallet_frozen"
+    | "wallet_unfrozen"
+    | "fraud_reported"
+    | "recovery_requested"
+    | "trusted_device_reviewed"
+    | "session_reviewed"
+    | "mfa_started";
+  detail: string | null;
+  metadata: Json;
+  created_at: string;
+};
+
+export type UserSecuritySettingsRow = {
+  user_id: string;
+  wallet_frozen: boolean;
+  trusted_device_label: string | null;
+  updated_at: string;
+};
+
+export type SupportBeneficiaryRow = {
+  id: string;
+  sponsor_id: string;
+  beneficiary_name: string;
+  relationship: string;
+  purpose: string;
+  support_mode: "repayment" | "non_repayment";
+  verified: boolean;
+  last_support_amount: number;
+  spending_proof_url: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export interface Database {
   public: {
     Tables: {
@@ -298,6 +373,102 @@ export interface Database {
           created_at?: string;
         };
         Update: Partial<Omit<NotificationRow, "id" | "user_id" | "created_at">>;
+        Relationships: [];
+      };
+      savings_goals: {
+        Row: SavingsGoalRow;
+        Insert: {
+          id?: string;
+          user_id: string;
+          name: string;
+          target_amount: number;
+          current_amount?: number;
+          locked?: boolean;
+          status?: SavingsGoalRow["status"];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<SavingsGoalRow, "id" | "user_id" | "created_at">>;
+        Relationships: [];
+      };
+      merchant_deals: {
+        Row: MerchantDealRow;
+        Insert: {
+          id?: string;
+          merchant_name: string;
+          category: string;
+          title: string;
+          description: string;
+          discount_percent?: number;
+          country_code?: string;
+          active?: boolean;
+          created_at?: string;
+        };
+        Update: Partial<Omit<MerchantDealRow, "id" | "created_at">>;
+        Relationships: [];
+      };
+      merchant_deal_claims: {
+        Row: MerchantDealClaimRow;
+        Insert: {
+          id?: string;
+          user_id: string;
+          deal_id: string;
+          status?: MerchantDealClaimRow["status"];
+          created_at?: string;
+        };
+        Update: Partial<Omit<MerchantDealClaimRow, "id" | "user_id" | "deal_id" | "created_at">>;
+        Relationships: [];
+      };
+      learning_progress: {
+        Row: LearningProgressRow;
+        Insert: {
+          user_id: string;
+          lesson_key: string;
+          completed_at?: string;
+        };
+        Update: Partial<Omit<LearningProgressRow, "user_id" | "lesson_key">>;
+        Relationships: [];
+      };
+      security_events: {
+        Row: SecurityEventRow;
+        Insert: {
+          id?: string;
+          user_id: string;
+          type: SecurityEventRow["type"];
+          detail?: string | null;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Update: Partial<Omit<SecurityEventRow, "id" | "user_id" | "created_at">>;
+        Relationships: [];
+      };
+      user_security_settings: {
+        Row: UserSecuritySettingsRow;
+        Insert: {
+          user_id: string;
+          wallet_frozen?: boolean;
+          trusted_device_label?: string | null;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<UserSecuritySettingsRow, "user_id">>;
+        Relationships: [];
+      };
+      support_beneficiaries: {
+        Row: SupportBeneficiaryRow;
+        Insert: {
+          id?: string;
+          sponsor_id: string;
+          beneficiary_name: string;
+          relationship?: string;
+          purpose?: string;
+          support_mode?: SupportBeneficiaryRow["support_mode"];
+          verified?: boolean;
+          last_support_amount?: number;
+          spending_proof_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<SupportBeneficiaryRow, "id" | "sponsor_id" | "created_at">>;
         Relationships: [];
       };
     };

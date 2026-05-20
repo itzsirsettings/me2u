@@ -9,6 +9,7 @@ import {
 import { getPlatformLoanRetainedDeposit, repeatPlatformLoanMinimum } from "@/lib/loans";
 import { withdrawalFeeAmount } from "@/lib/revenue";
 import { getRequiredWithdrawalBalance } from "@/lib/withdrawal";
+import { verifyTransactionPin } from "@/lib/server/pin";
 
 export async function POST(request: Request) {
   try {
@@ -49,8 +50,19 @@ export async function POST(request: Request) {
     if (!profile.transaction_pin) {
       throw new Error("Please set a transaction PIN in your security settings first.");
     }
-    if (profile.transaction_pin !== pin) {
+    if (!verifyTransactionPin(profile.transaction_pin, auth.user.id, pin)) {
       throw new Error("Incorrect transaction PIN.");
+    }
+
+    const { data: securitySettings, error: securitySettingsError } = await auth.supabase
+      .from("user_security_settings")
+      .select("wallet_frozen")
+      .eq("user_id", auth.user.id)
+      .maybeSingle();
+
+    if (securitySettingsError) throw new Error(securitySettingsError.message);
+    if (securitySettings?.wallet_frozen) {
+      throw new Error("Your wallet is frozen. Unfreeze it from Security Center before requesting withdrawals.");
     }
 
     // Block if there are outstanding borrower loans (excluding onboarding credit of 2000)

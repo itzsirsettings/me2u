@@ -316,7 +316,7 @@ function toUser(profile: ProfileRow, wallet: WalletRow | null, affiliateRewards:
     partnerOfferConsentVersion: profile.partner_offer_consent_version,
     passportPhotoUrl: profile.passport_photo_url,
     role: profile.role,
-    transactionPin: profile.transaction_pin,
+    transactionPin: profile.transaction_pin ? "set" : null,
     groupLendingEnabled: Boolean(profile.group_lending_enabled),
     createdAt: profile.created_at,
   };

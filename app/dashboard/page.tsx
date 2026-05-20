@@ -6,6 +6,7 @@ import Icons8Icon, { type Icons8IconName } from "@/components/Icons8Icon";
 import NotificationBell from "@/components/NotificationBell";
 import { onboardingCreditAmount, registrationDepositAmount } from "@/lib/loans";
 import { useStore, type Transaction } from "@/lib/store";
+import { getCreditBuilderBadges, getCreditLevel, getTrustScoreBreakdown } from "@/lib/product-features";
 import { motion, type Variants } from "framer-motion";
 
 const serviceActions: Array<{
@@ -102,9 +103,12 @@ export default function Dashboard() {
   const balance = user?.balance || 0;
   const bankLabel = user?.bankName && user.accountNumber
     ? `${user.bankName} • ${user.accountNumber}`
-    : user?.kycVerified
+      : user?.kycVerified
       ? "Wallet account ready"
       : "Verify to add bank";
+  const creditLevel = getCreditLevel(user?.trustScore || 0);
+  const trustBreakdown = getTrustScoreBreakdown(user, transactions, activeLoans).slice(0, 4);
+  const creditBadges = getCreditBuilderBadges(user, transactions, activeLoans);
 
   if (!mounted || (!isAuthenticated && !isLoading)) return null;
 
@@ -213,6 +217,51 @@ export default function Dashboard() {
                 </span>
               </button>
             ))}
+          </motion.section>
+
+          <motion.section variants={itemVariants} className="mobile-soft-card min-w-0 p-3.5">
+            <div className="mb-3 flex min-w-0 items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[1rem] font-black tracking-normal">Me2U Trust Score</p>
+                <p className="mt-1 text-xs font-semibold text-[var(--color-text-secondary)]">
+                  {creditLevel.name} level • {creditLevel.next}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-[var(--color-positive-bg)] text-lg font-black text-[var(--color-positive-text)]"
+                onClick={() => router.push("/profile")}
+                title="Open profile"
+              >
+                {user?.trustScore || 0}
+              </button>
+            </div>
+            <div className="grid gap-2">
+              {trustBreakdown.map((item) => (
+                <div key={item.label} className="rounded-[12px] bg-[var(--mobile-surface-muted)] p-2.5">
+                  <div className="flex items-center justify-between gap-2 text-xs font-black">
+                    <span>{item.label}</span>
+                    <span>{item.earned}/{item.weight}</span>
+                  </div>
+                  <p className="mt-1 text-[11px] font-semibold text-[var(--color-text-secondary)]">{item.detail}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              {creditBadges.map((badge) => (
+                <div
+                  key={badge.label}
+                  className={`rounded-[12px] border p-2 text-xs ${
+                    badge.active
+                      ? "border-[var(--color-accent-primary)] bg-[var(--color-positive-bg)] text-[var(--color-positive-text)]"
+                      : "border-[var(--color-border)] bg-[var(--mobile-surface-muted)] text-[var(--color-text-secondary)]"
+                  }`}
+                >
+                  <p className="font-black">{badge.label}</p>
+                  <p className="mt-1 font-semibold">{badge.value}</p>
+                </div>
+              ))}
+            </div>
           </motion.section>
         </div>
 

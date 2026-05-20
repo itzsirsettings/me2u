@@ -6,8 +6,16 @@ import Icons8Icon from "@/components/Icons8Icon";
 import PwaInstallButton from "@/components/PwaInstallButton";
 import { visibleSecurityFeatures } from "@/lib/product-features";
 import { useStore } from "@/lib/store";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { PinInput } from "@/components/ui/PinInput";
+
+type SecurityEvent = {
+  id: string;
+  type: string;
+  detail: string | null;
+  created_at: string;
+};
 
 export default function SecurityPage() {
   const isAuthenticated = useStore((state) => state.isAuthenticated);
@@ -20,6 +28,13 @@ export default function SecurityPage() {
   const [pinInput, setPinInput] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
   const [pinLoading, setPinLoading] = useState(false);
+  const [securityEvents, setSecurityEvents] = useState<SecurityEvent[]>([]);
+  const [securityLoading, setSecurityLoading] = useState(false);
+  const [mfaFactorId, setMfaFactorId] = useState("");
+  const [mfaQr, setMfaQr] = useState("");
+  const [mfaSecret, setMfaSecret] = useState("");
+  const [mfaCode, setMfaCode] = useState("");
+  const [mfaLoading, setMfaLoading] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -36,6 +51,149 @@ export default function SecurityPage() {
       router.push("/login");
     }
   }, [mounted, isLoading, isAuthenticated, router]);
+
+  async function authorizedFetch(input: RequestInfo | URL, init: RequestInit = {}) {
+    const supabase = getSupabaseBrowserClient();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session?.access_token) throw new Error("Please log in first.");
+
+    return fetch(input, {
+      ...init,
+      headers: {
+        ...(init.headers || {}),
+        Authorization: `Bearer ${session.access_token}`,
+      },
+    });
+  }
+
+  const loadSecuritySettings = async () => {
+    if (!isAuthenticated) return;
+    setSecurityLoading(true);
+    try {
+      const response = await authorizedFetch("/api/security/actions");
+      const data = await response.json().catch(() => ({}));
+      if (data.ok) {
+        setWalletFrozen(Boolean(data.settings?.wallet_frozen));
+        setSecurityEvents(data.events || []);
+      }
+    } finally {
+      setSecurityLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (mounted && isAuthenticated) {
+      loadSecuritySettings().catch(() => {});
+    }
+  }, [mounted, isAuthenticated]);
+
+  async function recordSecurityAction(action: string, detail?: string) {
+    const response = await authorizedFetch("/api/security/actions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, detail }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.ok) {
+      throw new Error(typeof data.error === "string" ? data.error : "Unable to complete security action.");
+    }
+    await loadSecuritySettings();
+  }
+
+  async function startMfaEnrollment() {
+    setMfaLoading(true);
+    try {
+      await recordSecurityAction("start_mfa", "User opened authenticator app enrollment.");
+      const supabase = getSupabaseBrowserClient();
+      const { data, error } = await supabase.auth.mfa.enroll({ factorType: "totp" });
+      if (error) throw error;
+
+      setMfaFactorId(data.id);
+      setMfaSecret(data.totp.secret || "");
+      setMfaQr(data.totp.qr_code || "");
+      toast.success("Scan the QR code with an authenticator app.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to start two-factor setup.");
+    } finally {
+      setMfaLoading(false);
+    }
+  }
+
+  async function verifyMfaEnrollment() {
+    if (!mfaFactorId || mfaCode.length < 6) {
+      toast.error("Enter the 6-digit authenticator code.");
+      return;
+    }
+
+    setMfaLoading(true);
+    try {
+      const supabase = getSupabaseBrowserClient();
+      const challenge = await supabase.auth.mfa.challenge({ factorId: mfaFactorId });
+      if (challenge.error) throw challenge.error;
+
+      const verification = await supabase.auth.mfa.verify({
+        factorId: mfaFactorId,
+        challengeId: challenge.data.id,
+        code: mfaCode,
+      });
+      if (verification.error) throw verification.error;
+
+      setMfaFactorId("");
+      setMfaQr("");
+      setMfaSecret("");
+      setMfaCode("");
+      toast.success("Two-factor authentication is enabled.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to verify two-factor code.");
+    } finally {
+      setMfaLoading(false);
+    }
+  }
+
+  function handleFeatureAction(title: string) {
+    if (title === "Two-factor authentication") {
+      startMfaEnrollment().catch(() => {});
+      return;
+    }
+    if (title === "Withdrawal PIN" || title === "Transaction PIN") {
+      document.getElementById("transaction-pin-card")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    if (title === "Freeze wallet") {
+      recordSecurityAction(walletFrozen ? "unfreeze_wallet" : "freeze_wallet")
+        .then(() => toast.success(walletFrozen ? "Wallet unfrozen." : "Wallet frozen."))
+        .catch((error) => toast.error(error.message));
+      return;
+    }
+    if (title === "Fraud report") {
+      recordSecurityAction("report_fraud", "User flagged suspicious account or wallet activity.")
+        .then(() => toast.success("Fraud report recorded for support review."))
+        .catch((error) => toast.error(error.message));
+      return;
+    }
+    if (title === "Account recovery") {
+      recordSecurityAction("request_recovery", "User requested account recovery guidance.")
+        .then(() => toast.success("Recovery request recorded. Support will verify identity before changes."))
+        .catch((error) => toast.error(error.message));
+      return;
+    }
+    if (title === "Trusted devices") {
+      recordSecurityAction("review_trusted_device", "User reviewed trusted device controls.")
+        .then(() => toast.success("Trusted device review recorded."))
+        .catch((error) => toast.error(error.message));
+      return;
+    }
+    if (title === "Session history" || title === "Device login alerts" || title === "Suspicious login warning") {
+      recordSecurityAction("review_session", `User reviewed ${title.toLowerCase()}.`)
+        .then(() => toast.success("Session review recorded."))
+        .catch((error) => toast.error(error.message));
+      return;
+    }
+    toast.info(`${title} uses device support where available.`);
+  }
 
   if (!mounted || (!isAuthenticated && !isLoading)) return null;
 
@@ -72,15 +230,16 @@ export default function SecurityPage() {
               type="button"
               className={walletFrozen ? "btn-ghost min-h-11 w-full" : "btn-primary min-h-11 w-full"}
               onClick={() => {
-                setWalletFrozen((current) => !current);
-                toast.info(walletFrozen ? "Wallet freeze removed for this session." : "Wallet freeze marked for this session.");
+                recordSecurityAction(walletFrozen ? "unfreeze_wallet" : "freeze_wallet")
+                  .then(() => toast.success(walletFrozen ? "Wallet freeze removed." : "Wallet frozen. Outgoing wallet actions are paused."))
+                  .catch((error) => toast.error(error.message));
               }}
             >
               {walletFrozen ? "Unfreeze Wallet" : "Freeze Wallet"}
             </button>
           </article>
 
-          <article className="mobile-soft-card min-w-0 p-4">
+          <article id="transaction-pin-card" className="mobile-soft-card min-w-0 p-4 scroll-mt-24">
             <div className="mb-4 flex min-w-0 items-start justify-between gap-3">
               <div className="min-w-0">
                 <h2 className="text-lg font-black leading-tight tracking-normal">Transaction PIN</h2>
@@ -180,7 +339,7 @@ export default function SecurityPage() {
             <div className="rounded-[8px] bg-[var(--mobile-surface-muted)] p-3">
               <p className="text-sm font-black">This device</p>
               <p className="mt-1 text-xs leading-relaxed text-[var(--color-text-secondary)]">
-                Session history will show verified app sessions as they are recorded by the backend.
+                Session and security events are recorded below when sensitive controls are used.
               </p>
             </div>
           </article>
@@ -214,7 +373,7 @@ export default function SecurityPage() {
                   key={feature.title}
                   type="button"
                   className="flex min-w-0 items-start gap-3 rounded-[8px] border border-[var(--color-border)] bg-[var(--mobile-surface-muted)] p-3 text-left transition hover:bg-[var(--mobile-surface)] active:scale-[0.99]"
-                  onClick={() => toast.info(`${feature.title} setup will open when security enrollment is enabled.`)}
+                  onClick={() => handleFeatureAction(feature.title)}
                 >
                   <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--mobile-surface)] text-[var(--color-accent-primary)]">
                     <Icons8Icon name={feature.icon} size={18} />
@@ -234,7 +393,7 @@ export default function SecurityPage() {
             <button
               type="button"
               className="mobile-soft-card flex min-w-0 items-center justify-between gap-3 p-4 text-left transition active:scale-[0.99]"
-              onClick={() => toast.info("Account recovery will verify identity before access is restored.")}
+              onClick={() => handleFeatureAction("Account recovery")}
             >
               <span className="min-w-0">
                 <span className="block text-sm font-black">Account recovery</span>
@@ -245,7 +404,7 @@ export default function SecurityPage() {
             <button
               type="button"
               className="mobile-soft-card flex min-w-0 items-center justify-between gap-3 p-4 text-left transition active:scale-[0.99]"
-              onClick={() => toast.info("Fraud report will route suspicious activity to support review.")}
+              onClick={() => handleFeatureAction("Fraud report")}
             >
               <span className="min-w-0">
                 <span className="block text-sm font-black">Fraud report</span>
@@ -253,6 +412,71 @@ export default function SecurityPage() {
               </span>
               <Icons8Icon name="alert" size={22} className="shrink-0 text-[var(--color-negative-text)]" />
             </button>
+          </article>
+
+          {(mfaQr || mfaSecret) && (
+            <article className="mobile-soft-card min-w-0 p-4">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <h2 className="text-lg font-black leading-tight tracking-normal">Two-factor setup</h2>
+                  <p className="mt-1 text-xs leading-relaxed text-[var(--color-text-secondary)]">
+                    Scan this code in an authenticator app, then enter the 6-digit code.
+                  </p>
+                </div>
+                <Icons8Icon name="key" size={23} className="shrink-0 text-[var(--color-accent-primary)]" />
+              </div>
+              {mfaQr && (
+                <div className="rounded-[8px] bg-white p-3">
+                  <img
+                    alt="Two-factor QR code"
+                    className="mx-auto h-44 w-44"
+                    src={mfaQr.startsWith("<svg") ? `data:image/svg+xml;utf8,${encodeURIComponent(mfaQr)}` : mfaQr}
+                  />
+                </div>
+              )}
+              {mfaSecret && (
+                <p className="overflow-anywhere mt-3 rounded-[8px] bg-[var(--mobile-surface-muted)] p-3 text-xs font-semibold text-[var(--color-text-secondary)]">
+                  Manual secret: {mfaSecret}
+                </p>
+              )}
+              <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+                <input
+                  value={mfaCode}
+                  onChange={(event) => setMfaCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                  inputMode="numeric"
+                  maxLength={6}
+                  placeholder="000000"
+                  className="h-11 rounded-[8px] border border-[var(--color-border)] bg-[var(--mobile-surface-muted)] px-3 text-center font-mono text-lg tracking-[0.35em] focus:border-[var(--color-accent-primary)] focus:outline-none"
+                />
+                <button type="button" className="btn-primary min-h-11 px-4 text-sm" disabled={mfaLoading} onClick={verifyMfaEnrollment}>
+                  Verify
+                </button>
+              </div>
+            </article>
+          )}
+
+          <article className="mobile-soft-card min-w-0 p-4">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h2 className="text-lg font-black leading-tight tracking-normal">Security history</h2>
+              <span className="text-xs font-bold text-[var(--color-text-secondary)]">{securityLoading ? "Syncing" : `${securityEvents.length} events`}</span>
+            </div>
+            <div className="grid gap-2">
+              {securityEvents.length === 0 ? (
+                <p className="rounded-[8px] bg-[var(--mobile-surface-muted)] p-3 text-sm text-[var(--color-text-secondary)]">
+                  No security events recorded yet.
+                </p>
+              ) : (
+                securityEvents.map((event) => (
+                  <div key={event.id} className="rounded-[8px] bg-[var(--mobile-surface-muted)] p-3">
+                    <p className="text-sm font-black capitalize">{event.type.replaceAll("_", " ")}</p>
+                    <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
+                      {new Date(event.created_at).toLocaleString()}
+                    </p>
+                    {event.detail && <p className="mt-1 text-xs leading-relaxed text-[var(--color-text-secondary)]">{event.detail}</p>}
+                  </div>
+                ))
+              )}
+            </div>
           </article>
         </div>
       </section>

@@ -7,6 +7,7 @@ import {
 } from "@/lib/server/auth";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { getGoogleUserPassword } from "@/lib/server/auth-helpers";
+import { createTransactionPinVerifier } from "@/lib/server/pin";
 
 export async function POST(request: Request) {
   try {
@@ -59,7 +60,7 @@ export async function POST(request: Request) {
 
     const { error } = await auth.supabase
       .from("profiles")
-      .update({ transaction_pin: pin })
+      .update({ transaction_pin: createTransactionPinVerifier(auth.user.id, pin) })
       .eq("id", auth.user.id);
 
     if (error) throw new Error(error.message);

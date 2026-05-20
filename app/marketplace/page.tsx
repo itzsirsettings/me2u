@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import LoadingButton from "@/LoadingButton";
 import Icons8Icon, { type Icons8IconName } from "@/components/Icons8Icon";
@@ -14,6 +14,7 @@ import {
   marketplaceBoostDurationHours,
   marketplaceBoostFeeAmount,
 } from "@/lib/revenue";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type ListingType = "borrow_request" | "lending_offer";
 
@@ -63,29 +64,71 @@ export default function Marketplace() {
   const [selectedCircle, setSelectedCircle] = useState<any | null>(null);
   const [circleAction, setCircleAction] = useState<"contribute" | "borrow" | null>(null);
   const [actionAmount, setActionAmount] = useState(5000);
+  const [circlePin, setCirclePin] = useState("");
   const [submittingAction, setSubmittingAction] = useState(false);
   const [togglingGroupLending, setTogglingGroupLending] = useState(false);
 
-  const fetchCircles = async () => {
+  const authorizedFetch = useCallback(async (input: RequestInfo | URL, init: RequestInit = {}) => {
+    const supabase = getSupabaseBrowserClient();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session?.access_token) {
+      throw new Error("Please log in first.");
+    }
+
+    return fetch(input, {
+      ...init,
+      headers: {
+        ...(init.headers || {}),
+        Authorization: `Bearer ${session.access_token}`,
+      },
+    });
+  }, []);
+
+  const fetchCircles = useCallback(async () => {
     try {
       setCirclesLoading(true);
-      const res = await fetch("/api/circles");
+      const res = await authorizedFetch("/api/circles");
       const data = await res.json();
       if (data.ok) {
         setCircles(data.circles || []);
+      } else {
+        toast.error(data.error || "Unable to load circles.");
       }
     } catch (err) {
       console.error("Error fetching circles:", err);
     } finally {
       setCirclesLoading(false);
     }
-  };
+  }, [authorizedFetch]);
 
   useEffect(() => {
     if (user?.groupLendingEnabled) {
       fetchCircles().catch(() => {});
     }
-  }, [user?.groupLendingEnabled]);
+  }, [fetchCircles, user?.groupLendingEnabled]);
+
+  useEffect(() => {
+    if (!user?.groupLendingEnabled) return;
+
+    const supabase = getSupabaseBrowserClient();
+    const channel = supabase
+      .channel("me2u-circles-live")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "circles" },
+        () => {
+          fetchCircles().catch(() => {});
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchCircles, user?.groupLendingEnabled]);
 
   const handleToggleGroupLending = async () => {
     setTogglingGroupLending(true);
@@ -114,7 +157,7 @@ export default function Marketplace() {
     }
     setSubmittingAction(true);
     try {
-      const res = await fetch("/api/circles", {
+      const res = await authorizedFetch("/api/circles", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "create", name: newCircleName }),
@@ -141,15 +184,25 @@ export default function Marketplace() {
       toast.error("Please enter a positive amount.");
       return;
     }
+    if (!user?.transactionPin) {
+      toast.error("Set a transaction PIN before using circle funds.");
+      router.push("/security");
+      return;
+    }
+    if (!/^\d{4}$/.test(circlePin)) {
+      toast.error("Enter your 4-digit transaction PIN.");
+      return;
+    }
     setSubmittingAction(true);
     try {
-      const res = await fetch("/api/circles", {
+      const res = await authorizedFetch("/api/circles", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: circleAction,
           circleId: selectedCircle.id,
           amount: actionAmount,
+          pin: circlePin,
         }),
       });
       const data = await res.json();
@@ -161,6 +214,7 @@ export default function Marketplace() {
         );
         setSelectedCircle(null);
         setCircleAction(null);
+        setCirclePin("");
         fetchCircles().catch(() => {});
         // Load user again to refresh balance
         useStore.getState().loadCurrentUser().catch(() => {});
@@ -528,6 +582,7 @@ export default function Marketplace() {
                               setSelectedCircle(circle);
                               setCircleAction("contribute");
                               setActionAmount(5000);
+                              setCirclePin("");
                             }}
                           >
                             Contribute
@@ -539,6 +594,7 @@ export default function Marketplace() {
                               setSelectedCircle(circle);
                               setCircleAction("borrow");
                               setActionAmount(5000);
+                              setCirclePin("");
                             }}
                           >
                             Borrow
@@ -824,6 +880,7 @@ export default function Marketplace() {
                   onClick={() => {
                     setSelectedCircle(null);
                     setCircleAction(null);
+                    setCirclePin("");
                   }}
                 >
                   x
@@ -848,6 +905,27 @@ export default function Marketplace() {
                       : `Circle pool balance: ₦${Number(selectedCircle.pool_balance || 0).toLocaleString()}`}
                   </p>
                 </div>
+                {!user?.transactionPin ? (
+                  <div className="rounded-[8px] border border-[var(--color-warning-text)] bg-[var(--color-warning-bg)] p-3 text-xs font-semibold leading-relaxed text-[var(--color-warning-text)]">
+                    Set a transaction PIN in Security Center before moving circle funds.
+                  </div>
+                ) : (
+                  <div>
+                    <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
+                      Transaction PIN
+                    </label>
+                    <input
+                      type="password"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={4}
+                      placeholder="0000"
+                      value={circlePin}
+                      onChange={(event) => setCirclePin(event.target.value.replace(/\D/g, "").slice(0, 4))}
+                      className="h-11 w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 text-center font-mono text-lg tracking-[0.35em] focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none"
+                    />
+                  </div>
+                )}
                 <div className="flex gap-2">
                   <button
                     type="button"
@@ -855,13 +933,14 @@ export default function Marketplace() {
                     onClick={() => {
                       setSelectedCircle(null);
                       setCircleAction(null);
+                      setCirclePin("");
                     }}
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
-                    disabled={submittingAction || actionAmount <= 0}
+                    disabled={submittingAction || actionAmount <= 0 || !user?.transactionPin || circlePin.length !== 4}
                     className="btn-primary flex-1 min-h-11"
                     onClick={handleCircleAction}
                   >

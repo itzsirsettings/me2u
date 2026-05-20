@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Icons8Icon from "@/components/Icons8Icon";
 import { financialEducationLessons } from "@/lib/product-features";
 import { useStore } from "@/lib/store";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -16,6 +17,7 @@ export default function LearnPage() {
   const [mounted, setMounted] = useState(false);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(0);
   const [completedLessons, setCompletedLessons] = useState<string[]>([]);
+  const [progressLoading, setProgressLoading] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -26,6 +28,50 @@ export default function LearnPage() {
       router.push("/login");
     }
   }, [mounted, isLoading, isAuthenticated, router]);
+
+  async function authorizedFetch(input: RequestInfo | URL, init: RequestInit = {}) {
+    const supabase = getSupabaseBrowserClient();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session?.access_token) throw new Error("Please log in first.");
+
+    return fetch(input, {
+      ...init,
+      headers: {
+        ...(init.headers || {}),
+        Authorization: `Bearer ${session.access_token}`,
+      },
+    });
+  }
+
+  useEffect(() => {
+    if (!mounted || !isAuthenticated) return;
+
+    setProgressLoading(true);
+    authorizedFetch("/api/learn/progress")
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.ok) {
+          setCompletedLessons((data.progress || []).map((item: { lesson_key: string }) => item.lesson_key));
+        }
+      })
+      .catch(() => {})
+      .finally(() => setProgressLoading(false));
+  }, [mounted, isAuthenticated]);
+
+  async function saveLessonProgress(lessonKey: string, completed: boolean) {
+    const response = await authorizedFetch("/api/learn/progress", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lessonKey, completed }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.ok) {
+      throw new Error(typeof data.error === "string" ? data.error : "Unable to save lesson progress.");
+    }
+  }
 
   const completionPercent = useMemo(
     () => Math.round((completedLessons.length / financialEducationLessons.length) * 100),
@@ -53,6 +99,7 @@ export default function LearnPage() {
               <p className="text-sm font-black">Your learning progress</p>
               <p className="mt-1 text-xs font-medium text-[var(--color-text-secondary)]">
                 {user?.name || "Your profile"} • {completedLessons.length}/{financialEducationLessons.length} lessons
+                {progressLoading ? " • syncing" : ""}
               </p>
             </div>
             <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[var(--color-bg-secondary)] text-[var(--color-accent-primary)]">
@@ -149,13 +196,17 @@ export default function LearnPage() {
                               type="button"
                               className="btn-primary min-h-[2.5rem] w-full text-xs font-bold"
                               onClick={() => {
-                                setCompletedLessons((current) => [...current, lesson.title]);
-                                toast.success(`Completed: ${lesson.title}`);
-                                if (index < financialEducationLessons.length - 1) {
-                                  setExpandedIndex(index + 1);
-                                } else {
-                                  setExpandedIndex(null);
-                                }
+                                saveLessonProgress(lesson.title, true)
+                                  .then(() => {
+                                    setCompletedLessons((current) => [...new Set([...current, lesson.title])]);
+                                    toast.success(`Completed: ${lesson.title}`);
+                                    if (index < financialEducationLessons.length - 1) {
+                                      setExpandedIndex(index + 1);
+                                    } else {
+                                      setExpandedIndex(null);
+                                    }
+                                  })
+                                  .catch((error) => toast.error(error.message));
                               }}
                             >
                               Mark as Completed
@@ -165,8 +216,12 @@ export default function LearnPage() {
                               type="button"
                               className="btn-ghost min-h-[2.5rem] w-full text-xs font-bold text-[var(--color-positive-text)]"
                               onClick={() => {
-                                setCompletedLessons((current) => current.filter((t) => t !== lesson.title));
-                                toast.success("Marked as uncompleted.");
+                                saveLessonProgress(lesson.title, false)
+                                  .then(() => {
+                                    setCompletedLessons((current) => current.filter((t) => t !== lesson.title));
+                                    toast.success("Marked as uncompleted.");
+                                  })
+                                  .catch((error) => toast.error(error.message));
                               }}
                             >
                               Completed (Tap to Undo)

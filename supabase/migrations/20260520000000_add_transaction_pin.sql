@@ -1,1 +1,1 @@
-ALTER TABLE public.profiles ADD COLUMN transaction_pin text;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS transaction_pin text;
