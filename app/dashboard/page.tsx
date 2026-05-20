@@ -28,7 +28,7 @@ const simpleShortcuts: Array<{
   icon: Icons8IconName;
   tone: string;
 }> = [
-  { label: "Profile", path: "/profile", icon: "profile", tone: "bg-[#dcecff] text-[#00406b]" },
+  { label: "Support", path: "/support", icon: "support", tone: "bg-[#dcecff] text-[#00406b]" },
   { label: "Learn", path: "/learn", icon: "book", tone: "bg-[#e8f7f0] text-[#005f46]" },
   { label: "Secure", path: "/security", icon: "security", tone: "bg-[#eee9ff] text-[#07026f]" },
 ];
@@ -128,14 +128,6 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
-          <button
-            type="button"
-            className="mobile-icon-button"
-            aria-label="Open profile"
-            onClick={() => router.push("/profile")}
-          >
-            <Icons8Icon name="profile" size={24} />
-          </button>
           <NotificationBell />
         </div>
       </motion.header>

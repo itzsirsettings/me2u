@@ -100,6 +100,7 @@ export interface User {
   passportPhotoUrl: string | null;
   role: "user" | "admin";
   transactionPin: string | null;
+  groupLendingEnabled: boolean;
   createdAt: string;
 }
 
@@ -136,7 +137,8 @@ interface AppStore {
   requestPlatformLoan: (amount?: number) => Promise<ActionResult>;
   repayLoan: (loanId: string) => Promise<ActionResult>;
   payBill: (amount: number, serviceLabel: string, detail: string, pin?: string) => Promise<ActionResult>;
-  setTransactionPin: (pin: string) => Promise<ActionResult>;
+  setTransactionPin: (pin: string, password: string) => Promise<ActionResult>;
+  toggleGroupLending: () => Promise<ActionResult>;
   deleteNotification: (id: string) => Promise<ActionResult>;
   clearAllNotifications: () => Promise<ActionResult>;
 }
@@ -315,6 +317,7 @@ function toUser(profile: ProfileRow, wallet: WalletRow | null, affiliateRewards:
     passportPhotoUrl: profile.passport_photo_url,
     role: profile.role,
     transactionPin: profile.transaction_pin,
+    groupLendingEnabled: Boolean(profile.group_lending_enabled),
     createdAt: profile.created_at,
   };
 }
@@ -454,6 +457,9 @@ export const useStore = create<AppStore>((set, get) => ({
       });
 
       if (error) throw error;
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("me2u_session_password", password);
+      }
       const loadResult = await get().loadCurrentUser();
       if (!loadResult.ok) {
         await supabase.auth.signOut();
@@ -669,9 +675,16 @@ export const useStore = create<AppStore>((set, get) => ({
     return result;
   },
 
-  setTransactionPin: async (pin) => {
+  setTransactionPin: async (pin, password) => {
     if (!hasSupabaseConfig()) return missingSupabaseResult;
-    const result = await postAuthenticatedJson("/api/security/pin", { pin });
+    const result = await postAuthenticatedJson("/api/security/pin", { pin, password });
+    if (result.ok) await get().loadCurrentUser();
+    return result;
+  },
+
+  toggleGroupLending: async () => {
+    if (!hasSupabaseConfig()) return missingSupabaseResult;
+    const result = await postAuthenticatedJson("/api/security/group-lending", {});
     if (result.ok) await get().loadCurrentUser();
     return result;
   },

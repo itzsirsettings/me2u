@@ -7,6 +7,7 @@ import PwaInstallButton from "@/components/PwaInstallButton";
 import { visibleSecurityFeatures } from "@/lib/product-features";
 import { useStore } from "@/lib/store";
 import { toast } from "sonner";
+import { PinInput } from "@/components/ui/PinInput";
 
 export default function SecurityPage() {
   const isAuthenticated = useStore((state) => state.isAuthenticated);
@@ -17,10 +18,17 @@ export default function SecurityPage() {
   const [mounted, setMounted] = useState(false);
   const [walletFrozen, setWalletFrozen] = useState(false);
   const [pinInput, setPinInput] = useState("");
+  const [passwordInput, setPasswordInput] = useState("");
   const [pinLoading, setPinLoading] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    if (typeof window !== "undefined") {
+      const cached = sessionStorage.getItem("me2u_session_password");
+      if (cached) {
+        setPasswordInput(cached);
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -103,36 +111,55 @@ export default function SecurityPage() {
                   toast.error("PIN must be exactly 4 digits.");
                   return;
                 }
+                if (!passwordInput) {
+                  toast.error("Please enter your account password to verify identity.");
+                  return;
+                }
                 setPinLoading(true);
-                const res = await setTransactionPin(pinInput);
+                const res = await setTransactionPin(pinInput, passwordInput);
                 setPinLoading(false);
                 if (res.ok) {
                   toast.success("Transaction PIN updated successfully.");
                   setPinInput("");
+                  // Clear password input unless cached in sessionStorage
+                  if (typeof window !== "undefined" && !sessionStorage.getItem("me2u_session_password")) {
+                    setPasswordInput("");
+                  }
                 } else {
                   toast.error(res.error || "Failed to update PIN.");
                 }
               }}
-              className="space-y-3"
+              className="space-y-4"
             >
-              <div>
+              <div className="space-y-1.5 text-left">
+                <label className="text-xs font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
+                  Account Password
+                </label>
                 <input
                   type="password"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  maxLength={4}
-                  placeholder={user?.transactionPin ? "Enter new 4-digit PIN" : "Create 4-digit PIN"}
-                  value={pinInput}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/\D/g, "");
-                    if (val.length <= 4) setPinInput(val);
-                  }}
-                  className="w-full rounded-[8px] border border-[var(--color-border)] bg-[var(--mobile-surface-muted)] px-3.5 py-2.5 font-mono text-center text-lg tracking-[0.4em] focus:border-[var(--color-accent-primary)] focus:outline-none"
+                  placeholder="Enter account password to verify"
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  className="w-full rounded-[8px] border border-[var(--color-border)] bg-[var(--mobile-surface-muted)] px-3.5 py-2.5 text-sm focus:border-[var(--color-accent-primary)] focus:outline-none"
+                  required
                 />
               </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold uppercase tracking-wider text-[var(--color-text-secondary)] text-left mb-1">
+                  {user?.transactionPin ? "New 4-Digit PIN" : "Create 4-Digit PIN"}
+                </label>
+                <PinInput
+                  value={pinInput}
+                  onChange={setPinInput}
+                  secure
+                  disabled={pinLoading}
+                />
+              </div>
+
               <button
                 type="submit"
-                disabled={pinLoading || pinInput.length !== 4}
+                disabled={pinLoading || pinInput.length !== 4 || !passwordInput}
                 className="btn-primary min-h-11 w-full text-sm font-bold disabled:opacity-50"
               >
                 {pinLoading ? "Updating..." : user?.transactionPin ? "Change PIN" : "Set PIN"}

@@ -5,6 +5,8 @@ import {
   requireAuthenticatedUser,
   tooManyRequestsResponse,
 } from "@/lib/server/auth";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { getGoogleUserPassword } from "@/lib/server/auth-helpers";
 
 export async function POST(request: Request) {
   try {
@@ -22,9 +24,37 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const pin = typeof body.pin === "string" ? body.pin.trim() : "";
+    const password = typeof body.password === "string" ? body.password : "";
 
     if (!/^\d{4}$/.test(pin)) {
       throw new Error("Transaction PIN must be a 4-digit number.");
+    }
+
+    if (!password) {
+      throw new Error("Password is required to change or reset your transaction PIN.");
+    }
+
+    // Verify user password by attempting to sign in using standard anon client
+    const client = getSupabaseBrowserClient();
+    let { error: signInError } = await client.auth.signInWithPassword({
+      email: auth.user.email!,
+      password: password,
+    });
+
+    if (signInError) {
+      // Try Google deterministic password
+      const googlePassword = getGoogleUserPassword(auth.user.email!);
+      const { error: googleSignInError } = await client.auth.signInWithPassword({
+        email: auth.user.email!,
+        password: googlePassword,
+      });
+      if (!googleSignInError) {
+        signInError = null;
+      }
+    }
+
+    if (signInError) {
+      throw new Error("Incorrect password. Please verify and try again.");
     }
 
     const { error } = await auth.supabase

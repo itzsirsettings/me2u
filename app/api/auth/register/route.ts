@@ -228,6 +228,7 @@ export async function POST(request: Request) {
       passport_photo_url: null,
       transaction_pin: null,
       role: "user",
+      group_lending_enabled: false,
     });
 
     if (profileError) {

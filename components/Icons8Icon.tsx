@@ -44,6 +44,7 @@ export const icons8Icons = {
   download: "https://img.icons8.com/material-outlined/96/download.png",
   mobile: "https://img.icons8.com/material-outlined/96/iphone.png",
   bell: "https://img.icons8.com/material-outlined/96/appointment-reminders.png",
+  support: "https://img.icons8.com/material-outlined/96/help.png",
 } as const;
 
 export type Icons8IconName = keyof typeof icons8Icons;

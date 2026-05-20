@@ -39,6 +39,7 @@ export default function Marketplace() {
   const acceptMarketplaceItem = useStore((state) => state.acceptMarketplaceItem);
   const createMarketplaceItem = useStore((state) => state.createMarketplaceItem);
   const user = useStore((state) => state.user);
+  const toggleGroupLending = useStore((state) => state.toggleGroupLending);
   const isAuthenticated = useStore((state) => state.isAuthenticated);
   const isLoading = useStore((state) => state.isLoading);
   const router = useRouter();
@@ -54,6 +55,124 @@ export default function Marketplace() {
     days: loanDurationMaxDays,
     boost: false,
   });
+
+  const [circles, setCircles] = useState<any[]>([]);
+  const [circlesLoading, setCirclesLoading] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newCircleName, setNewCircleName] = useState("");
+  const [selectedCircle, setSelectedCircle] = useState<any | null>(null);
+  const [circleAction, setCircleAction] = useState<"contribute" | "borrow" | null>(null);
+  const [actionAmount, setActionAmount] = useState(5000);
+  const [submittingAction, setSubmittingAction] = useState(false);
+  const [togglingGroupLending, setTogglingGroupLending] = useState(false);
+
+  const fetchCircles = async () => {
+    try {
+      setCirclesLoading(true);
+      const res = await fetch("/api/circles");
+      const data = await res.json();
+      if (data.ok) {
+        setCircles(data.circles || []);
+      }
+    } catch (err) {
+      console.error("Error fetching circles:", err);
+    } finally {
+      setCirclesLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user?.groupLendingEnabled) {
+      fetchCircles().catch(() => {});
+    }
+  }, [user?.groupLendingEnabled]);
+
+  const handleToggleGroupLending = async () => {
+    setTogglingGroupLending(true);
+    try {
+      const res = await toggleGroupLending();
+      if (res.ok) {
+        toast.success(
+          user?.groupLendingEnabled
+            ? "Group lending disabled."
+            : "Group lending enabled successfully! Welcome to Circles."
+        );
+      } else {
+        toast.error(res.error || "Failed to toggle group lending.");
+      }
+    } catch (err) {
+      toast.error("An error occurred while toggling group lending.");
+    } finally {
+      setTogglingGroupLending(false);
+    }
+  };
+
+  const handleCreateCircle = async () => {
+    if (!newCircleName.trim()) {
+      toast.error("Please enter a circle name.");
+      return;
+    }
+    setSubmittingAction(true);
+    try {
+      const res = await fetch("/api/circles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "create", name: newCircleName }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        toast.success(`Circle "${newCircleName}" created!`);
+        setNewCircleName("");
+        setShowCreateModal(false);
+        fetchCircles().catch(() => {});
+      } else {
+        toast.error(data.error || "Failed to create circle.");
+      }
+    } catch (err) {
+      toast.error("An error occurred while creating the circle.");
+    } finally {
+      setSubmittingAction(false);
+    }
+  };
+
+  const handleCircleAction = async () => {
+    if (!selectedCircle || !circleAction) return;
+    if (actionAmount <= 0) {
+      toast.error("Please enter a positive amount.");
+      return;
+    }
+    setSubmittingAction(true);
+    try {
+      const res = await fetch("/api/circles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: circleAction,
+          circleId: selectedCircle.id,
+          amount: actionAmount,
+        }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        toast.success(
+          circleAction === "contribute"
+            ? `Successfully contributed ₦${actionAmount.toLocaleString()} to ${selectedCircle.name}`
+            : `Successfully borrowed ₦${actionAmount.toLocaleString()} from ${selectedCircle.name}`
+        );
+        setSelectedCircle(null);
+        setCircleAction(null);
+        fetchCircles().catch(() => {});
+        // Load user again to refresh balance
+        useStore.getState().loadCurrentUser().catch(() => {});
+      } else {
+        toast.error(data.error || `Failed to ${circleAction}.`);
+      }
+    } catch (err) {
+      toast.error(`An error occurred during the ${circleAction}.`);
+    } finally {
+      setSubmittingAction(false);
+    }
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -334,28 +453,118 @@ export default function Marketplace() {
           </div>
         </Card>
 
-        <Card className="kinetic-border bg-[var(--color-bg-card)] p-5 shadow-[4px_4px_0px_var(--color-shadow)] md:p-6">
-          <div className="mb-4 flex min-w-0 items-start justify-between gap-3">
-            <div className="min-w-0">
-              <h2 className="text-xl font-display leading-none md:text-3xl">Me2U Circles</h2>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">
-                Create private lending groups for trusted communities and improve group trust over time.
-              </p>
+        <Card className="kinetic-border bg-[var(--color-bg-card)] p-5 shadow-[4px_4px_0px_var(--color-shadow)] md:p-6 flex flex-col justify-between">
+          <div>
+            <div className="mb-4 flex min-w-0 items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="text-xl font-display leading-none md:text-3xl">Me2U Circles</h2>
+                <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">
+                  Pool funds with trusted groups, contribute to pools, or borrow instantly at 0% interest.
+                </p>
+              </div>
+              <Icons8Icon name="group" size={28} className="shrink-0 text-[var(--color-accent-primary)]" />
             </div>
-            <Icons8Icon name="group" size={28} className="shrink-0 text-[var(--color-accent-primary)]" />
+
+            {!user?.groupLendingEnabled ? (
+              <div className="rounded-[8px] bg-[var(--color-bg-secondary)] p-4 text-center my-4">
+                <p className="text-sm leading-relaxed text-[var(--color-text-secondary)] mb-4">
+                  Group lending is currently disabled. Enable it to join and manage peer circles.
+                </p>
+                <button
+                  type="button"
+                  disabled={togglingGroupLending}
+                  className="btn-primary w-full py-2.5 text-sm"
+                  onClick={handleToggleGroupLending}
+                >
+                  {togglingGroupLending ? "Enabling..." : "Enable Group Lending"}
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3 my-4">
+                <div className="flex justify-between items-center pb-2 border-b border-[var(--color-border)]">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
+                    Active Pools ({circles.length})
+                  </span>
+                  <button
+                    type="button"
+                    className="text-xs font-bold text-[var(--color-accent-primary)] hover:underline"
+                    onClick={() => setShowCreateModal(true)}
+                  >
+                    + New Circle
+                  </button>
+                </div>
+
+                <div className="space-y-3 max-h-[190px] overflow-y-auto pr-1">
+                  {circlesLoading ? (
+                    <div className="text-center py-6 text-sm text-[var(--color-text-secondary)]">
+                      Loading circles...
+                    </div>
+                  ) : circles.length === 0 ? (
+                    <div className="text-center py-6 text-sm italic text-[var(--color-text-secondary)]">
+                      No active circles. Create one to begin!
+                    </div>
+                  ) : (
+                    circles.map((circle) => (
+                      <div
+                        key={circle.id}
+                        className="flex flex-col gap-2 rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3 text-left"
+                      >
+                        <div className="flex justify-between items-start gap-2">
+                          <div>
+                            <b className="block text-sm text-[var(--color-text-primary)]">{circle.name}</b>
+                            <span className="text-[10px] text-[var(--color-text-secondary)]">
+                              {circle.creator_id === user.id ? "Created by you" : "Member"}
+                            </span>
+                          </div>
+                          <span className="font-mono text-sm font-bold text-[var(--color-positive-text)]">
+                            ₦{Number(circle.pool_balance || 0).toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="flex gap-2 mt-1">
+                          <button
+                            type="button"
+                            className="btn-primary flex-1 py-1.5 text-xs h-auto min-h-0"
+                            onClick={() => {
+                              setSelectedCircle(circle);
+                              setCircleAction("contribute");
+                              setActionAmount(5000);
+                            }}
+                          >
+                            Contribute
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-ghost flex-1 py-1.5 text-xs h-auto min-h-0 border border-[var(--color-border)] bg-[var(--color-bg-card)]"
+                            onClick={() => {
+                              setSelectedCircle(circle);
+                              setCircleAction("borrow");
+                              setActionAmount(5000);
+                            }}
+                          >
+                            Borrow
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            {circleTypes.map((circle) => (
+
+          {user?.groupLendingEnabled && (
+            <div className="border-t border-[var(--color-border)] pt-3 mt-auto flex justify-between items-center text-xs">
+              <span className="text-[var(--color-text-secondary)]">Group Lending Active</span>
               <button
-                key={circle}
                 type="button"
-                className="min-h-11 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 text-left text-xs font-bold transition hover:bg-[var(--color-hover-soft)]"
-                onClick={() => toast.info(`${circle} setup will open when group lending is enabled.`)}
+                disabled={togglingGroupLending}
+                className="text-[var(--color-negative-text)] hover:underline font-bold"
+                onClick={handleToggleGroupLending}
               >
-                {circle}
+                Disable
               </button>
-            ))}
-          </div>
+            </div>
+          )}
         </Card>
       </motion.div>
 
@@ -530,6 +739,140 @@ export default function Marketplace() {
               >
                 Confirm
               </button>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {showCreateModal && (
+          <motion.div
+            className="fixed inset-0 z-[70] grid place-items-end bg-[var(--color-scrim)] px-3.5 pb-3.5 md:place-items-center md:p-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="w-full max-w-md rounded-[22px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-5 shadow-[0_18px_48px_rgba(0,64,107,0.22)] md:rounded-[8px] md:p-6"
+              initial={{ y: 40, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 40, opacity: 0 }}
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-lg font-display">Create Me2U Circle</h3>
+                <button
+                  type="button"
+                  className="grid h-8 w-8 place-items-center rounded-full bg-[var(--color-bg-secondary)] text-sm font-black"
+                  onClick={() => setShowCreateModal(false)}
+                >
+                  x
+                </button>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
+                    Circle Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Family Fund, Business Partners"
+                    className="h-11 w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 text-sm focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none"
+                    value={newCircleName}
+                    onChange={(e) => setNewCircleName(e.target.value)}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    className="btn-ghost flex-1 min-h-11"
+                    onClick={() => setShowCreateModal(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={submittingAction || !newCircleName.trim()}
+                    className="btn-primary flex-1 min-h-11"
+                    onClick={handleCreateCircle}
+                  >
+                    {submittingAction ? "Creating..." : "Create Circle"}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {selectedCircle && circleAction && (
+          <motion.div
+            className="fixed inset-0 z-[70] grid place-items-end bg-[var(--color-scrim)] px-3.5 pb-3.5 md:place-items-center md:p-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="w-full max-w-md rounded-[22px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-5 shadow-[0_18px_48px_rgba(0,64,107,0.22)] md:rounded-[8px] md:p-6"
+              initial={{ y: 40, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 40, opacity: 0 }}
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-lg font-display capitalize">
+                  {circleAction} to {selectedCircle.name}
+                </h3>
+                <button
+                  type="button"
+                  className="grid h-8 w-8 place-items-center rounded-full bg-[var(--color-bg-secondary)] text-sm font-black"
+                  onClick={() => {
+                    setSelectedCircle(null);
+                    setCircleAction(null);
+                  }}
+                >
+                  x
+                </button>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
+                    Amount (₦)
+                  </label>
+                  <input
+                    type="number"
+                    min="100"
+                    step="100"
+                    className="h-11 w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 font-mono text-lg focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none"
+                    value={actionAmount}
+                    onChange={(e) => setActionAmount(Math.max(0, Number(e.target.value)))}
+                  />
+                  <p className="mt-1.5 text-xs text-[var(--color-text-secondary)]">
+                    {circleAction === "contribute"
+                      ? `Your wallet balance: ₦${Number(user?.balance || 0).toLocaleString()}`
+                      : `Circle pool balance: ₦${Number(selectedCircle.pool_balance || 0).toLocaleString()}`}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    className="btn-ghost flex-1 min-h-11"
+                    onClick={() => {
+                      setSelectedCircle(null);
+                      setCircleAction(null);
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={submittingAction || actionAmount <= 0}
+                    className="btn-primary flex-1 min-h-11"
+                    onClick={handleCircleAction}
+                  >
+                    {submittingAction
+                      ? "Processing..."
+                      : circleAction === "contribute"
+                      ? "Contribute"
+                      : "Borrow"}
+                  </button>
+                </div>
+              </div>
             </motion.div>
           </motion.div>
         )}

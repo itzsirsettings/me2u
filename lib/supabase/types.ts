@@ -35,6 +35,7 @@ export type ProfileRow = {
   passport_photo_url: string | null;
   role: "user" | "admin";
   transaction_pin: string | null;
+  group_lending_enabled: boolean;
   created_at: string;
   updated_at: string;
 };
