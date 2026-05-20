@@ -7,3 +7,5 @@ out
 .env.*.local
 supabase/.temp/
 tsconfig.tsbuildinfo
+playwright-report/
+test-results/
