@@ -158,9 +158,6 @@ export default function AdvancedToolsSection() {
                   viewport={{ once: true, margin: "-100px" }}
                   transition={{ duration: 0.6 }}
                 >
-                  <span className="inline-block px-4 py-2 bg-slate-100 text-blue-600 font-bold text-sm rounded-full mb-6">
-                    {tool.tag}
-                  </span>
                   <h3 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-6 tracking-tight leading-tight">
                     {tool.title}
                   </h3>

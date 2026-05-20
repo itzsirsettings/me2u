@@ -113,9 +113,6 @@ export default function PublicProofSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <span className="inline-block px-4 py-2 bg-white/10 text-emerald-400 font-bold text-sm rounded-full mb-6">
-              Public proof
-            </span>
             <h2 className="text-3xl md:text-5xl font-extrabold mb-6 tracking-tight">
               Real trust numbers, never inflated.
             </h2>
@@ -152,9 +149,6 @@ export default function PublicProofSection() {
             viewport={{ once: true }}
             className="bg-white/5 border border-white/10 rounded-[2.5rem] p-10 md:p-12"
           >
-            <span className="inline-block px-4 py-2 bg-blue-500/20 text-blue-400 font-bold text-sm rounded-full mb-6">
-              Success stories
-            </span>
             <h2 className="text-3xl font-extrabold mb-6">Testimonials only after real consent.</h2>
             <p className="text-slate-400 font-medium leading-relaxed">
               User stories should come from verified borrowers, lenders, referrers, and savers who agree to be featured. Until then, Me2U should leave this section as a consent-based publishing queue instead of inventing quotes.
@@ -168,19 +162,19 @@ export default function PublicProofSection() {
             transition={{ delay: 0.1 }}
             className="bg-white/5 border border-white/10 rounded-[2.5rem] p-10 md:p-12"
           >
-            <span className="inline-block px-4 py-2 bg-emerald-500/20 text-emerald-400 font-bold text-sm rounded-full mb-6">
-              Native app readiness
-            </span>
             <h2 className="text-3xl font-extrabold mb-6">Install now, stores when approved.</h2>
-            <p className="text-slate-400 font-medium leading-relaxed mb-8">
-              Me2U is PWA-ready for supported browsers. Android, iPhone, push notifications, ratings, and store listings should launch only when the production app, compliance notices, and approved store assets are ready.
+            <p className="text-slate-400 font-medium leading-relaxed mb-4">
+              Me2U is PWA-ready for supported browsers. Real-world airtime, data, electricity, remittance, and app-store distribution require provider credentials, compliance approval, and production contracts before any funds can move outside Me2U’s internal wallet ledger.
+            </p>
+            <p className="text-slate-400 text-sm font-medium leading-relaxed mb-8">
+              Until those external integrations are fully approved, Me2U keeps money inside the wallet ledger and only publishes external service readiness after partner validation.
             </p>
             <div className="flex flex-wrap gap-4">
               <button className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold transition-colors flex items-center gap-3">
-                <span>↗</span> Start with Web app
+                <span>↗</span> Use web wallet
               </button>
               <button className="px-6 py-3 bg-white/5 border border-white/10 text-slate-500 cursor-not-allowed rounded-xl font-bold flex items-center gap-3">
-                <span>◎</span> Prepare for App stores
+                <span>◎</span> Await external approval
               </button>
             </div>
           </motion.div>
