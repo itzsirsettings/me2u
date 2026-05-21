@@ -22,7 +22,7 @@ export default function LandingHeader() {
     <>
       <header
         className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
-          scrolled ? "bg-white/80 backdrop-blur-md shadow-sm py-3" : "bg-transparent py-5"
+          scrolled ? "bg-white/80 backdrop-blur-md shadow-sm py-1.5" : "bg-transparent py-3"
         }`}
       >
         <div className="container mx-auto px-4 md:px-6 flex items-center justify-between">
@@ -31,15 +31,15 @@ export default function LandingHeader() {
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden lg:flex items-center gap-8">
+          <nav className="hidden lg:flex items-center gap-6">
             <div 
               className="relative"
               onMouseEnter={() => setProductsOpen(true)}
               onMouseLeave={() => setProductsOpen(false)}
             >
-              <button className="flex items-center gap-1 font-medium text-slate-700 hover:text-blue-600 transition-colors py-2">
+              <button className="flex items-center gap-1 font-medium text-sm text-slate-700 hover:text-blue-600 transition-colors py-1.5">
                 Products
-                <svg className={`w-4 h-4 transition-transform duration-200 ${productsOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className={`w-3.5 h-3.5 transition-transform duration-200 ${productsOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
@@ -94,22 +94,22 @@ export default function LandingHeader() {
                 )}
               </AnimatePresence>
             </div>
-            <Link href="/security" className="font-medium text-slate-700 hover:text-blue-600 transition-colors">
+            <Link href="/security" className="font-medium text-sm text-slate-700 hover:text-blue-600 transition-colors">
               Security
             </Link>
-            <Link href="/#faqs" className="font-medium text-slate-700 hover:text-blue-600 transition-colors">
+            <Link href="/#faqs" className="font-medium text-sm text-slate-700 hover:text-blue-600 transition-colors">
               FAQs
             </Link>
-            <Link href="/support" className="font-medium text-slate-700 hover:text-blue-600 transition-colors">
+            <Link href="/support" className="font-medium text-sm text-slate-700 hover:text-blue-600 transition-colors">
               Support
             </Link>
           </nav>
 
           <div className="hidden lg:flex items-center gap-4">
-            <Link href="/login" className="font-medium text-slate-700 hover:text-blue-600 transition-colors">
+            <Link href="/login" className="font-medium text-sm text-slate-700 hover:text-blue-600 transition-colors">
               Login
             </Link>
-            <Link href="/register" className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-all shadow-sm hover:shadow active:scale-95">
+            <Link href="/register" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-xl transition-all shadow-sm hover:shadow active:scale-95">
               Create Account
             </Link>
           </div>
