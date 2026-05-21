@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 
 type PlatformMetrics = {
   processedAmount: number;
