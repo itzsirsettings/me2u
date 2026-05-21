@@ -66,20 +66,22 @@ function StatusBar() {
 
 function Header() {
   return (
-    <div className="flex items-center justify-between px-[28px] pt-[7px]">
+    <div className="flex items-center justify-between px-[28px] pt-[12px]">
       <div className="flex items-center gap-[13px]">
-        <div className="grid h-[58px] w-[58px] place-items-center rounded-full bg-[#24c45a] text-[26px] font-black text-white shadow-sm">
-          C
+        <div className="relative h-[58px] w-[58px] overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm">
+          <BrandLogo className="h-full w-full p-2" imageClassName="h-full w-full" />
         </div>
-        <div className="-mt-[2px] leading-[1.04]">
-          <p className="text-[21px] font-bold tracking-[-0.02em] text-slate-900">Welcome</p>
-          <p className="text-[29px] font-black tracking-[-0.055em] text-slate-950">@chibaby</p>
+        <div className="-mt-[2px] leading-[1.1]">
+          <p className="text-[14px] font-medium tracking-wide text-slate-500 uppercase">Welcome back</p>
+          <p className="text-[24px] font-bold tracking-tight text-slate-900">@chibaby</p>
         </div>
       </div>
 
-      <div className="relative grid h-[57px] w-[57px] place-items-center rounded-full bg-white shadow-sm">
-        <Bell size={29} strokeWidth={2.55} className="text-slate-950" />
-        <span className="absolute right-[13px] top-[8px] text-[12px] font-black leading-none text-red-500">8</span>
+      <div className="relative grid h-[52px] w-[52px] place-items-center rounded-2xl bg-white border border-slate-100 shadow-sm">
+        <Bell size={24} strokeWidth={2} className="text-slate-900" />
+        <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-[11px] font-bold text-white ring-4 ring-[#eef7ff]">
+          8
+        </span>
       </div>
     </div>
   );
@@ -87,27 +89,28 @@ function Header() {
 
 function BalanceCard() {
   return (
-    <section className="mx-[18px] mt-[24px] rounded-[30px] bg-white px-[18px] pb-[18px] pt-[16px] shadow-[0_22px_50px_rgba(15,23,42,0.065)]">
-      <div className="flex items-start justify-between gap-3">
-        <h2 className="text-[24px] font-black leading-none tracking-[-0.045em] text-slate-950">Main Balance</h2>
-        <div className="rounded-full bg-slate-50 px-[13px] py-[7px] text-[11px] font-black leading-none tracking-[-0.035em] text-slate-900 shadow-sm">
-          Polaris Bank • 3051024266
+    <section className="mx-[18px] mt-[24px] rounded-[32px] bg-slate-900 p-[24px] shadow-xl text-white">
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-[14px] font-medium tracking-wider text-slate-400 uppercase">Main Balance</h2>
+          <div className="mt-[12px] flex items-center gap-[12px]">
+            <p className="text-[36px] font-bold tracking-tight text-white">₦8,000,000</p>
+            <Eye size={24} strokeWidth={2} className="text-slate-400" />
+          </div>
+        </div>
+        <div className="rounded-xl bg-white/10 px-[12px] py-[6px] text-[11px] font-medium text-slate-300 backdrop-blur-sm">
+          Polaris • 4266
         </div>
       </div>
 
-      <div className="mt-[25px] flex items-center gap-[14px]">
-        <p className="text-[39px] font-black leading-none tracking-[-0.065em] text-slate-950">₦8,000,000</p>
-        <Eye size={27} strokeWidth={2.8} className="mt-[2px] text-slate-950" />
-      </div>
-
-      <div className="mt-[27px] grid grid-cols-2 gap-[18px]">
-        <button className="flex h-[58px] items-center justify-center gap-[14px] rounded-full bg-[#edffd8] text-[25px] font-black tracking-[-0.055em] text-slate-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]">
+      <div className="mt-[32px] grid grid-cols-2 gap-[14px]">
+        <button className="flex h-[52px] items-center justify-center gap-[10px] rounded-2xl bg-emerald-500 text-[16px] font-bold text-slate-900 transition-transform active:scale-95">
+          <Banknote size={20} />
           Receive
-          <Banknote size={22} strokeWidth={2.7} />
         </button>
-        <button className="flex h-[58px] items-center justify-center gap-[14px] rounded-full bg-[#edffd8] text-[25px] font-black tracking-[-0.055em] text-slate-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]">
+        <button className="flex h-[52px] items-center justify-center gap-[10px] rounded-2xl bg-white/10 text-[16px] font-bold text-white backdrop-blur-sm transition-transform active:scale-95">
+          <ArrowDownToLine size={20} />
           Withdraw
-          <ArrowDownToLine size={21} strokeWidth={2.8} />
         </button>
       </div>
     </section>
@@ -117,20 +120,18 @@ function BalanceCard() {
 function ActionPanel({ variant = "quick" }: { variant?: "quick" | "utility" }) {
   const items = variant === "quick" ? quickActions : utilityActions;
   const columns = variant === "quick" ? "grid-cols-4" : "grid-cols-3";
-  const height = variant === "quick" ? "h-[95px]" : "h-[90px]";
 
   return (
-    <section className={`mx-[18px] mt-[16px] grid ${columns} ${height} overflow-hidden rounded-[25px] bg-white shadow-[0_16px_35px_rgba(15,23,42,0.055)]`}>
-      {items.map((item, index) => {
+    <section className={`mx-[18px] mt-[16px] grid ${columns} gap-2`}>
+      {items.map((item) => {
         const Icon = item.icon;
         return (
-          <div key={item.label} className="relative flex flex-col items-center justify-center gap-[7px]">
-            {index !== 0 && <div className="absolute left-0 top-[16px] h-[63px] w-px bg-slate-200" />}
-            <div className={`grid h-[43px] w-[43px] place-items-center rounded-full ${item.color}`}>
-              <Icon size={21} strokeWidth={2.5} />
+          <button key={item.label} className="flex flex-col items-center justify-center gap-[10px] rounded-[24px] bg-white p-4 shadow-sm border border-slate-50 transition-all active:scale-95">
+            <div className={`grid h-[44px] w-[44px] place-items-center rounded-2xl ${item.color.split(' ')[0]} bg-opacity-10 ${item.color.split(' ')[1]}`}>
+              <Icon size={22} strokeWidth={2} />
             </div>
-            <p className="text-[17px] font-black leading-none tracking-[-0.045em] text-slate-950">{item.label}</p>
-          </div>
+            <p className="text-[13px] font-bold tracking-tight text-slate-900">{item.label}</p>
+          </button>
         );
       })}
     </section>
@@ -139,36 +140,31 @@ function ActionPanel({ variant = "quick" }: { variant?: "quick" | "utility" }) {
 
 function TrustScore() {
   return (
-    <section className="mx-[18px] mt-[18px] rounded-[27px] bg-white px-[18px] pb-[115px] pt-[26px] shadow-[0_22px_45px_rgba(15,23,42,0.055)]">
-      <div className="flex items-start justify-between">
+    <section className="mx-[18px] mt-[16px] mb-[120px] rounded-[32px] bg-white p-[24px] shadow-sm border border-slate-50">
+      <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-[26px] font-black leading-none tracking-[-0.055em] text-slate-950">Me2U Trust Score</h2>
-          <p className="mt-[13px] text-[18px] font-semibold leading-none tracking-[-0.04em] text-slate-800">Gold level • Platinum at 90</p>
+          <h2 className="text-[18px] font-bold tracking-tight text-slate-900">Me2U Trust Score</h2>
+          <p className="mt-[4px] text-[14px] font-medium text-slate-500">Gold level • 10 to Platinum</p>
         </div>
-        <div className="mr-[10px] grid h-[76px] w-[76px] place-items-center rounded-full bg-[#e4faeb] text-[27px] font-black tracking-[-0.045em] text-emerald-600">
-          80
+        <div className="relative grid h-[64px] w-[64px] place-items-center">
+          <svg className="absolute inset-0 h-full w-full -rotate-90">
+            <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="6" fill="transparent" className="text-slate-100" />
+            <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="6" fill="transparent" strokeDasharray="176" strokeDashoffset="35" className="text-emerald-500" strokeLinecap="round" />
+          </svg>
+          <span className="text-[20px] font-bold text-slate-900">80</span>
         </div>
       </div>
 
-      <div className="mt-[28px] space-y-[13px]">
-        {scoreItems.map((item) => (
-          <article key={item.title} className="flex min-h-[82px] items-start justify-between rounded-[18px] bg-slate-50 px-[18px] py-[16px] shadow-[inset_0_1px_0_rgba(255,255,255,0.85)]">
+      <div className="mt-[24px] space-y-[12px]">
+        {scoreItems.slice(0, 2).map((item) => (
+          <div key={item.title} className="flex items-center justify-between rounded-2xl bg-slate-50 p-[16px]">
             <div>
-              <h3 className="text-[18px] font-black leading-none tracking-[-0.045em] text-slate-950">{item.title}</h3>
-              <p className="mt-[13px] text-[17px] font-semibold leading-none tracking-[-0.045em] text-slate-800">{item.subtitle}</p>
+              <h3 className="text-[15px] font-bold text-slate-900">{item.title}</h3>
+              <p className="text-[13px] font-medium text-slate-500">{item.subtitle}</p>
             </div>
-            <p className="text-[20px] font-black leading-none tracking-[-0.045em] text-slate-950">{item.value}</p>
-          </article>
+            <p className="text-[16px] font-bold text-emerald-600">{item.value}</p>
+          </div>
         ))}
-      </div>
-
-      <div className="mt-[19px] grid grid-cols-2 gap-[14px]">
-        <div className="h-[64px] rounded-[15px] border border-emerald-400 bg-emerald-50/80 px-4 pt-4 text-[14px] font-black text-emerald-700">
-          Available
-        </div>
-        <div className="h-[64px] rounded-[15px] border border-emerald-400 bg-emerald-50/80 px-4 pt-4 text-[14px] font-black text-emerald-700">
-          Eligible
-        </div>
       </div>
     </section>
   );
@@ -176,24 +172,13 @@ function TrustScore() {
 
 function BottomNavigation() {
   return (
-    <nav className="absolute bottom-[13px] left-[20px] right-[20px] z-20 grid h-[93px] grid-cols-4 rounded-[28px] bg-white/95 px-[14px] py-[10px] shadow-[0_8px_28px_rgba(15,23,42,0.18)] backdrop-blur-xl">
+    <nav className="absolute bottom-[24px] left-[18px] right-[18px] z-20 flex h-[76px] items-center justify-around rounded-[28px] bg-slate-900/95 p-[8px] shadow-2xl backdrop-blur-xl">
       {bottomNav.map((item) => {
         const Icon = item.icon;
         return (
-          <div key={item.label} className="flex items-center justify-center">
-            {item.active ? (
-              <div className="flex h-full w-[86px] flex-col items-center justify-center rounded-[22px] bg-[#e8fbef] text-emerald-500">
-                <Icon size={28} strokeWidth={2.55} />
-                <span className="mt-[6px] text-[15px] font-black tracking-[-0.04em]">Home</span>
-                <span className="mt-[5px] h-[8px] w-[37px] rounded-full bg-emerald-500" />
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center text-slate-900">
-                <Icon size={27} strokeWidth={2.45} />
-                <span className="mt-[8px] text-[15px] font-black tracking-[-0.04em]">{item.label}</span>
-              </div>
-            )}
-          </div>
+          <button key={item.label} className={`flex h-[56px] w-[56px] flex-col items-center justify-center rounded-2xl transition-all ${item.active ? 'bg-emerald-500 text-slate-900' : 'text-slate-400 hover:text-white'}`}>
+            <Icon size={24} strokeWidth={item.active ? 2.5 : 2} />
+          </button>
         );
       })}
     </nav>
