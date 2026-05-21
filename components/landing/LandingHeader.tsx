@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import BrandLogo from "@/components/BrandLogo";
 import { companyInfo } from "@/lib/legal-content";
 
 export default function LandingHeader() {
@@ -26,10 +27,8 @@ export default function LandingHeader() {
         }`}
       >
         <div className="container mx-auto px-4 md:px-6 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xl group-hover:bg-blue-700 transition-colors">
-              M
-            </div>
+          <Link href="/" className="flex items-center gap-3 group">
+            <BrandLogo className="h-10 w-10" imageClassName="h-10 w-10" />
             <div className="flex flex-col">
               <span className="font-extrabold text-xl leading-tight text-slate-900 group-hover:text-blue-700 transition-colors">
                 Me2U
