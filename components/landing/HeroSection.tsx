@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import PhoneHero from "@/components/landing/PhoneHero";
 
 export default function HeroSection() {
   return (
@@ -73,44 +74,9 @@ export default function HeroSection() {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="relative z-10"
             >
-              {/* Abstract App Mockup instead of a real image to ensure it looks premium without needing assets */}
-              <div className="relative mx-auto w-full max-w-[320px]">
-                <img
-                  src="/phone1.svg"
-                  alt="Me2U app on phone"
-                  className="w-full h-auto rounded-[2.5rem] shadow-2xl shadow-blue-900/30"
-                />
+              <div className="mx-auto w-full max-w-[423px]">
+                <PhoneHero />
               </div>
-
-              {/* Floating elements */}
-              <motion.div 
-                animate={{ y: [0, -10, 0] }} 
-                transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-                className="absolute -right-6 top-1/4 bg-white rounded-xl p-4 shadow-xl border border-slate-100 z-20 flex items-center gap-4"
-              >
-                <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center">
-                  <span className="text-blue-600 font-bold text-lg">0%</span>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Direct Loan</p>
-                  <p className="text-sm font-bold text-slate-900">Interest-free</p>
-                </div>
-              </motion.div>
-
-              <motion.div 
-                animate={{ y: [0, 10, 0] }} 
-                transition={{ repeat: Infinity, duration: 5, ease: "easeInOut", delay: 1 }}
-                className="absolute -left-8 bottom-1/4 bg-slate-900 rounded-xl p-4 shadow-xl border border-slate-700 z-20 flex items-center gap-4"
-              >
-                <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                  <span className="text-emerald-400 text-xl">✓</span>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Trust Score</p>
-                  <p className="text-sm font-bold text-white">Verified</p>
-                </div>
-              </motion.div>
-
             </motion.div>
           </div>
         </div>
