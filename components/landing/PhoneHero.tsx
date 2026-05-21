@@ -215,20 +215,22 @@ function PhoneShell({ children }: { children: React.ReactNode }) {
 
 export default function PhoneHero() {
   return (
-    <div className="mx-auto w-[75%] sm:w-full max-w-[423px] [container-type:inline-size]">
-      <div className="relative w-full aspect-[423/878]">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 origin-top scale-[calc(100cqw/423)] transition-transform duration-500">
-          <PhoneShell>
-            <div className="relative h-full overflow-hidden">
-              <StatusBar />
-              <Header />
-              <BalanceCard />
-              <ActionPanel />
-              <ActionPanel variant="utility" />
-              <TrustScore />
-              <BottomNavigation />
-            </div>
-          </PhoneShell>
+    <div className="mx-auto w-[65%] sm:w-full max-w-[423px] [container-type:inline-size] py-8 sm:py-0">
+      <div className="relative w-full aspect-[423/878] transition-all duration-700 hover:rotate-2">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 origin-top scale-[calc(100cqw/423)] transition-transform duration-500 [perspective:1000px]">
+          <div className="rotate-x-2 -rotate-y-2">
+            <PhoneShell>
+              <div className="relative h-full overflow-hidden">
+                <StatusBar />
+                <Header />
+                <BalanceCard />
+                <ActionPanel />
+                <ActionPanel variant="utility" />
+                <TrustScore />
+                <BottomNavigation />
+              </div>
+            </PhoneShell>
+          </div>
         </div>
       </div>
     </div>
