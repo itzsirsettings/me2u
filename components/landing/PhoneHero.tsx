@@ -73,7 +73,6 @@ function Header() {
           <BrandLogo className="h-full w-full p-2" imageClassName="h-full w-full" />
         </div>
         <div className="-mt-[2px] leading-[1.1]">
-          <p className="text-[14px] font-medium tracking-wide text-slate-500 uppercase">Welcome back</p>
           <p className="text-[24px] font-bold tracking-tight text-slate-900">@chibaby</p>
         </div>
       </div>
@@ -93,7 +92,6 @@ function BalanceCard() {
     <section className="mx-[18px] mt-[24px] rounded-[32px] bg-slate-900 p-[24px] shadow-xl text-white">
       <div className="flex items-start justify-between">
         <div>
-          <h2 className="text-[14px] font-medium tracking-wider text-slate-400 uppercase">Main Balance</h2>
           <div className="mt-[12px] flex items-center gap-[12px]">
             <p className="text-[36px] font-bold tracking-tight text-white">₦8,000,000</p>
             <Eye size={24} strokeWidth={2} className="text-slate-400" />

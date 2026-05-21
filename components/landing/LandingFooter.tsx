@@ -26,7 +26,6 @@ export default function LandingFooter() {
                 <span className="text-[10px] font-black tracking-[0.2em] uppercase text-slate-400">
                   {companyInfo.legalName}
                 </span>
-                <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest mt-0.5">Verified Institutional Platform</span>
               </div>
             </Link>
             
@@ -36,7 +35,6 @@ export default function LandingFooter() {
             
             <div className="flex items-center gap-6">
               <div className="flex flex-col">
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Corporate Office</span>
                 <span className="text-sm font-bold text-slate-900">{companyInfo.address}</span>
               </div>
             </div>

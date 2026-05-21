@@ -119,9 +119,6 @@ export default function PublicProofSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <div className="inline-flex items-center px-3 py-1 rounded-full bg-white/5 border border-white/10 text-emerald-400 text-[10px] font-bold tracking-widest uppercase mb-8">
-              Live Transparency
-            </div>
             <h2 className="text-4xl md:text-6xl font-black mb-8 tracking-tight leading-[1.05]">
               Real trust numbers, <br/>
               <span className="text-emerald-500">never inflated.</span>

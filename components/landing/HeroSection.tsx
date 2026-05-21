@@ -22,14 +22,6 @@ export default function HeroSection() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             >
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-bold tracking-wider uppercase mb-8">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-                Trust-Based Lending
-              </div>
-              
               <h1 className="text-5xl md:text-6xl lg:text-8xl font-black tracking-tight mb-8 leading-[0.95] text-slate-950">
                 Borrow at 0%. <br className="hidden md:block"/>
                 <span className="text-emerald-500">Build your trust.</span>

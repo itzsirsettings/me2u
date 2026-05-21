@@ -20,10 +20,6 @@ export default function LandingCTA() {
           </div>
 
           <div className="relative z-10 max-w-4xl mx-auto">
-            <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-emerald-400 text-[10px] font-black tracking-[0.2em] uppercase mb-10">
-              Future of Cooperative Finance
-            </div>
-            
             <h2 className="text-4xl md:text-6xl lg:text-7xl font-black text-white mb-10 tracking-tight leading-[1.02]">
               Join the new era of <br/>
               <span className="text-emerald-500 text-glow-emerald">trust-based lending.</span>
