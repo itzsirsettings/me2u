@@ -74,57 +74,12 @@ export default function HeroSection() {
               className="relative z-10"
             >
               {/* Abstract App Mockup instead of a real image to ensure it looks premium without needing assets */}
-              <div className="relative mx-auto w-full max-w-[320px] aspect-[1/2] rounded-[2.5rem] bg-slate-900 border-[8px] border-slate-800 shadow-2xl shadow-blue-900/50 overflow-hidden">
-                <div className="absolute top-0 inset-x-0 h-6 bg-slate-800 rounded-b-xl w-1/3 mx-auto z-20"></div>
-                
-                {/* App UI Representation */}
-                <div className="absolute inset-0 bg-slate-50 flex flex-col p-5 pt-10">
-                  <div className="flex justify-between items-center mb-8">
-                    <div className="w-10 h-10 rounded-full bg-slate-200"></div>
-                    <div className="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full">Verified</div>
-                  </div>
-                  
-                  <div className="bg-blue-600 rounded-2xl p-5 text-white mb-6 shadow-lg shadow-blue-600/20 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/4"></div>
-                    <p className="text-blue-100 text-xs font-medium mb-1 relative z-10">Wallet Balance</p>
-                    <h3 className="text-3xl font-bold relative z-10">₦12,000.00</h3>
-                  </div>
-                  
-                  <div className="grid grid-cols-4 gap-3 mb-8">
-                    {['Fund', 'Market', 'Loans', 'KYC'].map(label => (
-                      <div key={label} className="flex flex-col items-center gap-2">
-                        <div className="w-12 h-12 rounded-xl bg-white shadow-sm border border-slate-100 flex items-center justify-center text-blue-600">
-                          <div className="w-5 h-5 bg-blue-100 rounded-md"></div>
-                        </div>
-                        <span className="text-[10px] font-semibold text-slate-500">{label}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <h4 className="text-xs font-bold text-slate-900 mb-3">Approved wallet activity</h4>
-                  <div className="flex flex-col gap-3">
-                    <div className="flex items-center justify-between p-3 bg-white rounded-xl shadow-sm border border-slate-100">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-emerald-100"></div>
-                        <div>
-                          <p className="text-xs font-bold text-slate-900">Registration deposit</p>
-                          <p className="text-[10px] text-slate-500">Deposit proof submitted</p>
-                        </div>
-                      </div>
-                      <span className="text-xs font-bold text-slate-900">₦1,000</span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-white rounded-xl shadow-sm border border-slate-100">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-blue-100"></div>
-                        <div>
-                          <p className="text-xs font-bold text-slate-900">Welcome bonus</p>
-                          <p className="text-[10px] text-slate-500">KYC Verified</p>
-                        </div>
-                      </div>
-                      <span className="text-xs font-bold text-emerald-600">+₦2,000</span>
-                    </div>
-                  </div>
-                </div>
+              <div className="relative mx-auto w-full max-w-[320px]">
+                <img
+                  src="/phone.svg"
+                  alt="Me2U app on phone"
+                  className="w-full h-auto rounded-[2.5rem] shadow-2xl shadow-blue-900/30"
+                />
               </div>
 
               {/* Floating elements */}
