@@ -27,7 +27,7 @@ export default function LandingHeader() {
       >
         <div className="container mx-auto px-4 md:px-6 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
-            <BrandLogo className="h-10 w-10" imageClassName="h-10 w-10" />
+            <BrandLogo className="h-14 w-14" imageClassName="h-14 w-14" />
           </Link>
 
           {/* Desktop Nav */}

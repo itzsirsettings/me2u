@@ -76,7 +76,7 @@ export default function HeroSection() {
               {/* Abstract App Mockup instead of a real image to ensure it looks premium without needing assets */}
               <div className="relative mx-auto w-full max-w-[320px]">
                 <img
-                  src="/phone.svg"
+                  src="/phone1.svg"
                   alt="Me2U app on phone"
                   className="w-full h-auto rounded-[2.5rem] shadow-2xl shadow-blue-900/30"
                 />
