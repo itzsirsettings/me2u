@@ -22,22 +22,25 @@ export default function LandingHeader() {
     <>
       <header
         className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
-          scrolled ? "bg-white/80 backdrop-blur-md shadow-sm py-1.5" : "bg-transparent py-3"
+          scrolled ? "bg-white/80 backdrop-blur-md shadow-sm" : "bg-transparent"
         }`}
       >
-        <div className="container mx-auto px-4 md:px-6 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3 group">
-            <BrandLogo className="h-[84px] w-[84px]" imageClassName="h-[84px] w-[84px]" />
-          </Link>
+        <div className="container mx-auto px-4 md:px-6 relative flex items-center justify-between h-16">
+          {/* Logo - Independent of navbar height constraint */}
+          <div className="flex-shrink-0 flex items-center">
+            <Link href="/" className="group py-1">
+              <BrandLogo className="h-[84px] w-[84px] transition-transform duration-300" imageClassName="h-[84px] w-[84px]" />
+            </Link>
+          </div>
 
-          {/* Desktop Nav */}
+          {/* Desktop Nav - Centered or right-aligned relative to h-16 */}
           <nav className="hidden lg:flex items-center gap-6">
             <div 
               className="relative"
               onMouseEnter={() => setProductsOpen(true)}
               onMouseLeave={() => setProductsOpen(false)}
             >
-              <button className="flex items-center gap-1 font-medium text-sm text-slate-700 hover:text-blue-600 transition-colors py-1.5">
+              <button className="flex items-center gap-1 font-medium text-sm text-slate-700 hover:text-blue-600 transition-colors py-2">
                 Products
                 <svg className={`w-3.5 h-3.5 transition-transform duration-200 ${productsOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
