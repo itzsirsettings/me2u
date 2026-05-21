@@ -8,6 +8,7 @@ const navItems: Array<{ label: string; icon: Icons8IconName; path: string }> = [
   { label: "Home", icon: "home", path: "/dashboard" },
   { label: "Market", icon: "market", path: "/marketplace" },
   { label: "Loans", icon: "loans", path: "/loans" },
+  { label: "Wallet", icon: "wallet", path: "/wallet" },
   { label: "Profile", icon: "profile", path: "/profile" },
 ];
 

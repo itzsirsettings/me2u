@@ -133,10 +133,17 @@ export type WithdrawalRequestRow = {
   fee_amount: number;
   bank_name: string | null;
   account_number: string | null;
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "processing" | "success" | "failed" | "reversed";
   processed_by: string | null;
   processed_at: string | null;
   admin_note: string | null;
+  fee: number;
+  net_amount: number;
+  bank_code: string | null;
+  account_name: string | null;
+  paystack_recipient_code: string | null;
+  paystack_transfer_code: string | null;
+  paystack_reference: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -356,6 +363,13 @@ export interface Database {
           processed_by?: string | null;
           processed_at?: string | null;
           admin_note?: string | null;
+          fee?: number;
+          net_amount?: number;
+          bank_code?: string | null;
+          account_name?: string | null;
+          paystack_recipient_code?: string | null;
+          paystack_transfer_code?: string | null;
+          paystack_reference?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -557,6 +571,70 @@ export interface Database {
           p_request_id: string;
         };
         Returns: undefined;
+      };
+      me2u_initiate_paystack_withdrawal: {
+        Args: {
+          p_user_id: string;
+          p_amount: number;
+          p_fee: number;
+          p_net_amount: number;
+          p_bank_code: string;
+          p_account_number: string;
+          p_account_name: string;
+        };
+        Returns: string;
+      };
+      me2u_confirm_withdrawal_success: {
+        Args: {
+          p_request_id: string;
+          p_transfer_code: string;
+          p_reference: string;
+        };
+        Returns: undefined;
+      };
+      me2u_handle_withdrawal_failure: {
+        Args: {
+          p_request_id: string;
+          p_transfer_code: string;
+          p_reason?: string;
+        };
+        Returns: undefined;
+      };
+      me2u_increment_balance: {
+        Args: {
+          p_user_id: string;
+          p_amount: number;
+        };
+        Returns: undefined;
+      };
+      me2u_record_referral: {
+        Args: {
+          p_referrer_id: string;
+          p_referee_id: string;
+        };
+        Returns: undefined;
+      };
+      me2u_get_referral_stats: {
+        Args: {
+          p_user_id: string;
+        };
+        Returns: Json;
+      };
+      me2u_get_referral_details: {
+        Args: {
+          p_user_id: string;
+        };
+        Returns: {
+          referee_id: string;
+          referee_name: string;
+          referee_email: string;
+          referee_trust_score: number;
+          referee_kyc_verified: boolean;
+          signed_up_at: string;
+          first_withdrawal_rewarded: boolean;
+          first_repayment_rewarded: boolean;
+          pending_rewards: string;
+        }[];
       };
     };
     Enums: {

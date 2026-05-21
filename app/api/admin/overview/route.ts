@@ -176,7 +176,7 @@ export async function GET(request: Request) {
     const approvedProofs = paymentProofs.filter((proof) => proof.status === "approved");
     const pendingProofs = paymentProofs.filter((proof) => proof.status === "pending");
     const pendingWithdrawals = withdrawalRequests.filter((requestRow) => requestRow.status === "pending");
-    const approvedWithdrawals = withdrawalRequests.filter((requestRow) => requestRow.status === "approved");
+    const approvedWithdrawals = withdrawalRequests.filter((requestRow) => requestRow.status === "success");
     const activeLoans = loans.filter((loan) => loan.status === "active");
     const platformLoans = loans.filter((loan) => loan.lender_id === null);
     const retainedFloat = sumBy(

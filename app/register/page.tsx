@@ -141,6 +141,13 @@ function RegisterContent() {
     const ref = searchParams.get("ref");
     if (ref) {
       setFormData(prev => ({ ...prev, referral: ref }));
+    } else {
+      // Check localStorage for referral code from /r/[code] redirect
+      const storedRef = localStorage.getItem("referral_code");
+      if (storedRef) {
+        setFormData(prev => ({ ...prev, referral: storedRef }));
+        localStorage.removeItem("referral_code");
+      }
     }
   }, [searchParams]);
 

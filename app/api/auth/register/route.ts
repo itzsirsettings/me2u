@@ -320,6 +320,14 @@ export async function POST(request: Request) {
         throw walletError;
       }
 
+      // Record referral if applicable
+      if (referredBy) {
+        await supabase.rpc("me2u_record_referral", {
+          p_referrer_id: referredBy,
+          p_referee_id: userId,
+        });
+      }
+
       return NextResponse.json(
         {
           email,

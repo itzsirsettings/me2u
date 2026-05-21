@@ -137,12 +137,12 @@ function initials(name: string) {
     .join("");
 }
 
-function statusClass(status: "pending" | "approved" | "rejected" | "active" | "completed" | "funded" | "cancelled") {
-  if (status === "approved" || status === "completed" || status === "funded") {
+function statusClass(status: "pending" | "approved" | "rejected" | "active" | "completed" | "funded" | "cancelled" | "processing" | "success" | "failed" | "reversed") {
+  if (status === "approved" || status === "completed" || status === "funded" || status === "success") {
     return "bg-[var(--color-positive-bg)] text-[var(--color-positive-text)]";
   }
 
-  if (status === "pending" || status === "active") {
+  if (status === "pending" || status === "active" || status === "processing") {
     return "bg-[var(--color-warning-bg)] text-[var(--color-warning-text)]";
   }
 
@@ -154,7 +154,7 @@ function StatusBadge({
   status,
 }: {
   children: ReactNode;
-  status: "pending" | "approved" | "rejected" | "active" | "completed" | "funded" | "cancelled";
+  status: "pending" | "approved" | "rejected" | "active" | "completed" | "funded" | "cancelled" | "processing" | "success" | "failed" | "reversed";
 }) {
   return (
     <span className={`inline-flex max-w-full shrink-0 items-center justify-center rounded-[5px] px-2.5 py-1 text-center text-[11px] font-bold uppercase leading-tight tracking-normal sm:tracking-[0.08em] ${statusClass(status)}`}>
