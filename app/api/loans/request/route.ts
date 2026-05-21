@@ -25,10 +25,12 @@ export async function POST(request: Request) {
       body.amount === undefined || body.amount === null || body.amount === ""
         ? null
         : readPositiveAmount(body.amount, "Loan amount");
+    const days = body.days ? Number(body.days) : null;
 
     const { error } = await auth.supabase.rpc("me2u_request_platform_loan", {
       p_user_id: auth.user.id,
       p_amount: amount,
+      p_days: days,
     });
 
     if (error) throw new Error(error.message);

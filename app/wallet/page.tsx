@@ -2,7 +2,7 @@
 
 import { Card } from "@/components/ui/card";
 import Icons8Icon, { type Icons8IconName } from "@/components/Icons8Icon";
-import { onboardingCreditAmount, registrationDepositAmount } from "@/lib/loans";
+import { onboardingCreditAmount, registrationDepositAmount, getSecurityDeposit, getActivePlatformLoanRetainedDeposit } from "@/lib/loans";
 import { useStore } from "@/lib/store";
 import { useState, useEffect } from "react";
 import LoadingButton from "@/LoadingButton";
@@ -419,6 +419,65 @@ export default function WalletPage() {
       </motion.h1>
       
       <motion.div variants={itemVariants} className="w-full space-y-4 md:space-y-6">
+        {/* Security Deposit Breakdown */}
+        {user && user.locked > 0 && (
+          <Card className="kinetic-border bg-[var(--color-bg-card)] p-5 shadow-[4px_4px_0px_var(--color-shadow)] md:p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-accent-primary)]">
+                <Icons8Icon name="shield" size={22} />
+              </div>
+              <div>
+                <h2 className="text-lg font-display leading-none">Locked Balance</h2>
+                <p className="text-xs text-[var(--color-text-secondary)]">₦{user.locked.toLocaleString()} held</p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              {(() => {
+                const activeLoans = useStore.getState().activeLoans;
+                const loanDeposits = activeLoans
+                  .filter((l) => l.role === "borrower" && l.status === "active" && l.securityDeposit > 0)
+                  .map((l) => ({
+                    id: l.id,
+                    source: l.source,
+                    amount: l.securityDeposit,
+                    dueDate: l.dueDate,
+                  }));
+                
+                const otherLocked = user.locked - loanDeposits.reduce((sum, d) => sum + d.amount, 0);
+                
+                return (
+                  <>
+                    {loanDeposits.map((d) => (
+                      <div key={d.id} className="flex items-center justify-between rounded-[5px] bg-[var(--color-bg-secondary)] p-3 text-sm">
+                        <div>
+                          <p className="font-semibold text-[var(--color-text-primary)]">Security Deposit</p>
+                          <p className="text-xs text-[var(--color-text-secondary)]">
+                            {d.source === "platform" ? "Platform" : "Peer"} loan · Due {new Date(d.dueDate).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <p className="font-mono font-semibold text-[var(--color-accent-primary)]">₦{d.amount.toLocaleString()}</p>
+                      </div>
+                    ))}
+                    {otherLocked > 0 && (
+                      <div className="flex items-center justify-between rounded-[5px] bg-[var(--color-bg-secondary)] p-3 text-sm">
+                        <div>
+                          <p className="font-semibold text-[var(--color-text-primary)]">Other Locked</p>
+                          <p className="text-xs text-[var(--color-text-secondary)]">Savings goals or pending transactions</p>
+                        </div>
+                        <p className="font-mono font-semibold text-[var(--color-text-secondary)]">₦{otherLocked.toLocaleString()}</p>
+                      </div>
+                    )}
+                    <p className="text-xs text-[var(--color-text-secondary)] pt-1">
+                      Security deposits return to your usable balance when you repay on time.
+                    </p>
+                  </>
+                );
+              })()}
+            </div>
+          </Card>
+        )}
+
         {!user?.registrationDepositPaid && (
           <Card className="kinetic-border p-5 shadow-[4px_4px_0px_var(--color-shadow)] bg-[var(--color-bg-card)] md:p-8">
             <div className="mb-5 flex min-w-0 items-start justify-between gap-4 border-b border-[var(--color-border)] pb-5">

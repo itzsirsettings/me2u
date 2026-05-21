@@ -68,6 +68,9 @@ export interface ActiveLoan {
   dueDate: string;
   peerPhone?: string;
   peerBankDetails?: string;
+  securityDeposit: number;
+  tierLabel: string;
+  maxDuration: number;
 }
 
 export interface User {
@@ -134,7 +137,7 @@ interface AppStore {
   withdraw: (amount: number, pin?: string) => Promise<ActionResult>;
   createMarketplaceItem: (item: MarketplaceDraft) => Promise<ActionResult>;
   acceptMarketplaceItem: (itemId: string) => Promise<ActionResult>;
-  requestPlatformLoan: (amount?: number) => Promise<ActionResult>;
+  requestPlatformLoan: (amount?: number, days?: number) => Promise<ActionResult>;
   repayLoan: (loanId: string) => Promise<ActionResult>;
   payBill: (amount: number, serviceLabel: string, detail: string, pin?: string) => Promise<ActionResult>;
   setTransactionPin: (pin: string, password: string) => Promise<ActionResult>;
@@ -264,9 +267,13 @@ function sortMarketplaceItems(items: MarketplaceItem[]) {
   });
 }
 
+import { getTrustTier, getSecurityDeposit } from "@/lib/loans";
+
 function toLoan(row: any, userId: string): ActiveLoan {
   const isBorrower = row.borrower_id === userId;
   const peerDetails = isBorrower ? row.lender : row.borrower;
+  const trustScore = isBorrower ? (row.borrower?.trust_score ?? 50) : (row.lender?.trust_score ?? 50);
+  const tier = getTrustTier(trustScore);
   
   return {
     id: row.id,
@@ -281,6 +288,9 @@ function toLoan(row: any, userId: string): ActiveLoan {
     dueDate: row.due_date,
     peerPhone: peerDetails?.phone,
     peerBankDetails: peerDetails?.bank_name ? `${peerDetails.bank_name} - ${peerDetails.account_number}` : undefined,
+    securityDeposit: Number(row.security_deposit ?? getSecurityDeposit(Number(row.amount), trustScore)),
+    tierLabel: tier.label,
+    maxDuration: tier.maxDays,
   };
 }
 
@@ -603,7 +613,7 @@ export const useStore = create<AppStore>((set, get) => ({
     return result;
   },
 
-  requestPlatformLoan: async (amount) => {
+  requestPlatformLoan: async (amount, days) => {
     if (!hasSupabaseConfig()) return missingSupabaseResult;
 
     const user = get().user;
@@ -617,7 +627,7 @@ export const useStore = create<AppStore>((set, get) => ({
     if (!user.registrationDepositPaid) {
       return {
         ok: false,
-        error: `Confirm your ₦${registrationDepositAmount.toLocaleString()} registration deposit before requesting a loan.`,
+        error: `Confirm your registration deposit before requesting a loan.`,
       };
     }
 
@@ -637,6 +647,7 @@ export const useStore = create<AppStore>((set, get) => ({
 
     const result = await postAuthenticatedJson("/api/loans/request", {
       amount,
+      days,
     });
     if (result.ok) await get().loadCurrentUser();
     return result;
