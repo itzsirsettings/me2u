@@ -20,30 +20,30 @@ export default function BottomNav() {
   if (!showNav) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 px-2 pb-[calc(0.25rem+env(safe-area-inset-bottom))] md:hidden">
-      <div className="relative mx-auto grid max-w-md grid-cols-4 items-center gap-0.5 rounded-[22px] bg-[var(--mobile-surface)] px-2 py-1.5 shadow-[0_-10px_28px_rgba(0,64,107,0.09)]">
+    <div className="fixed bottom-0 left-0 right-0 z-50 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))] md:hidden">
+      <div className="relative mx-auto grid max-w-md grid-cols-4 items-center gap-1 rounded-[28px] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 py-2.5 shadow-[0_-8px_32px_rgba(0,0,0,0.18),0_-2px_8px_rgba(0,0,0,0.12)]">
         {navItems.map((item) => {
           const isActive = activePath === item.path || (item.path !== "/dashboard" && pathname.startsWith(item.path));
           return (
             <motion.button
-              whileTap={{ scale: 0.94 }}
+              whileTap={{ scale: 0.92 }}
               key={item.path}
               onClick={() => router.push(item.path)}
               aria-current={isActive ? "page" : undefined}
-              className={`relative flex min-h-[3rem] min-w-0 flex-col items-center justify-center gap-0.5 rounded-[16px] px-1 text-center transition-colors ${
+              className={`relative flex min-h-[3.5rem] min-w-0 flex-col items-center justify-center gap-1 rounded-[18px] px-2 text-center transition-all duration-200 ${
                 isActive
-                  ? "text-[var(--color-accent-primary)] font-bold"
-                  : "text-[var(--color-text-secondary)] hover:bg-[var(--color-hover-soft)]"
+                  ? "bg-[var(--color-accent-primary)]/10 text-[var(--color-accent-primary)] font-black"
+                  : "text-[var(--color-text-secondary)] hover:bg-[var(--color-hover-soft)] hover:text-[var(--color-text-primary)]"
               }`}
             >
-              <span className="grid h-5 w-5 place-items-center">
-                <Icons8Icon name={item.icon} size={17} />
+              <span className={`grid h-6 w-6 place-items-center transition-transform duration-200 ${isActive ? "scale-110" : ""}`}>
+                <Icons8Icon name={item.icon} size={20} />
               </span>
-              <span className="w-full truncate text-[9px] font-extrabold tracking-normal font-sans">
+              <span className="w-full truncate text-[10px] font-black tracking-wide font-sans">
                 {item.label}
               </span>
               {isActive && (
-                <span className="absolute bottom-0 h-1 w-1 rounded-full bg-[var(--color-accent-primary)]" />
+                <span className="absolute bottom-0 h-1.5 w-6 rounded-full bg-[var(--color-accent-primary)]" />
               )}
             </motion.button>
           );
