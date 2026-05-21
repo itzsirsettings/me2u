@@ -10,7 +10,7 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/icon.svg",
+      "src": "/me2u_logo_v2.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"

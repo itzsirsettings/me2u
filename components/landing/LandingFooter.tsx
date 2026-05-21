@@ -15,19 +15,18 @@ export default function LandingFooter() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-8 mb-16">
           
           <div className="lg:col-span-4">
-            <Link href="/" className="flex items-center gap-2 mb-6 group">
-              <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xl group-hover:bg-blue-700 transition-colors">
-                M
-              </div>
-              <div className="flex flex-col">
-                <span className="font-extrabold text-xl leading-tight text-slate-900">
-                  Me2U
-                </span>
-                <span className="text-[10px] font-semibold tracking-wider uppercase text-slate-500">
-                  by {companyInfo.legalName}
-                </span>
-              </div>
-            </Link>
+            <Link href="/" className="flex items-center gap-3 mb-6 group">
+            <img
+              src="/me2u_nav_logo.svg"
+              alt="Me2U"
+              className="h-11 w-auto object-contain"
+            />
+            <div className="flex flex-col">
+              <span className="text-[10px] font-semibold tracking-wider uppercase text-slate-500">
+                by {companyInfo.legalName}
+              </span>
+            </div>
+          </Link>
             
             <p className="text-slate-600 font-medium mb-6 leading-relaxed max-w-sm">
               Secure peer-to-peer lending with verified wallets, KYC, referrals, repayments, and protected withdrawals.
