@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { companyInfo } from "@/lib/legal-content";
-import BrandLogo from "@/components/BrandLogo";
 
 export default function LandingHeader() {
   const [scrolled, setScrolled] = useState(false);
@@ -28,7 +27,9 @@ export default function LandingHeader() {
       >
         <div className="container mx-auto px-4 md:px-6 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 group">
-            <BrandLogo className="h-10 w-10" />
+            <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xl group-hover:bg-blue-700 transition-colors">
+              M
+            </div>
             <div className="flex flex-col">
               <span className="font-extrabold text-xl leading-tight text-slate-900 group-hover:text-blue-700 transition-colors">
                 Me2U

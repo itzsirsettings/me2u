@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { companyInfo, legalFooterGroups } from "@/lib/legal-content";
-import BrandLogo from "@/components/BrandLogo";
 
 function isExternal(href: string) {
   return href.startsWith("mailto:") || href.startsWith("tel:");
@@ -17,7 +16,9 @@ export default function LandingFooter() {
           
           <div className="lg:col-span-4">
             <Link href="/" className="flex items-center gap-2 mb-6 group">
-              <BrandLogo className="h-10 w-10" />
+              <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xl group-hover:bg-blue-700 transition-colors">
+                M
+              </div>
               <div className="flex flex-col">
                 <span className="font-extrabold text-xl leading-tight text-slate-900">
                   Me2U
