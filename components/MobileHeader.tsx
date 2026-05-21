@@ -68,7 +68,7 @@ export default function MobileHeader() {
             <Icons8Icon name="back" size={20} />
           </button>
           <div className="min-w-0">
-            <BrandLogo className="hidden h-8 w-28 sm:w-32 md:inline-flex" />
+            <BrandLogo src="/me2u_nav_logo.svg" className="hidden h-8 w-28 sm:w-32 md:inline-flex" />
             <p className="truncate text-[1rem] font-extrabold leading-none tracking-normal text-[var(--color-text-primary)] md:mt-1 md:text-xs md:font-semibold md:uppercase md:tracking-[0.1em] md:text-[var(--color-text-secondary)]">
               {title}
             </p>

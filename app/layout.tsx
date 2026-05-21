@@ -28,7 +28,11 @@ const themeScript = `
 export const metadata: Metadata = {
   title: "me2u - Peer to Peer Lending",
   description: "Secure P2P Lending in Nigeria",
-  icons: { icon: "/me2u_logo_v2.svg" },
+  icons: {
+    icon: "/me2u_logo_v2.svg",
+    shortcut: "/me2u_logo_v2.svg",
+    apple: "/me2u_logo_v2.svg",
+  },
   manifest: "/manifest.json",
 };
 
