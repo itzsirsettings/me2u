@@ -130,56 +130,61 @@ const tools = [
 
 export default function AdvancedToolsSection() {
   return (
-    <section className="py-24 bg-white overflow-hidden" id="loans">
+    <section className="py-40 bg-white overflow-hidden" id="loans">
       <div className="container mx-auto px-4 md:px-6">
         
-        <div className="text-center max-w-3xl mx-auto mb-24">
+        <div className="max-w-4xl mb-32">
           <motion.h2 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-3xl md:text-5xl font-extrabold text-slate-900 mb-6 tracking-tight"
+            className="text-4xl md:text-6xl font-black text-slate-950 mb-8 tracking-tight leading-[1.05]"
           >
-            A polished flow from <br className="hidden md:block"/>deposit to withdrawal.
+            A refined flow from <br/>
+            <span className="text-emerald-500">deposit to withdrawal.</span>
           </motion.h2>
         </div>
 
-        <div className="flex flex-col gap-24 lg:gap-32">
+        <div className="flex flex-col gap-40 lg:gap-56">
           {tools.map((tool, index) => (
             <div 
               key={tool.id} 
               id={tool.id}
-              className={`flex flex-col ${tool.reverse ? 'lg:flex-row-reverse' : 'lg:flex-row'} items-center gap-12 lg:gap-24`}
+              className={`flex flex-col ${tool.reverse ? 'lg:flex-row-reverse' : 'lg:flex-row'} items-center gap-16 lg:gap-32`}
             >
               <div className="flex-1 w-full">
                 <motion.div
-                  initial={{ opacity: 0, x: tool.reverse ? 20 : -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-100px" }}
-                  transition={{ duration: 0.6 }}
+                  transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                 >
-                  <h3 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-6 tracking-tight leading-tight">
+                  <div className="inline-flex items-center px-3 py-1 rounded-full bg-slate-50 border border-slate-100 text-slate-500 text-[10px] font-bold tracking-widest uppercase mb-8">
+                    {tool.tag}
+                  </div>
+                  <h3 className="text-3xl md:text-5xl font-black text-slate-950 mb-8 tracking-tight leading-[1.1]">
                     {tool.title}
                   </h3>
-                  <p className="text-lg text-slate-600 font-medium leading-relaxed mb-8">
+                  <p className="text-lg md:text-xl text-slate-500 font-medium leading-relaxed mb-10 tracking-tight">
                     {tool.description}
                   </p>
                   <Link 
                     href="/register" 
-                    className="inline-flex items-center gap-2 text-blue-600 font-bold hover:text-blue-700 transition-colors"
+                    className="group inline-flex items-center gap-3 text-slate-950 font-bold text-lg hover:text-emerald-500 transition-colors"
                   >
-                    Get started <span className="text-xl">→</span>
+                    Start your journey 
+                    <span className="w-8 h-px bg-slate-200 group-hover:bg-emerald-500 group-hover:w-12 transition-all duration-300"></span>
                   </Link>
                 </motion.div>
               </div>
               
               <div className="flex-1 w-full">
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
+                  initial={{ opacity: 0, scale: 0.98 }}
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true, margin: "-100px" }}
-                  transition={{ duration: 0.6, delay: 0.2 }}
-                  className={`w-full rounded-[3rem] p-8 md:p-12 ${tool.imageBg}`}
+                  transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                  className={`w-full rounded-[3.5rem] p-8 md:p-20 bg-slate-50 border border-slate-100 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]`}
                 >
                   {tool.imageEl}
                 </motion.div>

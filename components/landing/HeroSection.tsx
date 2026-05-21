@@ -6,77 +6,79 @@ import PhoneHero from "@/components/landing/PhoneHero";
 
 export default function HeroSection() {
   return (
-    <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-[#0B1320] text-white">
-      {/* Background elements */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-blue-600/20 rounded-full blur-3xl translate-x-1/3 -translate-y-1/3 opacity-50" />
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-indigo-600/20 rounded-full blur-3xl -translate-x-1/3 translate-y-1/3 opacity-50" />
+    <section className="relative pt-32 pb-24 lg:pt-52 lg:pb-40 overflow-hidden bg-white selection:bg-blue-100">
+      {/* Refined Background Elements */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] bg-emerald-50 rounded-full blur-[120px] opacity-60" />
+        <div className="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] bg-slate-50 rounded-full blur-[100px] opacity-80" />
       </div>
 
       <div className="container mx-auto px-4 md:px-6 relative z-10">
-        <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-8">
+        <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
           
           <div className="flex-1 text-center lg:text-left">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
+              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             >
-
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-bold tracking-wider uppercase mb-8">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                Trust-Based Lending
+              </div>
               
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-6 leading-[1.1]">
-                Freedom to <br className="hidden md:block"/>
-                <span className="text-blue-400">borrow your way.</span>
+              <h1 className="text-5xl md:text-6xl lg:text-8xl font-black tracking-tight mb-8 leading-[0.95] text-slate-950">
+                Borrow at 0%. <br className="hidden md:block"/>
+                <span className="text-emerald-500">Build your trust.</span>
               </h1>
               
-              <p className="text-lg md:text-xl text-slate-400 mb-10 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-medium">
-                Register and verify your wallet. Borrow or lend at 0%. 
-                <br className="hidden md:block"/>
-                Claim your ₦2,000 welcome bonus after KYC.
+              <p className="text-xl md:text-2xl text-slate-500 mb-12 max-w-xl mx-auto lg:mx-0 leading-relaxed font-medium tracking-tight">
+                Me2U is the interest-free peer lending platform for modern cooperatives. 
+                Register, verify, and unlock ₦2,000 instantly.
               </p>
               
-              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-10">
+              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-12">
                 <Link 
                   href="/register" 
-                  className="w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-2xl transition-all shadow-lg hover:shadow-blue-500/25 active:scale-95 text-center text-lg"
+                  className="w-full sm:w-auto px-10 py-5 bg-slate-950 hover:bg-slate-900 text-white font-bold rounded-2xl transition-all shadow-xl hover:shadow-slate-200 active:scale-95 text-center text-lg"
                 >
-                  Create account
+                  Get Started
                 </Link>
                 <Link 
                   href="/login" 
-                  className="w-full sm:w-auto px-8 py-4 bg-white/5 hover:bg-white/10 text-white font-semibold rounded-2xl border border-white/10 transition-all active:scale-95 text-center text-lg backdrop-blur-sm"
+                  className="w-full sm:w-auto px-10 py-5 bg-white hover:bg-slate-50 text-slate-950 font-bold rounded-2xl border border-slate-200 transition-all active:scale-95 text-center text-lg"
                 >
-                  Login
+                  Sign In
                 </Link>
               </div>
 
-              <div className="flex items-center justify-center lg:justify-start gap-6 text-sm font-medium text-slate-400">
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-x-8 gap-y-4 text-sm font-bold text-slate-400 uppercase tracking-widest">
                 <div className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                  </svg>
-                  ₦2,000 welcome bonus
+                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  No Hidden Fees
                 </div>
                 <div className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                  </svg>
-                  0% direct & peer loans
+                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  P2P Verified
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  Instant Bonus
                 </div>
               </div>
             </motion.div>
           </div>
 
-          <div className="flex-1 w-full max-w-lg lg:max-w-none relative">
+          <div className="flex-1 w-full max-w-lg lg:max-w-none">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="relative z-10"
+              initial={{ opacity: 0, scale: 0.9, rotate: -2 }}
+              animate={{ opacity: 1, scale: 1, rotate: 0 }}
+              transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
             >
-              <div className="mx-auto w-full max-w-[423px]">
-                <PhoneHero />
-              </div>
+              <PhoneHero />
             </motion.div>
           </div>
         </div>

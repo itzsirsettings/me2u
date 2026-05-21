@@ -57,29 +57,30 @@ const features = [
 
 export default function FeaturesSection() {
   return (
-    <section className="py-24 bg-slate-50">
-      <div className="container mx-auto px-4 md:px-6">
-        <div className="text-center max-w-3xl mx-auto mb-16">
+    <section className="py-32 bg-white relative overflow-hidden">
+      <div className="container mx-auto px-4 md:px-6 relative z-10">
+        <div className="max-w-4xl mb-24">
           <motion.h2 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-3xl md:text-5xl font-extrabold text-slate-900 mb-6 tracking-tight"
+            className="text-4xl md:text-6xl font-black text-slate-950 mb-8 tracking-tight leading-[1.05]"
           >
-            Everything builds trust before you borrow or lend.
+            Everything builds trust <br/>
+            <span className="text-emerald-500">before you borrow.</span>
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-lg text-slate-600 font-medium"
+            className="text-xl md:text-2xl text-slate-500 font-medium max-w-2xl leading-relaxed tracking-tight"
           >
-            Me2U turns account creation into a clear trust flow: registration deposit, payment proof, KYC, welcome bonus, and wallet access.
+            Me2U turns onboarding into a transparent trust flow. Every step—from deposit to KYC—strengthens your profile.
           </motion.p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-16">
           {features.map((feature, idx) => (
             <motion.div
               key={idx}
@@ -87,13 +88,13 @@ export default function FeaturesSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: idx * 0.05 }}
-              className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 hover:shadow-md hover:border-blue-100 transition-all group"
+              className="group"
             >
-              <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-2xl mb-6 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+              <div className="text-3xl mb-6 text-slate-950 font-light opacity-50 group-hover:opacity-100 group-hover:text-emerald-500 transition-all duration-300">
                 {feature.icon}
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3">{feature.title}</h3>
-              <p className="text-slate-600 font-medium leading-relaxed">{feature.description}</p>
+              <h3 className="text-lg font-bold text-slate-950 mb-3 tracking-tight">{feature.title}</h3>
+              <p className="text-slate-500 font-medium leading-relaxed text-[15px]">{feature.description}</p>
             </motion.div>
           ))}
         </div>

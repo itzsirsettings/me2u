@@ -105,53 +105,63 @@ export default function PublicProofSection() {
   }, []);
 
   return (
-    <section className="py-24 bg-slate-900 text-white border-t border-slate-800">
-      <div className="container mx-auto px-4 md:px-6">
-        <div className="max-w-3xl mb-16">
+    <section className="py-40 bg-slate-950 text-white border-t border-white/5 relative overflow-hidden">
+      {/* Subtle Dark Background Pattern */}
+      <div className="absolute inset-0 z-0 opacity-20 pointer-events-none">
+        <div className="absolute top-[20%] left-[-10%] w-[800px] h-[800px] bg-emerald-900/20 rounded-full blur-[120px]" />
+      </div>
+
+      <div className="container mx-auto px-4 md:px-6 relative z-10">
+        <div className="max-w-4xl mb-32">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-3xl md:text-5xl font-extrabold mb-6 tracking-tight">
-              Real trust numbers, never inflated.
+            <div className="inline-flex items-center px-3 py-1 rounded-full bg-white/5 border border-white/10 text-emerald-400 text-[10px] font-bold tracking-widest uppercase mb-8">
+              Live Transparency
+            </div>
+            <h2 className="text-4xl md:text-6xl font-black mb-8 tracking-tight leading-[1.05]">
+              Real trust numbers, <br/>
+              <span className="text-emerald-500">never inflated.</span>
             </h2>
-            <p className="text-lg text-slate-400 font-medium">
-              Me2U publishes live app totals from the production ledger. Current user count: {loaded ? formatMetric(metrics.totalUsers) : "syncing"}.
+            <p className="text-xl md:text-2xl text-slate-400 font-medium leading-relaxed tracking-tight max-w-2xl">
+              Me2U publishes live data from the production ledger. Current user count: <span className="text-white font-bold">{loaded ? formatMetric(metrics.totalUsers) : "syncing..."}</span>
             </p>
           </motion.div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-24">
-          {proofCards.map((card, index) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-40">
+          {proofCards.slice(0, 4).map((card, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: index * 0.05 }}
-              className="bg-white/5 border border-white/10 rounded-3xl p-8 hover:bg-white/10 transition-colors"
+              transition={{ delay: index * 0.1, ease: [0.16, 1, 0.3, 1] }}
+              className="group"
             >
-              <span className="text-blue-400 font-bold text-xl mb-4 block">
+              <div className="text-sm font-bold text-slate-500 mb-6 group-hover:text-emerald-500 transition-colors">
                 {String(index + 1).padStart(2, "0")}
-              </span>
-              <h3 className="text-xl font-bold text-white mb-2">{card.label}</h3>
-              <p className="text-emerald-400 font-bold mb-4">{card.value}</p>
-              <p className="text-sm text-slate-400 font-medium">{card.detail}</p>
+              </div>
+              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-3">{card.label}</h3>
+              <p className="text-3xl font-black text-white mb-4 tracking-tighter">{card.value}</p>
+              <div className="w-full h-px bg-white/10 group-hover:bg-emerald-500/30 transition-all duration-500 mb-4" />
+              <p className="text-[13px] text-slate-500 font-medium leading-relaxed">{card.detail}</p>
             </motion.div>
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="bg-white/5 border border-white/10 rounded-[2.5rem] p-10 md:p-12"
+            className="bg-white/5 border border-white/10 rounded-[3rem] p-12 md:p-16 hover:bg-white/[0.07] transition-all duration-500"
           >
-            <h2 className="text-3xl font-extrabold mb-6">Testimonials only after real consent.</h2>
-            <p className="text-slate-400 font-medium leading-relaxed">
-              User stories should come from verified borrowers, lenders, referrers, and savers who agree to be featured. Until then, Me2U should leave this section as a consent-based publishing queue instead of inventing quotes.
+            <h2 className="text-3xl md:text-4xl font-black mb-8 leading-tight">Testimonials only after <br/><span className="text-emerald-500">real consent.</span></h2>
+            <p className="text-lg text-slate-400 font-medium leading-relaxed mb-0">
+              User stories come exclusively from verified participants who agree to be featured. We maintain this as a consent-driven space, prioritizing privacy over marketing hype.
             </p>
           </motion.div>
 
@@ -160,22 +170,20 @@ export default function PublicProofSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="bg-white/5 border border-white/10 rounded-[2.5rem] p-10 md:p-12"
+            className="bg-white/5 border border-white/10 rounded-[3rem] p-12 md:p-16 hover:bg-white/[0.07] transition-all duration-500"
           >
-            <h2 className="text-3xl font-extrabold mb-6">Install now, stores when approved.</h2>
-            <p className="text-slate-400 font-medium leading-relaxed mb-4">
-              Me2U is PWA-ready for supported browsers. Real-world airtime, data, electricity, remittance, and app-store distribution require provider credentials, compliance approval, and production contracts before any funds can move outside Me2U’s internal wallet ledger.
-            </p>
-            <p className="text-slate-400 text-sm font-medium leading-relaxed mb-8">
-              Until those external integrations are fully approved, Me2U keeps money inside the wallet ledger and only publishes external service readiness after partner validation.
+            <h2 className="text-3xl md:text-4xl font-black mb-8 leading-tight">Install now, stores <br/><span className="text-emerald-500">when approved.</span></h2>
+            <p className="text-lg text-slate-400 font-medium leading-relaxed mb-12">
+              Me2U is PWA-ready for all modern browsers. Native app store distribution follows our strict compliance and security audit cycle.
             </p>
             <div className="flex flex-wrap gap-4">
-              <button className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold transition-colors flex items-center gap-3">
-                <span>↗</span> Use web wallet
-              </button>
-              <button className="px-6 py-3 bg-white/5 border border-white/10 text-slate-500 cursor-not-allowed rounded-xl font-bold flex items-center gap-3">
-                <span>◎</span> Await external approval
-              </button>
+              <Link href="/register" className="px-8 py-4 bg-white text-slate-950 rounded-2xl font-bold transition-all hover:scale-[1.02] active:scale-95 shadow-xl shadow-white/5">
+                Use Web Wallet
+              </Link>
+              <div className="px-8 py-4 bg-white/5 border border-white/10 text-slate-500 rounded-2xl font-bold flex items-center gap-3">
+                <span className="h-2 w-2 rounded-full bg-slate-700 animate-pulse" />
+                Store Approval Pending
+              </div>
             </div>
           </motion.div>
         </div>
