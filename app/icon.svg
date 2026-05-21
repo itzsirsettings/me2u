@@ -1,5 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="10" fill="#00406b"/>
-  <path d="M14 43V21h7l11 13 11-13h7v22h-8V32L32 44 22 32v11z" fill="#ffffff"/>
-  <path d="M14 49h36" stroke="#007fff" stroke-width="5" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Left figure (dark blue) -->
+  <path d="M128 80a48 48 0 1 1 0 96 48 48 0 0 1 0-96z" fill="#0A1E3D"/>
+  <path d="M64 208c0-35.3 28.7-64 64-64h32c22.1 0 42.1 11.5 53.7 29.3L256 240l42.3-66.7A64 64 0 0 1 352 144h32c35.3 0 64 28.7 64 64v176H64V208z" fill="#0A1E3D"/>
+  
+  <!-- Right figure (lime green) -->
+  <path d="M384 80a48 48 0 1 1 0 96 48 48 0 0 1 0-96z" fill="#9ACD32"/>
+  <path d="M448 208c0-35.3-28.7-64-64-64h-32c-22.1 0-42.1 11.5-53.7 29.3L256 240l-42.3-66.7A64 64 0 0 0 160 144h-32c-35.3 0-64 28.7-64 64v176h384V208z" fill="#9ACD32"/>
+  
+  <!-- Overlap area (darker green) -->
+  <path d="M256 240l-42.3-66.7A64 64 0 0 0 160 144h32c22.1 0 42.1 11.5 53.7 29.3L256 240z" fill="#3D8B37" opacity="0.8"/>
+  <path d="M256 240l42.3-66.7A64 64 0 0 1 352 144h-32c-22.1 0-42.1 11.5-53.7 29.3L256 240z" fill="#3D8B37" opacity="0.8"/>
 </svg>
