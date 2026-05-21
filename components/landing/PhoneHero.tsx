@@ -215,9 +215,16 @@ function PhoneShell({ children }: { children: React.ReactNode }) {
 
 export default function PhoneHero() {
   return (
-    <div className="mx-auto w-[calc(100%-40px)] sm:w-[320px] lg:w-full max-w-[423px] [container-type:inline-size] py-12 lg:py-0">
-      <div className="relative w-full aspect-[423/878] transition-all duration-700">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 origin-top scale-[calc(100cqw/423)] transition-transform duration-500 [perspective:1200px]">
+    <div className="@container mx-auto w-[calc(100%-40px)] sm:w-[320px] lg:w-full max-w-[423px] py-12 lg:py-0">
+      <div className="relative w-full aspect-[423/878]">
+        <div 
+          className="absolute top-0 left-1/2 -translate-x-1/2 origin-top transition-transform duration-500"
+          style={{ 
+            transform: 'translateX(-50%) scale(calc(100cqw / 423))',
+            width: '423px',
+            height: '878px'
+          }}
+        >
           <div className="rotate-x-[4deg] -rotate-y-[4deg] shadow-2xl rounded-[57px]">
             <PhoneShell>
               <div className="relative h-full overflow-hidden">
