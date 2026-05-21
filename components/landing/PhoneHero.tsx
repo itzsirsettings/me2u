@@ -18,6 +18,7 @@ import {
   Wifi,
   BatteryFull,
 } from "lucide-react";
+import BrandLogo from "@/components/BrandLogo";
 
 const quickActions = [
   { label: "Pay Bills", icon: ReceiptText, color: "bg-violet-200 text-violet-700" },
