@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Icons8Icon, { type Icons8IconName } from "@/components/Icons8Icon";
 import NotificationBell from "@/components/NotificationBell";
-import { onboardingCreditAmount, registrationDepositAmount } from "@/lib/loans";
+import { registrationDepositAmount } from "@/lib/loans";
 import { useStore, type Transaction } from "@/lib/store";
 import { getCreditBuilderBadges, getCreditLevel, getTrustScoreBreakdown } from "@/lib/product-features";
 import { motion, type Variants } from "framer-motion";
@@ -90,15 +90,7 @@ export default function Dashboard() {
 
   const firstName = user?.name.trim().split(/\s+/)[0] || "Guest";
   const username = user?.username || firstName.toLowerCase();
-  const visibleLoans = activeLoans.filter(
-    (loan) =>
-      !(
-        loan.role === "borrower" &&
-        loan.source === "platform" &&
-        loan.amount === onboardingCreditAmount &&
-        loan.rate === 0
-      ),
-  );
+  const visibleLoans = activeLoans;
   const activeLoanCount = visibleLoans.filter((loan) => loan.status === "active").length;
   const balance = user?.balance || 0;
   const bankLabel = user?.bankName && user.accountNumber

@@ -8,7 +8,6 @@ import Icons8Icon from "@/components/Icons8Icon";
 import {
   repeatPlatformLoanMinimum,
   registrationDepositAmount,
-  onboardingCreditAmount,
   getSecurityDeposit,
   getMaxLoanDuration,
   getTierLabel,
@@ -81,15 +80,7 @@ export default function Loans() {
 
   if (!mounted || (!isAuthenticated && !isLoading)) return null;
 
-  const visibleLoans = activeLoans.filter(
-    (loan) =>
-      !(
-        loan.role === "borrower" &&
-        loan.source === "platform" &&
-        loan.amount === onboardingCreditAmount &&
-        loan.rate === 0
-      ),
-  );
+  const visibleLoans = activeLoans;
   const platformLoans = visibleLoans.filter((loan) => loan.role === "borrower" && loan.source === "platform");
   const activePlatformLoan = platformLoans.find((loan) => loan.status === "active");
   const repeatLoanAmount = Number(loanAmount);

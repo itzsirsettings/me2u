@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import LoadingButton from "@/LoadingButton";
 import { toast } from "sonner";
 import { useStore } from "@/lib/store";
-import { getActivePlatformLoanRetainedDeposit, onboardingCreditAmount } from "@/lib/loans";
+import { getActivePlatformLoanRetainedDeposit } from "@/lib/loans";
 import { getRequiredWithdrawalBalance } from "@/lib/withdrawal";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
@@ -86,7 +86,7 @@ export default function WithdrawPage() {
   const balanceAfter = currentBalance - totalDebit;
 
   const hasOutstandingLoans = activeLoans.some(
-    (loan) => loan.role === "borrower" && loan.status === "active" && loan.amount !== onboardingCreditAmount
+    (loan) => loan.role === "borrower" && loan.status === "active"
   );
 
   const canProceedToBank = withdrawalAmount >= MIN_WITHDRAWAL && currentBalance >= requiredBalance && !hasOutstandingLoans;
