@@ -9,11 +9,6 @@ const features = [
     description: "Pay the fixed ₦1,000 deposit and upload your transfer reference plus receipt."
   },
   {
-    icon: "⌁",
-    title: "Welcome bonus",
-    description: "₦2,000 wallet bonus after KYC approval."
-  },
-  {
     icon: "◈",
     title: "Me2U Trust Score",
     description: "Improve limits through KYC, repayments, wallet activity, referrals, and account age."
@@ -31,7 +26,7 @@ const features = [
   {
     icon: "✦",
     title: "Referral Rewards",
-    description: "Earn ₦500 when direct referrals complete onboarding."
+    description: "Earn ₦500 after referrals complete KYC and their first loan repayment."
   },
   {
     icon: "◇",
@@ -57,24 +52,24 @@ const features = [
 
 export default function FeaturesSection() {
   return (
-    <section className="py-32 bg-white relative overflow-hidden">
+    <section className="py-32 bg-snow relative overflow-hidden">
       <div className="container mx-auto px-4 md:px-6 relative z-10">
         <div className="max-w-4xl mb-24">
           <motion.h2 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-4xl md:text-6xl font-black text-slate-950 mb-8 tracking-tight leading-[1.05]"
+            className="text-4xl md:text-6xl font-medium text-navy mb-8 tracking-tight leading-[1.2]"
           >
             Everything builds trust <br/>
-            <span className="text-emerald-500">before you borrow.</span>
+            <span className="text-green">before you borrow.</span>
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-xl md:text-2xl text-slate-500 font-medium max-w-2xl leading-relaxed tracking-tight"
+            className="text-lg md:text-xl text-slate-light font-normal max-w-2xl leading-relaxed tracking-tight"
           >
             Me2U turns onboarding into a transparent trust flow. Every step—from deposit to KYC—strengthens your profile.
           </motion.p>
@@ -90,11 +85,11 @@ export default function FeaturesSection() {
               transition={{ delay: idx * 0.05 }}
               className="group"
             >
-              <div className="text-3xl mb-6 text-slate-950 font-light opacity-50 group-hover:opacity-100 group-hover:text-emerald-500 transition-all duration-300">
+              <div className="w-10 h-10 rounded-[10px] bg-green/10 text-green flex items-center justify-center text-xl mb-6 group-hover:bg-green group-hover:text-navy transition-all duration-300">
                 {feature.icon}
               </div>
-              <h3 className="text-lg font-bold text-slate-950 mb-3 tracking-tight">{feature.title}</h3>
-              <p className="text-slate-500 font-medium leading-relaxed text-[15px]">{feature.description}</p>
+              <h3 className="text-lg font-medium text-navy mb-3 tracking-tight">{feature.title}</h3>
+              <p className="text-slate-light font-normal leading-relaxed text-[14px]">{feature.description}</p>
             </motion.div>
           ))}
         </div>

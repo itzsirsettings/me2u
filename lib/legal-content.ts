@@ -48,7 +48,7 @@ export const legalDocuments: PolicyDocument[] = [
         paragraphs: [
           "Me2U is committed to protecting user data and handling personal information responsibly, transparently, and securely.",
           `This Data Policy explains how Me2U, legally owned and operated by ${companyInfo.legalName}, collects, uses, stores, shares, protects, and retains personal data when users access or use the Me2U platform.`,
-          "Me2U provides a secure peer-to-peer lending and wallet platform that allows eligible users to create accounts, complete KYC, fund wallets, upload payment proof, access welcome bonuses, request or fund interest-free loans, repay loans, withdraw eligible balances, earn referral rewards, and access partner merchant offers.",
+          "Me2U provides a secure peer-to-peer lending and wallet platform that allows eligible users to create accounts, complete KYC, fund wallets, upload payment proof, request or fund interest-free loans, repay loans, withdraw eligible balances, earn referral rewards, and access partner merchant offers.",
           "By using Me2U, you agree to this Data Policy and consent to the collection and processing of your information as described below.",
           `Applies to: ${appScope}`,
         ],
@@ -91,7 +91,6 @@ export const legalDocuments: PolicyDocument[] = [
               "Wallet balance records",
               "Withdrawal history",
               "Referral reward history",
-              "Welcome bonus approval status",
               "Marketplace loan listings",
               "Bank transfer details",
               "Transaction timestamps",
@@ -158,7 +157,6 @@ export const legalDocuments: PolicyDocument[] = [
           "Process the ₦1,000 registration deposit",
           "Review uploaded payment proof",
           "Approve or decline wallet crediting",
-          "Unlock the ₦2,000 welcome bonus after successful KYC approval",
           "Enable wallet funding",
           "Enable peer marketplace activity",
           "Allow users to create borrow requests",
@@ -327,7 +325,6 @@ export const legalDocuments: PolicyDocument[] = [
           "Verify your identity",
           "Confirm your registration deposit",
           "Approve your wallet activities",
-          "Process welcome bonuses after KYC approval",
           "Enable peer lending and direct loan features",
           "Track repayments",
           "Manage withdrawals",
@@ -350,7 +347,7 @@ export const legalDocuments: PolicyDocument[] = [
         title: "Payment Proof and Admin Review",
         paragraphs: [
           "When users fund their wallet or pay the registration deposit, Me2U may require payment reference details and uploaded proof.",
-          "Payment proof may be reviewed manually or automatically before wallet crediting, welcome bonus approval, loan eligibility, or withdrawal access.",
+          "Payment proof may be reviewed manually or automatically before wallet crediting, loan eligibility, or withdrawal access.",
         ],
       },
       {
@@ -428,7 +425,7 @@ export const legalDocuments: PolicyDocument[] = [
         paragraphs: [
           "Me2U is not a bank unless expressly licensed as one.",
           "Me2U does not represent that every user will qualify for a loan, bonus, referral reward, withdrawal, or marketplace transaction.",
-          "All lending activity, wallet activity, registration deposit approval, welcome bonus approval, KYC approval, and withdrawal access may be subject to internal review, verification, fraud checks, wallet rules, regulatory requirements, and platform policies.",
+          "All lending activity, wallet activity, registration deposit approval, KYC approval, and withdrawal access may be subject to internal review, verification, fraud checks, wallet rules, regulatory requirements, and platform policies.",
         ],
       },
       {
@@ -442,7 +439,7 @@ export const legalDocuments: PolicyDocument[] = [
       {
         title: "No Guaranteed Loan Approval",
         paragraphs: [
-          "Creating a Me2U account does not guarantee loan approval, marketplace matching, lending offer acceptance, withdrawal approval, bonus approval, referral reward approval, or any fixed income or investment return.",
+          "Creating a Me2U account does not guarantee loan approval, marketplace matching, lending offer acceptance, withdrawal approval, referral reward approval, or any fixed income or investment return.",
           "Me2U may decline, suspend, reverse, delay, or investigate transactions where required for fraud prevention, policy compliance, wallet safety, or legal reasons.",
         ],
       },
@@ -454,11 +451,10 @@ export const legalDocuments: PolicyDocument[] = [
         ],
       },
       {
-        title: "Registration Deposit and Welcome Bonus Disclosure",
+        title: "Registration Deposit Disclosure",
         paragraphs: [
           "Me2U may require a fixed onboarding or registration deposit before certain wallet features are activated.",
-          "The ₦2,000 welcome bonus is subject to successful account creation, registration deposit confirmation, uploaded proof approval, KYC completion, admin review, internal risk checks, and platform rules.",
-          "Me2U may modify, suspend, or discontinue bonuses or promotions with notice where required.",
+          "Me2U may modify, suspend, or discontinue promotions with notice where required.",
         ],
       },
       {
@@ -718,9 +714,7 @@ export const legalDocuments: PolicyDocument[] = [
           "Registration deposit processing",
           "Payment proof upload",
           "Admin review",
-          "Welcome bonus approval after KYC",
-          "Wallet funding",
-          "Peer lending marketplace",
+          "Wallet funding",          "Peer lending marketplace",
           "Direct loan requests",
           "Lending offers",
           "Loan repayment tools",
@@ -733,26 +727,16 @@ export const legalDocuments: PolicyDocument[] = [
       {
         title: "5. Registration Deposit",
         paragraphs: [
-          "Me2U may require a fixed registration deposit before certain wallet, bonus, loan, or withdrawal features are activated.",
+          "Me2U may require a fixed registration deposit before certain wallet, loan, or withdrawal features are activated.",
           "Users must upload accurate transfer references and proof of payment.",
-          "Submitting fake, edited, reused, or misleading payment proof may result in account suspension, bonus cancellation, wallet reversal, or legal action.",
+          "Submitting fake, edited, reused, or misleading payment proof may result in account suspension, wallet reversal, or legal action.",
         ],
       },
       {
-        title: "6. Welcome Bonus",
+        title: "6. Referrals",
         paragraphs: [
-          "The Me2U welcome bonus is promotional and subject to approval.",
-          "The welcome bonus is not a loan and does not require repayment unless it was credited due to fraud, technical error, duplicate account abuse, or policy violation.",
-          "Me2U may change or discontinue bonuses with notice where required.",
-        ],
-        bullets: [
-          "Successful account creation",
-          "Registration deposit confirmation",
-          "Valid payment proof",
-          "Completed KYC",
-          "Admin approval",
-          "Risk review",
-          "Compliance with Me2U rules",
+          "Me2U may offer referral rewards for users who refer others to the platform.",
+          "Referral rewards are subject to the referred user completing the required verification process.",
         ],
       },
       {
@@ -1195,7 +1179,7 @@ export const supportDocuments: PolicyDocument[] = [
     slug: "kyc-help",
     title: "KYC Help",
     eyebrow: "Verification help",
-    summary: "KYC guidance for identity verification, bank details, account ownership, welcome bonuses, withdrawals, and loan eligibility.",
+    summary: "KYC guidance for identity verification, bank details, account ownership, withdrawals, and loan eligibility.",
     lastUpdated: legalLastUpdated,
     sections: [
       {
@@ -1285,4 +1269,4 @@ export const legalFooterGroups = [
 ];
 
 export const footerDisclaimer =
-  "Me2U is a peer-to-peer lending and wallet technology platform. Loan access, welcome bonuses, withdrawals, referrals, wallet activity, and marketplace features are subject to registration, deposit confirmation, KYC, fraud checks, admin review, wallet rules, and approval. Loans require repayment. Terms apply.";
+  "Me2U is a peer-to-peer lending and wallet technology platform. Loan access, withdrawals, referrals, wallet activity, and marketplace features are subject to registration, deposit confirmation, KYC, fraud checks, admin review, wallet rules, and approval. Loans require repayment. Terms apply.";

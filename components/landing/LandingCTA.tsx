@@ -11,34 +11,34 @@ export default function LandingCTA() {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="bg-slate-950 rounded-[4rem] p-12 md:p-24 lg:p-32 text-center max-w-6xl mx-auto relative overflow-hidden shadow-[0_40px_100px_-20px_rgba(0,0,0,0.3)]"
+          className="bg-navy rounded-[32px] p-12 md:p-24 lg:p-32 text-center max-w-6xl mx-auto relative overflow-hidden shadow-2xl"
         >
           {/* Subtle Background Glow */}
           <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
-            <div className="absolute top-[-20%] right-[-10%] w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[100px]" />
-            <div className="absolute bottom-[-20%] left-[-10%] w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[100px]" />
+            <div className="absolute top-[-20%] right-[-10%] w-[500px] h-[500px] bg-green/10 rounded-full blur-[100px]" />
+            <div className="absolute bottom-[-20%] left-[-10%] w-[500px] h-[500px] bg-lime/5 rounded-full blur-[100px]" />
           </div>
 
           <div className="relative z-10 max-w-4xl mx-auto">
-            <h2 className="text-4xl md:text-6xl lg:text-7xl font-black text-white mb-10 tracking-tight leading-[1.02]">
+            <h2 className="text-4xl md:text-6xl lg:text-7xl font-medium text-white mb-10 tracking-tight leading-[1.1]">
               Join the new era of <br/>
-              <span className="text-emerald-500 text-glow-emerald">trust-based lending.</span>
+              <span className="text-green">trust-based lending.</span>
             </h2>
             
-            <p className="text-xl md:text-2xl text-slate-400 font-medium max-w-2xl mx-auto mb-16 leading-relaxed tracking-tight">
+            <p className="text-lg md:text-xl text-white/60 font-normal max-w-2xl mx-auto mb-16 leading-relaxed tracking-tight">
               Start your journey today. Build your trust score, access 0% loans, and grow with your community.
             </p>
             
             <div className="flex flex-col sm:flex-row justify-center items-center gap-6">
               <Link 
                 href="/register" 
-                className="w-full sm:w-auto px-12 py-6 bg-white text-slate-950 font-black rounded-2xl transition-all hover:scale-[1.02] hover:shadow-[0_20px_40px_rgba(255,255,255,0.1)] active:scale-95 text-lg shadow-2xl"
+                className="btn-primary w-full sm:w-auto text-lg h-auto py-5 px-12"
               >
                 Create Account
               </Link>
               <Link 
                 href="/login" 
-                className="w-full sm:w-auto px-12 py-6 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold rounded-2xl transition-all active:scale-95 text-lg"
+                className="btn-ghost text-white border-white/20 w-full sm:w-auto text-lg h-auto py-5 px-12"
               >
                 Sign In
               </Link>

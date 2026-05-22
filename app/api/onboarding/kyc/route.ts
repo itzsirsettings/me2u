@@ -39,18 +39,6 @@ export async function POST(request: Request) {
       );
     }
 
-    const { error: bonusError } = await auth.supabase.rpc("me2u_unlock_welcome_bonus", {
-      p_user_id: auth.user.id,
-    });
-
-    if (bonusError) {
-      console.error("Welcome bonus unlock error:", bonusError);
-      return NextResponse.json(
-        { error: "KYC saved, but the welcome bonus could not be unlocked. Please contact support." },
-        { status: 500 },
-      );
-    }
-
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("KYC error:", error);

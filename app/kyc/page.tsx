@@ -50,7 +50,7 @@ export default function KYCPage() {
         </div>
         <h2 className="mb-2 font-display text-xl font-bold text-[var(--color-text-primary)] md:text-2xl">KYC Verified</h2>
         <p className="max-w-md text-[var(--color-text-secondary)]">
-          Your identity has been verified. Your welcome bonus and full Me2U access are ready.
+          Your identity has been verified. You now have full Me2U access.
         </p>
         <button
           onClick={() => router.push("/dashboard")}
@@ -143,7 +143,7 @@ export default function KYCPage() {
           Verify Identity
         </h1>
         <p className="text-base leading-relaxed font-sans italic opacity-90 text-[var(--color-text-secondary)] md:text-xl">
-          Complete KYC to unlock your bonus and full access
+          Complete KYC to unlock full access
         </p>
       </div>
 

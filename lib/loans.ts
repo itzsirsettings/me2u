@@ -1,4 +1,3 @@
-export const onboardingCreditAmount = 2000;
 export const registrationDepositAmount = 1000;
 export const repeatPlatformLoanMinimum = 5000;
 export const platformLoanRetainedDepositRate = 0.5;

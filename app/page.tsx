@@ -10,12 +10,12 @@ import LandingFooter from "@/components/landing/LandingFooter";
 export const metadata: Metadata = {
   title: "Me2U - Trust-Based Interest-Free Peer Lending",
   description:
-    "Me2U is a secure peer-to-peer lending app built for individuals and cooperatives, with trust scores, credit builder tools, verified wallets, KYC, marketplace lending, savings goals, daily wallet services, welcome bonuses, and referral rewards.",
+    "Me2U is a secure peer-to-peer lending app built for individuals and cooperatives, with trust scores, credit builder tools, verified wallets, KYC, marketplace lending, savings goals, daily wallet services, and referral rewards.",
 };
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-white selection:bg-blue-200 selection:text-blue-900 font-sans">
+    <div className="min-h-screen bg-snow selection:bg-green/30 font-sans">
       <LandingHeader />
       
       <main>

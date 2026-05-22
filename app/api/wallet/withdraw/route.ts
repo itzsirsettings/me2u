@@ -176,7 +176,7 @@ export async function POST(request: Request) {
       throw new Error("Your wallet is frozen. Unfreeze it from Security Center before requesting withdrawals.");
     }
 
-    // Block if there are outstanding borrower loans (excluding onboarding credit of 2000)
+    // Block if there are outstanding borrower loans
     const { data: activeLoans, error: activeLoansError } = await auth.supabase
       .from("loans")
       .select("amount, lender_id")
@@ -185,9 +185,7 @@ export async function POST(request: Request) {
 
     if (activeLoansError) throw new Error(activeLoansError.message);
 
-    const hasOutstandingLoan = (activeLoans || []).some(
-      (loan) => !(Number(loan.amount) === 2000 && loan.lender_id === null)
-    );
+    const hasOutstandingLoan = (activeLoans || []).length > 0;
 
     if (hasOutstandingLoan) {
       throw new Error("You must repay all outstanding loans before you can withdraw your capital.");

@@ -138,10 +138,10 @@ export default function AdvancedToolsSection() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-4xl md:text-6xl font-black text-slate-950 mb-8 tracking-tight leading-[1.05]"
+            className="text-4xl md:text-6xl font-medium text-navy mb-8 tracking-tight leading-[1.2]"
           >
             A refined flow from <br/>
-            <span className="text-emerald-500">deposit to withdrawal.</span>
+            <span className="text-green">deposit to withdrawal.</span>
           </motion.h2>
         </div>
 
@@ -159,18 +159,21 @@ export default function AdvancedToolsSection() {
                   viewport={{ once: true, margin: "-100px" }}
                   transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                 >
-                  <h3 className="text-3xl md:text-5xl font-black text-slate-950 mb-8 tracking-tight leading-[1.1]">
+                  <div className="inline-block px-3 py-1 rounded-full bg-green/10 text-green text-[10px] font-bold uppercase tracking-wider mb-6">
+                    {tool.tag}
+                  </div>
+                  <h3 className="text-3xl md:text-5xl font-medium text-navy mb-8 tracking-tight leading-[1.2]">
                     {tool.title}
                   </h3>
-                  <p className="text-lg md:text-xl text-slate-500 font-medium leading-relaxed mb-10 tracking-tight">
+                  <p className="text-lg md:text-xl text-slate-light font-normal leading-relaxed mb-10 tracking-tight">
                     {tool.description}
                   </p>
                   <Link 
                     href="/register" 
-                    className="group inline-flex items-center gap-3 text-slate-950 font-bold text-lg hover:text-emerald-500 transition-colors"
+                    className="group inline-flex items-center gap-3 text-navy font-medium text-lg hover:text-green transition-colors"
                   >
                     Start your journey 
-                    <span className="w-8 h-px bg-slate-200 group-hover:bg-emerald-500 group-hover:w-12 transition-all duration-300"></span>
+                    <span className="w-8 h-px bg-slate-light/20 group-hover:bg-green group-hover:w-12 transition-all duration-300"></span>
                   </Link>
                 </motion.div>
               </div>
@@ -181,7 +184,7 @@ export default function AdvancedToolsSection() {
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true, margin: "-100px" }}
                   transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-                  className={`w-full rounded-[3.5rem] p-8 md:p-20 bg-slate-50 border border-slate-100 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]`}
+                  className={`w-full rounded-[32px] p-8 md:p-20 bg-snow border border-black/5 shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)]`}
                 >
                   {tool.imageEl}
                 </motion.div>

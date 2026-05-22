@@ -203,28 +203,28 @@ export const referralProgramLevels = [
     requirement: 1,
     reward: "₦500",
     badge: "Bronze",
-    summary: "1 verified referral",
+    summary: "1 verified referral with repayment",
   },
   {
     name: "Builder",
     requirement: 5,
     reward: "Bonus badge + extra reward",
     badge: "Silver",
-    summary: "5 verified referrals",
+    summary: "5 verified referrals with repayment",
   },
   {
     name: "Ambassador",
     requirement: 20,
     reward: "Higher reward + leaderboard",
     badge: "Gold",
-    summary: "20 verified referrals",
+    summary: "20 verified referrals with repayment",
   },
   {
     name: "Partner",
     requirement: 100,
     reward: "Commission plan",
     badge: "Platinum",
-    summary: "100 verified referrals",
+    summary: "100 verified referrals with repayment",
   },
 ] as const;
 

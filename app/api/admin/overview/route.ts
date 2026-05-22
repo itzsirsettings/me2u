@@ -197,11 +197,6 @@ export async function GET(request: Request) {
       revenueEvents.filter((event) => event.type === "partner_treasury_share"),
       (event) => moneyValue(event.amount),
     );
-    const onboardingCredits = transactions.filter(
-      (transaction) =>
-        transaction.type === "deposit" &&
-        /welcome bonus|onboarding credit|reversal of old onboarding credit/i.test(transaction.description),
-    );
 
     const summary = {
       users: profiles.length,
@@ -216,8 +211,7 @@ export async function GET(request: Request) {
       income: sumBy(approvedProofs, (proof) => moneyValue(proof.amount)) + revenueEventTotal,
       expenses:
         sumBy(approvedWithdrawals, (requestRow) => moneyValue(requestRow.amount)) +
-        sumBy(affiliateRewards, (reward) => moneyValue(reward.amount)) +
-        sumBy(onboardingCredits, (transaction) => moneyValue(transaction.amount)),
+        sumBy(affiliateRewards, (reward) => moneyValue(reward.amount)),
       withdrawal_fee_revenue: withdrawalFeeRevenue,
       marketplace_boost_revenue: marketplaceBoostRevenue,
       treasury_partner_revenue: treasuryPartnerRevenue,
@@ -256,10 +250,6 @@ export async function GET(request: Request) {
         sumBy(
           affiliateRewards.filter((reward) => sameMonth(reward.created_at)),
           (reward) => moneyValue(reward.amount),
-        ) +
-        sumBy(
-          onboardingCredits.filter((transaction) => sameMonth(transaction.created_at)),
-          (transaction) => moneyValue(transaction.amount),
         ),
     };
 

@@ -44,7 +44,7 @@ function read(path) {
   return readFileSync(path, "utf8");
 }
 
-test("visible product copy uses the new welcome bonus and loan language", () => {
+test("visible product copy uses the new loan language", () => {
   const source = visibleFiles.map(read).join("\n");
   const bannedCopy = [
     "Platform Credit",
@@ -56,6 +56,7 @@ test("visible product copy uses the new welcome bonus and loan language", () => 
     "platform loans",
     "platform loan",
     "onboarding credit",
+    "welcome bonus",
     "Starts from ₦10,000",
     "Request 0% loans from ₦10,000",
     "not a loan and does not need repayment",
@@ -65,7 +66,6 @@ test("visible product copy uses the new welcome bonus and loan language", () => 
     assert.equal(source.includes(phrase), false, `Unexpected old copy: ${phrase}`);
   }
 
-  assert.match(source, /welcome bonus is waiting/);
   assert.match(source, /0% interest loan from ₦5,000/);
 });
 
@@ -132,17 +132,14 @@ test("username login and the new loan minimum are wired", () => {
 test("licensed partner revenue model is backend-enforced", () => {
   const revenue = read("lib/revenue.ts");
   const withdrawal = read("app/api/wallet/withdraw/route.ts");
-  const kyc = read("app/api/onboarding/kyc/route.ts");
   const marketplace = read("app/api/marketplace/create/route.ts");
   const migration = read("supabase/migrations/20260519152449_licensed_partner_revenue_model.sql");
   const adminOverview = read("app/api/admin/overview/route.ts");
 
   assert.match(revenue, /withdrawalFeeAmount = 100/);
   assert.match(withdrawal, /fee_amount: withdrawalFeeAmount/);
-  assert.match(kyc, /me2u_unlock_welcome_bonus/);
   assert.match(marketplace, /p_boost: boost/);
   assert.match(migration, /create table if not exists public\.revenue_events/);
-  assert.match(migration, /welcome_bonus_unlocked_at/);
   assert.match(migration, /boosted_until/);
   assert.match(migration, /partner_offer_consent_at/);
   assert.match(migration, /'withdrawal_fee'/);

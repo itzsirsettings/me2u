@@ -93,7 +93,6 @@ export interface User {
   registrationDepositAmount: number;
   registrationDepositReference: string | null;
   registrationDepositConfirmedAt: string | null;
-  welcomeBonusUnlockedAt: string | null;
   referredBy: string | null;
   affiliateEarnings: number;
   verifiedReferralCount: number;
@@ -317,7 +316,6 @@ function toUser(profile: ProfileRow, wallet: WalletRow | null, affiliateRewards:
     registrationDepositAmount: Number(profile.registration_deposit_amount || 0),
     registrationDepositReference: profile.registration_payment_reference,
     registrationDepositConfirmedAt: profile.registration_deposit_confirmed_at,
-    welcomeBonusUnlockedAt: profile.welcome_bonus_unlocked_at,
     referredBy: profile.referred_by,
     affiliateEarnings: Number(profile.affiliate_earnings || 0),
     verifiedReferralCount: affiliateRewards.length,

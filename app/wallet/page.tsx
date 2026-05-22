@@ -2,7 +2,7 @@
 
 import { Card } from "@/components/ui/card";
 import Icons8Icon, { type Icons8IconName } from "@/components/Icons8Icon";
-import { onboardingCreditAmount, registrationDepositAmount, getSecurityDeposit, getActivePlatformLoanRetainedDeposit } from "@/lib/loans";
+import { registrationDepositAmount, getSecurityDeposit, getActivePlatformLoanRetainedDeposit } from "@/lib/loans";
 import { useStore } from "@/lib/store";
 import { useState, useEffect } from "react";
 import LoadingButton from "@/LoadingButton";
@@ -182,7 +182,7 @@ export default function WalletPage() {
       throw new Error("Unable to submit");
     }
 
-    toast.success("Receipt submitted! After approval, complete KYC to unlock your welcome bonus.");
+    toast.success("Receipt submitted! After approval, complete KYC to unlock full access.");
     setRegistrationReference("");
     setRegReceiptFile(null);
   };
@@ -483,8 +483,8 @@ export default function WalletPage() {
             <div className="mb-5 flex min-w-0 items-start justify-between gap-4 border-b border-[var(--color-border)] pb-5">
               <div className="min-w-0">
                 <h2 className="text-xl font-display md:text-3xl">Registration Deposit</h2>
-                <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">
-                  Your ₦{onboardingCreditAmount.toLocaleString()} welcome bonus is waiting. Submit the ₦{registrationDepositAmount.toLocaleString()} deposit proof, then complete KYC to unlock it.
+                <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
+                  Submit the ₦{registrationDepositAmount.toLocaleString()} deposit proof, then complete KYC to unlock full access.
                 </p>
               </div>
               <span className="shrink-0 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-warning-bg)] px-3 py-1 text-xs font-bold uppercase text-[var(--color-warning-text)]">
