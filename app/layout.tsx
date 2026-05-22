@@ -1,9 +1,22 @@
 import type { Metadata } from "next";
+import { Bricolage_Grotesque, Geologica } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import BottomNav from "@/components/BottomNav";
 import AuthBootstrap from "@/components/AuthBootstrap";
 import MobileHeader from "@/components/MobileHeader";
+
+const fontDisplay = Bricolage_Grotesque({
+  subsets: ["latin"],
+  variable: "--font-bricolage",
+  display: "swap",
+});
+
+const fontSans = Geologica({
+  subsets: ["latin"],
+  variable: "--font-geologica",
+  display: "swap",
+});
 
 const themeScript = `
 (() => {
@@ -42,7 +55,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={`${fontDisplay.variable} ${fontSans.variable}`}>
       <body className="font-sans" suppressHydrationWarning>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <AuthBootstrap />

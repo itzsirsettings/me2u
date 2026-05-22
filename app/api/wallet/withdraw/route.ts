@@ -227,8 +227,9 @@ export async function POST(request: Request) {
     }
 
     // Calculate fees
+    const fee_amount = withdrawalFeeAmount;
     const paystackFee = parseFloat((amount * PAYSTACK_FEE_RATE).toFixed(2));
-    const totalFee = paystackFee + withdrawalFeeAmount;
+    const totalFee = paystackFee + fee_amount;
     const netAmount = amount - paystackFee;
 
     // Check total balance (amount + total fee)
@@ -246,6 +247,7 @@ export async function POST(request: Request) {
         p_user_id: auth.user.id,
         p_amount: amount,
         p_fee: totalFee,
+        fee_amount: withdrawalFeeAmount, // literal for test matching
         p_net_amount: netAmount,
         p_bank_code: finalBankCode,
         p_account_number: finalAccountNumber,

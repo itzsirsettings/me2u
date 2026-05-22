@@ -23,8 +23,8 @@ export default function HeroSection() {
               transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             >
               <h1 className="text-5xl md:text-6xl lg:text-8xl font-black tracking-tight mb-8 leading-[0.95] text-slate-950">
-                Borrow at 0%. <br className="hidden md:block"/>
-                <span className="text-emerald-500">Build your trust.</span>
+                Freedom to borrow <br className="hidden md:block"/>
+                <span className="text-emerald-500">your way.</span>
               </h1>
               
               <p className="text-xl md:text-2xl text-slate-500 mb-12 max-w-xl mx-auto lg:mx-0 leading-relaxed font-medium tracking-tight">
@@ -37,7 +37,7 @@ export default function HeroSection() {
                   href="/register" 
                   className="w-full sm:w-auto px-10 py-5 bg-slate-950 hover:bg-slate-900 text-white font-bold rounded-2xl transition-all shadow-xl hover:shadow-slate-200 active:scale-95 text-center text-lg"
                 >
-                  Get Started
+                  Create account
                 </Link>
                 <Link 
                   href="/login" 

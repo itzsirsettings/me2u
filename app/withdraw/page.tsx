@@ -274,11 +274,11 @@ export default function WithdrawPage() {
                   <div className="grid gap-2.5 rounded-[12px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3.5 text-xs">
                     <div className="flex items-center justify-between">
                       <span className="text-[var(--color-text-secondary)]">Amount</span>
-                      <span className="font-mono font-semibold">₦{withdrawalAmount.toLocaleString()}</span>
+                      <span className="overflow-anywhere min-w-0 text-right font-mono font-semibold">₦{withdrawalAmount.toLocaleString()}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-[var(--color-text-secondary)]">Fee (1.5% + ₦{PLATFORM_FEE})</span>
-                      <span className="font-mono font-semibold">₦{totalFee.toLocaleString()}</span>
+                      <span className="overflow-anywhere min-w-0 text-right font-mono font-semibold">₦{totalFee.toLocaleString()}</span>
                     </div>
                     <div className="flex items-center justify-between border-t border-[var(--color-border)] pt-2 font-semibold">
                       <span>You receive</span>
@@ -329,11 +329,11 @@ export default function WithdrawPage() {
                 <div className="rounded-[12px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 space-y-2 text-xs">
                   <div className="flex items-center justify-between">
                     <span className="text-[var(--color-text-secondary)]">Withdraw</span>
-                    <span className="font-mono font-semibold">₦{withdrawalAmount.toLocaleString()}</span>
+                    <span className="overflow-anywhere min-w-0 text-right font-mono font-semibold">₦{withdrawalAmount.toLocaleString()}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-[var(--color-text-secondary)]">Fee</span>
-                    <span className="font-mono font-semibold">₦{totalFee.toLocaleString()}</span>
+                    <span className="overflow-anywhere min-w-0 text-right font-mono font-semibold">₦{totalFee.toLocaleString()}</span>
                   </div>
                   <div className="flex items-center justify-between border-t border-[var(--color-border)] pt-2 font-semibold">
                     <span>You receive</span>
