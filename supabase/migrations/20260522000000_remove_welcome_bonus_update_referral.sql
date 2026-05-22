@@ -1,19 +1,26 @@
--- Remove 2,000 Naira Welcome Bonus and Update Referral Logic
--- 1. Remove welcome bonus entirely.
--- 2. Referral bonus (N500) only after referral completes KYC AND first loan repayment.
+-- Final Cleanup: Remove Welcome Bonus and Update Referral Logic
+-- This file is synchronized with the live Supabase environment fixes.
 
--- ─── 1. Update Referrals Table ───
-ALTER TABLE public.referrals 
-ADD COLUMN IF NOT EXISTS rewarded BOOLEAN NOT NULL DEFAULT false;
+DO $$ 
+BEGIN
+    -- 1. Update Referrals Table Structure
+    ALTER TABLE public.referrals 
+    ADD COLUMN IF NOT EXISTS rewarded BOOLEAN NOT NULL DEFAULT false;
 
-UPDATE public.referrals
-SET rewarded = true
-WHERE first_withdrawal_rewarded = true AND first_repayment_rewarded = true;
+    UPDATE public.referrals
+    SET rewarded = true
+    WHERE first_withdrawal_rewarded = true AND first_repayment_rewarded = true;
 
--- ─── 2. Remove Welcome Bonus Logic ───
-DROP FUNCTION IF EXISTS public.me2u_unlock_welcome_bonus(uuid);
-DROP FUNCTION IF EXISTS private.me2u_unlock_welcome_bonus(uuid);
+    -- 2. Drop Legacy Bonus Functions
+    DROP FUNCTION IF EXISTS public.me2u_unlock_welcome_bonus(uuid);
+    DROP FUNCTION IF EXISTS private.me2u_unlock_welcome_bonus(uuid);
 
+    -- 3. Drop existing stats functions to avoid return type conflicts
+    DROP FUNCTION IF EXISTS public.me2u_get_referral_details(uuid);
+    DROP FUNCTION IF EXISTS public.me2u_get_referral_stats(uuid);
+END $$;
+
+-- 4. Update Admin Approval Logic (Remove Bonus Trigger)
 CREATE OR REPLACE FUNCTION public.admin_approve_payment_proof(p_proof_id uuid)
 RETURNS void
 LANGUAGE plpgsql
@@ -24,7 +31,6 @@ DECLARE
   v_proof public.payment_proofs%rowtype;
   v_profile public.profiles%rowtype;
   v_admin boolean;
-  v_updated integer;
 BEGIN
   SELECT exists (SELECT 1 FROM public.profiles WHERE id = (SELECT auth.uid()) AND role = 'admin')
   INTO v_admin;
@@ -67,7 +73,7 @@ BEGIN
 END;
 $$;
 
--- ─── 3. Update Referral Reward Logic ───
+-- 5. Update Referral Reward Trigger (KYC + First Loan)
 DROP TRIGGER IF EXISTS referral_withdrawal_trigger ON public.withdrawal_requests;
 DROP FUNCTION IF EXISTS private.me2u_handle_referral_withdrawal_reward();
 
@@ -83,40 +89,31 @@ DECLARE
   v_referee_kyc_verified boolean;
   v_updated integer;
 BEGIN
-  -- Only fires when a loan transitions to completed
   IF new.status = 'completed' AND old.status = 'active' THEN
-    -- Check if the borrower (referee) is KYC verified
     SELECT kyc_verified INTO v_referee_kyc_verified FROM public.profiles WHERE id = new.borrower_id;
     IF NOT v_referee_kyc_verified THEN RETURN new; END IF;
 
-    -- Find the referral where referee is this borrower and reward not yet given
     SELECT referrer_id INTO v_referrer_id FROM public.referrals
     WHERE referee_id = new.borrower_id AND rewarded = false LIMIT 1;
 
     IF v_referrer_id IS NOT NULL THEN
-      -- Credit referrer wallet
       UPDATE public.wallets SET balance = balance + v_reward WHERE user_id = v_referrer_id;
       GET DIAGNOSTICS v_updated = row_count;
       IF v_updated = 1 THEN
-        -- Mark rewarded and keep compatibility
         UPDATE public.referrals SET rewarded = true, first_repayment_rewarded = true, first_withdrawal_rewarded = true
         WHERE referee_id = new.borrower_id AND referrer_id = v_referrer_id;
-
-        -- Log transaction
         INSERT INTO public.transactions (user_id, type, amount, description)
         VALUES (v_referrer_id, 'deposit', v_reward, 'Referral reward — referee completed first loan and KYC');
-
-        -- Notify referrer
         INSERT INTO public.notifications (user_id, title, message)
         VALUES (v_referrer_id, 'Referral Reward Earned!', 'You earned ₦500 wallet credit because your referral completed their first loan repayment and KYC.');
       END IF;
     END IF;
   END IF;
-  RETURN new;
+  return new;
 END;
 $$;
 
--- ─── 4. Update Stats Functions ───
+-- 6. Re-create Statistics Functions with New Schema
 CREATE OR REPLACE FUNCTION public.me2u_get_referral_stats(p_user_id uuid)
 RETURNS json
 LANGUAGE plpgsql
