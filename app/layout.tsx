@@ -5,6 +5,7 @@ import BottomNav from "@/components/BottomNav";
 import AuthBootstrap from "@/components/AuthBootstrap";
 import MobileHeader from "@/components/MobileHeader";
 import ProtectedOnboarding from "@/components/ProtectedOnboarding";
+import Me2UAssistantWidget from "@/components/Me2UAssistantWidget";
 
 const themeScript = `
 (() => {
@@ -50,6 +51,7 @@ export default function RootLayout({
         <ProtectedOnboarding />
         <MobileHeader />
         {children}
+        <Me2UAssistantWidget />
         <BottomNav />
         <Toaster position="top-center" richColors closeButton />
       </body>

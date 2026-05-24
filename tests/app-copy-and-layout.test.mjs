@@ -229,3 +229,60 @@ test("customer UI does not expose platform revenue or investor-side benefits", (
     assert.equal(source.includes(phrase), false, `Customer UI exposes platform-side copy: ${phrase}`);
   }
 });
+
+test("Me2U Guide assistant is citation-bound and globally mounted", () => {
+  const route = read("app/api/assistant/chat/route.ts");
+  const knowledge = read("lib/assistant/knowledge.ts");
+  const safety = read("lib/assistant/safety.ts");
+  const accountContext = read("lib/assistant/account-context.ts");
+  const widget = read("components/Me2UAssistantWidget.tsx");
+  const layout = read("app/layout.tsx");
+  const readiness = read("lib/server/launch-readiness.ts");
+  const env = read(".env.example");
+
+  assert.match(route, /\/v1\/responses/);
+  assert.match(route, /json_schema/);
+  assert.match(route, /max_output_tokens/);
+  assert.match(route, /buildExtractiveFallbackAnswer/);
+  assert.match(route, /sanitizeAssistantAnswer/);
+  assert.match(route, /text\/event-stream/);
+  assert.match(route, /function sse\(event: "delta" \| "metadata" \| "error"/);
+  assert.match(route, /sse\("delta"/);
+  assert.match(route, /sse\("metadata"/);
+  assert.match(route, /OPENAI_MODEL/);
+  assert.match(route, /gpt-5\.2/);
+
+  assert.match(knowledge, /PRODUCT\.md/);
+  assert.match(knowledge, /design\.md/);
+  assert.match(knowledge, /legalDocuments/);
+  assert.match(knowledge, /supportDocuments/);
+  assert.match(knowledge, /growthFeatureModules/);
+  assert.match(knowledge, /visibleSecurityFeatures/);
+  assert.match(knowledge, /Withdrawal requirements/);
+  assert.match(knowledge, /Loan requirements/);
+
+  assert.match(safety, /I do not have enough verified Me2U information to answer that/);
+  assert.match(safety, /otp/);
+  assert.match(safety, /password/);
+  assert.match(safety, /pin/);
+  assert.match(safety, /handoffNeeded/);
+
+  assert.match(accountContext, /Sensitive fields redacted/);
+  assert.match(accountContext, /maskEmail/);
+  assert.match(accountContext, /maskPhone/);
+  assert.doesNotMatch(accountContext, /account_number[^\\n]+summary/);
+
+  assert.match(widget, /Me2U Guide/);
+  assert.match(widget, /Open Me2U Guide/);
+  assert.match(widget, /Create support request/);
+  assert.match(widget, /Why can't I withdraw yet\?/);
+  assert.match(widget, /html|dark|light|theme|var\(--color-bg-card\)/);
+  assert.match(layout, /<Me2UAssistantWidget \/>/);
+  assert.match(readiness, /OPENAI_API_KEY/);
+
+  assert.match(env, /OPENAI_API_KEY/);
+  assert.doesNotMatch(env, /sk-proj-[A-Za-z0-9_-]{32,}/);
+  assert.match(env, /OPENAI_TIMEOUT_MS/);
+  assert.match(env, /OPENAI_MAX_OUTPUT_TOKENS/);
+  assert.match(env, /ASSISTANT_MAX_CONTEXT_SNIPPETS/);
+});

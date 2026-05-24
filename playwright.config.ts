@@ -1,5 +1,8 @@
 import type { PlaywrightTestConfig } from '@playwright/test';
 
+const port = process.env.PLAYWRIGHT_PORT || '3000';
+const baseURL = process.env.PLAYWRIGHT_BASE_URL || `http://127.0.0.1:${port}`;
+
 const config: PlaywrightTestConfig = {
   testDir: './tests/e2e',
   timeout: 30000,
@@ -8,7 +11,7 @@ const config: PlaywrightTestConfig = {
   },
   use: {
     headless: true,
-    baseURL: 'http://127.0.0.1:3000',
+    baseURL,
     viewport: { width: 1280, height: 720 },
     actionTimeout: 10000,
     ignoreHTTPSErrors: true,
@@ -20,8 +23,8 @@ const config: PlaywrightTestConfig = {
     },
   ],
   webServer: {
-    command: 'npx next build && npx next start --port 3000',
-    url: 'http://127.0.0.1:3000',
+    command: `npx next build && npx next start --port ${port}`,
+    url: baseURL,
     reuseExistingServer: true,
     timeout: 120000,
   },

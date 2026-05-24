@@ -1,0 +1,146 @@
+import type { AssistantCitation } from "@/lib/assistant/knowledge";
+
+export type AssistantStructuredAnswer = {
+  answer: string;
+  citations: AssistantCitation[];
+  suggestedActions: string[];
+  confidence: "low" | "medium" | "high";
+  handoffNeeded: boolean;
+  supportRequest?: {
+    topic: string;
+    summary: string;
+    conversationExcerpt: string;
+    userId?: string;
+    route?: string;
+    createdAt: string;
+  };
+};
+
+const blockedSecrets = [
+  "otp",
+  "password",
+  "pin",
+  "card number",
+  "secret",
+  "token",
+  "private key",
+];
+
+const supportKeywords = [
+  "fraud",
+  "scam",
+  "dispute",
+  "failed",
+  "missing",
+  "stolen",
+  "unauthorized",
+  "wrong transfer",
+  "not credited",
+  "repayment conflict",
+  "withdrawal issue",
+];
+
+const complianceKeywords = [
+  "loan",
+  "repay",
+  "repayment",
+  "withdraw",
+  "kyc",
+  "deposit",
+  "legal",
+  "terms",
+  "dispute",
+  "fraud",
+];
+
+export function asksForSecret(message: string) {
+  const normalized = message.toLowerCase();
+  return blockedSecrets.some((keyword) => normalized.includes(keyword));
+}
+
+export function needsSupportHandoff(message: string) {
+  const normalized = message.toLowerCase();
+  return supportKeywords.some((keyword) => normalized.includes(keyword));
+}
+
+export function needsComplianceNote(message: string) {
+  const normalized = message.toLowerCase();
+  return complianceKeywords.some((keyword) => normalized.includes(keyword));
+}
+
+export function makeRefusalAnswer(message: string, route?: string): AssistantStructuredAnswer {
+  return {
+    answer: message || "I do not have enough verified Me2U information to answer that.",
+    citations: [],
+    suggestedActions: ["Contact official support", "Try asking about Me2U app rules or your account status"],
+    confidence: "low",
+    handoffNeeded: true,
+    supportRequest: {
+      topic: "Assistant could not verify an answer",
+      summary: message,
+      conversationExcerpt: message,
+      route,
+      createdAt: new Date().toISOString(),
+    },
+  };
+}
+
+export function buildSupportRequest(params: {
+  topic: string;
+  summary: string;
+  conversationExcerpt: string;
+  userId?: string;
+  route?: string;
+}) {
+  return {
+    topic: params.topic,
+    summary: params.summary,
+    conversationExcerpt: params.conversationExcerpt.slice(0, 1200),
+    userId: params.userId,
+    route: params.route,
+    createdAt: new Date().toISOString(),
+  };
+}
+
+export function sanitizeAssistantAnswer(
+  candidate: Partial<AssistantStructuredAnswer>,
+  allowedCitationIds: Set<string>,
+  latestUserMessage: string,
+  route?: string,
+): AssistantStructuredAnswer {
+  if (asksForSecret(latestUserMessage)) {
+    return makeRefusalAnswer(
+      "I cannot help reveal or recover OTPs, passwords, PINs, tokens, or private credentials. Use the official recovery or support flow instead.",
+      route,
+    );
+  }
+
+  const citations = (candidate.citations || []).filter((citation) => allowedCitationIds.has(citation.id));
+
+  if (!candidate.answer || citations.length === 0) {
+    return makeRefusalAnswer("I do not have enough verified Me2U information to answer that.", route);
+  }
+
+  let answer = candidate.answer.trim();
+  const handoffNeeded = Boolean(candidate.handoffNeeded || needsSupportHandoff(latestUserMessage));
+
+  if (needsComplianceNote(latestUserMessage) && !answer.toLowerCase().includes("support")) {
+    answer += "\n\nFor account obligations, repayments, disputes, or restrictions, confirm with official Me2U support before acting.";
+  }
+
+  return {
+    answer,
+    citations,
+    suggestedActions: Array.isArray(candidate.suggestedActions) ? candidate.suggestedActions.slice(0, 4) : [],
+    confidence: candidate.confidence === "high" || candidate.confidence === "medium" ? candidate.confidence : "low",
+    handoffNeeded,
+    supportRequest: handoffNeeded
+      ? candidate.supportRequest || buildSupportRequest({
+          topic: "Me2U Guide support handoff",
+          summary: latestUserMessage,
+          conversationExcerpt: latestUserMessage,
+          route,
+        })
+      : undefined,
+  };
+}

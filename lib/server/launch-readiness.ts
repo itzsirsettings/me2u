@@ -100,6 +100,15 @@ export function getLaunchReadinessChecks(): LaunchCheck[] {
         : "Configure Resend with a verified sending domain and set EMAIL_FROM to that domain before accepting real users.",
   });
 
+  checks.push({
+    key: "OPENAI_API_KEY",
+    ok: hasValue("OPENAI_API_KEY"),
+    severity: "warning",
+    message: hasValue("OPENAI_API_KEY")
+      ? "Me2U Guide AI assistant is connected to OpenAI server-side."
+      : "Me2U Guide will use local fallback answers until OPENAI_API_KEY is configured.",
+  });
+
   return checks;
 }
 
