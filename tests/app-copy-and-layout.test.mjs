@@ -244,6 +244,7 @@ test("Me2U Guide assistant is citation-bound and globally mounted", () => {
   assert.match(route, /json_schema/);
   assert.match(route, /max_output_tokens/);
   assert.match(route, /buildExtractiveFallbackAnswer/);
+  assert.match(route, /conversationalFallbackAnswer/);
   assert.match(route, /sanitizeAssistantAnswer/);
   assert.match(route, /text\/event-stream/);
   assert.match(route, /function sse\(event: "delta" \| "metadata" \| "error"/);
@@ -262,6 +263,7 @@ test("Me2U Guide assistant is citation-bound and globally mounted", () => {
   assert.match(knowledge, /Loan requirements/);
 
   assert.match(safety, /I do not have enough verified Me2U information to answer that/);
+  assert.match(safety, /isConversationalMessage/);
   assert.match(safety, /otp/);
   assert.match(safety, /password/);
   assert.match(safety, /pin/);
@@ -274,6 +276,16 @@ test("Me2U Guide assistant is citation-bound and globally mounted", () => {
 
   assert.match(widget, /Me2U Guide/);
   assert.match(widget, /Open Me2U Guide/);
+  assert.match(widget, /Type any question in your own words/);
+  assert.match(widget, /Ask in your own words/);
+  assert.match(widget, /Optional examples/);
+  assert.match(widget, /Ask anything or pick a suggestion/);
+  assert.match(widget, /<textarea/);
+  assert.match(widget, /placeholder="Type your own question\.\.\."/);
+  assert.match(widget, /onKeyDown=\{handleComposerKeyDown\}/);
+  assert.match(widget, /event\.key !== "Enter"/);
+  assert.match(widget, /event\.shiftKey/);
+  assert.match(widget, /sendMessage\(input\)/);
   assert.match(widget, /Create support request/);
   assert.match(widget, /Why can't I withdraw yet\?/);
   assert.match(widget, /html|dark|light|theme|var\(--color-bg-card\)/);

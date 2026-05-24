@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useRef, useState } from "react";
+import { FormEvent, KeyboardEvent, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowUpRight, LifeBuoy, Loader2, Send, ShieldCheck, X } from "lucide-react";
 import { usePathname } from "next/navigation";
@@ -96,7 +96,7 @@ export default function Me2UAssistantWidget() {
     {
       id: "welcome",
       role: "assistant",
-      content: "I am Me2U Guide. I answer from verified Me2U information and your safe account summary when you are logged in.",
+      content: "I am Me2U Guide. Type any question in your own words, or pick a suggestion to start.",
       citations: [{ id: "rule:read-only-assistant", title: "Me2U Guide safety boundary", sourceType: "rule", routeHref: "/support" }],
       suggestedActions: quickPrompts.slice(0, 3),
     },
@@ -226,6 +226,12 @@ export default function Me2UAssistantWidget() {
     void sendMessage(input);
   }
 
+  function handleComposerKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing) return;
+    event.preventDefault();
+    void sendMessage(input);
+  }
+
   return (
     <>
       <button
@@ -270,7 +276,7 @@ export default function Me2UAssistantWidget() {
                   </div>
                   <div className="min-w-0">
                     <h2 className="truncate text-sm font-black text-[var(--color-text-primary)]">Me2U Guide</h2>
-                    <p className="truncate text-xs font-semibold text-[var(--color-text-secondary)]">Verified answers only</p>
+                    <p className="truncate text-xs font-semibold text-[var(--color-text-secondary)]">Ask in your own words</p>
                   </div>
                 </div>
                 <button
@@ -330,6 +336,9 @@ export default function Me2UAssistantWidget() {
 
                 {messages.length === 1 && (
                   <div className="grid gap-2">
+                    <p className="px-1 text-[11px] font-black uppercase tracking-normal text-[var(--color-text-secondary)]">
+                      Optional examples
+                    </p>
                     {quickPrompts.map((prompt) => (
                       <button
                         key={prompt}
@@ -351,13 +360,17 @@ export default function Me2UAssistantWidget() {
               )}
 
               <form onSubmit={handleSubmit} className="border-t border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+                <p className="mb-2 px-1 text-xs font-bold text-[var(--color-text-secondary)]">
+                  Ask anything or pick a suggestion
+                </p>
                 <div className="flex items-end gap-2 rounded-[22px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-2">
                   <textarea
                     value={input}
                     onChange={(event) => setInput(event.target.value)}
+                    onKeyDown={handleComposerKeyDown}
                     rows={1}
                     maxLength={800}
-                    placeholder="Ask Me2U Guide"
+                    placeholder="Type your own question..."
                     className="max-h-28 min-h-10 flex-1 resize-none bg-transparent px-2 py-2 text-sm font-semibold text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-secondary)]"
                   />
                   <button

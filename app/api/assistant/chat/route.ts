@@ -10,6 +10,7 @@ import {
 import {
   asksForSecret,
   buildSupportRequest,
+  isConversationalMessage,
   makeRefusalAnswer,
   needsSupportHandoff,
   sanitizeAssistantAnswer,
@@ -346,6 +347,24 @@ function summarizeOpenAiError(error: unknown) {
   }
 }
 
+function conversationalFallbackAnswer(message: string): AssistantStructuredAnswer {
+  const normalized = message.trim().toLowerCase();
+  const isThanks = /^(thanks|thank you)\b/.test(normalized);
+  const isWellbeing = /^(how are you|how far|what'?s up)\b/.test(normalized);
+
+  return {
+    answer: isThanks
+      ? "You are welcome. What would you like to do next?"
+      : isWellbeing
+        ? "I am here and ready to help. What is on your mind?"
+        : "Hello. I am here with you. Ask me anything, or tell me what you want to figure out.",
+    citations: [],
+    suggestedActions: ["Ask a question", "Check your account", "Pick a suggestion"],
+    confidence: "high",
+    handoffNeeded: false,
+  };
+}
+
 function localFallbackAnswer(params: {
   latestUserMessage: string;
   route?: string;
@@ -423,6 +442,10 @@ async function buildAssistantAnswer(params: {
   const latestUserMessage = params.messages.at(-1)?.content || "";
   const allowedCitationIds = new Set(params.citations.map((citation) => citation.id));
 
+  if (isConversationalMessage(latestUserMessage)) {
+    return conversationalFallbackAnswer(latestUserMessage);
+  }
+
   if (asksForSecret(latestUserMessage)) {
     return localFallbackAnswer({
       latestUserMessage,
@@ -463,7 +486,12 @@ async function buildAssistantAnswer(params: {
 
     const parsed = JSON.parse(outputText || "{}");
     const sanitized = sanitizeAssistantAnswer(parsed, allowedCitationIds, latestUserMessage, params.route);
-    if (sanitized.citations.length === 0 && params.citations.length > 0 && !asksForSecret(latestUserMessage)) {
+    if (
+      sanitized.citations.length === 0 &&
+      params.citations.length > 0 &&
+      !asksForSecret(latestUserMessage) &&
+      !isConversationalMessage(latestUserMessage)
+    ) {
       return localFallbackAnswer({
         latestUserMessage,
         route: params.route,

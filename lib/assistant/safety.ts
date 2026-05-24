@@ -53,9 +53,19 @@ const complianceKeywords = [
   "fraud",
 ];
 
+const conversationalPatterns = [
+  /^(hi|hello|hey|yo|good morning|good afternoon|good evening|thanks|thank you|sup)\b[\s!.?]*$/i,
+  /^(how are you|how far|what'?s up|are you there)\b[\s!.?]*$/i,
+];
+
 export function asksForSecret(message: string) {
   const normalized = message.toLowerCase();
   return blockedSecrets.some((keyword) => normalized.includes(keyword));
+}
+
+export function isConversationalMessage(message: string) {
+  const normalized = message.trim();
+  return conversationalPatterns.some((pattern) => pattern.test(normalized));
 }
 
 export function needsSupportHandoff(message: string) {
@@ -116,6 +126,16 @@ export function sanitizeAssistantAnswer(
   }
 
   const citations = (candidate.citations || []).filter((citation) => allowedCitationIds.has(citation.id));
+
+  if (isConversationalMessage(latestUserMessage) && candidate.answer) {
+    return {
+      answer: candidate.answer.trim(),
+      citations,
+      suggestedActions: Array.isArray(candidate.suggestedActions) ? candidate.suggestedActions.slice(0, 4) : [],
+      confidence: candidate.confidence === "high" || candidate.confidence === "medium" ? candidate.confidence : "medium",
+      handoffNeeded: false,
+    };
+  }
 
   if (!candidate.answer || citations.length === 0) {
     return makeRefusalAnswer("I do not have enough verified Me2U information to answer that.", route);
