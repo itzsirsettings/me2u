@@ -7,7 +7,9 @@ type AdminAction =
   | "approve_payment_proof"
   | "reject_payment_proof"
   | "approve_withdrawal"
-  | "reject_withdrawal";
+  | "reject_withdrawal"
+  | "approve_kyc"
+  | "reject_kyc";
 
 function getUserScopedSupabase(accessToken: string) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -35,7 +37,9 @@ function readAction(value: unknown): AdminAction {
     value === "approve_payment_proof" ||
     value === "reject_payment_proof" ||
     value === "approve_withdrawal" ||
-    value === "reject_withdrawal"
+    value === "reject_withdrawal" ||
+    value === "approve_kyc" ||
+    value === "reject_kyc"
   ) {
     return value;
   }
@@ -58,6 +62,29 @@ export async function POST(request: Request) {
     const action = readAction(body.action);
     const id = readId(body.id);
     const supabase = getUserScopedSupabase(auth.accessToken);
+
+    if (action === "approve_kyc" || action === "reject_kyc") {
+      const { data: profile, error: profileError } = await auth.supabase
+        .from("profiles")
+        .select("id, bank_name, account_number, passport_photo_url")
+        .eq("id", id)
+        .maybeSingle();
+
+      if (profileError) throw new Error(profileError.message);
+      if (!profile) throw new Error("Profile not found.");
+      if (action === "approve_kyc" && (!profile.bank_name || !profile.account_number || !profile.passport_photo_url)) {
+        throw new Error("KYC documents are incomplete.");
+      }
+
+      const { error } = await auth.supabase
+        .from("profiles")
+        .update({ kyc_verified: action === "approve_kyc" })
+        .eq("id", id);
+
+      if (error) throw new Error(error.message);
+
+      return NextResponse.json({ ok: true });
+    }
 
     const { error } =
       action === "approve_payment_proof"

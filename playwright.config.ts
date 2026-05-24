@@ -22,7 +22,7 @@ const config: PlaywrightTestConfig = {
   webServer: {
     command: 'npx next build && npx next start --port 3000',
     url: 'http://127.0.0.1:3000',
-    reuseExistingServer: false,
+    reuseExistingServer: true,
     timeout: 120000,
   },
 };

@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
-import { createHmac } from "crypto";
-import { getGoogleUserPassword } from "@/lib/server/auth-helpers";
+import { getClientIp, isRateLimited } from "@/lib/rate-limit";
+import { tooManyRequestsResponse } from "@/lib/server/auth";
+import { createSignedFlowToken, verifySignedOtpToken } from "@/lib/server/otp";
 
 export async function POST(request: Request) {
   try {
+    const clientIp = getClientIp(request);
+    if (isRateLimited(`verify-otp-ip:${clientIp}`, 20, 10 * 60_000)) {
+      return tooManyRequestsResponse();
+    }
+
     const body = await request.json();
     const email = String(body.email || "").trim().toLowerCase();
     const code = String(body.code || "").trim();
@@ -14,42 +20,37 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Email, code, and token are required." }, { status: 400 });
     }
 
-    // Split token into expiry and hash
-    const parts = token.split(".");
-    if (parts.length !== 2) {
-      return NextResponse.json({ error: "Invalid verification token." }, { status: 400 });
+    if (action !== "login" && action !== "register") {
+      return NextResponse.json({ error: "Unsupported verification action." }, { status: 400 });
     }
 
-    const [expiresAtStr, hash] = parts;
-    const expiresAt = Number(expiresAtStr);
-
-    if (isNaN(expiresAt) || Date.now() > expiresAt) {
-      return NextResponse.json({ error: "Verification code has expired. Please request a new one." }, { status: 400 });
+    if (isRateLimited(`verify-otp-email:${action}:${email}`, 8, 15 * 60_000)) {
+      return NextResponse.json(
+        { error: "Too many verification attempts. Please request a new code." },
+        { status: 429 },
+      );
     }
 
-    // Verify signature
-    const secret = process.env.SUPABASE_SERVICE_ROLE_KEY || "fallback_secret_for_dev_only";
-    const payload = `${email}:${code}:${expiresAt}`;
-    const expectedHash = createHmac("sha256", secret).update(payload).digest("hex");
+    const purpose = action === "login" ? "login" : "register";
 
-    if (hash !== expectedHash) {
-      return NextResponse.json({ error: "Incorrect verification code." }, { status: 400 });
+    if (!verifySignedOtpToken({ email, code, token, purpose })) {
+      return NextResponse.json(
+        { error: "Invalid or expired verification code. Please request a new one." },
+        { status: 400 },
+      );
     }
 
-    // Code is correct!
     if (action === "login") {
-      const password = getGoogleUserPassword(email);
-      return NextResponse.json({
-        success: true,
-        email,
-        password,
-      });
+      return NextResponse.json(
+        { error: "Passwordless login is not enabled for this account. Please sign in with your password." },
+        { status: 403 },
+      );
     }
 
     return NextResponse.json({
       success: true,
       email,
-      verified: true,
+      registrationToken: createSignedFlowToken({ email, purpose: "register_complete" }),
     });
   } catch (error) {
     console.error("Error verifying OTP:", error);

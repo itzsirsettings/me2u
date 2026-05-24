@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { randomUUID } from "crypto";
 import { requireAuthenticatedUser } from "@/lib/server/auth";
 
 type PrivateImageBucket = "receipts" | "kyc-documents";
@@ -12,7 +13,7 @@ function toSafeStorageFileName(fileName: string) {
 }
 
 function createStorageId() {
-  return globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  return globalThis.crypto?.randomUUID?.() || randomUUID();
 }
 
 function isAllowedBucket(bucket: string): bucket is PrivateImageBucket {

@@ -38,12 +38,6 @@ export default function SecurityPage() {
 
   useEffect(() => {
     setMounted(true);
-    if (typeof window !== "undefined") {
-      const cached = sessionStorage.getItem("me2u_session_password");
-      if (cached) {
-        setPasswordInput(cached);
-      }
-    }
   }, []);
 
   useEffect(() => {
@@ -280,10 +274,7 @@ export default function SecurityPage() {
                 if (res.ok) {
                   toast.success("Transaction PIN updated successfully.");
                   setPinInput("");
-                  // Clear password input unless cached in sessionStorage
-                  if (typeof window !== "undefined" && !sessionStorage.getItem("me2u_session_password")) {
-                    setPasswordInput("");
-                  }
+                  setPasswordInput("");
                 } else {
                   toast.error(res.error || "Failed to update PIN.");
                 }
@@ -426,7 +417,7 @@ export default function SecurityPage() {
                 <Icons8Icon name="key" size={23} className="shrink-0 text-[var(--color-accent-primary)]" />
               </div>
               {mfaQr && (
-                <div className="rounded-[8px] bg-white p-3">
+                <div className="rounded-[8px] bg-snow p-3">
                   <img
                     alt="Two-factor QR code"
                     className="mx-auto h-44 w-44"

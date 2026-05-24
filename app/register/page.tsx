@@ -74,27 +74,6 @@ function RegistrationField({
   );
 }
 
-const GoogleLogo = () => (
-  <svg className="h-5 w-5 mr-3 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      fill="#4285F4"
-      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-    />
-    <path
-      fill="#34A853"
-      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-    />
-    <path
-      fill="#FBBC05"
-      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-    />
-    <path
-      fill="#EA4335"
-      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-    />
-  </svg>
-);
-
 export default function Register() {
   return (
     <Suspense fallback={
@@ -119,12 +98,7 @@ function RegisterContent() {
   const [regEmail, setRegEmail] = useState("");
   const [regEmailCode, setRegEmailCode] = useState("");
   const [regEmailToken, setRegEmailToken] = useState("");
-
-  // Google Sign-in flow states
-  const [googleStep, setGoogleStep] = useState<"none" | "select_email" | "enter_otp">("none");
-  const [googleEmail, setGoogleEmail] = useState("");
-  const [googleVerificationCode, setGoogleVerificationCode] = useState("");
-  const [googleOtpToken, setGoogleOtpToken] = useState("");
+  const [registrationToken, setRegistrationToken] = useState("");
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -226,34 +200,22 @@ function RegisterContent() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          step: "verify_and_register",
+          step: "verify_code",
           email: regEmail,
           code: regEmailCode,
           token: regEmailToken,
-          firstName: "VERIFY_ONLY",
-          lastName: "VERIFY_ONLY",
-          username: "verify_only",
-          phone: "+2348030000000",
-          password: "verifyonly123",
-          countryCode: "NG",
-          preferredLanguage: "en",
         }),
       });
 
       const data = await response.json();
 
-      if (response.ok && data.email === regEmail) {
-        toast.error("This email is already registered. Please login instead.");
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (!response.ok && data.error !== "Enter your first and last name.") {
+      if (!response.ok || typeof data.registrationToken !== "string") {
         toast.error(data.error || "Invalid verification code.");
         setIsSubmitting(false);
         return;
       }
 
+      setRegistrationToken(data.registrationToken);
       setRegStep("details");
       toast.success("Email verified! Please complete your registration.");
     } catch (err) {
@@ -276,8 +238,7 @@ function RegisterContent() {
         body: JSON.stringify({
           step: "verify_and_register",
           email: regEmail,
-          code: regEmailCode,
-          token: regEmailToken,
+          registrationToken,
           firstName: formData.firstName.trim(),
           lastName: formData.lastName.trim(),
           username: formData.username.trim().toLowerCase(),
@@ -314,126 +275,13 @@ function RegisterContent() {
     }
   };
 
-  const startGoogleSignIn = () => {
-    setGoogleStep("select_email");
-  };
-
-  const handleGoogleEmailSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isValidEmail(googleEmail)) {
-      toast.error("Please enter a valid Google email address.");
-      return;
-    }
-    setIsSubmitting(true);
-    try {
-      const response = await fetch("/api/auth/send-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: googleEmail, action: "register" }),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        toast.error(data.error || "Failed to send verification code.");
-        return;
-      }
-      setGoogleOtpToken(data.token);
-      setGoogleStep("enter_otp");
-      if (data.loggedToConsole) {
-        toast.success("Verification code sent! (Check server console in development)");
-      } else {
-        toast.success("Verification code sent to your email!");
-      }
-    } catch (err) {
-      toast.error("Failed to send verification code.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const verifyGoogleOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      const verifyResponse = await fetch("/api/auth/verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: googleEmail,
-          code: googleVerificationCode,
-          token: googleOtpToken,
-          action: "register",
-        }),
-      });
-
-      const verifyData = await verifyResponse.json();
-      if (!verifyResponse.ok) {
-        toast.error(verifyData.error || "Incorrect verification code.");
-        setIsSubmitting(false);
-        return;
-      }
-
-      const googleUser = googleEmail.split("@")[0].replace(/[^a-zA-Z0-9]/g, "");
-      const generatedUsername = `${googleUser}${Math.floor(100 + Math.random() * 900)}`;
-
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          step: "verify_and_register",
-          email: googleEmail,
-          code: googleVerificationCode,
-          token: googleOtpToken,
-          firstName: googleUser.charAt(0).toUpperCase() + googleUser.slice(1),
-          lastName: "GoogleUser",
-          username: generatedUsername.toLowerCase(),
-          phone: "+2348031234567",
-          countryCode: "NG",
-          preferredLanguage: "en",
-          referral: formData.referral,
-          googleToken: googleOtpToken,
-          googleCode: googleVerificationCode,
-        }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        toast.error(data.error || "Google Sign-in registration failed.");
-        setIsSubmitting(false);
-        return;
-      }
-
-      const signInResult = await signInWithPassword(googleEmail, data.password);
-      if (!signInResult.ok) {
-        toast.error(signInResult.error || "Registration complete but login failed.");
-        router.push("/login");
-        return;
-      }
-
-      toast.success(`Registered with Google successfully! Welcome ${data.firstName}.`);
-      router.push("/wallet");
-    } catch (err) {
-      toast.error("An error occurred during Google registration.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   const getPageTitle = () => {
-    if (googleStep !== "none") {
-      return googleStep === "enter_otp" ? "Verify Code" : "Create Account";
-    }
     if (regStep === "email") return "Create Account";
     if (regStep === "verify_email") return "Verify Email";
     return "Complete Registration";
   };
 
   const getPageSubtitle = () => {
-    if (googleStep !== "none") {
-      return googleStep === "enter_otp"
-        ? `Verification code sent to ${googleEmail}`
-        : "Join me2u today and start your journey";
-    }
     if (regStep === "email") return "Join me2u today and start your journey";
     if (regStep === "verify_email") return `Verification code sent to ${regEmail}`;
     return "Fill in your details to complete registration";
@@ -452,111 +300,8 @@ function RegisterContent() {
         </div>
 
         <AnimatePresence mode="wait">
-          {/* Google flow */}
-          {googleStep !== "none" && (
-            <motion.div
-              key="google"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-            >
-              {googleStep === "select_email" && (
-                <form
-                  onSubmit={handleGoogleEmailSubmit}
-                  className="space-y-6 rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-5 shadow-[4px_4px_0px_var(--color-shadow)] md:p-8"
-                >
-                  <div>
-                    <div className="flex items-center gap-2 mb-4">
-                      <GoogleLogo />
-                      <span className="text-lg font-bold text-slate-800">Sign in with Google</span>
-                    </div>
-                    <label htmlFor="google-email-input" className="mb-3 block text-base font-sans font-bold text-[var(--color-text-primary)]">
-                      Enter your Google Account email
-                    </label>
-                    <Input
-                      id="google-email-input"
-                      type="email"
-                      placeholder="email@gmail.com"
-                      value={googleEmail}
-                      onChange={(e) => setGoogleEmail(e.target.value)}
-                      className="h-14 rounded-[8px] border-transparent bg-[var(--color-bg-secondary)] px-5 shadow-none focus:border-[var(--color-border)]"
-                      required
-                    />
-                  </div>
-                  <div className="flex gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setGoogleStep("none")}
-                      className="btn-ghost flex-1 h-12"
-                    >
-                      Back
-                    </button>
-                    <button
-                      type="submit"
-                      className="btn-primary flex-1 h-12"
-                    >
-                      Send OTP
-                    </button>
-                  </div>
-                </form>
-              )}
-
-              {googleStep === "enter_otp" && (
-                <div className="space-y-6">
-                  <form
-                    onSubmit={verifyGoogleOtp}
-                    className="space-y-6 rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-5 shadow-[4px_4px_0px_var(--color-shadow)] md:p-8"
-                  >
-                    <div>
-                      <label htmlFor="google-otp-input" className="mb-3 block text-base font-sans font-bold text-[var(--color-text-primary)]">
-                        Enter 6-Digit Code
-                      </label>
-                      <input
-                        id="google-otp-input"
-                        type="text"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        maxLength={6}
-                        placeholder="000000"
-                        value={googleVerificationCode}
-                        onChange={(e) => {
-                          const val = e.target.value.replace(/\D/g, "");
-                          if (val.length <= 6) setGoogleVerificationCode(val);
-                        }}
-                        className="w-full rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3.5 py-2.5 font-mono text-center text-2xl tracking-[0.4em] focus:border-[var(--color-accent-primary)] focus:outline-none"
-                        required
-                      />
-                      <p className="mt-3 text-sm text-[var(--color-text-secondary)]">
-                        Enter the code from the verification email received.
-                      </p>
-                    </div>
-
-                    <div className="flex gap-3">
-                      <button
-                        type="button"
-                        onClick={() => { setGoogleStep("select_email"); setGoogleVerificationCode(""); }}
-                        className="btn-ghost flex-1 h-12 text-sm"
-                        disabled={isSubmitting}
-                      >
-                        Change Email
-                      </button>
-                      <LoadingButton
-                        label="Verify & Sign Up"
-                        loadingText="Verifying..."
-                        successText="Verified!"
-                        disabled={googleVerificationCode.length !== 6}
-                        onClick={() => {}}
-                      />
-                    </div>
-                  </form>
-                </div>
-              )}
-            </motion.div>
-          )}
-
           {/* Standard registration flow */}
-          {googleStep === "none" && regStep === "email" && (
+          {regStep === "email" && (
             <motion.div
               key="reg-email"
               initial={{ opacity: 0, y: 10 }}
@@ -565,21 +310,6 @@ function RegisterContent() {
               transition={{ duration: 0.2 }}
               className="space-y-6"
             >
-              <button
-                onClick={startGoogleSignIn}
-                className="flex w-full items-center justify-center rounded-[8px] border border-[var(--color-border)] bg-white px-5 py-3.5 text-base font-bold text-slate-800 transition-all hover:bg-slate-50 hover:shadow-sm"
-              >
-                <GoogleLogo />
-                Continue with Google
-              </button>
-
-              <div className="relative flex items-center justify-center">
-                <span className="absolute inset-x-0 h-px bg-[var(--color-border)]" />
-                <span className="relative bg-[var(--color-bg-primary)] px-4 text-xs font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
-                  Or register with email
-                </span>
-              </div>
-
               <div className="rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-5 shadow-[4px_4px_0px_var(--color-shadow)] md:p-8">
                 <label htmlFor="reg-email-input" className="mb-3 block text-base font-sans font-bold text-[var(--color-text-primary)]">
                   Email Address
@@ -609,7 +339,7 @@ function RegisterContent() {
             </motion.div>
           )}
 
-          {googleStep === "none" && regStep === "verify_email" && (
+          {regStep === "verify_email" && (
             <motion.div
               key="reg-verify"
               initial={{ opacity: 0, y: 10 }}
@@ -648,7 +378,11 @@ function RegisterContent() {
                 <div className="flex gap-3">
                   <button
                     type="button"
-                    onClick={() => { setRegStep("email"); setRegEmailCode(""); }}
+                    onClick={() => {
+                      setRegStep("email");
+                      setRegEmailCode("");
+                      setRegistrationToken("");
+                    }}
                     className="btn-ghost flex-1 h-12 text-sm"
                     disabled={isSubmitting}
                   >
@@ -666,7 +400,7 @@ function RegisterContent() {
             </motion.div>
           )}
 
-          {googleStep === "none" && regStep === "details" && (
+          {regStep === "details" && (
             <motion.div
               key="reg-details"
               initial={{ opacity: 0, y: 10 }}
@@ -674,8 +408,8 @@ function RegisterContent() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="mb-4 rounded-[8px] border border-green-500/30 bg-green-500/10 p-4 text-center">
-                <p className="text-sm font-bold text-green-400">Email Verified</p>
+              <div className="mb-4 rounded-[8px] border border-green/30 bg-green/10 p-4 text-center">
+                <p className="text-sm font-bold text-green">Email Verified</p>
                 <p className="text-xs text-[var(--color-text-secondary)]">{regEmail}</p>
               </div>
 

@@ -1,23 +1,15 @@
 import { NextResponse } from "next/server";
-import { createHmac } from "crypto";
 import { getClientIp, isRateLimited } from "@/lib/rate-limit";
+import {
+  createSignedFlowToken,
+  verifySignedFlowToken,
+  verifySignedOtpToken,
+} from "@/lib/server/otp";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { tooManyRequestsResponse } from "@/lib/server/auth";
 
 function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-}
-
-function verifyTokenAndCode(email: string, code: string, token: string): boolean {
-  const parts = token.split(".");
-  if (parts.length !== 2) return false;
-  const [expiresAtStr, hash] = parts;
-  const expiresAt = Number(expiresAtStr);
-  if (isNaN(expiresAt) || Date.now() > expiresAt) return false;
-  const secret = process.env.SUPABASE_SERVICE_ROLE_KEY || "fallback_secret_for_dev_only";
-  const payload = `${email}:${code}:${expiresAt}`;
-  const expectedHash = createHmac("sha256", secret).update(payload).digest("hex");
-  return hash === expectedHash;
 }
 
 export async function POST(request: Request) {
@@ -28,29 +20,19 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
+    const mode = String(body.mode || "reset").trim().toLowerCase();
     const email = String(body.email || "").trim().toLowerCase();
     const code = String(body.code || "").trim();
     const token = String(body.token || "").trim();
+    const resetToken = String(body.resetToken || "").trim();
     const newPassword = String(body.newPassword || "");
 
-    if (!email || !code || !token) {
-      return NextResponse.json({ error: "Email, verification code, and token are required." }, { status: 400 });
+    if (!email) {
+      return NextResponse.json({ error: "Email is required." }, { status: 400 });
     }
 
     if (!isValidEmail(email)) {
       return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
-    }
-
-    if (!newPassword) {
-      return NextResponse.json({ error: "New password is required." }, { status: 400 });
-    }
-
-    if (newPassword.length < 8) {
-      return NextResponse.json({ error: "Password must be at least 8 characters." }, { status: 400 });
-    }
-
-    if (!verifyTokenAndCode(email, code, token)) {
-      return NextResponse.json({ error: "Invalid or expired verification code." }, { status: 400 });
     }
 
     if (isRateLimited(`reset-password-email:${email}`, 3, 15 * 60_000)) {
@@ -79,22 +61,34 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data: users, error: listUsersError } = await supabase.auth.admin.listUsers();
+    if (mode === "verify_code") {
+      if (!code || !token) {
+        return NextResponse.json({ error: "Verification code and token are required." }, { status: 400 });
+      }
 
-    if (listUsersError) {
-      throw listUsersError;
+      if (!verifySignedOtpToken({ email, code, token, purpose: "password_reset" })) {
+        return NextResponse.json({ error: "Invalid or expired verification code." }, { status: 400 });
+      }
+
+      return NextResponse.json({
+        success: true,
+        resetToken: createSignedFlowToken({ email, purpose: "password_reset_complete" }),
+      });
     }
 
-    const user = users?.users?.find((u) => u.email?.toLowerCase() === email);
-
-    if (!user) {
-      return NextResponse.json(
-        { error: "Unable to find your account. Please contact support." },
-        { status: 404 },
-      );
+    if (!resetToken || !verifySignedFlowToken({ email, token: resetToken, purpose: "password_reset_complete" })) {
+      return NextResponse.json({ error: "Password reset verification has expired. Request a new code." }, { status: 400 });
     }
 
-    const { error: updateError } = await supabase.auth.admin.updateUserById(user.id, {
+    if (!newPassword) {
+      return NextResponse.json({ error: "New password is required." }, { status: 400 });
+    }
+
+    if (newPassword.length < 8) {
+      return NextResponse.json({ error: "Password must be at least 8 characters." }, { status: 400 });
+    }
+
+    const { error: updateError } = await supabase.auth.admin.updateUserById(profile.id, {
       password: newPassword,
     });
 

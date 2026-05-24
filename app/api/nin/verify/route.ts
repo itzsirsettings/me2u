@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { verifyNin } from "@/lib/nin";
 import { getClientIp, isRateLimited } from "@/lib/rate-limit";
+import { requireAuthenticatedUser } from "@/lib/server/auth";
 
 export async function POST(request: Request) {
   try {
@@ -11,6 +12,9 @@ export async function POST(request: Request) {
         { status: 429 },
       );
     }
+
+    const auth = await requireAuthenticatedUser(request);
+    if ("response" in auth) return auth.response;
 
     const body = await request.json();
     const profile = await verifyNin(String(body.nin || ""));

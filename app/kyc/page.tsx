@@ -80,6 +80,26 @@ export default function KYCPage() {
     );
   }
 
+  if (user.passportPhotoUrl && user.bankName && user.accountNumber) {
+    return (
+      <div className="app-mobile-screen mx-auto flex w-full max-w-lg flex-col items-center justify-center px-3.5 pt-[4.85rem] text-center md:py-24">
+        <div className="mb-4 grid h-16 w-16 place-items-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-warning-bg)] text-[var(--color-warning-text)] shadow-[3px_3px_0px_var(--color-shadow)]">
+          <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8v4l3 3"></path><circle cx="12" cy="12" r="10"></circle></svg>
+        </div>
+        <h2 className="mb-2 font-display text-xl font-bold text-[var(--color-text-primary)] md:text-2xl">KYC Under Review</h2>
+        <p className="max-w-md text-[var(--color-text-secondary)]">
+          Your bank details and passport photo have been submitted. Me2U will unlock withdrawals and lending after review.
+        </p>
+        <button
+          onClick={() => router.push("/dashboard")}
+          className="btn-primary mt-5 h-11 px-5 md:mt-8 md:h-12 md:px-6"
+        >
+          Go to Dashboard
+        </button>
+      </div>
+    );
+  }
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setPassportFile(e.target.files[0]);
@@ -129,7 +149,7 @@ export default function KYCPage() {
         throw new Error(loadResult.error || "KYC saved, but the profile could not be refreshed.");
       }
 
-      router.push("/dashboard");
+      setPassportFile(null);
     } catch (err) {
       setError(toErrorMessage(err));
       throw err;

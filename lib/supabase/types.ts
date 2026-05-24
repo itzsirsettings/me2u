@@ -614,6 +614,15 @@ export interface Database {
         };
         Returns: undefined;
       };
+      me2u_pay_bill: {
+        Args: {
+          p_user_id: string;
+          p_amount: number;
+          p_service_label: string;
+          p_detail?: string | null;
+        };
+        Returns: undefined;
+      };
       me2u_get_referral_stats: {
         Args: {
           p_user_id: string;

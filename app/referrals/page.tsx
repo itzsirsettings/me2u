@@ -174,7 +174,7 @@ export default function ReferralsPage() {
             </code>
             <button
               onClick={copyLink}
-              className="rounded-[5px] bg-[var(--color-accent-primary)] px-4 py-3 text-sm font-bold text-white hover:bg-[var(--color-accent-primary)]/90"
+              className="rounded-[5px] bg-[var(--color-accent-primary)] px-4 py-3 text-sm font-bold text-[var(--color-on-accent)] hover:bg-[var(--color-accent-primary)]/90"
             >
               {copied ? "✓" : "Copy"}
             </button>

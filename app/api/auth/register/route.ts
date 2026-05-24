@@ -1,13 +1,18 @@
 import { NextResponse } from "next/server";
-import { createHmac } from "crypto";
 import {
   getCountryConfig,
   isSupportedCountryCode,
   isSupportedLanguageCode,
 } from "@/lib/product-features";
 import { getClientIp, isRateLimited } from "@/lib/rate-limit";
+import {
+  createSignedFlowToken,
+  createSignedOtpToken,
+  generateOtpCode,
+  verifySignedFlowToken,
+  verifySignedOtpToken,
+} from "@/lib/server/otp";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
-import { getGoogleUserPassword } from "@/lib/server/auth-helpers";
 import { sendOtpEmail } from "@/lib/server/email";
 
 function isValidEmail(value: string) {
@@ -50,23 +55,14 @@ function registrationErrorResponse(error: unknown) {
 }
 
 function generateVerificationToken(email: string, code: string) {
-  const expiresAt = Date.now() + 10 * 60 * 1000;
-  const secret = process.env.SUPABASE_SERVICE_ROLE_KEY || "fallback_secret_for_dev_only";
-  const payload = `${email}:${code}:${expiresAt}`;
-  const hash = createHmac("sha256", secret).update(payload).digest("hex");
-  return { token: `${expiresAt}.${hash}`, code, expiresAt };
+  return {
+    token: createSignedOtpToken({ email, code, purpose: "register" }),
+    code,
+  };
 }
 
 function verifyTokenAndCode(email: string, code: string, token: string): boolean {
-  const parts = token.split(".");
-  if (parts.length !== 2) return false;
-  const [expiresAtStr, hash] = parts;
-  const expiresAt = Number(expiresAtStr);
-  if (isNaN(expiresAt) || Date.now() > expiresAt) return false;
-  const secret = process.env.SUPABASE_SERVICE_ROLE_KEY || "fallback_secret_for_dev_only";
-  const payload = `${email}:${code}:${expiresAt}`;
-  const expectedHash = createHmac("sha256", secret).update(payload).digest("hex");
-  return hash === expectedHash;
+  return verifySignedOtpToken({ email, code, token, purpose: "register" });
 }
 
 export async function POST(request: Request) {
@@ -110,7 +106,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Email is already registered. Please login instead." }, { status: 409 });
       }
 
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      const code = generateOtpCode();
       const { token } = generateVerificationToken(email, code);
       const emailResult = await sendOtpEmail(email, code);
 
@@ -129,8 +125,7 @@ export async function POST(request: Request) {
       });
     }
 
-    // STEP 2: Verify code and create account
-    if (step === "verify_and_register") {
+    if (step === "verify_code") {
       const email = String(body.email || "").trim().toLowerCase();
       const code = String(body.code || "").trim();
       const token = String(body.token || "").trim();
@@ -139,8 +134,51 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Email, verification code, and token are required." }, { status: 400 });
       }
 
+      if (!isValidEmail(email)) {
+        return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
+      }
+
+      if (isRateLimited(`register-verify:${email}`, 8, 15 * 60_000)) {
+        return NextResponse.json(
+          { error: "Too many verification attempts for this email. Please request a new code." },
+          { status: 429 },
+        );
+      }
+
       if (!verifyTokenAndCode(email, code, token)) {
         return NextResponse.json({ error: "Invalid or expired verification code." }, { status: 400 });
+      }
+
+      const supabase = getSupabaseAdminClient();
+      const { data: existingProfile, error: existingProfileError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("email", email)
+        .maybeSingle();
+
+      if (existingProfileError) throw existingProfileError;
+      if (existingProfile) {
+        return NextResponse.json({ error: "Email is already registered. Please login instead." }, { status: 409 });
+      }
+
+      return NextResponse.json({
+        success: true,
+        email,
+        registrationToken: createSignedFlowToken({ email, purpose: "register_complete" }),
+      });
+    }
+
+    // STEP 2: Verify code and create account
+    if (step === "verify_and_register") {
+      const email = String(body.email || "").trim().toLowerCase();
+      const registrationToken = String(body.registrationToken || "").trim();
+
+      if (!email || !registrationToken) {
+        return NextResponse.json({ error: "Email verification is required before registration." }, { status: 400 });
+      }
+
+      if (!verifySignedFlowToken({ email, token: registrationToken, purpose: "register_complete" })) {
+        return NextResponse.json({ error: "Email verification has expired. Request a new code." }, { status: 400 });
       }
 
       if (isRateLimited(`register-email:${email}`, 3, 15 * 60_000)) {
@@ -157,37 +195,13 @@ export async function POST(request: Request) {
       const referral = String(body.referral || "").trim();
       const countryCode = String(body.countryCode || "NG").trim().toUpperCase();
       const preferredLanguage = String(body.preferredLanguage || "en").trim().toLowerCase();
-      const googleToken = String(body.googleToken || "").trim();
-      const googleCode = String(body.googleCode || "").trim();
 
-      let password: string;
-
-      // Handle Google registration path
-      if (googleToken && googleCode) {
-        const parts = googleToken.split(".");
-        if (parts.length !== 2) {
-          return NextResponse.json({ error: "Invalid Google verification token." }, { status: 400 });
-        }
-        const [expiresAtStr, hash] = parts;
-        const expiresAt = Number(expiresAtStr);
-        if (isNaN(expiresAt) || Date.now() > expiresAt) {
-          return NextResponse.json({ error: "Google verification code has expired." }, { status: 400 });
-        }
-        const secret = process.env.SUPABASE_SERVICE_ROLE_KEY || "fallback_secret_for_dev_only";
-        const payload = `${email}:${googleCode}:${expiresAt}`;
-        const expectedHash = createHmac("sha256", secret).update(payload).digest("hex");
-        if (hash !== expectedHash) {
-          return NextResponse.json({ error: "Incorrect Google verification code." }, { status: 400 });
-        }
-        password = getGoogleUserPassword(email);
-      } else {
-        password = String(body.password || "");
-        if (!password) {
-          return NextResponse.json({ error: "Password is required." }, { status: 400 });
-        }
-        if (password.length < 8) {
-          return NextResponse.json({ error: "Password must be at least 8 characters." }, { status: 400 });
-        }
+      const password = String(body.password || "");
+      if (!password) {
+        return NextResponse.json({ error: "Password is required." }, { status: 400 });
+      }
+      if (password.length < 8) {
+        return NextResponse.json({ error: "Password must be at least 8 characters." }, { status: 400 });
       }
 
       if (firstName.length < 2 || firstName.length > 80 || lastName.length < 2 || lastName.length > 80) {
@@ -334,7 +348,6 @@ export async function POST(request: Request) {
           firstName,
           lastName,
           username,
-          password: googleToken && googleCode ? password : undefined,
         },
         {
           headers: {
@@ -344,7 +357,10 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json({ error: "Invalid registration step. Use 'send_code' or 'verify_and_register'." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid registration step. Use 'send_code', 'verify_code', or 'verify_and_register'." },
+      { status: 400 },
+    );
   } catch (error) {
     return registrationErrorResponse(error);
   }

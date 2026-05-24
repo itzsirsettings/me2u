@@ -23,8 +23,11 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const amount = readPositiveAmount(body.amount);
-    const serviceLabel = typeof body.serviceLabel === "string" ? body.serviceLabel : "Bill Payment";
-    const detail = typeof body.detail === "string" ? body.detail : "";
+    const serviceLabel =
+      typeof body.serviceLabel === "string" && body.serviceLabel.trim()
+        ? body.serviceLabel.trim().slice(0, 80)
+        : "Bill Payment";
+    const detail = typeof body.detail === "string" ? body.detail.trim().slice(0, 160) : "";
     const pin = typeof body.pin === "string" ? body.pin.trim() : "";
 
     const { data: profile, error: profileError } = await auth.supabase
@@ -58,47 +61,14 @@ export async function POST(request: Request) {
       throw new Error("Your wallet is frozen. Unfreeze it from Security Center before paying bills.");
     }
 
-    // 1. Get current balance
-    const { data: wallet, error: walletError } = await auth.supabase
-      .from("wallets")
-      .select("balance")
-      .eq("user_id", auth.user.id)
-      .maybeSingle();
+    const { error } = await auth.supabase.rpc("me2u_pay_bill", {
+      p_user_id: auth.user.id,
+      p_amount: amount,
+      p_service_label: serviceLabel,
+      p_detail: detail || null,
+    });
 
-    if (walletError) throw new Error(walletError.message);
-    if (!wallet) throw new Error("Wallet not found.");
-
-    const balance = Number(wallet.balance || 0);
-    if (balance < amount) {
-      throw new Error(`Insufficient wallet balance for ₦${amount.toLocaleString()} ${serviceLabel}.`);
-    }
-
-    // Deduct balance via admin client
-    const { error: updateError } = await auth.supabase
-      .from("wallets")
-      .update({ balance: balance - amount })
-      .eq("user_id", auth.user.id)
-      .gte("balance", amount); // Prevent race conditions
-
-    if (updateError) {
-      throw new Error("Unable to deduct balance. " + updateError.message);
-    }
-
-    // Add transaction
-    const { error: txError } = await auth.supabase
-      .from("transactions")
-      .insert({
-        user_id: auth.user.id,
-        amount,
-        type: "withdrawal",
-        description: `Paid ${serviceLabel} ${detail ? `(${detail})` : ""}`,
-      });
-
-    if (txError) {
-      // Best effort rollback
-      await auth.supabase.from("wallets").update({ balance }).eq("user_id", auth.user.id);
-      throw new Error(txError.message);
-    }
+    if (error) throw new Error(error.message);
 
     return NextResponse.json({ ok: true });
   } catch (error) {

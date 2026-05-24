@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { createHmac } from "crypto";
 import { getClientIp, isRateLimited } from "@/lib/rate-limit";
+import { createSignedOtpToken, generateOtpCode } from "@/lib/server/otp";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { sendOtpEmail } from "@/lib/server/email";
 import { tooManyRequestsResponse } from "@/lib/server/auth";
@@ -53,12 +53,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = Date.now() + 10 * 60 * 1000;
-    const secret = process.env.SUPABASE_SERVICE_ROLE_KEY || "fallback_secret_for_dev_only";
-    const payload = `${email}:${code}:${expiresAt}`;
-    const hash = createHmac("sha256", secret).update(payload).digest("hex");
-    const token = `${expiresAt}.${hash}`;
+    const code = generateOtpCode();
+    const token = createSignedOtpToken({ email, code, purpose: "password_reset" });
 
     const emailResult = await sendOtpEmail(email, code);
 

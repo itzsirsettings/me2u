@@ -91,6 +91,22 @@ test("admin dashboard uses overflow-safe grids and contained ledger scrolling", 
   assert.match(globals, /\.overflow-anywhere/);
 });
 
+test("landing phone mockup uses measured responsive scaling", () => {
+  const phoneHero = read("components/landing/PhoneHero.tsx");
+
+  assert.match(phoneHero, /ResizeObserver/);
+  assert.match(phoneHero, /Math\.min\(1, frame\.clientWidth \/ PHONE_WIDTH\)/);
+  assert.match(phoneHero, /aspect-\[423\/878\]/);
+  assert.doesNotMatch(phoneHero, /100cqw/);
+});
+
+test("landing header uses the nav logo asset", () => {
+  const landingHeader = read("components/landing/LandingHeader.tsx");
+
+  assert.match(landingHeader, /src="\/me2u_nav_logo\.svg"/);
+  assert.match(landingHeader, /aria-label="Me2U home"/);
+});
+
 test("authenticated routes keep long financial data inside their containers", () => {
   const globals = read("app/globals.css");
   const loadingButton = read("LoadingButton.jsx");
@@ -127,6 +143,49 @@ test("username login and the new loan minimum are wired", () => {
   assert.match(loans, /repeatPlatformLoanMinimum = 5000/);
   assert.match(migration, /Loans start from NGN 5,000/);
   assert.match(migration, /amount >= 5000\.00/);
+});
+
+test("auth and identity flows avoid release-blocking shortcuts", () => {
+  const otp = read("lib/server/otp.ts");
+  const resetPassword = read("app/api/auth/reset-password/route.ts");
+  const register = read("app/api/auth/register/route.ts");
+  const store = read("lib/store.ts");
+  const securityPin = read("app/api/security/pin/route.ts");
+  const kyc = read("app/api/onboarding/kyc/route.ts");
+  const adminActions = read("app/api/admin/actions/route.ts");
+  const source = [otp, resetPassword, register, store, securityPin, kyc, adminActions].join("\n");
+
+  assert.match(otp, /randomInt\(100000, 1000000\)/);
+  assert.match(otp, /timingSafeEqual/);
+  assert.match(resetPassword, /mode === "verify_code"/);
+  assert.match(resetPassword, /resetToken/);
+  assert.match(register, /step === "verify_code"/);
+  assert.match(register, /registrationToken/);
+  assert.match(kyc, /kyc_verified: false/);
+  assert.match(adminActions, /approve_kyc/);
+  assert.doesNotMatch(source, /fallback_secret_for_dev_only/);
+  assert.doesNotMatch(source, /verify_only_123/);
+  assert.doesNotMatch(source, /me2u_session_password/);
+  assert.doesNotMatch(source, /getGoogleUserPassword/);
+});
+
+test("bill payments and withdrawals use hardened financial paths", () => {
+  const payBill = read("app/api/wallet/pay-bill/route.ts");
+  const withdrawal = read("app/api/wallet/withdraw/route.ts");
+  const withdrawPage = read("app/withdraw/page.tsx");
+  const revenue = read("lib/revenue.ts");
+  const migration = read("supabase/migrations/20260523110905_harden_auth_and_atomic_bill_payments.sql");
+
+  assert.match(payBill, /me2u_pay_bill/);
+  assert.match(migration, /create or replace function private\.me2u_pay_bill/);
+  assert.match(migration, /revoke execute on function public\.me2u_pay_bill/);
+  assert.match(migration, /revoke insert, update on public\.referrals from authenticated/);
+  assert.match(migration, /You can only read your own referral stats/);
+  assert.match(withdrawal, /account_number/);
+  assert.match(withdrawal, /getWithdrawalProcessorFee/);
+  assert.match(withdrawPage, /PinInput/);
+  assert.match(withdrawPage, /pin: transactionPin/);
+  assert.match(revenue, /withdrawalProcessorFeeRate = 0\.015/);
 });
 
 test("licensed partner revenue model is backend-enforced", () => {

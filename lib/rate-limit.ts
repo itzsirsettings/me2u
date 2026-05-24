@@ -4,9 +4,22 @@ type Bucket = {
 };
 
 const buckets = new Map<string, Bucket>();
+let lastSweepAt = 0;
+
+function sweepExpiredBuckets(now: number) {
+  if (now - lastSweepAt < 60_000) return;
+  lastSweepAt = now;
+
+  for (const [key, bucket] of buckets) {
+    if (bucket.resetAt <= now) {
+      buckets.delete(key);
+    }
+  }
+}
 
 export function isRateLimited(key: string, limit: number, windowMs: number) {
   const now = Date.now();
+  sweepExpiredBuckets(now);
   const bucket = buckets.get(key);
 
   if (!bucket || bucket.resetAt <= now) {

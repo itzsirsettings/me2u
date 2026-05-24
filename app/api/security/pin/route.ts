@@ -5,8 +5,7 @@ import {
   requireAuthenticatedUser,
   tooManyRequestsResponse,
 } from "@/lib/server/auth";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { getGoogleUserPassword } from "@/lib/server/auth-helpers";
+import { getSupabaseServerAnonClient } from "@/lib/supabase/client";
 import { createTransactionPinVerifier } from "@/lib/server/pin";
 
 export async function POST(request: Request) {
@@ -36,23 +35,11 @@ export async function POST(request: Request) {
     }
 
     // Verify user password by attempting to sign in using standard anon client
-    const client = getSupabaseBrowserClient();
-    let { error: signInError } = await client.auth.signInWithPassword({
+    const client = getSupabaseServerAnonClient();
+    const { error: signInError } = await client.auth.signInWithPassword({
       email: auth.user.email!,
       password: password,
     });
-
-    if (signInError) {
-      // Try Google deterministic password
-      const googlePassword = getGoogleUserPassword(auth.user.email!);
-      const { error: googleSignInError } = await client.auth.signInWithPassword({
-        email: auth.user.email!,
-        password: googlePassword,
-      });
-      if (!googleSignInError) {
-        signInError = null;
-      }
-    }
 
     if (signInError) {
       throw new Error("Incorrect password. Please verify and try again.");

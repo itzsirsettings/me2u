@@ -1,12 +1,25 @@
 import { NextResponse } from "next/server";
-import { requireAuthenticatedUser } from "@/lib/server/auth";
+import { getClientIp, isRateLimited } from "@/lib/rate-limit";
+import { requireAuthenticatedUser, tooManyRequestsResponse } from "@/lib/server/auth";
 
 const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY || "";
 
 export async function POST(request: Request) {
   try {
+    const clientIp = getClientIp(request);
+    if (isRateLimited(`resolve-account-ip:${clientIp}`, 30, 60_000)) {
+      return tooManyRequestsResponse();
+    }
+
     const auth = await requireAuthenticatedUser(request);
     if ("response" in auth) return auth.response;
+
+    if (!PAYSTACK_SECRET) {
+      return NextResponse.json(
+        { error: "Bank verification is not configured. Please contact support." },
+        { status: 503 },
+      );
+    }
 
     const body = await request.json();
     const accountNumber = String(body.account_number || "").trim();
@@ -19,21 +32,22 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!bankCode) {
+    if (!/^\d{3,6}$/.test(bankCode)) {
       return NextResponse.json(
-        { error: "Bank code is required" },
+        { error: "Select a valid bank" },
         { status: 400 }
       );
     }
 
-    const res = await fetch(
-      `https://api.paystack.co/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`,
-      {
-        headers: {
-          Authorization: `Bearer ${PAYSTACK_SECRET}`,
-        },
-      }
-    );
+    const params = new URLSearchParams({
+      account_number: accountNumber,
+      bank_code: bankCode,
+    });
+    const res = await fetch(`https://api.paystack.co/bank/resolve?${params.toString()}`, {
+      headers: {
+        Authorization: `Bearer ${PAYSTACK_SECRET}`,
+      },
+    });
 
     const data = await res.json();
 

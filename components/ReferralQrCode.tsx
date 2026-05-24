@@ -29,8 +29,8 @@ export default function ReferralQrCode({ value, className = "" }: ReferralQrCode
       margin: 1,
       width: 192,
       color: {
-        dark: "#001f35",
-        light: "#ffffff",
+        dark: "#081320",
+        light: "#F8FAFC",
       },
     })
       .then((url) => {
@@ -50,7 +50,7 @@ export default function ReferralQrCode({ value, className = "" }: ReferralQrCode
 
   return (
     <div
-      className={`grid place-items-center overflow-hidden border border-[var(--color-border)] bg-white ${className}`}
+      className={`grid place-items-center overflow-hidden border border-[var(--color-border)] bg-snow ${className}`}
     >
       {dataUrl ? (
         <img

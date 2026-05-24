@@ -13,9 +13,12 @@
     "check": "npm run test && npm run typecheck && npm run build && npm run audit:prod"
   },
   "dependencies": {
+    "@base-ui/react": "^1.5.0",
     "@supabase/supabase-js": "^2.105.4",
+    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.38.0",
+    "gsap": "^3.15.0",
     "lucide-react": "^1.16.0",
     "next": "^16.2.6",
     "nodemailer": "^8.0.7",

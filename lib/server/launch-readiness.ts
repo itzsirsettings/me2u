@@ -9,6 +9,10 @@ function hasValue(name: string) {
   return Boolean(process.env[name]?.trim());
 }
 
+function readValue(name: string) {
+  return process.env[name]?.trim() || "";
+}
+
 function checkRequired(name: string, message: string): LaunchCheck {
   return {
     key: name,
@@ -24,6 +28,15 @@ export function getLaunchReadinessChecks(): LaunchCheck[] {
     checkRequired("NEXT_PUBLIC_SUPABASE_ANON_KEY", "Supabase anon key is configured."),
     checkRequired("SUPABASE_SERVICE_ROLE_KEY", "Supabase service role key is configured server-side."),
   ];
+
+  checks.push({
+    key: "AUTH_TOKEN_SECRET",
+    ok: hasValue("AUTH_TOKEN_SECRET"),
+    severity: "warning",
+    message: hasValue("AUTH_TOKEN_SECRET")
+      ? "Dedicated server token secret is configured."
+      : "AUTH_TOKEN_SECRET is not set; OTP tokens will rotate with the service role key.",
+  });
 
   const hasNinProviderUrl = hasValue("NIN_VERIFICATION_API_URL");
   const hasNinProviderKey = hasValue("NIN_VERIFICATION_API_KEY");
@@ -71,6 +84,20 @@ export function getLaunchReadinessChecks(): LaunchCheck[] {
     message: hasPlatformAccountDetails
       ? "Registration deposit account details are configured."
       : "Registration deposit account details are not configured yet.",
+  });
+
+  const emailFrom = readValue("EMAIL_FROM");
+  const hasResendApiKey = hasValue("RESEND_API_KEY");
+  const usesResendSandboxSender = /@resend\.dev>?$/i.test(emailFrom);
+
+  checks.push({
+    key: "EMAIL_DELIVERY",
+    ok: hasResendApiKey && hasValue("EMAIL_FROM") && !usesResendSandboxSender,
+    severity: "required",
+    message:
+      hasResendApiKey && hasValue("EMAIL_FROM") && !usesResendSandboxSender
+        ? "Production email delivery is configured with a non-sandbox sender."
+        : "Configure Resend with a verified sending domain and set EMAIL_FROM to that domain before accepting real users.",
   });
 
   return checks;

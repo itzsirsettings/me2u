@@ -465,9 +465,7 @@ export const useStore = create<AppStore>((set, get) => ({
       });
 
       if (error) throw error;
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem("me2u_session_password", password);
-      }
+
       const loadResult = await get().loadCurrentUser();
       if (!loadResult.ok) {
         await supabase.auth.signOut();

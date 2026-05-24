@@ -17,10 +17,10 @@ const serviceActions: Array<{
   requiresKyc?: boolean;
   requiresDeposit?: boolean;
 }> = [
-  { label: "Pay Bills", path: "/wallet#bills", icon: "bill", tone: "bg-[#c9c0f2] text-[#07026f]" },
-  { label: "Market", path: "/marketplace", icon: "market", tone: "bg-[#ffdfad] text-[#7a3f00]", requiresKyc: true },
-  { label: "Loans", path: "/loans", icon: "loans", tone: "bg-[#e0a9f0] text-[#07026f]", requiresKyc: true },
-  { label: "KYC", path: "/kyc", icon: "shield", tone: "bg-[#9adbc4] text-[#00406b]", requiresDeposit: true },
+  { label: "Pay Bills", path: "/wallet#bills", icon: "bill", tone: "bg-lime/20 text-lime" },
+  { label: "Market", path: "/marketplace", icon: "market", tone: "bg-green/20 text-green", requiresKyc: true },
+  { label: "Loans", path: "/loans", icon: "loans", tone: "bg-lime text-navy", requiresKyc: true },
+  { label: "KYC", path: "/kyc", icon: "shield", tone: "bg-green text-navy", requiresDeposit: true },
 ];
 
 const simpleShortcuts: Array<{
@@ -29,9 +29,9 @@ const simpleShortcuts: Array<{
   icon: Icons8IconName;
   tone: string;
 }> = [
-  { label: "Support", path: "/support", icon: "support", tone: "bg-[#dcecff] text-[#00406b]" },
-  { label: "Learn", path: "/learn", icon: "book", tone: "bg-[#e8f7f0] text-[#005f46]" },
-  { label: "Secure", path: "/security", icon: "security", tone: "bg-[#eee9ff] text-[#07026f]" },
+  { label: "Support", path: "/support", icon: "support", tone: "bg-slate text-snow" },
+  { label: "Learn", path: "/learn", icon: "book", tone: "bg-lime/20 text-lime" },
+  { label: "Secure", path: "/security", icon: "security", tone: "bg-green/20 text-green" },
 ];
 
 function getInitials(name?: string | null) {
@@ -113,7 +113,7 @@ export default function Dashboard() {
     >
       <motion.header variants={itemVariants} className="mb-3.5 flex w-full min-w-0 items-center justify-between gap-2.5 md:mb-10">
         <div className="flex min-w-0 items-center gap-2">
-          <div className="relative grid h-[3.15rem] w-[3.15rem] shrink-0 place-items-center rounded-full bg-[var(--color-accent-primary)] text-lg font-black text-[var(--color-on-accent)] shadow-[0_8px_18px_rgba(0,64,107,0.13)]">
+          <div className="relative grid h-[3.15rem] w-[3.15rem] shrink-0 place-items-center rounded-full bg-[var(--color-accent-primary)] text-lg font-black text-[var(--color-on-accent)] shadow-[0_8px_18px_rgba(34,197,94,0.22)]">
             {getInitials(user?.name)}
           </div>
           <div className="min-w-0">
@@ -258,15 +258,15 @@ export default function Dashboard() {
         </div>
 
         <div className="grid min-w-0 gap-3">
-          <motion.section variants={itemVariants} className="relative min-w-0 overflow-hidden rounded-[22px] bg-[#020814] p-4 text-white">
+          <motion.section variants={itemVariants} className="relative min-w-0 overflow-hidden rounded-[22px] bg-navy p-4 text-snow">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5">
-                <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--color-negative-text)] text-white">
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-lime text-navy">
                   <Icons8Icon name="loans" size={18} />
                 </span>
                 <p className="text-sm font-bold">Credit</p>
               </div>
-              <span className="shrink-0 rounded-full border border-white/35 px-3 py-1 text-xs font-black">
+              <span className="shrink-0 rounded-full border border-snow/35 px-3 py-1 text-xs font-black">
                 {activeLoanCount} active
               </span>
             </div>
@@ -274,12 +274,12 @@ export default function Dashboard() {
               0% interest loan from ₦5,000.
             </h2>
             <button
-              className="mt-4 inline-flex min-h-11 items-center rounded-full bg-white px-4 text-xs font-black text-[#020814] transition active:scale-95"
+              className="mt-4 inline-flex min-h-11 items-center rounded-full bg-lime px-4 text-xs font-black text-navy transition active:scale-95"
               onClick={() => router.push("/loans")}
             >
               View loans
             </button>
-            <div className="absolute -bottom-16 -right-12 h-40 w-40 rounded-full bg-[rgba(0,127,255,0.34)] blur-sm" />
+            <div className="absolute -bottom-16 -right-12 h-40 w-40 rounded-full bg-lime/25 blur-sm" />
           </motion.section>
 
           {user?.role === "admin" && (

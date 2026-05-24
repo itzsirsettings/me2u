@@ -7,13 +7,13 @@ import { toast } from "sonner";
 import { useStore } from "@/lib/store";
 import { getActivePlatformLoanRetainedDeposit } from "@/lib/loans";
 import { getRequiredWithdrawalBalance } from "@/lib/withdrawal";
+import { getWithdrawalProcessorFee, withdrawalFeeAmount } from "@/lib/revenue";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import Icons8Icon from "@/components/Icons8Icon";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { PinInput } from "@/components/ui/PinInput";
 
-const FEE_RATE = 0.015;
-const PLATFORM_FEE = 100;
 const MIN_WITHDRAWAL = 1000;
 
 const NIGERIAN_BANKS = [
@@ -57,6 +57,7 @@ export default function WithdrawPage() {
   const [bankCode, setBankCode] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [accountName, setAccountName] = useState("");
+  const [transactionPin, setTransactionPin] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [verified, setVerified] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -78,12 +79,11 @@ export default function WithdrawPage() {
   const currentBalance = user?.balance || 0;
   const platformLoanDeposit = getActivePlatformLoanRetainedDeposit(activeLoans);
   const requiredBalance = getRequiredWithdrawalBalance(withdrawalAmount, platformLoanDeposit);
-  const fee = Math.round(withdrawalAmount * FEE_RATE * 100) / 100;
-  const totalFee = fee + PLATFORM_FEE;
-  const netAmount = withdrawalAmount - totalFee;
+  const fee = getWithdrawalProcessorFee(withdrawalAmount);
+  const totalFee = fee + withdrawalFeeAmount;
+  const netAmount = withdrawalAmount;
   const totalDebit = withdrawalAmount + totalFee;
   const shortfall = Math.max(0, requiredBalance - currentBalance);
-  const balanceAfter = currentBalance - totalDebit;
 
   const hasOutstandingLoans = activeLoans.some(
     (loan) => loan.role === "borrower" && loan.status === "active"
@@ -153,6 +153,11 @@ export default function WithdrawPage() {
       return;
     }
 
+    if (!/^\d{4}$/.test(transactionPin)) {
+      toast.error("Enter your 4-digit transaction PIN.");
+      return;
+    }
+
     setSubmitting(true);
     try {
       const supabase = getSupabaseBrowserClient();
@@ -169,6 +174,7 @@ export default function WithdrawPage() {
           bank_code: bankCode,
           account_number: accountNumber,
           account_name: accountName,
+          pin: transactionPin,
         }),
       });
 
@@ -277,7 +283,7 @@ export default function WithdrawPage() {
                       <span className="overflow-anywhere min-w-0 text-right font-mono font-semibold">₦{withdrawalAmount.toLocaleString()}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-[var(--color-text-secondary)]">Fee (1.5% + ₦{PLATFORM_FEE})</span>
+                      <span className="text-[var(--color-text-secondary)]">Fee (1.5% + ₦{withdrawalFeeAmount})</span>
                       <span className="overflow-anywhere min-w-0 text-right font-mono font-semibold">₦{totalFee.toLocaleString()}</span>
                     </div>
                     <div className="flex items-center justify-between border-t border-[var(--color-border)] pt-2 font-semibold">
@@ -403,17 +409,36 @@ export default function WithdrawPage() {
                   </div>
                 )}
 
+                <div className="space-y-2">
+                  <label className="mb-2 block text-xs font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
+                    Transaction PIN
+                  </label>
+                  <PinInput
+                    value={transactionPin}
+                    onChange={setTransactionPin}
+                    secure
+                    disabled={submitting}
+                  />
+                </div>
+
                 {/* Actions */}
                 <div className="space-y-2 pt-2">
                   <button
                     onClick={handleSubmit}
-                    disabled={submitting || !verified || !accountName}
+                    disabled={submitting || !verified || !accountName || transactionPin.length !== 4}
                     className="btn-primary h-11 w-full text-sm md:h-12 disabled:opacity-40"
                   >
                     {submitting ? "Processing…" : `Withdraw ₦${netAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                   </button>
                   <button
-                    onClick={() => { setStep("amount"); setBankCode(""); setAccountNumber(""); setAccountName(""); setVerified(false); }}
+                    onClick={() => {
+                      setStep("amount");
+                      setBankCode("");
+                      setAccountNumber("");
+                      setAccountName("");
+                      setTransactionPin("");
+                      setVerified(false);
+                    }}
                     className="btn-ghost h-11 w-full"
                   >
                     Back

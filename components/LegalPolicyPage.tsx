@@ -56,22 +56,22 @@ function PublicFooter() {
       <div className="grid gap-8 md:grid-cols-[1.1fr_0.9fr_0.9fr_1fr]">
         <div>
           <BrandLogo className="h-10 w-28 brightness-0 invert" />
-          <p className="mt-4 text-sm leading-6 text-white/72">
+          <p className="mt-4 text-sm leading-6 text-snow/72">
             Me2U is legally owned by {companyInfo.legalName}.
           </p>
-          <p className="mt-3 text-sm font-black leading-6 text-white">{companyInfo.tradingName} support</p>
+          <p className="mt-3 text-sm font-black leading-6 text-snow">{companyInfo.tradingName} support</p>
         </div>
         {legalFooterGroups.map((group) => (
           <div key={group.title}>
-            <h2 className="text-xs font-black uppercase tracking-[0.12em] text-white">{group.title}</h2>
+            <h2 className="text-xs font-black uppercase tracking-[0.12em] text-snow">{group.title}</h2>
             <div className="mt-4 grid gap-2">
               {group.links.map((link) =>
                 isExternal(link.href) ? (
-                  <a key={link.href} href={link.href} className="text-sm font-semibold leading-6 text-white/72 transition hover:text-white">
+                  <a key={link.href} href={link.href} className="text-sm font-semibold leading-6 text-snow/72 transition hover:text-snow">
                     {link.label}
                   </a>
                 ) : (
-                  <Link key={link.href} href={link.href} className="text-sm font-semibold leading-6 text-white/72 transition hover:text-white">
+                  <Link key={link.href} href={link.href} className="text-sm font-semibold leading-6 text-snow/72 transition hover:text-snow">
                     {link.label}
                   </Link>
                 ),
@@ -80,9 +80,9 @@ function PublicFooter() {
           </div>
         ))}
       </div>
-      <div className="mt-8 border-t border-white/14 pt-5">
-        <p className="text-xs font-semibold leading-6 text-white/64">{footerDisclaimer}</p>
-        <p className="mt-3 text-xs font-semibold text-white/52">©2026 Me2U by {companyInfo.legalName}</p>
+      <div className="mt-8 border-t border-snow/14 pt-5">
+        <p className="text-xs font-semibold leading-6 text-snow/64">{footerDisclaimer}</p>
+        <p className="mt-3 text-xs font-semibold text-snow/52">©2026 Me2U by {companyInfo.legalName}</p>
       </div>
     </footer>
   );

@@ -84,7 +84,9 @@ type AdminAction =
   | "approve_payment_proof"
   | "reject_payment_proof"
   | "approve_withdrawal"
-  | "reject_withdrawal";
+  | "reject_withdrawal"
+  | "approve_kyc"
+  | "reject_kyc";
 
 const moneyFormatter = new Intl.NumberFormat("en-NG", {
   style: "currency",
@@ -821,6 +823,23 @@ export default function AdminDashboard() {
                       )}
                     </div>
                     <p className="mt-2 break-all text-sm text-[var(--color-text-secondary)]">{selectedUser.email}</p>
+                    <div className="mt-3 flex min-w-0 flex-wrap items-center gap-2">
+                      {!selectedUser.kyc_verified && selectedUser.passport_photo_url && selectedUser.bank_name && selectedUser.account_number ? (
+                        <QueueActionButton
+                          label="Approve KYC"
+                          busy={busyAction === `approve_kyc:${selectedUser.id}`}
+                          onClick={() => runAdminAction("approve_kyc", selectedUser.id)}
+                        />
+                      ) : null}
+                      {selectedUser.kyc_verified ? (
+                        <QueueActionButton
+                          label="Revoke KYC"
+                          variant="danger"
+                          busy={busyAction === `reject_kyc:${selectedUser.id}`}
+                          onClick={() => runAdminAction("reject_kyc", selectedUser.id)}
+                        />
+                      ) : null}
+                    </div>
                     <div className="mt-4 grid min-w-0 gap-2 text-sm sm:grid-cols-3">
                       <span className="min-w-0">
                         <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Wallet</b>

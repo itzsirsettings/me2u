@@ -1,16 +1,39 @@
 import { NextResponse } from "next/server";
-import { createHmac } from "crypto";
+import { getClientIp, isRateLimited } from "@/lib/rate-limit";
+import { tooManyRequestsResponse } from "@/lib/server/auth";
+import { createSignedOtpToken, generateOtpCode } from "@/lib/server/otp";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { sendOtpEmail } from "@/lib/server/email";
 
 export async function POST(request: Request) {
   try {
+    const clientIp = getClientIp(request);
+    if (isRateLimited(`send-otp-ip:${clientIp}`, 10, 10 * 60_000)) {
+      return tooManyRequestsResponse();
+    }
+
     const body = await request.json();
     const email = String(body.email || "").trim().toLowerCase();
     const action = String(body.action || "register").trim().toLowerCase();
 
     if (!email) {
       return NextResponse.json({ error: "Email address is required." }, { status: 400 });
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
+    }
+
+    if (action !== "login" && action !== "register") {
+      return NextResponse.json({ error: "Unsupported verification action." }, { status: 400 });
+    }
+    const purpose = action === "login" ? "login" : "register";
+
+    if (isRateLimited(`send-otp-email:${action}:${email}`, 3, 15 * 60_000)) {
+      return NextResponse.json(
+        { error: "Too many verification attempts for this email. Please wait and try again." },
+        { status: 429 },
+      );
     }
 
     const supabase = getSupabaseAdminClient();
@@ -40,15 +63,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Generate random 6-digit code
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes from now
-
-    // Sign the verification code statelessly using the service role key as a secret
-    const secret = process.env.SUPABASE_SERVICE_ROLE_KEY || "fallback_secret_for_dev_only";
-    const payload = `${email}:${code}:${expiresAt}`;
-    const hash = createHmac("sha256", secret).update(payload).digest("hex");
-    const token = `${expiresAt}.${hash}`;
+    const code = generateOtpCode();
+    const token = createSignedOtpToken({ email, code, purpose });
 
     // Send email
     const emailResult = await sendOtpEmail(email, code);

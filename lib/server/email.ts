@@ -89,13 +89,20 @@ Borrow smart. Lend safely. 0% interest.`;
   }
 
   try {
-    await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: toEmail,
       subject: "Your secure Me2U verification code",
       html: emailHtml,
       text: emailText,
     });
+
+    if (error) {
+      return {
+        success: false,
+        error: error.message || "Email delivery failure",
+      };
+    }
 
     return { success: true };
   } catch (error) {

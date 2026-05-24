@@ -691,7 +691,7 @@ export default function Marketplace() {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="w-full max-w-md rounded-[22px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[0_18px_48px_rgba(0,64,107,0.22)] md:rounded-[8px] md:p-6"
+              className="w-full max-w-md rounded-[22px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[0_18px_48px_rgba(8,19,32,0.22)] md:rounded-[8px] md:p-6"
               initial={{ y: 40, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 40, opacity: 0 }}
@@ -807,7 +807,7 @@ export default function Marketplace() {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="w-full max-w-md rounded-[22px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-5 shadow-[0_18px_48px_rgba(0,64,107,0.22)] md:rounded-[8px] md:p-6"
+              className="w-full max-w-md rounded-[22px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-5 shadow-[0_18px_48px_rgba(8,19,32,0.22)] md:rounded-[8px] md:p-6"
               initial={{ y: 40, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 40, opacity: 0 }}
@@ -865,7 +865,7 @@ export default function Marketplace() {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="w-full max-w-md rounded-[22px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-5 shadow-[0_18px_48px_rgba(0,64,107,0.22)] md:rounded-[8px] md:p-6"
+              className="w-full max-w-md rounded-[22px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-5 shadow-[0_18px_48px_rgba(8,19,32,0.22)] md:rounded-[8px] md:p-6"
               initial={{ y: 40, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 40, opacity: 0 }}

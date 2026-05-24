@@ -6,11 +6,10 @@ import {
   requireAuthenticatedUser,
   tooManyRequestsResponse,
 } from "@/lib/server/auth";
-import { withdrawalFeeAmount } from "@/lib/revenue";
+import { getWithdrawalProcessorFee, withdrawalFeeAmount } from "@/lib/revenue";
 import { verifyTransactionPin } from "@/lib/server/pin";
 
 const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY || "";
-const PAYSTACK_FEE_RATE = 0.015; // 1.5%
 const MIN_WITHDRAWAL = 1000;
 
 // Nigerian bank codes mapping (common banks)
@@ -74,6 +73,25 @@ async function createPaystackRecipient(
   return data.data;
 }
 
+async function resolvePaystackAccount(accountNumber: string, bankCode: string) {
+  const params = new URLSearchParams({
+    account_number: accountNumber,
+    bank_code: bankCode,
+  });
+  const res = await fetch(`https://api.paystack.co/bank/resolve?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${PAYSTACK_SECRET}`,
+    },
+  });
+
+  const data = await res.json();
+  if (!data.status || !data.data?.account_name) {
+    throw new Error("Could not verify the destination bank account.");
+  }
+
+  return String(data.data.account_name).trim();
+}
+
 async function initiatePaystackTransfer(
   recipientCode: string,
   amountInKobo: number,
@@ -117,6 +135,7 @@ export async function POST(request: Request) {
     const amount = readPositiveAmount(body.amount);
     const pin = typeof body.pin === "string" ? body.pin.trim() : "";
     const bankCode = String(body.bank_code || "").trim();
+    const accountNumber = String(body.account_number || "").trim();
     const accountName = String(body.account_name || "").trim();
 
     if (amount < MIN_WITHDRAWAL) {
@@ -148,14 +167,23 @@ export async function POST(request: Request) {
       throw new Error("Complete KYC before withdrawal.");
     }
 
-    // Use provided bank details or fallback to profile
-    const finalBankCode = bankCode || "057"; // Default Zenith
-    const finalAccountNumber = profile.account_number || "";
-    const finalAccountName = accountName || profile.bank_name ? `${profile.bank_name} Account` : "";
+    const finalBankCode = bankCode;
+    const finalAccountNumber = accountNumber;
+    const finalAccountName = accountName;
 
-    if (!finalAccountNumber) {
-      throw new Error("Complete your bank details before withdrawal.");
+    if (!/^\d{3,6}$/.test(finalBankCode)) {
+      throw new Error("Select and verify your bank before withdrawal.");
     }
+
+    if (!/^\d{10}$/.test(finalAccountNumber)) {
+      throw new Error("Enter a valid 10-digit account number.");
+    }
+
+    if (finalAccountName.length < 2 || finalAccountName.length > 120) {
+      throw new Error("Verify the destination account name before withdrawal.");
+    }
+
+    const resolvedAccountName = await resolvePaystackAccount(finalAccountNumber, finalBankCode);
 
     // Verify PIN
     if (!profile.transaction_pin) {
@@ -226,9 +254,9 @@ export async function POST(request: Request) {
 
     // Calculate fees
     const fee_amount = withdrawalFeeAmount;
-    const paystackFee = parseFloat((amount * PAYSTACK_FEE_RATE).toFixed(2));
+    const paystackFee = getWithdrawalProcessorFee(amount);
     const totalFee = paystackFee + fee_amount;
-    const netAmount = amount - paystackFee;
+    const netAmount = amount;
 
     // Check total balance (amount + total fee)
     if (balance < amount + totalFee) {
@@ -249,7 +277,7 @@ export async function POST(request: Request) {
         p_net_amount: netAmount,
         p_bank_code: finalBankCode,
         p_account_number: finalAccountNumber,
-        p_account_name: finalAccountName,
+        p_account_name: resolvedAccountName,
       }
     );
 
@@ -261,7 +289,7 @@ export async function POST(request: Request) {
     let recipientData;
     try {
       recipientData = await createPaystackRecipient(
-        finalAccountName,
+        resolvedAccountName,
         finalAccountNumber,
         finalBankCode
       );

@@ -125,7 +125,7 @@ export default function LearnPage() {
                 key={lesson.title}
                 className={`flex flex-col min-w-0 rounded-[18px] border transition-all ${
                   isExpanded
-                    ? "border-[var(--color-accent-primary)] bg-[var(--mobile-surface)] p-4 shadow-[4px_4px_0px_rgba(0,64,107,0.06)]"
+                    ? "border-[var(--color-accent-primary)] bg-[var(--mobile-surface)] p-4 shadow-[4px_4px_0px_rgba(8,19,32,0.06)]"
                     : "border-[var(--color-border)] bg-[var(--mobile-surface-muted)] p-3 hover:bg-[var(--color-hover-soft)]"
                 }`}
               >
