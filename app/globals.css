@@ -262,15 +262,15 @@ html[data-theme="dark"] .btn-ghost {
 .hero-section {
   position: relative;
   width: 100%;
-  min-height: 540px;
+  min-height: 100svh;
   overflow: hidden;
   isolation: isolate;
   background: var(--navy);
 }
 
-@media (min-width: 640px) {
+@media (max-width: 639px) {
   .hero-section {
-    min-height: 100svh;
+    height: 100svh;
   }
 }
 
@@ -339,6 +339,12 @@ html[data-theme="dark"] .btn-ghost {
   padding-bottom: 2.5rem;
 }
 
+@media (max-width: 639px) {
+  .hero-content {
+    padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+  }
+}
+
 @media (min-width: 640px) {
   .hero-content {
     align-items: center;
@@ -365,6 +371,12 @@ html[data-theme="dark"] .btn-ghost {
   letter-spacing: -0.025em;
   color: var(--snow);
   font-size: clamp(2rem, 6.5vw, 3.6rem);
+}
+
+@media (max-width: 639px) {
+  .hero-headline {
+    font-size: clamp(2.05rem, 10vw, 3rem);
+  }
 }
 
 @media (min-width: 1024px) {
@@ -397,6 +409,14 @@ html[data-theme="dark"] .btn-ghost {
   max-width: 480px;
 }
 
+@media (max-width: 639px) {
+  .hero-subtext {
+    margin-top: 1rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+}
+
 @media (min-width: 1024px) {
   .hero-subtext {
     margin-top: 1.5rem;
@@ -409,6 +429,12 @@ html[data-theme="dark"] .btn-ghost {
   gap: 0.75rem;
   margin-top: 1.75rem;
   flex-wrap: wrap;
+}
+
+@media (max-width: 639px) {
+  .hero-cta-row {
+    margin-top: 1.35rem;
+  }
 }
 
 @media (min-width: 1024px) {
@@ -501,6 +527,13 @@ html[data-theme="dark"] .btn-ghost {
   gap: 1.5rem;
   margin-top: 2.25rem;
   flex-wrap: wrap;
+}
+
+@media (max-width: 639px) {
+  .hero-trust-row {
+    gap: 1rem;
+    margin-top: 1.65rem;
+  }
 }
 
 @media (min-width: 1024px) {
