@@ -17,13 +17,28 @@ export type AssistantStructuredAnswer = {
 };
 
 const blockedSecrets = [
-  "otp",
-  "password",
-  "pin",
   "card number",
   "secret",
   "token",
   "private key",
+];
+
+const credentialWords = ["otp", "password", "pin"];
+const unsafeCredentialActions = [
+  "bypass",
+  "crack",
+  "find",
+  "get",
+  "guess",
+  "recover",
+  "reveal",
+  "send",
+  "share",
+  "show",
+  "steal",
+  "tell",
+  "unlock",
+  "what is",
 ];
 
 const supportKeywords = [
@@ -56,16 +71,34 @@ const complianceKeywords = [
 const conversationalPatterns = [
   /^(hi|hello|hey|yo|good morning|good afternoon|good evening|thanks|thank you|sup)\b[\s!.?]*$/i,
   /^(how are you|how far|what'?s up|are you there)\b[\s!.?]*$/i,
+  /^(who are you|what can you do|can you help|help|i need help)\b[\s!.?]*$/i,
+];
+
+const gettingStartedPatterns = [
+  /\b(how|where)\s+(can|do|should)\s+i\s+(start|begin|get started)\b/i,
+  /\b(start|begin|get started)\s+(with|using|on)\s+me2u\b/i,
+  /\b(new|first time)\s+(user|customer|account)\b/i,
+  /\b(sign up|signup|register|registration)\b/i,
 ];
 
 export function asksForSecret(message: string) {
   const normalized = message.toLowerCase();
-  return blockedSecrets.some((keyword) => normalized.includes(keyword));
+  if (blockedSecrets.some((keyword) => normalized.includes(keyword))) return true;
+
+  return credentialWords.some((credential) => {
+    if (!normalized.includes(credential)) return false;
+    return unsafeCredentialActions.some((action) => normalized.includes(action));
+  });
 }
 
 export function isConversationalMessage(message: string) {
   const normalized = message.trim();
   return conversationalPatterns.some((pattern) => pattern.test(normalized));
+}
+
+export function isGettingStartedMessage(message: string) {
+  const normalized = message.trim();
+  return gettingStartedPatterns.some((pattern) => pattern.test(normalized));
 }
 
 export function needsSupportHandoff(message: string) {
@@ -127,7 +160,7 @@ export function sanitizeAssistantAnswer(
 
   const citations = (candidate.citations || []).filter((citation) => allowedCitationIds.has(citation.id));
 
-  if (isConversationalMessage(latestUserMessage) && candidate.answer) {
+  if ((isConversationalMessage(latestUserMessage) || isGettingStartedMessage(latestUserMessage)) && candidate.answer) {
     return {
       answer: candidate.answer.trim(),
       citations,

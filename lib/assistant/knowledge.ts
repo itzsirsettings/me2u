@@ -128,6 +128,8 @@ function tokenize(value: string) {
   const expanded = tokens.flatMap((token) => {
     const variants = [token];
     if (token.endsWith("s")) variants.push(token.slice(0, -1));
+    if (token === "start" || token === "started" || token === "begin") variants.push("onboarding", "register", "registration", "signup", "account");
+    if (token === "signup" || token === "sign" || token === "register") variants.push("onboarding", "registration", "account");
     if (token.startsWith("withdraw")) variants.push("withdraw", "withdrawal", "withdrawals");
     if (token.startsWith("deposit")) variants.push("deposit", "deposits");
     if (token.startsWith("loan")) variants.push("loan", "loans");
@@ -146,6 +148,8 @@ function getIntentBoost(queryTokens: Set<string>, item: AssistantKnowledgeItem) 
   if (queryTokens.has("withdraw") && (id.includes("withdraw") || route.includes("withdraw"))) boost += 20;
   if (queryTokens.has("kyc") && (id.includes("kyc") || route.includes("kyc"))) boost += 18;
   if (queryTokens.has("deposit") && id.includes("onboarding")) boost += 12;
+  if ((queryTokens.has("start") || queryTokens.has("started") || queryTokens.has("begin") || queryTokens.has("onboarding")) && id.includes("onboarding")) boost += 24;
+  if ((queryTokens.has("signup") || queryTokens.has("register") || queryTokens.has("registration")) && (id.includes("onboarding") || route.includes("register"))) boost += 20;
   if (queryTokens.has("loan") && (id.includes("loan") || route.includes("loan"))) boost += 18;
   if (queryTokens.has("wallet") && (id.includes("wallet") || route.includes("wallet"))) boost += 14;
   if (queryTokens.has("referral") && (id.includes("referral") || route.includes("referral"))) boost += 14;

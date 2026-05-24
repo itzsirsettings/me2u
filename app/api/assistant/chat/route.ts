@@ -11,6 +11,7 @@ import {
   asksForSecret,
   buildSupportRequest,
   isConversationalMessage,
+  isGettingStartedMessage,
   makeRefusalAnswer,
   needsSupportHandoff,
   sanitizeAssistantAnswer,
@@ -110,7 +111,9 @@ function buildPrompt(params: {
 
   return [
     "You are Me2U Guide, a read-only assistant inside the Me2U app.",
-    "You are not a human employee. You answer calmly, directly, and only from the approved sources below or the safe account context.",
+    "You are not a human employee. You answer calmly, directly, and use the approved sources below or the safe account context for Me2U facts.",
+    "For casual greetings, capability questions, and light conversational messages, respond naturally and briefly without pretending to perform actions.",
+    "If the user asks how to start, get started, register, or sign up, explain the onboarding path from the Protected onboarding source.",
     "Never invent facts. If the sources do not support the answer, set answer to: I do not have enough verified Me2U information to answer that.",
     "Never ask for or reveal passwords, OTPs, PINs, tokens, card details, NIN, full account numbers, private image URLs, or auth secrets.",
     "Never perform actions. You may explain and link users to app pages.",
@@ -351,18 +354,59 @@ function conversationalFallbackAnswer(message: string): AssistantStructuredAnswe
   const normalized = message.trim().toLowerCase();
   const isThanks = /^(thanks|thank you)\b/.test(normalized);
   const isWellbeing = /^(how are you|how far|what'?s up)\b/.test(normalized);
+  const isIdentity = /^(who are you|what can you do|can you help|help|i need help)\b/.test(normalized);
 
   return {
     answer: isThanks
       ? "You are welcome. What would you like to do next?"
       : isWellbeing
         ? "I am here and ready to help. What is on your mind?"
-        : "Hello. I am here with you. Ask me anything, or tell me what you want to figure out.",
+        : isIdentity
+          ? "I am Me2U Guide. I can explain how to start, KYC, wallet funding, withdrawals, referrals, loans, trust score, and account safety. I can also help you phrase a support request when something needs review."
+          : "Hello. I am here with you. Ask me anything, or tell me what you want to figure out.",
     citations: [],
-    suggestedActions: ["Ask a question", "Check your account", "Pick a suggestion"],
+    suggestedActions: ["How can I start?", "Check my account", "Contact support"],
     confidence: "high",
     handoffNeeded: false,
   };
+}
+
+function gettingStartedFallbackAnswer(params: {
+  route?: string;
+  citations: AssistantCitation[];
+}) {
+  const onboardingCitation = params.citations.find((citation) => citation.id === "rule:onboarding");
+  const globalReadinessCitation = params.citations.find((citation) => citation.id === "feature:global-readiness");
+  const supportCitation = params.citations.find((citation) => citation.id === "rule:support-contact");
+  const citations = [onboardingCitation, globalReadinessCitation, supportCitation]
+    .filter((citation): citation is AssistantCitation => Boolean(citation))
+    .slice(0, 3);
+
+  if (citations.length === 0) {
+    return makeRefusalAnswer("I can help you get started, but I could not load the verified onboarding steps right now. Please open Register or Support.", params.route);
+  }
+
+  return sanitizeAssistantAnswer(
+    {
+      answer: [
+        "To start with Me2U:",
+        "1. Create your account and verify your email.",
+        "2. Complete the registration deposit shown in the app.",
+        "3. Finish KYC so higher-risk features can unlock.",
+        "4. Set up your wallet and security details.",
+        "5. Build your trust score, then use features like loans, referrals, marketplace, and withdrawals based on your account status.",
+        "",
+        "If you are already logged in, open Dashboard first; it will show the next step for your account.",
+      ].join("\n"),
+      citations,
+      suggestedActions: ["Open Dashboard", "Register", "Ask about KYC"],
+      confidence: "high",
+      handoffNeeded: false,
+    },
+    new Set(citations.map((citation) => citation.id)),
+    "How can I start?",
+    params.route,
+  );
 }
 
 function localFallbackAnswer(params: {
@@ -444,6 +488,13 @@ async function buildAssistantAnswer(params: {
 
   if (isConversationalMessage(latestUserMessage)) {
     return conversationalFallbackAnswer(latestUserMessage);
+  }
+
+  if (isGettingStartedMessage(latestUserMessage)) {
+    return gettingStartedFallbackAnswer({
+      route: params.route,
+      citations: params.citations,
+    });
   }
 
   if (asksForSecret(latestUserMessage)) {
