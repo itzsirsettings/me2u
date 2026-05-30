@@ -1,99 +1,138 @@
 "use client";
 
-import { motion } from "framer-motion";
+import {
+  FileCheck2,
+  Gift,
+  Globe2,
+  PiggyBank,
+  ReceiptText,
+  ShieldCheck,
+  Store,
+  UsersRound,
+  WalletCards,
+} from "lucide-react";
+import { FeatureGrid } from "@/components/ui/feature-section";
+import featuresIllustration from "@/features-me2u-transparent.png";
+import featuresDarkIllustration from "@/features-me2u-transparent-dark.png";
 
-const features = [
+const featureCategories = [
   {
-    icon: "↗",
-    title: "Registration deposit",
-    description: "Pay the fixed ₦1,000 deposit and upload your transfer reference plus receipt."
+    icon: <FileCheck2 size={24} />,
+    title: "Onboarding",
+    items: [
+      { text: "₦1,000 registration deposit" },
+      { text: "Receipt and transfer reference upload" },
+      { text: "KYC guidance for verified accounts", href: "/register" },
+    ],
   },
   {
-    icon: "◈",
-    title: "Me2U Trust Score",
-    description: "Improve limits through KYC, repayments, wallet activity, referrals, and account age."
+    icon: <ShieldCheck size={24} />,
+    title: "Trust score",
+    items: [
+      { text: "Repayment history tracking" },
+      { text: "Wallet activity signals" },
+      { text: "Higher limits from verified behavior" },
+    ],
   },
   {
-    icon: "⚡",
-    title: "Bills and utilities",
-    description: "Use the wallet for airtime, data, electricity, cable TV, school fees, and payment links."
+    icon: <WalletCards size={24} />,
+    title: "Wallet",
+    items: [
+      { text: "Receive and withdraw money" },
+      { text: "Verified wallet records" },
+      { text: "Payment links for daily use" },
+    ],
   },
   {
-    icon: "◎",
-    title: "Savings goals",
-    description: "Create emergency, rent, school fee, business capital, and group savings goals."
+    icon: <ReceiptText size={24} />,
+    title: "Bills",
+    items: [
+      { text: "Airtime and data" },
+      { text: "Electricity and cable TV" },
+      { text: "School fees and utilities" },
+    ],
   },
   {
-    icon: "✦",
-    title: "Referral Rewards",
-    description: "Earn ₦500 after referrals complete KYC and their first loan repayment."
+    icon: <PiggyBank size={24} />,
+    title: "Savings",
+    items: [
+      { text: "Emergency goals" },
+      { text: "Rent and school fee goals" },
+      { text: "Business and group savings" },
+    ],
   },
   {
-    icon: "◇",
-    title: "Top deals",
-    description: "Merchant deals from verified food, pharmacy, transport, school, and training businesses."
+    icon: <UsersRound size={24} />,
+    title: "Circles",
+    items: [
+      { text: "Private family lending groups" },
+      { text: "School, church, and trader circles" },
+      { text: "Agreement summaries and receipts" },
+    ],
   },
   {
-    icon: "▣",
-    title: "Me2U Circles",
-    description: "Create private lending groups for families, schools, churches, traders, and businesses."
+    icon: <Gift size={24} />,
+    title: "Rewards",
+    items: [
+      { text: "Referral reward tracking" },
+      { text: "₦500 after qualifying repayment" },
+      { text: "Verified invite quality signals" },
+    ],
   },
   {
-    icon: "▰",
-    title: "Protected lending",
-    description: "Review agreement summaries, repayment countdowns, receipts, and dispute evidence."
+    icon: <Store size={24} />,
+    title: "Marketplace",
+    items: [
+      { text: "Top merchant deals" },
+      { text: "Food, pharmacy, and transport offers" },
+      { text: "Verified local business listings" },
+    ],
   },
   {
-    icon: "⌘",
+    icon: <Globe2 size={24} />,
     title: "Global profile",
-    description: "Choose country, currency, and language while lending remains country-gated until local setup is ready."
-  }
+    items: [
+      { text: "Country and currency preferences" },
+      { text: "Language-ready account profile" },
+      { text: "Country-gated lending setup" },
+    ],
+  },
 ];
 
 export default function FeaturesSection() {
   return (
-    <section className="py-32 bg-snow relative overflow-hidden">
-      <div className="container mx-auto px-4 md:px-6 relative z-10">
-        <div className="max-w-4xl mb-24">
-          <motion.h2 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-4xl md:text-6xl font-medium text-navy mb-8 tracking-tight leading-[1.2]"
-          >
-            Everything builds trust <br/>
-            <span className="text-green">before you borrow.</span>
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="text-lg md:text-xl text-slate-light font-normal max-w-2xl leading-relaxed tracking-tight"
-          >
-            Me2U turns onboarding into a transparent trust flow. Every step—from deposit to KYC—strengthens your profile.
-          </motion.p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-16">
-          {features.map((feature, idx) => (
-            <motion.div
-              key={idx}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: idx * 0.05 }}
-              className="group"
-            >
-              <div className="w-10 h-10 rounded-[10px] bg-green/10 text-green flex items-center justify-center text-xl mb-6 group-hover:bg-green group-hover:text-navy transition-all duration-300">
-                {feature.icon}
-              </div>
-              <h3 className="text-lg font-medium text-navy mb-3 tracking-tight">{feature.title}</h3>
-              <p className="text-slate-light font-normal leading-relaxed text-[14px]">{feature.description}</p>
-            </motion.div>
-          ))}
-        </div>
-      </div>
+    <section id="features" className="bg-background py-24 md:py-32">
+      <FeatureGrid
+        title={
+          <>
+            Everything builds{" "}
+            <span className="relative inline-block">
+              trust
+              <svg
+                viewBox="0 0 120 6"
+                className="absolute left-0 bottom-0 -mb-1 w-full"
+                aria-hidden="true"
+              >
+                <path
+                  d="M1 4.5C25.46 1.63 78.43 1.39 119 4.5"
+                  stroke="var(--green)"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+              </svg>
+            </span>
+          </>
+        }
+        subtitle="Me2U turns onboarding, wallet activity, KYC, referrals, savings, and repayments into a transparent profile before you borrow."
+        illustrationSrc={featuresIllustration.src}
+        illustrationDarkSrc={featuresDarkIllustration.src}
+        illustrationAlt="Me2U feature illustration showing verified forms and account activity"
+        categories={featureCategories}
+        buttonText="Open account"
+        buttonHref="/register"
+      />
     </section>
   );
 }

@@ -8,6 +8,7 @@ const navItems: Array<{ label: string; icon: Icons8IconName; path: string }> = [
   { label: "Home", icon: "home", path: "/dashboard" },
   { label: "Market", icon: "market", path: "/marketplace" },
   { label: "Wallet", icon: "wallet", path: "/wallet" },
+  { label: "Bills", icon: "bill", path: "/bills" },
   { label: "Profile", icon: "profile", path: "/profile" },
 ];
 
@@ -21,7 +22,7 @@ export default function BottomNav() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))] md:hidden">
-      <div className="relative mx-auto grid max-w-md grid-cols-4 items-center gap-1 rounded-[28px] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 py-2.5 shadow-[0_-8px_32px_rgba(0,0,0,0.18),0_-2px_8px_rgba(0,0,0,0.12)]">
+      <div className="relative mx-auto grid max-w-md grid-cols-5 items-center gap-1 rounded-[28px] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2 py-2.5 shadow-[0_-8px_32px_rgba(0,0,0,0.18),0_-2px_8px_rgba(0,0,0,0.12)]">
         {navItems.map((item) => {
           const isActive = activePath === item.path || (item.path !== "/dashboard" && pathname.startsWith(item.path));
           return (

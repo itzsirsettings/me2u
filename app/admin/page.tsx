@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Icons8Icon from "@/components/Icons8Icon";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { backendFetch } from "@/lib/backend-api";
 import { useStore } from "@/lib/store";
 import type {
   AffiliateRewardRow,
+  BillTransactionRow,
   LoanRow,
   MarketplaceRow,
   PaymentProofRow,
@@ -65,6 +67,11 @@ type AdminOverview = {
     active_loan_exposure: number;
     platform_loan_exposure: number;
     marketplace_active: number;
+    total_bills_processed: number;
+    successful_bills: number;
+    failed_bills: number;
+    pending_bills: number;
+    total_bill_profit: number;
     retained_float: number;
     month_revenue: number;
     month_income: number;
@@ -78,6 +85,7 @@ type AdminOverview = {
   marketplace_items: MarketplaceRow[];
   affiliate_rewards: AffiliateRewardRow[];
   revenue_events: RevenueEventRow[];
+  bill_transactions: BillTransactionRow[];
 };
 
 type AdminAction =
@@ -174,7 +182,7 @@ function MetricCard({
   label: string;
   value: string;
   detail: string;
-  icon: "wallet" | "moneyBag" | "cash" | "requestMoney" | "market" | "profile" | "referral" | "loans";
+  icon: "wallet" | "moneyBag" | "cash" | "requestMoney" | "market" | "profile" | "referral" | "loans" | "bill" | "receipt" | "alert";
 }) {
   return (
     <div className="min-w-0 overflow-hidden rounded-[6px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[3px_3px_0px_var(--color-shadow)]">
@@ -321,6 +329,36 @@ export default function AdminDashboard() {
 
       toast.success("Admin action completed.");
       await fetchOverview();
+    } catch (error) {
+      toast.error(toErrorMessage(error));
+    } finally {
+      setBusyAction(null);
+    }
+  };
+
+  const runBillAction = async (action: "requery" | "refund", reference: string) => {
+    const key = `bill_${action}:${reference}`;
+    setBusyAction(key);
+
+    try {
+      await backendFetch(`/api/admin/bills/${action}/${reference}`, {
+        method: "POST",
+        body: JSON.stringify({}),
+      });
+      toast.success(action === "requery" ? "Bill requery queued." : "Bill refund processed.");
+      await fetchOverview();
+    } catch (error) {
+      toast.error(toErrorMessage(error));
+    } finally {
+      setBusyAction(null);
+    }
+  };
+
+  const checkProviderBalance = async () => {
+    setBusyAction("provider-balance");
+    try {
+      const balance = await backendFetch<Record<string, unknown>>("/api/admin/bills/provider-balance");
+      toast.success(`Provider balance checked: ${JSON.stringify(balance).slice(0, 120)}`);
     } catch (error) {
       toast.error(toErrorMessage(error));
     } finally {
@@ -481,6 +519,62 @@ export default function AdminDashboard() {
         />
       </section>
 
+      <section className="mb-6 min-w-0 overflow-hidden rounded-[6px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[4px_4px_0px_var(--color-shadow)]">
+        <div className="mb-4 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <h2 className="font-display text-2xl font-bold">Bills Monitor</h2>
+            <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+              Track provider fulfilment, queue requery, refund failed bills, and check provider balance.
+            </p>
+          </div>
+          <button
+            type="button"
+            className="btn-ghost min-h-10 text-xs font-bold"
+            disabled={busyAction === "provider-balance"}
+            onClick={checkProviderBalance}
+          >
+            {busyAction === "provider-balance" ? "Checking..." : "Provider Balance"}
+          </button>
+        </div>
+        <div className="grid gap-2">
+          {(overview.bill_transactions || []).slice(0, 6).map((transaction) => (
+            <div key={transaction.id} className="grid min-w-0 gap-2 rounded-[5px] bg-[var(--color-bg-secondary)] p-3 text-sm md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+              <div className="min-w-0">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <b className="break-all font-mono text-xs">{transaction.reference}</b>
+                  <span className="rounded-[5px] bg-[var(--color-bg-card)] px-2 py-1 text-[10px] font-black uppercase text-[var(--color-text-secondary)]">
+                    {transaction.status}
+                  </span>
+                </div>
+                <p className="mt-1 truncate text-xs text-[var(--color-text-secondary)]">
+                  {transaction.category} • {transaction.network || "provider"} • {transaction.customer_identifier} • {money(Number(transaction.selling_price))}
+                </p>
+              </div>
+              <div className="flex min-w-0 flex-wrap gap-2">
+                <QueueActionButton
+                  label="Requery"
+                  busy={busyAction === `bill_requery:${transaction.reference}`}
+                  onClick={() => runBillAction("requery", transaction.reference)}
+                />
+                {transaction.status !== "refunded" && transaction.status !== "successful" ? (
+                  <QueueActionButton
+                    label="Refund"
+                    variant="danger"
+                    busy={busyAction === `bill_refund:${transaction.reference}`}
+                    onClick={() => runBillAction("refund", transaction.reference)}
+                  />
+                ) : null}
+              </div>
+            </div>
+          ))}
+          {(overview.bill_transactions || []).length === 0 ? (
+            <p className="rounded-[5px] bg-[var(--color-bg-secondary)] p-3 text-sm text-[var(--color-text-secondary)]">
+              No bill transactions yet.
+            </p>
+          ) : null}
+        </div>
+      </section>
+
       <section className="mb-6 grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           label="Income"
@@ -511,6 +605,33 @@ export default function AdminDashboard() {
           value={money(overview.summary.pending_funding_amount)}
           detail={`${pendingFundingProofs.length} wallet funding proofs need review`}
           icon="cash"
+        />
+      </section>
+
+      <section className="mb-6 grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          label="Bills Processed"
+          value={numberFormatter.format(overview.summary.total_bills_processed || 0)}
+          detail={`${numberFormatter.format(overview.summary.successful_bills || 0)} successful bills`}
+          icon="bill"
+        />
+        <MetricCard
+          label="Bills Pending"
+          value={numberFormatter.format(overview.summary.pending_bills || 0)}
+          detail="Transactions awaiting provider confirmation or requery"
+          icon="receipt"
+        />
+        <MetricCard
+          label="Bills Failed"
+          value={numberFormatter.format(overview.summary.failed_bills || 0)}
+          detail="Failed, reversed, or refunded bills"
+          icon="alert"
+        />
+        <MetricCard
+          label="Bill Profit"
+          value={money(overview.summary.total_bill_profit || 0)}
+          detail="Profit from successful bills fulfilment"
+          icon="moneyBag"
         />
       </section>
 

@@ -1,43 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  applyThemeMode,
+  getStoredThemeMode,
+  saveThemeMode,
+  themeChangeEvent,
+  type ThemeMode,
+} from "@/lib/theme";
 
-type ThemeMode = "light" | "dark" | "system";
-type ResolvedTheme = "light" | "dark";
-
-const storageKey = "me2u-theme";
 const themeOptions: Array<{ label: string; value: ThemeMode }> = [
   { label: "Light", value: "light" },
   { label: "Dark", value: "dark" },
   { label: "System", value: "system" },
 ];
-
-function getSystemTheme(): ResolvedTheme {
-  if (typeof window === "undefined") return "light";
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-}
-
-function resolveTheme(mode: ThemeMode): ResolvedTheme {
-  return mode === "system" ? getSystemTheme() : mode;
-}
-
-function getStoredThemeMode(): ThemeMode {
-  if (typeof window === "undefined") return "system";
-
-  const storedTheme = window.localStorage.getItem(storageKey);
-  if (storedTheme === "light" || storedTheme === "dark" || storedTheme === "system") {
-    return storedTheme;
-  }
-
-  return "system";
-}
-
-function applyThemeMode(mode: ThemeMode) {
-  const resolvedTheme = resolveTheme(mode);
-  document.documentElement.dataset.themeMode = mode;
-  document.documentElement.dataset.theme = resolvedTheme;
-  document.documentElement.style.colorScheme = resolvedTheme;
-}
 
 export default function ThemeModeSelector() {
   const [themeMode, setThemeMode] = useState<ThemeMode>("system");
@@ -53,20 +29,30 @@ export default function ThemeModeSelector() {
         applyThemeMode("system");
       }
     };
+    const handleSavedThemeChange = () => {
+      setThemeMode(getStoredThemeMode());
+    };
+
+    window.addEventListener(themeChangeEvent, handleSavedThemeChange);
 
     if (mediaQuery.addEventListener) {
       mediaQuery.addEventListener("change", handleSystemThemeChange);
-      return () => mediaQuery.removeEventListener("change", handleSystemThemeChange);
+      return () => {
+        mediaQuery.removeEventListener("change", handleSystemThemeChange);
+        window.removeEventListener(themeChangeEvent, handleSavedThemeChange);
+      };
     }
 
     mediaQuery.addListener(handleSystemThemeChange);
-    return () => mediaQuery.removeListener(handleSystemThemeChange);
+    return () => {
+      mediaQuery.removeListener(handleSystemThemeChange);
+      window.removeEventListener(themeChangeEvent, handleSavedThemeChange);
+    };
   }, []);
 
   const selectThemeMode = (mode: ThemeMode) => {
     setThemeMode(mode);
-    window.localStorage.setItem(storageKey, mode);
-    applyThemeMode(mode);
+    saveThemeMode(mode);
   };
 
   return (

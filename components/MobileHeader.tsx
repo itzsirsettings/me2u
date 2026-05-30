@@ -4,10 +4,12 @@ import BrandLogo from "@/components/BrandLogo";
 import { usePathname, useRouter } from "next/navigation";
 import Icons8Icon from "@/components/Icons8Icon";
 import NotificationBell from "./NotificationBell";
+import ThemeToggleIcon from "@/components/ThemeToggleIcon";
 
 const routeTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/wallet": "Wallet",
+  "/bills": "Bills & Utilities",
   "/withdraw": "Withdraw",
   "/kyc": "KYC",
   "/marketplace": "Marketplace",
@@ -35,7 +37,7 @@ const routeTitles: Record<string, string> = {
 export default function MobileHeader() {
   const pathname = usePathname();
   const router = useRouter();
-  const title = routeTitles[pathname];
+  const title = routeTitles[pathname] || (pathname.startsWith("/bills/transactions") ? "Bill Receipt" : undefined);
 
   if (!title) return null;
   if (pathname === "/dashboard") return null;
@@ -74,7 +76,8 @@ export default function MobileHeader() {
             </p>
           </div>
         </div>
-        <div className="flex items-center">
+        <div className="flex items-center gap-1">
+          <ThemeToggleIcon className="border-[var(--color-border)] bg-[var(--color-bg-card)] text-[var(--color-text-primary)] hover:border-[var(--color-accent-primary)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-accent-primary)] focus-visible:ring-[var(--color-accent-primary)] focus-visible:ring-offset-[var(--mobile-app-bg)]" />
           <NotificationBell />
         </div>
       </div>

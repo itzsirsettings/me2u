@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { requireAdminUser } from "@/lib/server/auth";
+import { requestWemaVirtualAccountForKycUser } from "@/lib/server/wema-virtual-account";
 import type { Database } from "@/lib/supabase/types";
 
 type AdminAction =
@@ -66,7 +67,7 @@ export async function POST(request: Request) {
     if (action === "approve_kyc" || action === "reject_kyc") {
       const { data: profile, error: profileError } = await auth.supabase
         .from("profiles")
-        .select("id, bank_name, account_number, passport_photo_url")
+        .select("id, first_name, last_name, email, phone, nin_last4, bank_name, account_number, passport_photo_url")
         .eq("id", id)
         .maybeSingle();
 
@@ -82,6 +83,21 @@ export async function POST(request: Request) {
         .eq("id", id);
 
       if (error) throw new Error(error.message);
+
+      if (action === "approve_kyc") {
+        try {
+          await requestWemaVirtualAccountForKycUser({
+            userId: profile.id,
+            firstName: profile.first_name,
+            lastName: profile.last_name,
+            email: profile.email,
+            phone: profile.phone,
+            ninLast4: profile.nin_last4,
+          });
+        } catch (virtualAccountError) {
+          console.error("Wema virtual account request failed after KYC approval", virtualAccountError);
+        }
+      }
 
       return NextResponse.json({ ok: true });
     }

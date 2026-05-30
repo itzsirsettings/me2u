@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { motion, type Variants, AnimatePresence } from "framer-motion";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import PaystackFundingAccount from "@/components/PaystackFundingAccount";
 
 const walletServices: Array<{ id: string; label: string; detail: string; icon: Icons8IconName }> = [
   { id: "airtime", label: "Airtime", detail: "Top up any network instantly", icon: "phone" },
@@ -573,6 +574,9 @@ export default function WalletPage() {
 
         <Card className="kinetic-border p-5 shadow-[4px_4px_0px_var(--color-shadow)] bg-[var(--color-bg-card)] md:p-10">
           <h2 className="mb-4 text-xl font-display md:mb-8 md:text-3xl">Fund Wallet</h2>
+          <div className="mb-4 md:mb-6">
+            <PaystackFundingAccount />
+          </div>
           <div className="mb-4 rounded-[5px] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3 text-sm md:p-4">
             {hasPlatformAccountDetails ? (
               <div className="grid gap-2">
@@ -668,179 +672,19 @@ export default function WalletPage() {
             <div className="min-w-0">
               <h2 className="text-xl font-display md:text-3xl">Pay Bills</h2>
               <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">
-                Instantly buy airtime, data, or pay electricity bills directly from your wallet.
+                Use the dedicated Bills & Utilities flow for VTpass airtime/data fulfilment, provider tracking, and automatic refunds.
               </p>
             </div>
             <Icons8Icon name="bill" size={26} className="shrink-0 text-[var(--color-accent-primary)]" />
           </div>
-          
-          <div className="grid gap-2 sm:grid-cols-3 mb-6">
-            {walletServices.map((service) => (
-              <button
-                key={service.id}
-                type="button"
-                className={`flex min-w-0 items-center gap-3 rounded-[5px] border p-3 text-left transition ${
-                  selectedService === service.id 
-                    ? "border-[var(--color-accent-primary)] bg-[var(--color-hover-soft)] shadow-inner" 
-                    : "border-[var(--color-border)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-hover-soft)]"
-                }`}
-                onClick={() => {
-                  setSelectedService(service.id);
-                  setServiceProvider(
-                    service.id === "electricity"
-                      ? "Ikeja Electric"
-                      : service.id === "cable"
-                        ? "DSTV"
-                        : service.id === "internet"
-                          ? "Spectranet"
-                          : service.id === "school"
-                            ? "Partner School"
-                            : service.id === "merchant_qr"
-                              ? "Verified Merchant"
-                              : service.id === "payment_link"
-                                ? "Business Payment Link"
-                                : "MTN",
-                  );
-                }}
-              >
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[5px] bg-[var(--color-bg-card)] text-[var(--color-accent-primary)]">
-                  <Icons8Icon name={service.icon} size={21} />
-                </span>
-                <span className="min-w-0">
-                  <b className="block truncate text-sm">{service.label}</b>
-                </span>
-              </button>
-            ))}
+          <div className="grid gap-3 rounded-[5px] bg-[var(--color-bg-secondary)] p-3.5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+            <p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">
+              Airtime and data are live first. Electricity and Cable TV stay in the next phase until validation edge cases are stable.
+            </p>
+            <button type="button" className="btn-primary min-h-11 px-5 text-sm font-bold" onClick={() => router.push("/bills")}>
+              Open Bills
+            </button>
           </div>
-
-          <AnimatePresence>
-            {selectedService && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="overflow-hidden"
-              >
-                <div className="space-y-4 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
-                  <div>
-                    <label className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
-                      Provider
-                    </label>
-                    <select
-                      className="h-11 w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 font-sans focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none"
-                      value={serviceProvider}
-                      onChange={(e) => setServiceProvider(e.target.value)}
-                    >
-                      {selectedService === "electricity" ? (
-                        <>
-                          <option value="Ikeja Electric">Ikeja Electric (IKEDC)</option>
-                          <option value="Eko Electric">Eko Electric (EKEDC)</option>
-                          <option value="Abuja Electric">Abuja Electric (AEDC)</option>
-                        </>
-                      ) : selectedService === "cable" ? (
-                        <>
-                          <option value="DSTV">DSTV</option>
-                          <option value="GOtv">GOtv</option>
-                          <option value="Startimes">Startimes</option>
-                        </>
-                      ) : selectedService === "internet" ? (
-                        <>
-                          <option value="Spectranet">Spectranet</option>
-                          <option value="Smile">Smile</option>
-                          <option value="Fiber Partner">Fiber Partner</option>
-                        </>
-                      ) : selectedService === "school" ? (
-                        <>
-                          <option value="Partner School">Partner School</option>
-                          <option value="Training Center">Training Center</option>
-                        </>
-                      ) : selectedService === "merchant_qr" || selectedService === "payment_link" ? (
-                        <>
-                          <option value="Verified Merchant">Verified Merchant</option>
-                          <option value="Small Business">Small Business</option>
-                        </>
-                      ) : (
-                        <>
-                          <option value="MTN">MTN</option>
-                          <option value="Airtel">Airtel</option>
-                          <option value="Glo">Glo</option>
-                          <option value="9mobile">9mobile</option>
-                        </>
-                      )}
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
-                      {selectedService === "electricity" ? "Meter Number" : "Phone Number"}
-                    </label>
-                    <input
-                      type="text"
-                      placeholder={selectedService === "electricity" ? "Enter meter number" : "Enter phone number"}
-                      value={servicePhone}
-                      onChange={(e) => setServicePhone(e.target.value)}
-                      className="w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 font-mono focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">Amount (₦)</label>
-                    <input
-                      type="number"
-                      placeholder="0.00"
-                      value={serviceAmount}
-                      onChange={(e) => setServiceAmount(e.target.value)}
-                      className="w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 font-mono focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none"
-                    />
-                  </div>
-                  {!user?.transactionPin ? (
-                    <div className="rounded-[8px] border border-[var(--color-warning-text)] bg-[var(--color-warning-bg)] p-3 text-xs text-[var(--color-warning-text)]">
-                      <span className="font-bold font-sans">PIN Setup Required:</span> You need to set a transaction PIN in Security settings before you can buy airtime/data or pay bills.
-                    </div>
-                  ) : (
-                    <div>
-                      <label className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">Transaction PIN</label>
-                      <input
-                        type="password"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        maxLength={4}
-                        placeholder="••••"
-                        value={billPin}
-                        onChange={(e) => {
-                          const val = e.target.value.replace(/\D/g, "");
-                          if (val.length <= 4) setBillPin(val);
-                        }}
-                        className="w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 font-mono text-center text-lg tracking-[0.4em] focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none"
-                      />
-                    </div>
-                  )}
-                  
-                  <div className="pt-2 w-full [&>button]:w-full">
-                    {!user?.transactionPin ? (
-                      <button
-                        onClick={() => router.push("/security")}
-                        className="btn-primary min-h-11 w-full text-sm font-bold"
-                      >
-                        Set up Transaction PIN
-                      </button>
-                    ) : (
-                      <LoadingButton
-                        label={`Pay ₦${serviceAmount || "0"}`}
-                        loadingText="Processing..."
-                        successText="Successful!"
-                        disabled={!serviceAmount || !servicePhone || !user?.kycVerified || billPin.length !== 4}
-                        onClick={handlePayBill}
-                      />
-                    )}
-                    {!user?.kycVerified && (
-                      <p className="mt-2 text-xs text-center text-[var(--color-warning-text)]">Complete KYC to unlock bill payments.</p>
-                    )}
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </Card>
 
         <Card className="kinetic-border bg-[var(--color-bg-card)] p-5 shadow-[4px_4px_0px_var(--color-shadow)] md:p-8">

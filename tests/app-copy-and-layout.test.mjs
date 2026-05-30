@@ -175,9 +175,13 @@ test("bill payments and withdrawals use hardened financial paths", () => {
   const withdrawPage = read("app/withdraw/page.tsx");
   const revenue = read("lib/revenue.ts");
   const migration = read("supabase/migrations/20260523110905_harden_auth_and_atomic_bill_payments.sql");
+  const billsMigration = read("supabase/migrations/20260526170504_me2u_bills_architecture.sql");
 
-  assert.match(payBill, /me2u_pay_bill/);
+  assert.match(payBill, /Legacy wallet bill debit is retired/);
   assert.match(migration, /create or replace function private\.me2u_pay_bill/);
+  assert.match(billsMigration, /create table if not exists public\.bill_transactions/);
+  assert.match(billsMigration, /create or replace function private\.me2u_create_bill_debit/);
+  assert.match(billsMigration, /create or replace function private\.me2u_refund_bill_transaction/);
   assert.match(migration, /revoke execute on function public\.me2u_pay_bill/);
   assert.match(migration, /revoke insert, update on public\.referrals from authenticated/);
   assert.match(migration, /You can only read your own referral stats/);
@@ -186,6 +190,46 @@ test("bill payments and withdrawals use hardened financial paths", () => {
   assert.match(withdrawPage, /PinInput/);
   assert.match(withdrawPage, /pin: transactionPin/);
   assert.match(revenue, /withdrawalProcessorFeeRate = 0\.015/);
+});
+
+test("Wema banking rails are adapter-backed and ledger-first", () => {
+  const migration = read("supabase/migrations/20260527001749_wema_primary_banking_rails.sql");
+  const bankingProvider = read("server/src/modules/banking/banking-provider.interface.ts");
+  const wemaProvider = read("server/src/modules/banking/wema.provider.ts");
+  const bankingService = read("server/src/modules/banking/banking.service.ts");
+  const walletController = read("server/src/modules/wallet/wallet.controller.ts");
+  const webhooks = read("server/src/modules/webhooks/webhooks.controller.ts");
+  const env = read(".env.example");
+
+  assert.match(migration, /create table if not exists public\.virtual_accounts/);
+  assert.match(migration, /create table if not exists public\.wallet_inflows/);
+  assert.match(migration, /create table if not exists public\.bank_transfers/);
+  assert.match(migration, /create or replace function private\.me2u_credit_wallet_inflow/);
+  assert.match(migration, /'bank_transfer'/);
+  assert.match(bankingProvider, /export interface BankingProvider/);
+  assert.match(wemaProvider, /WEMA_ENABLED/);
+  assert.match(wemaProvider, /WEMA_WEBHOOK_SECRET/);
+  assert.match(bankingService, /me2u_credit_wallet_inflow/);
+  assert.match(walletController, /@Get\("virtual-account"\)/);
+  assert.match(walletController, /@Post\("requery-inflow"\)/);
+  assert.match(webhooks, /@Post\("wema\/inflow"\)/);
+  assert.match(env, /WEMA_ENABLED=false/);
+  assert.match(env, /WEMA_TRANSFERS_ENABLED=false/);
+});
+
+test("Wema DVA creation starts after admin KYC approval while Paystack DVA is fallback-gated", () => {
+  const adminActions = read("app/api/admin/actions/route.ts");
+  const register = read("app/api/auth/register/route.ts");
+  const wemaHelper = read("lib/server/wema-virtual-account.ts");
+  const backfill = read("scripts/backfill-wema-virtual-accounts.mjs");
+
+  assert.match(adminActions, /requestWemaVirtualAccountForKycUser/);
+  assert.match(adminActions, /action === "approve_kyc"/);
+  assert.match(register, /PAYSTACK_DVA_ENABLED === "true"/);
+  assert.match(wemaHelper, /WEMA_VIRTUAL_ACCOUNT_PATH/);
+  assert.match(backfill, /kyc_verified/);
+  assert.match(backfill, /nin_last4/);
+  assert.match(backfill, /--dry-run/);
 });
 
 test("licensed partner revenue model is backend-enforced", () => {

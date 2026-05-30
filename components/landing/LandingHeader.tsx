@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import BrandLogo from "@/components/BrandLogo";
+import ThemeToggleIcon from "@/components/ThemeToggleIcon";
+import { GlowCard } from "@/components/ui/spotlight-card";
 
 export default function LandingHeader() {
   const [scrolled, setScrolled] = useState(false);
@@ -57,45 +59,47 @@ export default function LandingHeader() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute top-full left-1/2 -translate-x-1/2 w-[600px] bg-slate/85 backdrop-blur-md rounded-2xl shadow-2xl border border-snow/5 p-6 grid grid-cols-2 gap-6"
+                    className="absolute top-full left-1/2 w-[600px] -translate-x-1/2"
                   >
-                    <div className="col-span-2 p-4 bg-navy/50 rounded-xl border border-snow/5">
-                      <h3 className="font-medium text-green mb-1">Me2U Lending Flow</h3>
-                      <p className="text-sm text-snow/60 mb-3">One app for verified wallets, peer matching, interest-free loans, and repayments.</p>
-                      <Link href="/register" className="text-sm font-medium text-green hover:text-lime transition-colors">Create an account &rarr;</Link>
-                    </div>
-                    <div>
-                      <Link href="/#loans" className="block group p-2 -m-2 rounded-lg hover:bg-snow/5">
-                        <div className="font-medium text-snow group-hover:text-green mb-1 flex items-center gap-2 transition-colors">
-                          <span className="text-lg text-green">⌁</span> 0% Loans
-                        </div>
-                        <p className="text-xs text-snow/40 font-normal">Access 0% interest loans from ₦5,000.</p>
-                      </Link>
-                    </div>
-                    <div>
-                      <Link href="/#marketplace" className="block group p-2 -m-2 rounded-lg hover:bg-snow/5">
-                        <div className="font-medium text-snow group-hover:text-green mb-1 flex items-center gap-2 transition-colors">
-                          <span className="text-lg text-green">▣</span> Peer Marketplace
-                        </div>
-                        <p className="text-xs text-snow/40 font-normal">Create borrow requests and lending offers.</p>
-                      </Link>
-                    </div>
-                    <div>
-                      <Link href="/#trust" className="block group p-2 -m-2 rounded-lg hover:bg-snow/5">
-                        <div className="font-medium text-snow group-hover:text-green mb-1 flex items-center gap-2 transition-colors">
-                          <span className="text-lg text-green">◈</span> Trust Score
-                        </div>
-                        <p className="text-xs text-snow/40 font-normal">Build trust from KYC and repayments.</p>
-                      </Link>
-                    </div>
-                    <div>
-                      <Link href="/#rewards" className="block group p-2 -m-2 rounded-lg hover:bg-snow/5">
-                        <div className="font-medium text-snow group-hover:text-green mb-1 flex items-center gap-2 transition-colors">
-                          <span className="text-lg text-green">✦</span> Referral Rewards
-                        </div>
-                        <p className="text-xs text-snow/40 font-normal">Earn ₦500 after referral loan repayment.</p>
-                      </Link>
-                    </div>
+                    <GlowCard customSize glowColor="green" className="grid grid-cols-2 gap-6 rounded-2xl border border-snow/5 bg-slate/85 p-6 shadow-2xl backdrop-blur-md">
+                      <div className="col-span-2 p-4 bg-navy/50 rounded-xl border border-snow/5">
+                        <h3 className="font-medium text-green mb-1">Me2U Lending Flow</h3>
+                        <p className="text-sm text-snow/60 mb-3">One app for verified wallets, peer matching, interest-free loans, and repayments.</p>
+                        <Link href="/register" className="text-sm font-medium text-green hover:text-lime transition-colors">Create an account &rarr;</Link>
+                      </div>
+                      <div>
+                        <Link href="/#loans" className="block group p-2 -m-2 rounded-lg hover:bg-snow/5">
+                          <div className="font-medium text-snow group-hover:text-green mb-1 flex items-center gap-2 transition-colors">
+                            <span className="text-lg text-green">⌁</span> 0% Loans
+                          </div>
+                          <p className="text-xs text-snow/40 font-normal">Access 0% interest loans from ₦5,000.</p>
+                        </Link>
+                      </div>
+                      <div>
+                        <Link href="/#marketplace" className="block group p-2 -m-2 rounded-lg hover:bg-snow/5">
+                          <div className="font-medium text-snow group-hover:text-green mb-1 flex items-center gap-2 transition-colors">
+                            <span className="text-lg text-green">▣</span> Peer Marketplace
+                          </div>
+                          <p className="text-xs text-snow/40 font-normal">Create borrow requests and lending offers.</p>
+                        </Link>
+                      </div>
+                      <div>
+                        <Link href="/#trust" className="block group p-2 -m-2 rounded-lg hover:bg-snow/5">
+                          <div className="font-medium text-snow group-hover:text-green mb-1 flex items-center gap-2 transition-colors">
+                            <span className="text-lg text-green">◈</span> Trust Score
+                          </div>
+                          <p className="text-xs text-snow/40 font-normal">Build trust from KYC and repayments.</p>
+                        </Link>
+                      </div>
+                      <div>
+                        <Link href="/#rewards" className="block group p-2 -m-2 rounded-lg hover:bg-snow/5">
+                          <div className="font-medium text-snow group-hover:text-green mb-1 flex items-center gap-2 transition-colors">
+                            <span className="text-lg text-green">✦</span> Referral Rewards
+                          </div>
+                          <p className="text-xs text-snow/40 font-normal">Earn ₦500 after referral loan repayment.</p>
+                        </Link>
+                      </div>
+                    </GlowCard>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -112,6 +116,7 @@ export default function LandingHeader() {
           </nav>
 
           <div className="hidden lg:flex items-center gap-8">
+            <ThemeToggleIcon />
             <Link href="/login" className="font-medium text-sm text-snow/60 hover:text-snow transition-colors">
               Log In
             </Link>
@@ -121,18 +126,22 @@ export default function LandingHeader() {
           </div>
 
           {/* Mobile Toggle */}
-          <button 
-            className="lg:hidden p-2 text-snow"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              {mobileMenuOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              )}
-            </svg>
-          </button>
+          <div className="flex items-center gap-1 lg:hidden">
+            <ThemeToggleIcon />
+            <button
+              className="p-2 text-snow"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+            >
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                {mobileMenuOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -146,14 +155,14 @@ export default function LandingHeader() {
             className="fixed inset-x-0 top-[72px] bg-navy border-b border-snow/5 shadow-2xl z-40 lg:hidden overflow-hidden"
           >
             <div className="p-4 flex flex-col gap-4">
-              <div className="p-4 bg-snow/5 rounded-xl">
+              <GlowCard customSize glowColor="green" className="rounded-xl bg-snow/5 p-4">
                 <h3 className="font-medium text-green mb-1 text-sm">Products</h3>
                 <div className="grid grid-cols-1 gap-3 mt-3">
                   <Link href="/#loans" className="text-sm font-normal text-snow/80" onClick={() => setMobileMenuOpen(false)}>0% Loans</Link>
                   <Link href="/#marketplace" className="text-sm font-normal text-snow/80" onClick={() => setMobileMenuOpen(false)}>Peer Marketplace</Link>
                   <Link href="/#trust" className="text-sm font-normal text-snow/80" onClick={() => setMobileMenuOpen(false)}>Trust Score</Link>
                 </div>
-              </div>
+              </GlowCard>
               <Link href="/security" className="p-3 font-normal text-snow/80 border-b border-snow/5" onClick={() => setMobileMenuOpen(false)}>Security</Link>
               <Link href="/#faqs" className="p-3 font-normal text-snow/80 border-b border-snow/5" onClick={() => setMobileMenuOpen(false)}>FAQs</Link>
               <Link href="/support" className="p-3 font-normal text-snow/80" onClick={() => setMobileMenuOpen(false)}>Support</Link>

@@ -72,6 +72,16 @@
   --mobile-pill-text: var(--navy);
   --mobile-radius-xl: 20px;
   --mobile-radius-lg: 12px;
+
+  /* Landing page bands */
+  --landing-accent-strong: var(--green-dark);
+  --landing-proof-bg: color-mix(in srgb, var(--green) 4%, var(--snow));
+  --landing-proof-card: color-mix(in srgb, var(--green) 3%, var(--snow));
+  --landing-cta-image-opacity: 0.2;
+  --landing-cta-grid: color-mix(in srgb, var(--navy) 10%, transparent);
+  --landing-cta-scrim-start: color-mix(in srgb, var(--snow) 68%, transparent);
+  --landing-cta-scrim-end: color-mix(in srgb, var(--snow) 92%, transparent);
+  --landing-cta-accent: color-mix(in srgb, var(--green) 20%, transparent);
 }
 
 html[data-theme="dark"] {
@@ -106,6 +116,15 @@ html[data-theme="dark"] {
     var(--mobile-app-bg);
   --mobile-pill: rgba(163, 230, 53, 0.24);
   --mobile-pill-text: var(--snow);
+
+  --landing-accent-strong: var(--lime);
+  --landing-proof-bg: var(--navy);
+  --landing-proof-card: color-mix(in srgb, var(--slate) 84%, var(--navy));
+  --landing-cta-image-opacity: 0.48;
+  --landing-cta-grid: color-mix(in srgb, var(--snow) 15%, transparent);
+  --landing-cta-scrim-start: color-mix(in srgb, var(--navy) 54%, transparent);
+  --landing-cta-scrim-end: color-mix(in srgb, var(--navy) 92%, transparent);
+  --landing-cta-accent: color-mix(in srgb, var(--green) 28%, transparent);
 }
 
 @theme inline {
@@ -121,6 +140,17 @@ html[data-theme="dark"] {
 
   --color-background: var(--color-page-background);
   --color-foreground: var(--color-text-primary);
+  --color-card: var(--color-bg-card);
+  --color-card-foreground: var(--color-text-primary);
+  --color-primary: var(--color-accent-primary);
+  --color-primary-foreground: var(--color-on-accent);
+  --color-secondary: var(--color-bg-secondary);
+  --color-secondary-foreground: var(--color-text-primary);
+  --color-destructive: var(--color-negative-text);
+  --color-destructive-foreground: var(--color-bg-card);
+  --color-input: var(--color-border);
+  --color-accent: var(--color-hover-soft);
+  --color-accent-foreground: var(--color-text-primary);
   --color-muted-foreground: var(--color-text-secondary);
   --color-ring: var(--color-accent-primary);
   --font-sans: "Aptos", "Segoe UI", "DM Sans", system-ui, sans-serif;
@@ -184,6 +214,173 @@ body {
 .overflow-anywhere {
   overflow-wrap: anywhere;
   word-break: break-word;
+}
+
+.spotlight-surface,
+[data-glow],
+.btn-primary,
+.btn-secondary,
+.btn-dark,
+.btn-lime,
+.btn-ghost,
+.hero-btn-primary,
+.hero-btn-secondary,
+.hero-trust-badge,
+.footer-glass-pill,
+.mobile-icon-button {
+  position: relative;
+  overflow: hidden;
+  --border-size: calc(var(--border, 1) * 1px);
+  --spotlight-size: calc(var(--size, 150) * 1px);
+  --glow-color: var(--green);
+  --glow-highlight: var(--lime);
+  --glow-soft: var(--snow);
+  background-image:
+    radial-gradient(
+      var(--spotlight-size) var(--spotlight-size) at calc(var(--x, 0) * 1px) calc(var(--y, 0) * 1px),
+      color-mix(in srgb, var(--glow-color) 10%, transparent),
+      transparent
+    );
+  background-size: calc(100% + (2 * var(--border-size))) calc(100% + (2 * var(--border-size)));
+  background-position: 50% 50%;
+  background-attachment: fixed;
+}
+
+.spotlight-surface::before,
+.spotlight-surface::after,
+[data-glow]::before,
+[data-glow]::after,
+.btn-primary::before,
+.btn-primary::after,
+.btn-secondary::before,
+.btn-secondary::after,
+.btn-dark::before,
+.btn-dark::after,
+.btn-lime::before,
+.btn-lime::after,
+.btn-ghost::before,
+.btn-ghost::after,
+.hero-btn-primary::before,
+.hero-btn-primary::after,
+.hero-btn-secondary::before,
+.hero-btn-secondary::after,
+.hero-trust-badge::before,
+.hero-trust-badge::after,
+.footer-glass-pill::before,
+.footer-glass-pill::after,
+.mobile-icon-button::before,
+.mobile-icon-button::after {
+  pointer-events: none;
+  content: "";
+  position: absolute;
+  inset: calc(var(--border-size) * -1);
+  border: var(--border-size) solid transparent;
+  border-radius: inherit;
+  background-attachment: fixed;
+  background-size: calc(100% + (2 * var(--border-size))) calc(100% + (2 * var(--border-size)));
+  background-repeat: no-repeat;
+  background-position: 50% 50%;
+  mask: linear-gradient(transparent, transparent), linear-gradient(white, white);
+  mask-clip: padding-box, border-box;
+  mask-composite: intersect;
+}
+
+.spotlight-surface::before,
+[data-glow]::before,
+.btn-primary::before,
+.btn-secondary::before,
+.btn-dark::before,
+.btn-lime::before,
+.btn-ghost::before,
+.hero-btn-primary::before,
+.hero-btn-secondary::before,
+.hero-trust-badge::before,
+.footer-glass-pill::before,
+.mobile-icon-button::before {
+  background-image:
+    radial-gradient(
+      calc(var(--spotlight-size) * 0.75) calc(var(--spotlight-size) * 0.75) at calc(var(--x, 0) * 1px) calc(var(--y, 0) * 1px),
+      color-mix(in srgb, var(--glow-highlight) 82%, transparent),
+      transparent 100%
+    );
+  filter: brightness(2);
+}
+
+.spotlight-surface::after,
+[data-glow]::after,
+.btn-primary::after,
+.btn-secondary::after,
+.btn-dark::after,
+.btn-lime::after,
+.btn-ghost::after,
+.hero-btn-primary::after,
+.hero-btn-secondary::after,
+.hero-trust-badge::after,
+.footer-glass-pill::after,
+.mobile-icon-button::after {
+  background-image:
+    radial-gradient(
+      calc(var(--spotlight-size) * 0.5) calc(var(--spotlight-size) * 0.5) at calc(var(--x, 0) * 1px) calc(var(--y, 0) * 1px),
+      color-mix(in srgb, var(--glow-soft) 55%, transparent),
+      transparent 100%
+    );
+}
+
+[data-glow] > [data-glow] {
+  position: absolute;
+  inset: 0;
+  will-change: filter;
+  opacity: var(--outer, 1);
+  border-radius: inherit;
+  filter: blur(calc(var(--border-size) * 10));
+  background: none;
+  pointer-events: none;
+  border: none;
+}
+
+[data-glow] > [data-glow]::before {
+  inset: -10px;
+  border-width: 10px;
+}
+
+.feature-highlight-image-dark {
+  display: none;
+}
+
+html[data-theme="dark"] .has-dark-feature-image {
+  display: none;
+}
+
+html[data-theme="dark"] .feature-highlight-image-dark {
+  display: block;
+}
+
+.landing-cta-image {
+  opacity: var(--landing-cta-image-opacity);
+}
+
+.landing-cta-grid {
+  border-color: var(--landing-cta-grid);
+}
+
+.landing-cta-grid > :not(:last-child) {
+  border-color: var(--landing-cta-grid);
+}
+
+.landing-cta-scrim {
+  background: linear-gradient(
+    180deg,
+    var(--landing-cta-scrim-start),
+    var(--landing-cta-scrim-end)
+  );
+}
+
+.landing-cta-accent {
+  background: radial-gradient(
+    circle at 50% 25%,
+    var(--landing-cta-accent),
+    transparent 38%
+  );
 }
 
 /* Design System Components */

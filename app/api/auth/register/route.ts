@@ -14,6 +14,7 @@ import {
 } from "@/lib/server/otp";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { sendOtpEmail } from "@/lib/server/email";
+import { assignPaystackDvaForNewUser } from "@/lib/server/paystack-dva";
 
 function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -334,6 +335,24 @@ export async function POST(request: Request) {
         throw walletError;
       }
 
+      let walletAccountStatus: string | null = null;
+      if (process.env.PAYSTACK_DVA_ENABLED === "true") {
+        try {
+          const walletAccount = await assignPaystackDvaForNewUser({
+            userId,
+            email,
+            firstName,
+            lastName,
+            phone,
+            countryCode: country.code,
+          });
+          walletAccountStatus = walletAccount.status;
+        } catch (walletAccountError) {
+          console.error("Paystack DVA assignment failed during registration", walletAccountError);
+          walletAccountStatus = "pending";
+        }
+      }
+
       // Record referral if applicable
       if (referredBy) {
         await supabase.rpc("me2u_record_referral", {
@@ -348,6 +367,7 @@ export async function POST(request: Request) {
           firstName,
           lastName,
           username,
+          walletAccountStatus,
         },
         {
           headers: {

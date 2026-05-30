@@ -6,6 +6,7 @@ import AuthBootstrap from "@/components/AuthBootstrap";
 import MobileHeader from "@/components/MobileHeader";
 import ProtectedOnboarding from "@/components/ProtectedOnboarding";
 import Me2UAssistantWidget from "@/components/Me2UAssistantWidget";
+import { SpotlightPointer } from "@/components/ui/spotlight-card";
 
 const themeScript = `
 (() => {
@@ -47,6 +48,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className="font-sans" suppressHydrationWarning>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <SpotlightPointer />
         <AuthBootstrap />
         <ProtectedOnboarding />
         <MobileHeader />

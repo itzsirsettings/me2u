@@ -27,7 +27,9 @@ export interface Transaction {
     | "loan_repayment"
     | "investment"
     | "repayment_received"
-    | "affiliate_reward";
+    | "affiliate_reward"
+    | "bill_payment"
+    | "bill_refund";
   amount: number;
   date: string;
   description: string;

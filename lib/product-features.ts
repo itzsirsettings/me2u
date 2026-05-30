@@ -363,6 +363,25 @@ export function getTrustScoreBreakdown(
   const completedLoans = loans.filter((loan) => loan.status === "completed").length;
   const activeLoans = loans.filter((loan) => loan.status === "active").length;
   const walletActivity = transactions.length;
+  const thirtyDaysAgo = Date.now() - 30 * 86_400_000;
+  const recentBillTransactions = transactions.filter(
+    (transaction) =>
+      transaction.type === "bill_payment" &&
+      (!transaction.date || new Date(transaction.date).getTime() >= thirtyDaysAgo),
+  );
+  const recentBillRefunds = transactions.filter(
+    (transaction) =>
+      transaction.type === "bill_refund" &&
+      (!transaction.date || new Date(transaction.date).getTime() >= thirtyDaysAgo),
+  );
+  const billActivityPoints =
+    recentBillTransactions.length >= 5 ? 8 : recentBillTransactions.length >= 3 ? 5 : recentBillTransactions.length > 0 ? 2 : 0;
+  const billConsistencyPoints = recentBillTransactions.length > 0 && walletActivity >= 5 ? 2 : 0;
+  const billFailurePenalty =
+    recentBillTransactions.length + recentBillRefunds.length >= 5 &&
+    recentBillRefunds.length / (recentBillTransactions.length + recentBillRefunds.length) > 0.2
+      ? 3
+      : 0;
   const ageDays = user?.createdAt
     ? Math.max(0, Math.floor((Date.now() - new Date(user.createdAt).getTime()) / 86_400_000))
     : 0;
@@ -386,6 +405,15 @@ export function getTrustScoreBreakdown(
       earned: walletActivity >= 5 ? 12 : walletActivity > 0 ? 7 : 0,
       weight: 12,
       detail: walletActivity > 0 ? `${walletActivity} wallet records` : "Fund or repay to build history",
+    },
+    {
+      label: "Bills activity",
+      earned: Math.max(0, billActivityPoints + billConsistencyPoints - billFailurePenalty),
+      weight: 10,
+      detail:
+        recentBillTransactions.length > 0
+          ? `${recentBillTransactions.length} successful bills in 30 days`
+          : "Pay airtime or data to build daily-use trust",
     },
     {
       label: "Referral quality",

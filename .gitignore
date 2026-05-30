@@ -9,3 +9,4 @@ supabase/.temp/
 tsconfig.tsbuildinfo
 playwright-report/
 test-results/
+server/dist/

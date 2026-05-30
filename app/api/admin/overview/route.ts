@@ -3,6 +3,7 @@ import { requireAdminUser } from "@/lib/server/auth";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import type {
   AffiliateRewardRow,
+  BillTransactionRow,
   LoanRow,
   MarketplaceRow,
   PaymentProofRow,
@@ -114,6 +115,12 @@ export async function GET(request: Request) {
     const affiliateRewards = (affiliateRewardsResponse.data || []) as AffiliateRewardRow[];
     const withdrawalRequests = (withdrawalRequestsResponse.data || []) as WithdrawalRequestRow[];
     const revenueEvents = (revenueEventsResponse.data || []) as RevenueEventRow[];
+    const billTransactionsResponse = await supabase
+      .from("bill_transactions")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(250);
+    const billTransactions = (billTransactionsResponse.error ? [] : billTransactionsResponse.data || []) as BillTransactionRow[];
     const profilesById = new Map(profiles.map((profile) => [profile.id, profile]));
     const walletsByUserId = new Map(wallets.map((wallet) => [wallet.user_id, wallet]));
 
@@ -233,6 +240,14 @@ export async function GET(request: Request) {
         (loan) => moneyValue(loan.amount),
       ),
       marketplace_active: marketplaceItems.filter((item) => item.status === "active").length,
+      total_bills_processed: billTransactions.length,
+      successful_bills: billTransactions.filter((transaction) => transaction.status === "successful").length,
+      failed_bills: billTransactions.filter((transaction) => ["failed", "reversed", "refunded"].includes(transaction.status)).length,
+      pending_bills: billTransactions.filter((transaction) => ["initiated", "debited", "pending"].includes(transaction.status)).length,
+      total_bill_profit: sumBy(
+        billTransactions.filter((transaction) => transaction.status === "successful"),
+        (transaction) => moneyValue(transaction.profit),
+      ),
       retained_float: retainedFloat,
       month_revenue: sumBy(
         approvedProofs.filter((proof) => proof.type === "registration_deposit" && sameMonth(proof.created_at)),
@@ -264,6 +279,7 @@ export async function GET(request: Request) {
       marketplace_items: marketplaceItems,
       affiliate_rewards: affiliateRewards,
       revenue_events: revenueEvents,
+      bill_transactions: billTransactions,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to load admin overview.";

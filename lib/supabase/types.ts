@@ -41,6 +41,7 @@ export type ProfileRow = {
 };
 
 export type WalletRow = {
+  id: string;
   user_id: string;
   balance: number;
   locked: number;
@@ -57,7 +58,9 @@ export type TransactionRow = {
     | "loan_repayment"
     | "investment"
     | "repayment_received"
-    | "affiliate_reward";
+    | "affiliate_reward"
+    | "bill_payment"
+    | "bill_refund";
   amount: number;
   description: string;
   created_at: string;
@@ -144,6 +147,147 @@ export type WithdrawalRequestRow = {
   paystack_recipient_code: string | null;
   paystack_transfer_code: string | null;
   paystack_reference: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type BillCategoryRow = {
+  id: string;
+  name: string;
+  slug: "airtime" | "data" | "electricity" | "cable" | string;
+  status: "active" | "inactive";
+  created_at: string;
+  updated_at: string;
+};
+
+export type BillProductRow = {
+  id: string;
+  category_id: string;
+  provider: "vtpass" | "flutterwave" | "wema";
+  service_id: string;
+  variation_code: string | null;
+  network: string | null;
+  name: string;
+  cost_price: number;
+  selling_price: number;
+  commission: number;
+  is_active: boolean;
+  metadata: Json;
+  created_at: string;
+  updated_at: string;
+};
+
+export type BillTransactionRow = {
+  id: string;
+  user_id: string;
+  wallet_id: string;
+  product_id: string | null;
+  reference: string;
+  idempotency_key: string | null;
+  provider: "vtpass" | "flutterwave" | "wema";
+  provider_reference: string | null;
+  category: string;
+  service_id: string;
+  variation_code: string | null;
+  network: string | null;
+  customer_identifier: string;
+  amount: number;
+  cost_price: number;
+  selling_price: number;
+  profit: number;
+  status: "initiated" | "debited" | "pending" | "successful" | "failed" | "reversed" | "refunded";
+  provider_response: Json | null;
+  failure_reason: string | null;
+  requery_count: number;
+  next_requery_at: string | null;
+  completed_at: string | null;
+  refunded_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type WalletLedgerRow = {
+  id: string;
+  user_id: string;
+  wallet_id: string;
+  transaction_type: "credit" | "debit" | "refund" | "reversal";
+  source: "deposit" | "loan" | "bill_payment" | "repayment" | "admin_adjustment" | "withdrawal" | "referral" | "bank_transfer" | "transfer";
+  amount: number;
+  balance_before: number;
+  balance_after: number;
+  reference: string;
+  description: string;
+  metadata: Json;
+  created_at: string;
+};
+
+export type VirtualAccountRow = {
+  id: string;
+  user_id: string;
+  provider: string;
+  provider_reference: string | null;
+  account_name: string | null;
+  account_number: string | null;
+  bank_name: string | null;
+  bank_code: string | null;
+  currency: string;
+  status: string;
+  request_payload: Json;
+  response_payload: Json;
+  created_at: string;
+  updated_at: string;
+};
+
+export type WalletInflowRow = {
+  id: string;
+  user_id: string;
+  wallet_id: string | null;
+  virtual_account_id: string | null;
+  provider: string;
+  provider_reference: string;
+  amount: number;
+  currency: string;
+  status: string;
+  sender_name: string | null;
+  sender_account_number: string | null;
+  narration: string | null;
+  credited_at: string | null;
+  raw_payload: Json;
+  created_at: string;
+  updated_at: string;
+};
+
+export type BankTransferRow = {
+  id: string;
+  user_id: string;
+  wallet_id: string | null;
+  provider: string;
+  reference: string;
+  provider_reference: string | null;
+  amount: number;
+  bank_code: string;
+  account_number: string;
+  account_name: string | null;
+  narration: string | null;
+  status: string;
+  failure_reason: string | null;
+  provider_response: Json | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PaystackDedicatedAccountRow = {
+  id: string;
+  user_id: string;
+  customer_code: string | null;
+  dedicated_account_id: string | null;
+  account_name: string | null;
+  account_number: string | null;
+  bank_name: string | null;
+  bank_slug: string | null;
+  assignment_payload: Json | null;
+  status: string;
   created_at: string;
   updated_at: string;
 };
@@ -249,6 +393,7 @@ export interface Database {
       wallets: {
         Row: WalletRow;
         Insert: {
+          id?: string;
           user_id: string;
           balance?: number;
           locked?: number;
@@ -374,6 +519,179 @@ export interface Database {
           updated_at?: string;
         };
         Update: Partial<Omit<WithdrawalRequestRow, "id" | "user_id" | "created_at">>;
+        Relationships: [];
+      };
+      bill_categories: {
+        Row: BillCategoryRow;
+        Insert: {
+          id?: string;
+          name: string;
+          slug: string;
+          status?: BillCategoryRow["status"];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<BillCategoryRow, "id" | "created_at">>;
+        Relationships: [];
+      };
+      bill_products: {
+        Row: BillProductRow;
+        Insert: {
+          id?: string;
+          category_id: string;
+          provider?: BillProductRow["provider"];
+          service_id: string;
+          variation_code?: string | null;
+          network?: string | null;
+          name: string;
+          cost_price?: number;
+          selling_price?: number;
+          commission?: number;
+          is_active?: boolean;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<BillProductRow, "id" | "created_at">>;
+        Relationships: [];
+      };
+      bill_transactions: {
+        Row: BillTransactionRow;
+        Insert: {
+          id?: string;
+          user_id: string;
+          wallet_id: string;
+          product_id?: string | null;
+          reference: string;
+          idempotency_key?: string | null;
+          provider?: BillTransactionRow["provider"];
+          provider_reference?: string | null;
+          category: string;
+          service_id: string;
+          variation_code?: string | null;
+          network?: string | null;
+          customer_identifier: string;
+          amount: number;
+          cost_price?: number;
+          selling_price: number;
+          profit?: number;
+          status?: BillTransactionRow["status"];
+          provider_response?: Json | null;
+          failure_reason?: string | null;
+          requery_count?: number;
+          next_requery_at?: string | null;
+          completed_at?: string | null;
+          refunded_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<BillTransactionRow, "id" | "user_id" | "wallet_id" | "created_at">>;
+        Relationships: [];
+      };
+      wallet_ledger: {
+        Row: WalletLedgerRow;
+        Insert: {
+          id?: string;
+          user_id: string;
+          wallet_id: string;
+          transaction_type: WalletLedgerRow["transaction_type"];
+          source: WalletLedgerRow["source"];
+          amount: number;
+          balance_before: number;
+          balance_after: number;
+          reference: string;
+          description: string;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Update: Partial<Omit<WalletLedgerRow, "id" | "user_id" | "wallet_id" | "created_at">>;
+        Relationships: [];
+      };
+      virtual_accounts: {
+        Row: VirtualAccountRow;
+        Insert: {
+          id?: string;
+          user_id: string;
+          provider?: string;
+          provider_reference?: string | null;
+          account_name?: string | null;
+          account_number?: string | null;
+          bank_name?: string | null;
+          bank_code?: string | null;
+          currency?: string;
+          status?: string;
+          request_payload?: Json;
+          response_payload?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<VirtualAccountRow, "id" | "user_id" | "created_at">>;
+        Relationships: [];
+      };
+      wallet_inflows: {
+        Row: WalletInflowRow;
+        Insert: {
+          id?: string;
+          user_id: string;
+          wallet_id?: string | null;
+          virtual_account_id?: string | null;
+          provider?: string;
+          provider_reference: string;
+          amount: number;
+          currency?: string;
+          status?: string;
+          sender_name?: string | null;
+          sender_account_number?: string | null;
+          narration?: string | null;
+          credited_at?: string | null;
+          raw_payload?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<WalletInflowRow, "id" | "user_id" | "created_at">>;
+        Relationships: [];
+      };
+      bank_transfers: {
+        Row: BankTransferRow;
+        Insert: {
+          id?: string;
+          user_id: string;
+          wallet_id?: string | null;
+          provider?: string;
+          reference: string;
+          provider_reference?: string | null;
+          amount: number;
+          bank_code: string;
+          account_number: string;
+          account_name?: string | null;
+          narration?: string | null;
+          status?: string;
+          failure_reason?: string | null;
+          provider_response?: Json | null;
+          completed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<BankTransferRow, "id" | "user_id" | "created_at">>;
+        Relationships: [];
+      };
+      paystack_dedicated_accounts: {
+        Row: PaystackDedicatedAccountRow;
+        Insert: {
+          id?: string;
+          user_id: string;
+          customer_code?: string | null;
+          dedicated_account_id?: string | null;
+          account_name?: string | null;
+          account_number?: string | null;
+          bank_name?: string | null;
+          bank_slug?: string | null;
+          assignment_payload?: Json | null;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<PaystackDedicatedAccountRow, "id" | "user_id" | "created_at">>;
         Relationships: [];
       };
       notifications: {
@@ -623,6 +941,33 @@ export interface Database {
         };
         Returns: undefined;
       };
+      me2u_create_bill_debit: {
+        Args: {
+          p_user_id: string;
+          p_product_id: string;
+          p_reference: string;
+          p_idempotency_key: string;
+          p_amount: number;
+          p_customer_identifier: string;
+        };
+        Returns: BillTransactionRow;
+      };
+      me2u_refund_bill_transaction: {
+        Args: {
+          p_reference: string;
+          p_reason?: string | null;
+        };
+        Returns: BillTransactionRow;
+      };
+      me2u_credit_wallet_funding: {
+        Args: {
+          p_user_id: string;
+          p_amount: number;
+          p_reference: string;
+          p_description?: string;
+        };
+        Returns: WalletLedgerRow;
+      };
       me2u_get_referral_stats: {
         Args: {
           p_user_id: string;
@@ -656,6 +1001,11 @@ export interface Database {
       payment_proof_type: PaymentProofRow["type"];
       revenue_event_type: RevenueEventRow["type"];
       withdrawal_request_status: WithdrawalRequestRow["status"];
+      bill_record_status: BillCategoryRow["status"];
+      bill_provider: BillProductRow["provider"];
+      bill_transaction_status: BillTransactionRow["status"];
+      wallet_ledger_transaction_type: WalletLedgerRow["transaction_type"];
+      wallet_ledger_source: WalletLedgerRow["source"];
     };
     CompositeTypes: Record<string, never>;
   };

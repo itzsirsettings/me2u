@@ -17,7 +17,7 @@ const serviceActions: Array<{
   requiresKyc?: boolean;
   requiresDeposit?: boolean;
 }> = [
-  { label: "Pay Bills", path: "/wallet#bills", icon: "bill", tone: "bg-lime/20 text-lime" },
+  { label: "Pay Bills", path: "/bills", icon: "bill", tone: "bg-lime/20 text-lime" },
   { label: "Market", path: "/marketplace", icon: "market", tone: "bg-green/20 text-green", requiresKyc: true },
   { label: "Loans", path: "/loans", icon: "loans", tone: "bg-lime text-navy", requiresKyc: true },
   { label: "KYC", path: "/kyc", icon: "shield", tone: "bg-green text-navy", requiresDeposit: true },
@@ -43,13 +43,13 @@ function getInitials(name?: string | null) {
 }
 
 function transactionAmountTone(transaction: Transaction) {
-  return ["deposit", "loan_disbursed", "repayment_received", "affiliate_reward"].includes(transaction.type)
+  return ["deposit", "loan_disbursed", "repayment_received", "affiliate_reward", "bill_refund"].includes(transaction.type)
     ? "text-[var(--color-positive-text)]"
     : "text-[var(--color-negative-text)]";
 }
 
 function transactionPrefix(transaction: Transaction) {
-  return ["deposit", "loan_disbursed", "repayment_received", "affiliate_reward"].includes(transaction.type)
+  return ["deposit", "loan_disbursed", "repayment_received", "affiliate_reward", "bill_refund"].includes(transaction.type)
     ? "+"
     : "-";
 }
