@@ -1,0 +1,25 @@
+{
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "regions": ["iad1"],
+  "env": {
+    "DATABASE_URL": "@database_url",
+    "AUTH_TOKEN_SECRET": "@auth_token_secret",
+    "SMTP_HOST": "@smtp_host",
+    "SMTP_PORT": "@smtp_port",
+    "SMTP_SECURE": "@smtp_secure",
+    "SMTP_USER": "@smtp_user",
+    "SMTP_PASSWORD": "@smtp_password",
+    "EMAIL_FROM": "@email_from",
+    "PAYSTACK_SECRET_KEY": "@paystack_secret_key",
+    "PAYSTACK_PUBLIC_KEY": "@paystack_public_key",
+    "PAYSTACK_WEBHOOK_SECRET": "@paystack_webhook_secret",
+    "VTPASS_BASE_URL": "@vtpass_base_url",
+    "VTPASS_PUBLIC_KEY": "@vtpass_public_key",
+    "VTPASS_SECRET_KEY": "@vtpass_secret_key",
+    "VTPASS_API_KEY": "@vtpass_api_key",
+    "NEXT_PUBLIC_APP_URL": "@next_public_app_url"
+  }
+}

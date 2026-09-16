@@ -1,8 +1,18 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+// SMTP Configuration - Works with Gmail, Outlook, Yahoo, or any SMTP server
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || "smtp.gmail.com",
+  port: parseInt(process.env.SMTP_PORT || "587"),
+  secure: process.env.SMTP_SECURE === "true", // true for 465, false for other ports
+  auth: process.env.SMTP_USER && process.env.SMTP_PASSWORD ? {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASSWORD,
+  } : undefined,
+});
 
-const FROM_EMAIL = process.env.EMAIL_FROM || "Me2U <onboarding@resend.dev>";
+const FROM_EMAIL = process.env.EMAIL_FROM || "Me2U <noreply@me2u.app>";
+const SMTP_CONFIGURED = !!(process.env.SMTP_USER && process.env.SMTP_PASSWORD);
 
 export async function sendOtpEmail(toEmail: string, code: string): Promise<{ success: boolean; error?: string; loggedToConsole?: boolean }> {
   const emailHtml = `
@@ -66,20 +76,28 @@ The Me2U Team
 Me2U
 Borrow smart. Lend safely. 0% interest.`;
 
-  if (!resend) {
+  if (!SMTP_CONFIGURED) {
     console.log("==========================================");
-    console.log("ME2U OTP EMAIL SANDBOX (RESEND NOT CONFIGURED)");
+    console.log("ME2U OTP EMAIL SANDBOX (SMTP NOT CONFIGURED)");
     console.log(`To: ${toEmail}`);
     console.log(`Subject: Your secure Me2U verification code`);
     console.log("------------------------------------------");
     console.log(emailText);
     console.log("==========================================");
     console.log("");
-    console.log("To send real emails:");
-    console.log("1. Sign up at https://resend.com (free tier: 3,000 emails/month)");
-    console.log("2. Get your API key from the dashboard");
-    console.log("3. Add RESEND_API_KEY=re_xxxxx to your .env.local");
-    console.log("4. Optionally set EMAIL_FROM=you@yourdomain.com");
+    console.log("To send real emails, add these to your environment:");
+    console.log("SMTP_HOST=smtp.gmail.com");
+    console.log("SMTP_PORT=587");
+    console.log("SMTP_SECURE=false");
+    console.log("SMTP_USER=your-email@gmail.com");
+    console.log('SMTP_PASSWORD=your-app-password');
+    console.log('EMAIL_FROM="Me2U" <your-email@gmail.com>');
+    console.log("");
+    console.log("For Gmail App Password:");
+    console.log("1. Enable 2FA on your Google account");
+    console.log("2. Go to: https://myaccount.google.com/apppasswords");
+    console.log("3. Generate new app password");
+    console.log("4. Use that password in SMTP_PASSWORD");
     console.log("==========================================");
 
     return {
@@ -89,7 +107,7 @@ Borrow smart. Lend safely. 0% interest.`;
   }
 
   try {
-    const { error } = await resend.emails.send({
+    await transporter.sendMail({
       from: FROM_EMAIL,
       to: toEmail,
       subject: "Your secure Me2U verification code",
@@ -97,16 +115,9 @@ Borrow smart. Lend safely. 0% interest.`;
       text: emailText,
     });
 
-    if (error) {
-      return {
-        success: false,
-        error: error.message || "Email delivery failure",
-      };
-    }
-
     return { success: true };
   } catch (error) {
-    console.error("Failed to send OTP email via Resend:", error);
+    console.error("Failed to send OTP email via SMTP:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Email delivery failure",
