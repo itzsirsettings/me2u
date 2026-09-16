@@ -1,0 +1,12 @@
+node_modules
+.next
+out
+*.log
+.env
+.env.local
+.env.*.local
+supabase/.temp/
+tsconfig.tsbuildinfo
+playwright-report/
+test-results/
+server/dist/

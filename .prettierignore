@@ -1,0 +1,9 @@
+node_modules
+.next
+out
+build
+coverage
+*.tsbuildinfo
+.next/types
+supabase/functions
+server/dist
