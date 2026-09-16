@@ -1,20 +1,70 @@
 import nodemailer from "nodemailer";
+import type { Transporter } from "nodemailer";
 
 // SMTP Configuration - Works with Gmail, Outlook, Yahoo, or any SMTP server
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || "smtp.gmail.com",
-  port: parseInt(process.env.SMTP_PORT || "587"),
-  secure: process.env.SMTP_SECURE === "true", // true for 465, false for other ports
-  auth: process.env.SMTP_USER && process.env.SMTP_PASSWORD ? {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASSWORD,
-  } : undefined,
-});
-
+const SMTP_HOST = process.env.SMTP_HOST || "smtp.gmail.com";
+const SMTP_PORT = parseInt(process.env.SMTP_PORT || "587");
+const SMTP_SECURE = process.env.SMTP_SECURE === "true"; // true for 465, false for other ports
+const SMTP_USER = process.env.SMTP_USER;
+const SMTP_PASSWORD = process.env.SMTP_PASSWORD;
 const FROM_EMAIL = process.env.EMAIL_FROM || "Me2U <noreply@me2u.app>";
-const SMTP_CONFIGURED = !!(process.env.SMTP_USER && process.env.SMTP_PASSWORD);
+const SMTP_CONFIGURED = !!(SMTP_USER && SMTP_PASSWORD);
 
-export async function sendOtpEmail(toEmail: string, code: string): Promise<{ success: boolean; error?: string; loggedToConsole?: boolean }> {
+let transporter: Transporter | null = null;
+
+// Initialize transporter lazily
+function getTransporter(): Transporter | null {
+  if (!SMTP_CONFIGURED) {
+    return null;
+  }
+
+  if (!transporter) {
+    transporter = nodemailer.createTransport({
+      host: SMTP_HOST,
+      port: SMTP_PORT,
+      secure: SMTP_SECURE,
+      auth: {
+        user: SMTP_USER,
+        pass: SMTP_PASSWORD,
+      },
+      // Connection timeout
+      connectionTimeout: 10000,
+      // Greeting timeout
+      greetingTimeout: 10000,
+      // Socket timeout
+      socketTimeout: 10000,
+      // Enable debug logging in development
+      debug: process.env.NODE_ENV === "development",
+      logger: process.env.NODE_ENV === "development",
+    });
+  }
+
+  return transporter;
+}
+
+// Validate email format
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+export async function sendOtpEmail(
+  toEmail: string, 
+  code: string
+): Promise<{ success: boolean; error?: string; loggedToConsole?: boolean }> {
+  // Validate inputs
+  if (!toEmail || !isValidEmail(toEmail)) {
+    return {
+      success: false,
+      error: "Invalid email address",
+    };
+  }
+
+  if (!code || !/^\d{6}$/.test(code)) {
+    return {
+      success: false,
+      error: "Invalid OTP code format (must be 6 digits)",
+    };
+  }
   const emailHtml = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px; background: #ffffff; color: #1a1a2e;">
       <div style="text-align: center; margin-bottom: 32px;">
@@ -76,7 +126,10 @@ The Me2U Team
 Me2U
 Borrow smart. Lend safely. 0% interest.`;
 
-  if (!SMTP_CONFIGURED) {
+  // Get transporter
+  const smtp = getTransporter();
+
+  if (!smtp) {
     console.log("==========================================");
     console.log("ME2U OTP EMAIL SANDBOX (SMTP NOT CONFIGURED)");
     console.log(`To: ${toEmail}`);
@@ -84,6 +137,8 @@ Borrow smart. Lend safely. 0% interest.`;
     console.log("------------------------------------------");
     console.log(emailText);
     console.log("==========================================");
+    console.log("");
+    console.log("✅ OTP CODE (for testing): " + code);
     console.log("");
     console.log("To send real emails, add these to your environment:");
     console.log("SMTP_HOST=smtp.gmail.com");
@@ -107,20 +162,120 @@ Borrow smart. Lend safely. 0% interest.`;
   }
 
   try {
-    await transporter.sendMail({
+    // Verify SMTP connection before sending
+    if (process.env.NODE_ENV === "development") {
+      try {
+        await smtp.verify();
+        console.log("✅ SMTP connection verified");
+      } catch (verifyError) {
+        console.warn("⚠️  SMTP verification failed (will try sending anyway):", verifyError);
+      }
+    }
+
+    const info = await smtp.sendMail({
       from: FROM_EMAIL,
       to: toEmail,
       subject: "Your secure Me2U verification code",
       html: emailHtml,
       text: emailText,
+      // Add headers
+      headers: {
+        'X-Priority': '1',
+        'X-MSMail-Priority': 'High',
+        'Importance': 'high',
+      },
+    });
+
+    console.log(`✅ Email sent successfully to ${toEmail}`, {
+      messageId: info.messageId,
+      response: info.response,
     });
 
     return { success: true };
   } catch (error) {
-    console.error("Failed to send OTP email via SMTP:", error);
+    console.error("❌ Failed to send OTP email via SMTP:", error);
+    
+    // Provide helpful error messages
+    let errorMessage = "Email delivery failure";
+    
+    if (error instanceof Error) {
+      const errorStr = error.message.toLowerCase();
+      
+      if (errorStr.includes("invalid login") || errorStr.includes("authentication failed")) {
+        errorMessage = "SMTP authentication failed. Check SMTP_USER and SMTP_PASSWORD";
+      } else if (errorStr.includes("connection timeout") || errorStr.includes("etimedout")) {
+        errorMessage = "SMTP connection timeout. Check SMTP_HOST and SMTP_PORT";
+      } else if (errorStr.includes("self signed certificate")) {
+        errorMessage = "SSL certificate error. Try SMTP_SECURE=false";
+      } else if (errorStr.includes("no recipients")) {
+        errorMessage = "Invalid recipient email address";
+      } else {
+        errorMessage = error.message;
+      }
+    }
+    
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Email delivery failure",
+      error: errorMessage,
+    };
+  }
+}
+
+
+/**
+ * Verify SMTP connection without sending email
+ */
+export async function verifyEmailConfig(): Promise<{
+  configured: boolean;
+  connected: boolean;
+  error?: string;
+  config?: {
+    host: string;
+    port: number;
+    secure: boolean;
+    user: string;
+  };
+}> {
+  if (!SMTP_CONFIGURED) {
+    return {
+      configured: false,
+      connected: false,
+      error: "SMTP credentials not configured",
+    };
+  }
+
+  const smtp = getTransporter();
+  if (!smtp) {
+    return {
+      configured: false,
+      connected: false,
+      error: "Failed to create SMTP transporter",
+    };
+  }
+
+  try {
+    await smtp.verify();
+    return {
+      configured: true,
+      connected: true,
+      config: {
+        host: SMTP_HOST,
+        port: SMTP_PORT,
+        secure: SMTP_SECURE,
+        user: SMTP_USER || "not set",
+      },
+    };
+  } catch (error) {
+    return {
+      configured: true,
+      connected: false,
+      error: error instanceof Error ? error.message : "Connection verification failed",
+      config: {
+        host: SMTP_HOST,
+        port: SMTP_PORT,
+        secure: SMTP_SECURE,
+        user: SMTP_USER || "not set",
+      },
     };
   }
 }
