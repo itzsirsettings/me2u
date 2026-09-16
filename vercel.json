@@ -4,9 +4,16 @@
   "installCommand": "npm install",
   "framework": "nextjs",
   "regions": ["iad1"],
+  "crons": [
+    {
+      "path": "/api/cron/unlock-eligible-users",
+      "schedule": "0 * * * *"
+    }
+  ],
   "env": {
     "DATABASE_URL": "@database_url",
     "AUTH_TOKEN_SECRET": "@auth_token_secret",
+    "CRON_SECRET": "@cron_secret",
     "SMTP_HOST": "@smtp_host",
     "SMTP_PORT": "@smtp_port",
     "SMTP_SECURE": "@smtp_secure",

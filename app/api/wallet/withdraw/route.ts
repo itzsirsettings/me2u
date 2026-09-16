@@ -91,22 +91,41 @@ export async function POST(request: Request) {
 
     const userId = auth.user.id;
 
-    // Load profile
+    // Load profile with unlock eligibility
     const { rows: profileRows } = await auth.db.query<{
       registration_deposit_paid: boolean;
       kyc_verified: boolean;
       transaction_pin: string | null;
       account_unlocked: boolean;
       verified_referral_count: number;
+      created_at: string;
+      unlock_eligible_at: string | null;
+      unlock_payment_made: boolean;
+      has_subscription: boolean;
+      days_since_registration: number;
     }>(
       `SELECT 
-         registration_deposit_paid, 
-         kyc_verified, 
-         transaction_pin,
-         COALESCE(account_unlocked, false) as account_unlocked,
-         COALESCE(verified_referral_count, 0) as verified_referral_count
-       FROM profiles 
-       WHERE id = $1`,
+         p.registration_deposit_paid, 
+         p.kyc_verified, 
+         p.transaction_pin,
+         COALESCE(p.account_unlocked, false) as account_unlocked,
+         COALESCE(p.verified_referral_count, 0) as verified_referral_count,
+         p.created_at,
+         p.unlock_eligible_at,
+         EXISTS (
+           SELECT 1 FROM account_unlock_payments 
+           WHERE user_id = p.id AND status = 'success' AND amount >= 2000
+         ) as unlock_payment_made,
+         EXISTS (
+           SELECT 1 FROM subscriptions 
+           WHERE user_id = p.id 
+             AND status IN ('active', 'trialing')
+             AND plan IN ('plus_monthly', 'plus_annual', 'lender_pro_monthly', 'lender_pro_volume')
+             AND current_period_end > NOW()
+         ) as has_subscription,
+         EXTRACT(DAY FROM NOW() - p.created_at)::integer as days_since_registration
+       FROM profiles p
+       WHERE p.id = $1`,
       [userId],
     );
     const profile = profileRows[0];
@@ -114,14 +133,92 @@ export async function POST(request: Request) {
     if (!profile.registration_deposit_paid) throw new Error("Confirm your registration deposit before withdrawal.");
     if (!profile.kyc_verified) throw new Error("Complete KYC before withdrawal.");
     
-    // Check 10-referral withdrawal lock
-    if (!profile.account_unlocked && profile.verified_referral_count < 10) {
+    // NEW UNLOCK LOGIC: Check multiple unlock paths
+    // Path 1: Already unlocked
+    if (profile.account_unlocked) {
+      // Account is unlocked, proceed with withdrawal
+    }
+    // Path 2: Active subscription (Plus/Lender Pro) - auto-unlocks
+    else if (profile.has_subscription) {
+      // Auto-unlock for subscribers
+      await auth.db.query(
+        `UPDATE profiles 
+         SET account_unlocked = true, 
+             unlock_method = 'subscription',
+             account_unlock_paid_at = NOW()
+         WHERE id = $1`,
+        [userId]
+      );
+    }
+    // Path 3: 10+ verified referrals - free unlock
+    else if (profile.verified_referral_count >= 10) {
+      // Auto-unlock for referrers
+      await auth.db.query(
+        `UPDATE profiles 
+         SET account_unlocked = true, 
+             unlock_method = 'referrals',
+             account_unlock_paid_at = NOW()
+         WHERE id = $1`,
+        [userId]
+      );
+    }
+    // Path 4: 15 days + payment made - time-based unlock
+    else if (
+      profile.unlock_payment_made && 
+      profile.unlock_eligible_at && 
+      new Date(profile.unlock_eligible_at) <= new Date()
+    ) {
+      // Auto-unlock after 15-day waiting period
+      await auth.db.query(
+        `UPDATE profiles 
+         SET account_unlocked = true, 
+             unlock_method = 'time_based',
+             account_unlock_paid_at = NOW()
+         WHERE id = $1`,
+        [userId]
+      );
+    }
+    // Still locked - show unlock options
+    else {
+      const daysRemaining = profile.unlock_payment_made && profile.unlock_eligible_at
+        ? Math.ceil((new Date(profile.unlock_eligible_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+        : null;
+      
+      const unlockOptions: string[] = [];
+      
+      // Option 1: Wait for 15 days (if payment made)
+      if (profile.unlock_payment_made && daysRemaining !== null && daysRemaining > 0) {
+        unlockOptions.push(`Wait ${daysRemaining} more day${daysRemaining !== 1 ? 's' : ''} (payment received, unlock on ${new Date(profile.unlock_eligible_at!).toLocaleDateString('en-NG')})`);
+      }
+      // Option 1b: Make payment to start 15-day countdown
+      else if (!profile.unlock_payment_made) {
+        unlockOptions.push(`Pay ₦2,000 one-time fee, then wait 15 days`);
+      }
+      
+      // Option 2: Get 10 referrals
+      const referralsNeeded = 10 - profile.verified_referral_count;
+      if (referralsNeeded > 0) {
+        unlockOptions.push(`Refer ${referralsNeeded} more verified user${referralsNeeded !== 1 ? 's' : ''} (${profile.verified_referral_count}/10) for instant unlock`);
+      }
+      
+      // Option 3: Subscribe to Plus
+      unlockOptions.push(`Upgrade to Me2U Plus (₦1,500/month) for instant unlock + premium features`);
+      
       return NextResponse.json({
         error: "account_locked",
-        message: `To unlock withdrawals, either: (1) Refer ${10 - profile.verified_referral_count} more verified users (${profile.verified_referral_count}/10), or (2) Pay a one-time unlock fee of ₦2,000.`,
-        verified_referral_count: profile.verified_referral_count,
-        referrals_needed: 10 - profile.verified_referral_count,
+        message: `Your account is locked. Choose an unlock option:`,
+        unlock_options: unlockOptions,
+        current_status: {
+          days_since_registration: profile.days_since_registration,
+          payment_made: profile.unlock_payment_made,
+          days_remaining: daysRemaining,
+          unlock_eligible_at: profile.unlock_eligible_at,
+          verified_referrals: profile.verified_referral_count,
+          referrals_needed: Math.max(0, 10 - profile.verified_referral_count),
+          has_subscription: profile.has_subscription,
+        },
         unlock_fee: 2000,
+        upgrade_url: "/profile/upgrade",
       }, { status: 403 });
     }
 
