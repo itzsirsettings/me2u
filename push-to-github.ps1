@@ -2,7 +2,7 @@
 # Run this after creating your GitHub repository
 
 # STEP 1: Update this with your GitHub username and repository name
-$GITHUB_USERNAME = "YOUR_GITHUB_USERNAME"  # Replace with your username
+$GITHUB_USERNAME = "itzsirsettings"  # Your GitHub username
 $REPO_NAME = "me2u"
 
 # Construct the repository URL
