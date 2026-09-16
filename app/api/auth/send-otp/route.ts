@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { getClientIp, isRateLimited } from "@/lib/rate-limit";
 import { tooManyRequestsResponse } from "@/lib/server/auth";
-import { createSignedOtpToken, generateOtpCode } from "@/lib/server/otp";
-import { sendOtpEmail } from "@/lib/server/email";
+import { createOtp, getCurrentOtp } from "@/lib/server/in-app-otp";
 import { query } from "@/lib/railway/client";
 
 export async function POST(request: Request) {
@@ -54,22 +53,15 @@ export async function POST(request: Request) {
       );
     }
 
-    const code = generateOtpCode();
-    const token = createSignedOtpToken({ email, code, purpose });
-
-    const emailResult = await sendOtpEmail(email, code);
-    if (!emailResult.success) {
-      return NextResponse.json(
-        { error: emailResult.error || "Failed to send verification email." },
-        { status: 500 },
-      );
-    }
+    // Create OTP in database (no external service needed!)
+    const { code, expiresAt } = await createOtp(email, purpose);
 
     return NextResponse.json({
       success: true,
       email,
-      token,
-      loggedToConsole: !!emailResult.loggedToConsole,
+      code, // Return code directly - will be displayed in UI
+      expiresAt: expiresAt.toISOString(),
+      message: "Verification code generated. Enter the code shown above.",
     });
   } catch (error) {
     return NextResponse.json(

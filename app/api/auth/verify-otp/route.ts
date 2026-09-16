@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { getClientIp, isRateLimited } from "@/lib/rate-limit";
 import { tooManyRequestsResponse } from "@/lib/server/auth";
-import { createSignedFlowToken, verifySignedOtpToken } from "@/lib/server/otp";
+import { verifyOtp } from "@/lib/server/in-app-otp";
+import { createSignedFlowToken } from "@/lib/server/otp";
 
 export async function POST(request: Request) {
   try {
@@ -13,11 +14,10 @@ export async function POST(request: Request) {
     const body = await request.json();
     const email = String(body.email || "").trim().toLowerCase();
     const code = String(body.code || "").trim();
-    const token = String(body.token || "").trim();
     const action = String(body.action || "register").trim().toLowerCase();
 
-    if (!email || !code || !token) {
-      return NextResponse.json({ error: "Email, code, and token are required." }, { status: 400 });
+    if (!email || !code) {
+      return NextResponse.json({ error: "Email and code are required." }, { status: 400 });
     }
 
     if (action !== "login" && action !== "register") {
@@ -33,9 +33,12 @@ export async function POST(request: Request) {
 
     const purpose = action === "login" ? "login" : "register";
 
-    if (!verifySignedOtpToken({ email, code, token, purpose })) {
+    // Verify OTP from database
+    const result = await verifyOtp(email, code, purpose);
+    
+    if (!result.valid) {
       return NextResponse.json(
-        { error: "Invalid or expired verification code. Please request a new one." },
+        { error: result.error || "Invalid verification code." },
         { status: 400 },
       );
     }

@@ -8,6 +8,10 @@
     {
       "path": "/api/cron/unlock-eligible-users",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/cleanup-otp",
+      "schedule": "0 2 * * *"
     }
   ],
   "env": {
