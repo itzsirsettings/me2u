@@ -534,10 +534,10 @@ function StatCard({ label, value, icon, highlight }: { label: string; value: str
   );
 }
 
-function RewardStep({ step, title, description, reward }: { step: number; title: string; description: string; reward: string | null }) {
+function RewardStep({ step, title, description, reward, highlight }: { step: number; title: string; description: string; reward: string | null; highlight?: boolean }) {
   return (
     <div className="flex items-start gap-4">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-bg-secondary)] text-sm font-bold">{step}</div>
+      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${highlight ? "bg-[var(--color-positive-bg)] text-[var(--color-positive-text)]" : "bg-[var(--color-bg-secondary)]"}`}>{step}</div>
       <div className="flex-1">
         <p className="font-semibold text-[var(--color-text-primary)]">{title}</p>
         <p className="text-xs text-[var(--color-text-secondary)]">{description}</p>

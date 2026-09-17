@@ -7,7 +7,7 @@ const SMTP_PORT = parseInt(process.env.SMTP_PORT || "587");
 const SMTP_SECURE = process.env.SMTP_SECURE === "true"; // true for 465, false for other ports
 const SMTP_USER = process.env.SMTP_USER;
 const SMTP_PASSWORD = process.env.SMTP_PASSWORD;
-const FROM_EMAIL = process.env.EMAIL_FROM || "Me2U <noreply@me2u.app>";
+const FROM_EMAIL = process.env.EMAIL_FROM || "Me2U <noreply@me2ulend.online>";
 const SMTP_CONFIGURED = !!(SMTP_USER && SMTP_PASSWORD);
 
 let transporter: Transporter | null = null;

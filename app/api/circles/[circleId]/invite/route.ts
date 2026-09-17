@@ -8,13 +8,13 @@ export const revalidate = 0;
 
 export async function POST(
   request: Request,
-  { params }: { params: { circleId: string } }
+  { params }: { params: Promise<{ circleId: string }> }
 ) {
   try {
     const auth = await requireAuthenticatedUser(request);
     if ("response" in auth) return auth.response;
 
-    const { circleId } = params;
+    const { circleId } = await params;
     const body = await request.json();
     const { userId, username } = body;
 

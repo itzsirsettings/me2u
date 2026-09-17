@@ -18,13 +18,13 @@ type CircleReward = {
 
 export async function GET(
   request: Request,
-  { params }: { params: { circleId: string } }
+  { params }: { params: Promise<{ circleId: string }> }
 ) {
   try {
     const auth = await requireAuthenticatedUser(request);
     if ("response" in auth) return auth.response;
 
-    const { circleId } = params;
+    const { circleId } = await params;
 
     // Verify user is a member of this circle
     const { rows: membership } = await queryAsUser<{ circle_id: string }>(

@@ -86,7 +86,7 @@ Make sure these are set in Railway:
 ### Required
 ```env
 DATABASE_URL=postgresql://...              # Railway auto-provides this
-AUTH_TOKEN_SECRET=your_jwt_secret_here
+AUTH_TOKEN_SECRET=<generate-a-random-32-char-secret>
 PAYSTACK_SECRET_KEY=sk_live_xxxxx
 REDIS_URL=redis://...                     # For rate limiting
 ```

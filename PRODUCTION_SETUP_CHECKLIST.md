@@ -8,7 +8,7 @@
 
 ### ✅ Step 1: Database (Railway PostgreSQL)
 **Status**: ✅ Already configured
-- DATABASE_URL: `postgresql://postgres:***@postgres.railway.internal:5432/railway`
+- DATABASE_URL: `postgresql://***REDACTED-USER:PASS***@postgres.railway.internal:5432/railway`
 
 **Action Required**:
 ```bash
@@ -71,7 +71,7 @@ PAYSTACK_DVA_PREFERRED_BANK=wema-bank
 
 **Keys to copy**:
 ```
-RESEND_API_KEY=re_your_actual_resend_api_key
+RESEND_API_KEY=YOUR_RESEND_API_KEY
 EMAIL_FROM="Me2U" <noreply@yourdomain.com>
 ```
 
@@ -104,7 +104,7 @@ VTPASS_API_KEY=your_vtpass_api_key
 
 **Keys to copy**:
 ```
-OPENAI_API_KEY=sk-proj-your_actual_openai_api_key
+OPENAI_API_KEY=<your-openai-api-key>
 OPENAI_MODEL=gpt-4o-mini
 ```
 
@@ -136,7 +136,7 @@ https://railway.app/project/c2ac2e8b-c3a9-4c67-9547-b458b0272d2e
 DATABASE_URL=${{Postgres.DATABASE_URL}}
 
 # Auth Secret (generate a random 32+ character string)
-AUTH_TOKEN_SECRET=your-super-secret-random-string-at-least-32-chars-please-change-this
+AUTH_TOKEN_SECRET=<generate-a-random-32-char-secret>
 
 # Paystack - GET FROM: https://dashboard.paystack.com/settings/api
 PAYSTACK_SECRET_KEY=sk_live_your_actual_paystack_secret_key
@@ -145,7 +145,7 @@ PAYSTACK_DVA_ENABLED=true
 PAYSTACK_DVA_PREFERRED_BANK=wema-bank
 
 # Email - GET FROM: https://resend.com/api-keys
-RESEND_API_KEY=re_your_actual_resend_api_key
+RESEND_API_KEY=YOUR_RESEND_API_KEY
 EMAIL_FROM="Me2U" <noreply@yourdomain.com>
 
 # VTpass Bills - GET FROM: https://www.vtpass.com
@@ -170,7 +170,7 @@ WEMA_AUTHORIZATION=
 WEMA_WEBHOOK_SECRET=
 
 # OpenAI Assistant (optional)
-OPENAI_API_KEY=sk-proj-your_openai_key_or_leave_empty
+OPENAI_API_KEY=<your-openai-api-key>
 OPENAI_MODEL=gpt-4o-mini
 OPENAI_TIMEOUT_MS=25000
 OPENAI_MAX_OUTPUT_TOKENS=900

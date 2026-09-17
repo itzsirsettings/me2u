@@ -25,8 +25,8 @@
 3. Copy these keys:
 
 ```env
-PAYSTACK_SECRET_KEY=sk_live_xxxxxxxxxxxxxxxxxxxxx
-PAYSTACK_PUBLIC_KEY=pk_live_xxxxxxxxxxxxxxxxxxxxx
+PAYSTACK_SECRET_KEY=sk_live_***REDACTED***
+PAYSTACK_PUBLIC_KEY=pk_live_***REDACTED***
 ```
 
 ### Set Webhook
@@ -160,7 +160,7 @@ VTPASS_BASE_URL=https://sandbox.vtpass.com/api
 4. Copy key (starts with `sk-proj-`)
 
 ```env
-OPENAI_API_KEY=sk-proj-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+OPENAI_API_KEY=<your-openai-api-key>
 OPENAI_MODEL=gpt-4o-mini
 ```
 
@@ -195,7 +195,7 @@ DATABASE_URL=${{Postgres.DATABASE_URL}}
 3. Use it:
 
 ```env
-AUTH_TOKEN_SECRET=abc123def456ghi789jkl012mno345pq
+AUTH_TOKEN_SECRET=<generate-a-random-32-char-secret>
 ```
 
 ### Option 2: Command Line
@@ -245,7 +245,7 @@ DATABASE_URL=${{Postgres.DATABASE_URL}}
 # ==========================================
 # SECURITY
 # ==========================================
-AUTH_TOKEN_SECRET=PASTE_YOUR_32_CHAR_RANDOM_SECRET_HERE
+AUTH_TOKEN_SECRET=<generate-a-random-32-char-secret>
 
 # ==========================================
 # PAYSTACK
@@ -259,7 +259,7 @@ PAYSTACK_DVA_PREFERRED_BANK=wema-bank
 # ==========================================
 # EMAIL (RESEND)
 # ==========================================
-RESEND_API_KEY=re_PASTE_YOUR_RESEND_KEY_HERE
+RESEND_API_KEY=YOUR_RESEND_API_KEY
 EMAIL_FROM="Me2U" <noreply@yourdomain.com>
 
 # ==========================================
@@ -281,7 +281,7 @@ NEXT_PUBLIC_PLATFORM_ACCOUNT_NUMBER=1234567890
 # ==========================================
 # OPTIONAL
 # ==========================================
-OPENAI_API_KEY=sk-proj-YOUR_KEY_OR_LEAVE_EMPTY
+OPENAI_API_KEY=<your-openai-api-key>
 OPENAI_MODEL=gpt-4o-mini
 
 # ==========================================

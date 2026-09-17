@@ -19,7 +19,7 @@ export const legalLastUpdated = "May 19, 2026";
 export const companyInfo = {
   legalName: "Merenity Systems",
   tradingName: "Me2U",
-  email: "menenityhub@gmail.com",
+  email: "admin@me2ulend.online",
   phones: ["+234 903 4162 902", "+234 806 5117 689", "+234 815 1583 421"],
   address: "Nigeria",
 };

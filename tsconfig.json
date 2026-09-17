@@ -39,6 +39,7 @@
   "exclude": [
     "node_modules",
     "supabase/functions",
+    "migrations/functions",
     "server"
   ]
 }

@@ -83,7 +83,7 @@ function mailtoSupport(request?: SupportRequest) {
     request?.createdAt ? `Created: ${request.createdAt}` : "",
   ].filter(Boolean).join("\n\n"));
 
-  return `mailto:menenityhub@gmail.com?subject=${subject}&body=${body}`;
+  return `mailto:admin@me2ulend.online?subject=${subject}&body=${body}`;
 }
 
 export default function Me2UAssistantWidget() {

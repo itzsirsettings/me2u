@@ -7,7 +7,7 @@
 ## ✅ What's Configured
 
 - ✅ **Custom SMTP Email System** (Gmail, Outlook, Yahoo - no delays)
-- ✅ **AUTH_TOKEN_SECRET Generated**: `67xFnPnEHBZcNDsA1Hx+4kr/TxeVzOCmnNCLW0xCci0=`
+- ✅ **AUTH_TOKEN_SECRET Generated**: keep it in `.env` only — never commit secrets (the previous one was leaked here and has been rotated)
 - ✅ **VTpass Optional** (bills feature can be disabled)
 - ✅ **Vercel-ready** (vercel.json configured)
 - ✅ **Production-ready** with instant OTP delivery
@@ -106,7 +106,7 @@ Click **Add New** for each:
 #### Database (Required)
 ```
 Name: DATABASE_URL
-Value: postgresql://user:password@host:5432/railway
+Value: postgresql://***REDACTED-USER:PASS***@host:5432/railway
 Environment: Production, Preview, Development
 ```
 
@@ -118,7 +118,7 @@ railway variables | findstr DATABASE_URL
 #### Security (Required)
 ```
 Name: AUTH_TOKEN_SECRET
-Value: 67xFnPnEHBZcNDsA1Hx+4kr/TxeVzOCmnNCLW0xCci0=
+Value: (generate a new 64-char random secret — see .env.vercel.template; do not commit it)
 Environment: Production, Preview, Development
 ```
 

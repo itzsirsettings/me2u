@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDb } from "@/lib/railway/client";
+import * as db from "@/lib/railway/client";
 
 /**
  * Cron job to auto-unlock users who have reached their 15-day eligibility
@@ -24,8 +24,6 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const db = getDb();
-    
     // Find users eligible for time-based unlock
     const { rows: eligibleUsers } = await db.query<{
       user_id: string;

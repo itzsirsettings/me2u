@@ -173,8 +173,9 @@ export async function POST(request: Request) {
       const { rows } = await auth.db.query<{
         account_unlocked: boolean;
         email: string;
+        created_at: string;
       }>(
-        `SELECT COALESCE(account_unlocked, false) as account_unlocked, email
+        `SELECT COALESCE(account_unlocked, false) as account_unlocked, email, created_at
          FROM profiles WHERE id = $1`,
         [userId],
       );

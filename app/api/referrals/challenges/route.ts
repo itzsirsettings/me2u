@@ -10,12 +10,14 @@ export async function GET(request: Request) {
 
     // Get current week's challenge using database function
     const { rows: challengeRows } = await auth.db.query<{
-      active: boolean;
-      target: number;
-      current: number;
-      reward: number;
-      completed: boolean;
-      week_end: string;
+      challenge: {
+        active: boolean;
+        target: number;
+        current: number;
+        reward: number;
+        completed: boolean;
+        week_end: string;
+      } | null;
     }>(
       `SELECT (public.me2u_get_current_week_challenge($1)::jsonb)::json as challenge`,
       [userId],

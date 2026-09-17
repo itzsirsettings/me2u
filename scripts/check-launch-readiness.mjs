@@ -47,52 +47,57 @@ const hasRecentEvidence = (name, maxAgeDays) => {
 console.log('🔍 Me2U Launch Readiness Check\n');
 const issues = [];
 
-// Required checks
+// Required checks (current architecture: Railway PostgreSQL + pg, SMTP email, Paystack, in-app OTP)
 const requiredChecks = [
-  { name: 'NEXT_PUBLIC_SUPABASE_URL', msg: 'Supabase URL' },
-  { name: 'NEXT_PUBLIC_SUPABASE_ANON_KEY', msg: 'Supabase anon key' },
-  { name: 'SUPABASE_SERVICE_ROLE_KEY', msg: 'Supabase service role key' },
-  { name: 'REDIS_URL', msg: 'Redis URL' },
-  { name: 'PIN_PEPPER', msg: 'PIN pepper' },
-  { name: 'INTERNAL_JOBS_TOKEN', msg: 'Internal jobs token' },
-  { name: 'NEXT_PUBLIC_API_BASE_URL', msg: 'API base URL' },
-  { name: 'RESEND_API_KEY', msg: 'Resend API key' },
-  { name: 'EMAIL_FROM', msg: 'Email from address (non-resend.dev)' },
+  { name: 'DATABASE_URL', alt: ['PGHOST', 'PGPASSWORD', 'PGDATABASE'], msg: 'PostgreSQL database URL' },
+  { name: 'AUTH_TOKEN_SECRET', msg: 'Auth token secret (JWT signing)' },
+  { name: 'REDIS_URL', msg: 'Redis URL (rate limiting)' },
+  { name: 'SMTP_HOST', msg: 'SMTP host' },
+  { name: 'SMTP_USER', msg: 'SMTP user' },
+  { name: 'SMTP_PASSWORD', msg: 'SMTP password' },
+  { name: 'EMAIL_FROM', msg: 'Email from address (non-placeholder)' },
+  { name: 'PAYSTACK_SECRET_KEY', msg: 'Paystack secret key' },
 ];
 
 requiredChecks.forEach(check => {
-  if (!hasValue(check.name)) {
+  const ok = hasValue(check.name) || (check.alt && check.alt.every(a => hasValue(a)));
+  if (!ok) {
     issues.push(`❌ ${check.msg} missing or placeholder`);
   } else {
     console.log(`✅ ${check.msg} configured`);
   }
 });
 
-// SQS queues (8 required)
-const sqsQueues = [
-  'SQS_BILL_PURCHASE_QUEUE_URL',
-  'SQS_BILL_REQUERY_QUEUE_URL',
-  'SQS_TRANSFER_DISPATCH_QUEUE_URL',
-  'SQS_TRANSFER_REQUERY_QUEUE_URL',
-  'SQS_WITHDRAWAL_DISPATCH_QUEUE_URL',
-  'SQS_WITHDRAWAL_REQUERY_QUEUE_URL',
-  'SQS_PROJECTIONS_REFRESH_QUEUE_URL',
-  'SQS_OUTBOX_PUBLISH_QUEUE_URL',
-];
-
-const sqsOk = sqsQueues.every(q => hasValue(q));
-if (sqsOk) {
-  console.log('✅ All 8 SQS queues configured');
+// Paystack production posture
+const paystackKey = readValue('PAYSTACK_SECRET_KEY');
+if (paystackKey.startsWith('sk_test_')) {
+  console.log('⚠️  Paystack TEST key — fine for development, switch to sk_live_ before launch');
+} else if (!paystackKey.startsWith('sk_live_')) {
+  issues.push('❌ Paystack secret key must start with sk_live_ or sk_test_');
 } else {
-  issues.push('❌ Missing SQS queue URLs');
+  console.log('✅ Paystack live key configured');
 }
 
-// Paystack
-const paystackOk = readValue('PAYSTACK_SECRET_KEY').startsWith('sk_live_') && isTrue('PAYSTACK_DVA_ENABLED');
-if (paystackOk) {
-  console.log('✅ Paystack live configured');
-} else {
-  issues.push('❌ Paystack needs live key and DVA enabled');
+// Recommended (not blocking local dev, blocking for real-money launch)
+const recommendedChecks = [
+  { name: 'PAYSTACK_PUBLIC_KEY', msg: 'Paystack public key (frontend checkout)' },
+  { name: 'PAYSTACK_WEBHOOK_SECRET', msg: 'Paystack webhook secret (payment verification)' },
+  { name: 'NEXT_PUBLIC_APP_URL', msg: 'Public app URL' },
+];
+recommendedChecks.forEach(check => {
+  if (!hasValue(check.name)) {
+    issues.push(`⚠️  ${check.msg} missing (required before real-money launch)`);
+  } else {
+    console.log(`✅ ${check.msg} configured`);
+  }
+});
+
+// Demo flags must be off in production
+if (isTrue('ALLOW_DEMO_WALLET_FUNDING')) {
+  console.log('⚠️  ALLOW_DEMO_WALLET_FUNDING=true — disable before real-money launch');
+}
+if (readValue('VTPASS_BASE_URL').includes('sandbox')) {
+  console.log('⚠️  VTpass pointed at sandbox — bill payments are test-only');
 }
 
 // Summary

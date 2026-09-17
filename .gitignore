@@ -5,6 +5,10 @@ out
 .env
 .env.local
 .env.*.local
+.env.railway.production
+.railway/*.local
+.trae/
+/_*.mjs
 supabase/.temp/
 tsconfig.tsbuildinfo
 playwright-report/

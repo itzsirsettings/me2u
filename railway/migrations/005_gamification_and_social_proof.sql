@@ -1,0 +1,591 @@
+-- ============================================================
+-- Gamification & Social Proof System
+-- Railway-adapted: app_user_id() instead of auth.uid(), no
+-- Supabase roles (anon/authenticated/service_role), no
+-- supabase_realtime publications, no storage.* references.
+-- ============================================================
+
+-- ─── 1. BADGES & ACHIEVEMENTS ───
+
+do $$ begin
+  create type public.badge_type as enum (
+    'trust_builder',
+    'early_adopter',
+    'community_lender',
+    'responsible_borrower',
+    'circle_champion',
+    'referral_master',
+    'financial_literacy',
+    'milestone_5k',
+    'milestone_50k',
+    'milestone_100k',
+    'perfect_record',
+    'speed_repayer',
+    'super_saver'
+  );
+exception when duplicate_object then null; end $$;
+
+do $$ begin
+  create type public.achievement_category as enum (
+    'trust',
+    'lending',
+    'borrowing',
+    'circles',
+    'referrals',
+    'education',
+    'milestones',
+    'repayment'
+  );
+exception when duplicate_object then null; end $$;
+
+create table if not exists public.badges (
+  id            uuid primary key default gen_random_uuid(),
+  badge_type    public.badge_type not null unique,
+  name          text not null,
+  description   text not null,
+  category      public.achievement_category not null,
+  icon          text not null,
+  rarity        text not null check (rarity in ('common', 'rare', 'epic', 'legendary')),
+  requirement   jsonb not null default '{}'::jsonb,
+  reward_amount numeric(14, 2) not null default 0 check (reward_amount >= 0),
+  created_at    timestamptz not null default now()
+);
+
+create table if not exists public.user_badges (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references public.profiles(id) on delete cascade,
+  badge_type  public.badge_type not null references public.badges(badge_type) on delete cascade,
+  earned_at   timestamptz not null default now(),
+  notified    boolean not null default false,
+  unique (user_id, badge_type)
+);
+
+create index if not exists user_badges_user_earned_idx on public.user_badges(user_id, earned_at desc);
+create index if not exists user_badges_badge_type_idx on public.user_badges(badge_type);
+
+-- ─── 2. PLATFORM STATISTICS ───
+
+create table if not exists public.platform_stats (
+  stat_key   text primary key,
+  stat_value numeric(14, 2) not null default 0,
+  updated_at timestamptz not null default now()
+);
+
+insert into public.platform_stats (stat_key, stat_value) values
+  ('total_borrowed', 0),
+  ('total_repaid', 0),
+  ('active_circles', 0),
+  ('total_users', 0),
+  ('successful_loans', 0),
+  ('total_lent', 0),
+  ('active_loans', 0),
+  ('trust_score_avg', 85)
+on conflict (stat_key) do nothing;
+
+-- ─── 3. SUCCESS STORIES ───
+
+create table if not exists public.success_stories (
+  id           uuid primary key default gen_random_uuid(),
+  user_id      uuid references public.profiles(id) on delete set null,
+  title        text not null,
+  story        text not null,
+  amount       numeric(14, 2) not null check (amount > 0),
+  category     text not null check (category in ('education', 'business', 'emergency', 'family', 'other')),
+  is_featured  boolean not null default false,
+  is_public    boolean not null default false,
+  display_name text not null,
+  created_at   timestamptz not null default now(),
+  featured_at  timestamptz
+);
+
+create index if not exists success_stories_featured_idx on public.success_stories(is_featured, featured_at desc)
+  where is_featured = true and is_public = true;
+create index if not exists success_stories_public_idx on public.success_stories(is_public, created_at desc)
+  where is_public = true;
+
+-- ─── 4. CIRCLE PERFORMANCE & REWARDS ───
+
+create table if not exists public.circle_performance (
+  circle_id             uuid primary key references public.circles(id) on delete cascade,
+  total_loans_issued    integer not null default 0,
+  total_loans_repaid    integer not null default 0,
+  on_time_repayment_rate numeric(5, 2) not null default 100.00 check (on_time_repayment_rate between 0 and 100),
+  total_volume          numeric(14, 2) not null default 0 check (total_volume >= 0),
+  member_count          integer not null default 0,
+  performance_score     integer not null default 0 check (performance_score between 0 and 100),
+  last_calculated       timestamptz not null default now()
+);
+
+create table if not exists public.circle_rewards (
+  id                uuid primary key default gen_random_uuid(),
+  circle_id         uuid not null references public.circles(id) on delete cascade,
+  reward_type       text not null check (reward_type in ('perfect_month', 'milestone_volume', 'member_growth', 'perfect_quarter')),
+  reward_per_member numeric(14, 2) not null check (reward_per_member > 0),
+  total_amount      numeric(14, 2) not null check (total_amount > 0),
+  disbursed         boolean not null default false,
+  earned_at         timestamptz not null default now(),
+  disbursed_at      timestamptz
+);
+
+create index if not exists circle_rewards_circle_disbursed_idx on public.circle_rewards(circle_id, disbursed, earned_at desc);
+
+-- ─── 5. TRUST SCORE MILESTONES ───
+
+create table if not exists public.trust_milestones (
+  id             uuid primary key default gen_random_uuid(),
+  user_id        uuid not null references public.profiles(id) on delete cascade,
+  milestone_score integer not null check (milestone_score in (50, 60, 70, 80, 85, 90, 95, 100)),
+  reached_at     timestamptz not null default now(),
+  celebrated     boolean not null default false,
+  unique (user_id, milestone_score)
+);
+
+create index if not exists trust_milestones_user_idx on public.trust_milestones(user_id, milestone_score desc);
+
+-- ─── 6. FRIEND DISCOVERY & NETWORK EFFECTS ───
+
+create table if not exists public.user_contacts (
+  id             uuid primary key default gen_random_uuid(),
+  user_id        uuid not null references public.profiles(id) on delete cascade,
+  phone_hash     text not null,
+  contact_name   text,
+  matched_user_id uuid references public.profiles(id) on delete set null,
+  notified       boolean not null default false,
+  created_at     timestamptz not null default now(),
+  unique (user_id, phone_hash)
+);
+
+create index if not exists user_contacts_user_idx on public.user_contacts(user_id);
+create index if not exists user_contacts_phone_hash_idx on public.user_contacts(phone_hash)
+  where matched_user_id is null;
+create index if not exists user_contacts_matched_idx on public.user_contacts(matched_user_id)
+  where matched_user_id is not null;
+
+-- ─── 7. FINANCIAL EDUCATION CONTENT ───
+
+create table if not exists public.education_content (
+  id                uuid primary key default gen_random_uuid(),
+  slug              text not null unique,
+  title             text not null,
+  summary           text not null,
+  content           text not null,
+  category          text not null check (category in ('borrowing', 'saving', 'trust_score', 'security', 'circles', 'general', 'referrals')),
+  difficulty        text not null check (difficulty in ('beginner', 'intermediate', 'advanced')),
+  estimated_minutes integer not null default 5 check (estimated_minutes > 0),
+  order_index       integer not null default 0,
+  is_featured       boolean not null default false,
+  created_at        timestamptz not null default now(),
+  updated_at        timestamptz not null default now()
+);
+
+create index if not exists education_content_category_order_idx on public.education_content(category, order_index);
+create index if not exists education_content_featured_idx on public.education_content(is_featured)
+  where is_featured = true;
+
+create trigger education_content_set_updated_at
+  before update on public.education_content
+  for each row execute function public.set_updated_at();
+
+-- ─── 8. RLS POLICIES (uses app_user_id(), no Supabase roles) ───
+
+alter table public.badges enable row level security;
+alter table public.user_badges enable row level security;
+alter table public.platform_stats enable row level security;
+alter table public.success_stories enable row level security;
+alter table public.circle_performance enable row level security;
+alter table public.circle_rewards enable row level security;
+alter table public.trust_milestones enable row level security;
+alter table public.user_contacts enable row level security;
+alter table public.education_content enable row level security;
+
+-- Badges (public read)
+drop policy if exists "Anyone can read badges" on public.badges;
+create policy "Anyone can read badges"
+  on public.badges for select using (true);
+
+-- User badges (own badges readable)
+drop policy if exists "Users can read own badges" on public.user_badges;
+create policy "Users can read own badges"
+  on public.user_badges for select
+  using (user_id = public.app_user_id());
+
+-- Platform stats (public read)
+drop policy if exists "Anyone can read platform stats" on public.platform_stats;
+create policy "Anyone can read platform stats"
+  on public.platform_stats for select using (true);
+
+-- Success stories
+drop policy if exists "Anyone can read public success stories" on public.success_stories;
+create policy "Anyone can read public success stories"
+  on public.success_stories for select using (is_public = true);
+
+drop policy if exists "Users can create own success stories" on public.success_stories;
+create policy "Users can create own success stories"
+  on public.success_stories for insert
+  with check (user_id = public.app_user_id());
+
+drop policy if exists "Users can update own success stories" on public.success_stories;
+create policy "Users can update own success stories"
+  on public.success_stories for update
+  using (user_id = public.app_user_id())
+  with check (user_id = public.app_user_id());
+
+-- Circle performance (authenticated read)
+drop policy if exists "Authenticated users can read circle performance" on public.circle_performance;
+create policy "Authenticated users can read circle performance"
+  on public.circle_performance for select using (public.app_user_id() is not null);
+
+-- Circle rewards (circle members)
+drop policy if exists "Circle members can read rewards" on public.circle_rewards;
+create policy "Circle members can read rewards"
+  on public.circle_rewards for select using (
+    exists (
+      select 1 from public.circle_members cm
+      where cm.circle_id = circle_rewards.circle_id
+        and cm.user_id = public.app_user_id()
+    )
+  );
+
+-- Trust milestones (own only)
+drop policy if exists "Users can read own trust milestones" on public.trust_milestones;
+create policy "Users can read own trust milestones"
+  on public.trust_milestones for select
+  using (user_id = public.app_user_id());
+
+-- User contacts (own only, all operations)
+drop policy if exists "Users can manage own contacts" on public.user_contacts;
+create policy "Users can manage own contacts"
+  on public.user_contacts for all
+  using (user_id = public.app_user_id())
+  with check (user_id = public.app_user_id());
+
+-- Education content (public read)
+drop policy if exists "Anyone can read education content" on public.education_content;
+create policy "Anyone can read education content"
+  on public.education_content for select using (true);
+
+-- ─── 9. SEED BADGES ───
+
+insert into public.badges (badge_type, name, description, category, icon, rarity, requirement, reward_amount) values
+  ('trust_builder', 'Trust Builder', 'Reached 90+ trust score', 'trust', '🏆', 'epic', '{"min_trust_score": 90}', 500),
+  ('early_adopter', 'Early Adopter', 'Joined within first 1000 users', 'milestones', '🌟', 'legendary', '{"max_user_number": 1000}', 1000),
+  ('community_lender', 'Community Lender', 'Lent to 5+ different people', 'lending', '🤝', 'rare', '{"unique_loans_lent": 5}', 300),
+  ('responsible_borrower', 'Responsible Borrower', 'Repaid 5 loans on time', 'borrowing', '✅', 'rare', '{"on_time_repayments": 5}', 300),
+  ('circle_champion', 'Circle Champion', 'Created a circle with 10+ members', 'circles', '👥', 'epic', '{"circle_members": 10}', 500),
+  ('referral_master', 'Referral Master', 'Referred 10+ verified users', 'referrals', '📣', 'epic', '{"verified_referrals": 10}', 500),
+  ('financial_literacy', 'Financial Literacy', 'Completed all education modules', 'education', '📚', 'rare', '{"completed_modules": "all"}', 200),
+  ('milestone_5k', '5K Club', 'Total borrowed/lent: ₦5,000+', 'milestones', '💰', 'common', '{"total_volume": 5000}', 100),
+  ('milestone_50k', '50K Club', 'Total borrowed/lent: ₦50,000+', 'milestones', '💎', 'rare', '{"total_volume": 50000}', 500),
+  ('milestone_100k', '100K Club', 'Total borrowed/lent: ₦100,000+', 'milestones', '👑', 'legendary', '{"total_volume": 100000}', 2000),
+  ('perfect_record', 'Perfect Record', '100% on-time repayment history', 'repayment', '⭐', 'legendary', '{"perfect_repayment": true}', 1000),
+  ('speed_repayer', 'Speed Repayer', 'Repaid a loan within 24 hours', 'repayment', '⚡', 'rare', '{"repaid_within_hours": 24}', 250),
+  ('super_saver', 'Super Saver', 'Saved ₦50,000+ in savings goals', 'milestones', '🎯', 'epic', '{"total_savings": 50000}', 500)
+on conflict (badge_type) do nothing;
+
+-- ─── 10. SEED EDUCATION CONTENT ───
+
+insert into public.education_content (slug, title, summary, content, category, difficulty, estimated_minutes, order_index, is_featured) values
+  ('understanding-trust-scores', 'Understanding Trust Scores', 'Learn how your trust score is calculated and how to improve it',
+   E'# Understanding Trust Scores\n\nYour trust score determines your borrowing limits, loan duration, and security deposit requirements.\n\n## What Affects Your Trust Score\n\n1. **KYC Verification** (+18 points)\n2. **Completed Loans** (+18 points for first, +12 for 3+)\n3. **Wallet Activity** (+12 points for 5+ transactions)\n4. **Referrals** (+10 points for 5+ verified referrals)\n5. **Account Age** (+8 points for 90+ days)\n6. **Verified Contacts** (+7 points for email, phone, KYC)',
+   'trust_score', 'beginner', 5, 1, true),
+
+  ('borrowing-responsibly', 'Borrowing Responsibly', 'Best practices for taking and repaying loans',
+   E'# Borrowing Responsibly\n\n## Before You Borrow\n\n1. Assess Your Need: Only borrow what you actually need\n2. Plan Repayment: Ensure you can repay before the due date\n3. Check Your Trust Score: Higher scores unlock better terms\n4. Understand the Terms: 0% interest, but on-time repayment matters',
+   'borrowing', 'beginner', 7, 2, true),
+
+  ('building-wealth-circles', 'Building Wealth with Circles', 'Maximize the power of group lending',
+   E'# Building Wealth with Circles\n\nCircles are modern cooperatives that pool resources for mutual benefit.\n\n## Creating a Strong Circle\n\n1. Invite Trusted Members: Quality over quantity\n2. Set Clear Rules: Agree on contribution amounts and terms\n3. Regular Activity: Consistent contributions build momentum',
+   'circles', 'intermediate', 8, 3, true),
+
+  ('maximizing-referrals', 'Maximizing Referral Rewards', 'Earn wallet credit by growing the community',
+   E'# Maximizing Referral Rewards\n\nYou earn rewards at each referral milestone.\n\n## Best Referral Practices\n\n1. Target Active Users\n2. Explain the Benefits\n3. Support Their Journey\n4. Leverage Your Networks',
+   'referrals', 'intermediate', 6, 4, false),
+
+  ('security-best-practices', 'Security Best Practices', 'Protect your account and funds',
+   E'# Security Best Practices\n\n## Account Security\n\n1. Strong Password\n2. Transaction PIN (never share)\n3. Trusted Device Reviews\n4. Weekly Transaction Checks',
+   'security', 'beginner', 5, 5, false)
+on conflict (slug) do nothing;
+
+-- ─── 11. FUNCTIONS ───
+
+create or replace function private.me2u_update_platform_stats()
+returns void language plpgsql security definer set search_path = public, pg_temp as $$
+declare
+  v_total_borrowed numeric;
+  v_total_repaid numeric;
+  v_successful_loans integer;
+  v_active_loans integer;
+  v_total_lent numeric;
+  v_active_circles integer;
+  v_total_users integer;
+  v_avg_trust numeric;
+begin
+  select coalesce(sum(amount), 0) into v_total_borrowed from public.loans;
+  select coalesce(sum(amount), 0) into v_total_repaid from public.loans where status = 'completed';
+  select count(*) into v_successful_loans from public.loans where status = 'completed';
+  select count(*) into v_active_loans from public.loans where status = 'active';
+  v_total_lent := v_total_borrowed;
+  select count(*) into v_active_circles from public.circles;
+  select count(*) into v_total_users from public.profiles;
+  select coalesce(avg(trust_score), 85) into v_avg_trust from public.profiles where kyc_verified = true;
+
+  update public.platform_stats set stat_value = v_total_borrowed, updated_at = now() where stat_key = 'total_borrowed';
+  update public.platform_stats set stat_value = v_total_repaid, updated_at = now() where stat_key = 'total_repaid';
+  update public.platform_stats set stat_value = v_successful_loans, updated_at = now() where stat_key = 'successful_loans';
+  update public.platform_stats set stat_value = v_active_loans, updated_at = now() where stat_key = 'active_loans';
+  update public.platform_stats set stat_value = v_total_lent, updated_at = now() where stat_key = 'total_lent';
+  update public.platform_stats set stat_value = v_active_circles, updated_at = now() where stat_key = 'active_circles';
+  update public.platform_stats set stat_value = v_total_users, updated_at = now() where stat_key = 'total_users';
+  update public.platform_stats set stat_value = round(v_avg_trust, 0), updated_at = now() where stat_key = 'trust_score_avg';
+end;
+$$;
+
+create or replace function private.me2u_award_badge(
+  p_user_id uuid,
+  p_badge_type public.badge_type
+) returns boolean language plpgsql security definer set search_path = public, pg_temp as $$
+declare
+  v_reward numeric;
+  v_name text;
+begin
+  if exists (
+    select 1 from public.user_badges
+    where user_id = p_user_id and badge_type = p_badge_type
+  ) then return false; end if;
+
+  select reward_amount, name into v_reward, v_name
+  from public.badges where badge_type = p_badge_type;
+
+  if not found then return false; end if;
+
+  insert into public.user_badges (user_id, badge_type)
+  values (p_user_id, p_badge_type)
+  on conflict (user_id, badge_type) do nothing;
+
+  if v_reward > 0 then
+    update public.wallets set balance = balance + v_reward where user_id = p_user_id;
+    insert into public.transactions (user_id, type, amount, description)
+    values (p_user_id, 'deposit', v_reward, 'Badge reward: ' || v_name);
+  end if;
+
+  insert into public.notifications (user_id, title, message)
+  values (
+    p_user_id,
+    'Badge Unlocked!',
+    'You earned the "' || v_name || '" badge' ||
+    case when v_reward > 0 then ' and NGN ' || v_reward || ' wallet credit!' else '!' end
+  );
+
+  return true;
+end;
+$$;
+
+create or replace function private.me2u_check_user_badges(p_user_id uuid)
+returns void language plpgsql security definer set search_path = public, pg_temp as $$
+declare
+  v_profile record;
+  v_loans_completed integer;
+  v_loans_lent integer;
+  v_total_volume numeric;
+  v_total_savings numeric;
+  v_verified_referrals integer;
+  v_circle_members integer;
+  v_education_completed integer;
+  v_total_repayments integer;
+  v_on_time_repayments integer;
+  v_has_speed_repayment boolean;
+begin
+  select * into v_profile from public.profiles where id = p_user_id;
+  if not found then return; end if;
+
+  select count(*) into v_loans_completed
+  from public.loans where borrower_id = p_user_id and status = 'completed';
+
+  select count(distinct borrower_id) into v_loans_lent
+  from public.loans where lender_id = p_user_id and status = 'completed';
+
+  select coalesce(sum(amount), 0) into v_total_volume
+  from public.loans where borrower_id = p_user_id or lender_id = p_user_id;
+
+  select coalesce(sum(current_amount), 0) into v_total_savings
+  from public.savings_goals where user_id = p_user_id;
+
+  select count(*) into v_verified_referrals
+  from public.referrals r
+  join public.profiles p on p.id = r.referee_id
+  where r.referrer_id = p_user_id and p.kyc_verified = true;
+
+  select max(member_count) into v_circle_members
+  from public.circles c
+  join public.circle_performance cp on cp.circle_id = c.id
+  where c.creator_id = p_user_id;
+
+  select count(distinct lesson_key) into v_education_completed
+  from public.learning_progress where user_id = p_user_id;
+
+  select exists (
+    select 1 from public.loans
+    where borrower_id = p_user_id
+      and status = 'completed'
+      and created_at >= (select max(created_at) from public.loans where borrower_id = p_user_id and status = 'completed')
+      and extract(epoch from (
+        (select max(updated_at) from public.transactions
+         where user_id = p_user_id and type = 'loan_repayment'
+         and description like '%' || id::text || '%')
+        - start_date
+      )) <= 86400
+  ) into v_has_speed_repayment;
+
+  if v_profile.trust_score >= 90 then
+    perform private.me2u_award_badge(p_user_id, 'trust_builder');
+  end if;
+  if v_loans_lent >= 5 then
+    perform private.me2u_award_badge(p_user_id, 'community_lender');
+  end if;
+  if v_loans_completed >= 5 then
+    perform private.me2u_award_badge(p_user_id, 'responsible_borrower');
+  end if;
+  if v_circle_members >= 10 then
+    perform private.me2u_award_badge(p_user_id, 'circle_champion');
+  end if;
+  if v_verified_referrals >= 10 then
+    perform private.me2u_award_badge(p_user_id, 'referral_master');
+  end if;
+  if v_total_volume >= 100000 then
+    perform private.me2u_award_badge(p_user_id, 'milestone_100k');
+  elsif v_total_volume >= 50000 then
+    perform private.me2u_award_badge(p_user_id, 'milestone_50k');
+  elsif v_total_volume >= 5000 then
+    perform private.me2u_award_badge(p_user_id, 'milestone_5k');
+  end if;
+  if v_total_savings >= 50000 then
+    perform private.me2u_award_badge(p_user_id, 'super_saver');
+  end if;
+  if v_has_speed_repayment then
+    perform private.me2u_award_badge(p_user_id, 'speed_repayer');
+  end if;
+
+  select count(*) into v_total_repayments
+  from public.loans where borrower_id = p_user_id and status = 'completed';
+
+  if v_total_repayments >= 5 then
+    select count(*) into v_on_time_repayments
+    from public.loans
+    where borrower_id = p_user_id and status = 'completed'
+      and updated_at <= due_date;
+    if v_on_time_repayments = v_total_repayments then
+      perform private.me2u_award_badge(p_user_id, 'perfect_record');
+    end if;
+  end if;
+end;
+$$;
+
+create or replace function private.me2u_record_trust_milestone(
+  p_user_id uuid,
+  p_new_score integer
+) returns void language plpgsql security definer set search_path = public, pg_temp as $$
+declare
+  v_milestone integer;
+  v_milestones integer[] := array[50, 60, 70, 80, 85, 90, 95, 100];
+begin
+  foreach v_milestone in array v_milestones loop
+    if p_new_score >= v_milestone then
+      insert into public.trust_milestones (user_id, milestone_score)
+      values (p_user_id, v_milestone)
+      on conflict (user_id, milestone_score) do nothing;
+
+      if v_milestone in (70, 80, 90, 100) and not exists(
+        select 1 from public.trust_milestones
+        where user_id = p_user_id and milestone_score = v_milestone and celebrated = true
+      ) then
+        insert into public.notifications (user_id, title, message)
+        values (
+          p_user_id,
+          'Trust Score Milestone!',
+          'Congratulations! You reached a trust score of ' || v_milestone || '!'
+        );
+        update public.trust_milestones
+        set celebrated = true
+        where user_id = p_user_id and milestone_score = v_milestone;
+      end if;
+    end if;
+  end loop;
+end;
+$$;
+
+create or replace function private.me2u_trigger_platform_stats()
+returns trigger language plpgsql security definer set search_path = public, pg_temp as $$
+begin
+  perform private.me2u_update_platform_stats();
+  return new;
+end;
+$$;
+
+drop trigger if exists loans_update_platform_stats on public.loans;
+create trigger loans_update_platform_stats
+  after insert or update or delete on public.loans
+  for each statement execute function private.me2u_trigger_platform_stats();
+
+drop trigger if exists circles_update_platform_stats on public.circles;
+create trigger circles_update_platform_stats
+  after insert or delete on public.circles
+  for each statement execute function private.me2u_trigger_platform_stats();
+
+drop trigger if exists profiles_update_platform_stats on public.profiles;
+create trigger profiles_update_platform_stats
+  after insert on public.profiles
+  for each statement execute function private.me2u_trigger_platform_stats();
+
+create or replace function private.me2u_trigger_badge_check()
+returns trigger language plpgsql security definer set search_path = public, pg_temp as $$
+begin
+  if tg_table_name = 'loans' then
+    perform private.me2u_check_user_badges(new.borrower_id);
+    if new.lender_id is not null then
+      perform private.me2u_check_user_badges(new.lender_id);
+    end if;
+  elsif tg_table_name = 'profiles' then
+    if new.trust_score <> coalesce(old.trust_score, 85) then
+      perform private.me2u_record_trust_milestone(new.id, new.trust_score);
+      perform private.me2u_check_user_badges(new.id);
+    end if;
+  elsif tg_table_name = 'referrals' then
+    perform private.me2u_check_user_badges(new.referrer_id);
+  elsif tg_table_name = 'savings_goals' then
+    perform private.me2u_check_user_badges(new.user_id);
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists loans_check_badges on public.loans;
+create trigger loans_check_badges
+  after insert or update on public.loans
+  for each row execute function private.me2u_trigger_badge_check();
+
+drop trigger if exists profiles_check_badges on public.profiles;
+create trigger profiles_check_badges
+  after update of trust_score on public.profiles
+  for each row execute function private.me2u_trigger_badge_check();
+
+drop trigger if exists referrals_check_badges on public.referrals;
+create trigger referrals_check_badges
+  after insert on public.referrals
+  for each row execute function private.me2u_trigger_badge_check();
+
+drop trigger if exists savings_goals_check_badges on public.savings_goals;
+create trigger savings_goals_check_badges
+  after insert or update of current_amount on public.savings_goals
+  for each row execute function private.me2u_trigger_badge_check();
+
+select private.me2u_update_platform_stats();
+
+comment on table public.badges is 'Defines available badges users can earn';
+comment on table public.user_badges is 'Tracks badges earned by each user';
+comment on table public.platform_stats is 'Real-time platform statistics for social proof';
+comment on table public.success_stories is 'User success stories for testimonials';
+comment on table public.circle_performance is 'Performance metrics for lending circles';
+comment on table public.circle_rewards is 'Rewards earned by circles for achievements';
+comment on table public.trust_milestones is 'Trust score milestones reached by users';
+comment on table public.user_contacts is 'Hashed phone contacts for friend discovery';
+comment on table public.education_content is 'Financial education articles and guides';

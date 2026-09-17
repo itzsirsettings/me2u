@@ -30,11 +30,13 @@ $$;
 
 -- Admin check helper
 create or replace function public.is_admin()
-returns boolean language sql stable as $$
-  select exists (
+returns boolean language plpgsql stable as $$
+begin
+  return exists (
     select 1 from public.profiles
     where id = public.app_user_id() and role = 'admin'
-  )
+  );
+end;
 $$;
 
 -- Timestamp trigger helper

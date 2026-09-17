@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { authorizedFetch } from "@/lib/fetch";
 import { motion } from "framer-motion";
 import Me2uIcon from "@/components/Me2uIcon";
 
-export default function AccountUnlockVerifyPage() {
+function VerifyContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const reference = searchParams.get("reference");
@@ -104,5 +104,19 @@ export default function AccountUnlockVerifyPage() {
         )}
       </motion.div>
     </div>
+  );
+}
+
+export default function AccountUnlockVerifyPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center p-4 bg-[var(--color-bg-primary)]">
+          <div className="h-16 w-16 animate-spin rounded-full border-4 border-[var(--color-accent-primary)] border-t-transparent" />
+        </div>
+      }
+    >
+      <VerifyContent />
+    </Suspense>
   );
 }

@@ -291,6 +291,159 @@ export const me2uIcons: Record<string, ReactNode> = {
       d="M12 3.3a9.7 9.7 0 0 1 9.7 9.7 9.7 9.7 0 0 1-9.7 9.7A9.7 9.7 0 0 1 2.3 13 9.7 9.7 0 0 1 12 3.3Zm0 2.3A7.4 7.4 0 0 0 4.6 13 7.4 7.4 0 0 0 12 20.4 7.4 7.4 0 0 0 19.4 13 7.4 7.4 0 0 0 12 5.6Zm0 2.2A5.2 5.2 0 0 1 17.2 13 5.2 5.2 0 0 1 12 18.2 5.2 5.2 0 0 1 6.8 13 5.2 5.2 0 0 1 12 7.8Zm0 1.4a3.8 3.8 0 1 1 0 7.6 3.8 3.8 0 0 1 0-7.6Z"
     />
   ),
+  fire: (
+    <path
+      fillRule="evenodd"
+      d="M12 2.4c.4 0 .7.2.9.5 1.2 2.1 2.7 3.5 4.5 4.4a.9.9 0 0 1 .4 1.2c-.5 1.3-.6 2.6-.3 3.9a9 9 0 0 1-6.9 10.4c-4.8 1-9.4-2-10.4-6.8-.8-3.9 1.1-7.7 4.4-9.6a.9.9 0 0 1 1.3.5c.3 1 .9 1.9 1.7 2.6.3.3.8.2 1-.2.5-.9.8-1.8.9-2.8a.9.9 0 0 1 .4-.7c.6-.5 1.3-1 2.1-1.5Zm-1.7 6.3c-.8.2-1.4.7-1.9 1.5-.7 1.1-.8 2.5-.3 3.7.6 1.3 1.9 2.2 3.3 2.3 1.8.1 3.4-1.1 3.8-2.8.3-1.1.1-2.2-.5-3.2-.5-.9-1.4-1.5-2.4-1.7-.5-.1-1-.1-1.5 0-.2 0-.3.1-.5.2Z"
+    />
+  ),
+  chat: (
+    <path
+      fillRule="evenodd"
+      d="M6.4 4h11.2A2.4 2.4 0 0 1 20 6.4v8.8a2.4 2.4 0 0 1-2.4 2.4H8.8L4 21.2v-2.6a2.4 2.4 0 0 1-1.6-2.2V6.4A2.4 2.4 0 0 1 4.8 4Zm1.4 4v1.6h8.4V8Zm0 3.2v1.6h6.4v-1.6Z"
+    />
+  ),
+  copy: (
+    <>
+      <rect x="8.2" y="8.2" width="12" height="12" rx="2" />
+      <path d="M5.8 15.8H4.6A2.6 2.6 0 0 1 2 13.2V4.6A2.6 2.6 0 0 1 4.6 2h8.6a2.6 2.6 0 0 1 2.6 2.6v1.2h-2V4.6a.6.6 0 0 0-.6-.6H4.6a.6.6 0 0 0-.6.6v8.6c0 .3.3.6.6.6h1.2Z" />
+    </>
+  ),
+  share: (
+    <>
+      <circle cx="6.8" cy="12" r="2.8" />
+      <circle cx="17.2" cy="6.8" r="2.8" />
+      <circle cx="17.2" cy="17.2" r="2.8" />
+      <path d="M9.2 10.8 14.8 8M9.2 13.2 14.8 16" strokeWidth="1.6" stroke="currentColor" fill="none" />
+    </>
+  ),
+  info: (
+    <path
+      fillRule="evenodd"
+      d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 2a7 7 0 1 1 0 14 7 7 0 0 1 0-14Zm-1 8v4h2v-4Zm0-4v2h2V9Z"
+    />
+  ),
+  close: (
+    <>
+      <path d="M6.4 6.4 17.6 17.6M17.6 6.4 6.4 17.6" strokeWidth="2" stroke="currentColor" strokeLinecap="round" />
+    </>
+  ),
+  history: (
+    <path
+      fillRule="evenodd"
+      d="M12 3.4a8.6 8.6 0 1 0 0 17.2 8.6 8.6 0 0 0 0-17.2ZM12 5a7 7 0 1 1 0 14 7 7 0 0 1 0-14Zm-.8 2.8v4.4l3.6 2.2.8-1.4-2.8-1.6V7.8Z"
+    />
+  ),
+  send: (
+    <path d="M3.4 12 20.6 3.4 12 20.6l-2.4-7.2ZM12 12l5.2-5.2M12 12 9.6 9.6Z" strokeWidth="1.6" stroke="currentColor" fill="none" />
+  ),
+  plus: (
+    <path d="M12 5v14M5 12h14" strokeWidth="2" stroke="currentColor" strokeLinecap="round" />
+  ),
+  minus: (
+    <path d="M5 12h14" strokeWidth="2" stroke="currentColor" strokeLinecap="round" />
+  ),
+  search: (
+    <>
+      <circle cx="10.5" cy="10.5" r="6.5" strokeWidth="2" stroke="currentColor" fill="none" />
+      <path d="M15 15 20 20" strokeWidth="2" stroke="currentColor" strokeLinecap="round" />
+    </>
+  ),
+  filter: (
+    <>
+      <path d="M4 6h16M7 12h10M10 18h4" strokeWidth="2" stroke="currentColor" strokeLinecap="round" />
+    </>
+  ),
+  edit: (
+    <>
+      <path d="M16.8 3.8 20.2 7.2l-10.4 10.4-4.4 1 1-4.4Z" />
+      <path d="M15.4 5.2 18.8 8.6" strokeWidth="1.5" stroke="currentColor" fill="none" />
+    </>
+  ),
+  trash: (
+    <path
+      fillRule="evenodd"
+      d="M9.2 3.4h5.6v1.8H9.2ZM4 6.8h16v1.8H4Zm3.6 3.4v8.6a2 2 0 0 0 2 2h4.8a2 2 0 0 0 2-2v-8.6Zm3.2 1.6v5.4h1.8v-5.4Zm-1.8 0v5.4H7.6v-5.4Zm5.4 0v5.4h1.8v-5.4Z"
+    />
+  ),
+  settings: (
+    <>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M16.9 16.9l1.4 1.4M5.6 18.4l1.4-1.4M16.9 7.1l1.4-1.4" strokeWidth="2" stroke="currentColor" strokeLinecap="round" />
+    </>
+  ),
+  calendar: (
+    <path
+      fillRule="evenodd"
+      d="M6.4 4h11.2A2.4 2.4 0 0 1 20 6.4v11.2A2.4 2.4 0 0 1 17.6 20H6.4A2.4 2.4 0 0 1 4 17.6V6.4A2.4 2.4 0 0 1 6.4 4ZM5.6 9.2h12.8v8.4a.8.8 0 0 1-.8.8H6.4a.8.8 0 0 1-.8-.8ZM8 2.4v3.2h1.6V2.4Zm6.4 0v3.2H16V2.4Z"
+    />
+  ),
+  clockHistoy: (
+    <>
+      <circle cx="12" cy="12" r="8" strokeWidth="2" stroke="currentColor" fill="none" />
+      <path d="M12 7v5l3 3" strokeWidth="2" stroke="currentColor" strokeLinecap="round" />
+    </>
+  ),
+  users: (
+    <>
+      <circle cx="9" cy="7.5" r="3" />
+      <circle cx="16.5" cy="8.5" r="2.5" />
+      <path d="M3.5 18.5v-1c0-2.5 2.2-4.5 5-4.5s5 2 5 4.5v1c0 .3-.3.5-.7.5H4.2c-.4 0-.7-.2-.7-.5Z" />
+      <path d="M14 18.5v-1c0-1.7 1-3.2 2.5-4v4.7c0 .3-.3.5-.6.5h-1.5c-.2 0-.4-.1-.4-.2Z" />
+    </>
+  ),
+  logout: (
+    <>
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" strokeWidth="2" stroke="currentColor" strokeLinecap="round" fill="none" />
+      <path d="M16 17l5-5-5-5M21 12H9" strokeWidth="2" stroke="currentColor" strokeLinecap="round" fill="none" />
+    </>
+  ),
+  refresh: (
+    <>
+      <path d="M3 12a9 9 0 0 1 9-9c2.5 0 4.8 1 6.4 2.6L21 8" strokeWidth="2" stroke="currentColor" strokeLinecap="round" fill="none" />
+      <path d="M21 3v5h-5M21 12a9 9 0 0 1-9 9c-2.5 0-4.8-1-6.4-2.6L3 16" strokeWidth="2" stroke="currentColor" strokeLinecap="round" fill="none" />
+      <path d="M3 21v-5h5" strokeWidth="2" stroke="currentColor" strokeLinecap="round" fill="none" />
+    </>
+  ),
+  upload: (
+    <>
+      <path d="M12 16V4M8 8l4-4 4 4" strokeWidth="2" stroke="currentColor" strokeLinecap="round" fill="none" />
+      <rect x="4" y="16" width="16" height="4" rx="1" />
+    </>
+  ),
+  image: (
+    <path
+      fillRule="evenodd"
+      d="M6 4h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm0 2v12h12v-3.6l-3.2-3.2-3.6 3.6-2.4-2.4ZM8.5 9a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"
+    />
+  ),
+  document: (
+    <path
+      fillRule="evenodd"
+      d="M7 3h8l4 4v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm6 2v3h3ZM8 12h8v1.5H8Zm0 3h8v1.5H8Z"
+    />
+  ),
+  link: (
+    <>
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" strokeWidth="2" stroke="currentColor" strokeLinecap="round" fill="none" />
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" strokeWidth="2" stroke="currentColor" strokeLinecap="round" fill="none" />
+    </>
+  ),
+  menu: (
+    <path d="M4 6h16M4 12h16M4 18h16" strokeWidth="2" stroke="currentColor" strokeLinecap="round" />
+  ),
+  checkCircle: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M8 12l2 2 4-4" strokeWidth="2" stroke="white" strokeLinecap="round" fill="none" />
+    </>
+  ),
+  xCircle: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9 9l6 6M15 9l-6 6" strokeWidth="2" stroke="white" strokeLinecap="round" />
+    </>
+  ),
 };
 
 export type Me2uIconName = keyof typeof me2uIcons;

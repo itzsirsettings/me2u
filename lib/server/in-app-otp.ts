@@ -150,13 +150,18 @@ export async function getCurrentOtp(
  * Clean up expired OTPs (run periodically)
  */
 export async function cleanupExpiredOtps(): Promise<number> {
-  const { rowCount } = await query(
-    `DELETE FROM otp_codes 
-     WHERE expires_at < NOW() - INTERVAL '24 hours'`
+  const { rows } = await query<{ deleted: number }>(
+    `WITH deleted AS (
+       DELETE FROM otp_codes
+       WHERE expires_at < NOW() - INTERVAL '24 hours'
+       RETURNING 1
+     )
+     SELECT COUNT(*)::int AS deleted FROM deleted`
   );
 
+  const rowCount = rows[0]?.deleted ?? 0;
   console.log(`🧹 Cleaned up ${rowCount} expired OTP codes`);
-  return rowCount || 0;
+  return rowCount;
 }
 
 /**

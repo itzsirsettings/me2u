@@ -75,7 +75,7 @@ railway run psql -f migrations/migrations/20260916100000_enhanced_viral_referral
 In Railway dashboard → Variables, add:
 
 ```env
-AUTH_TOKEN_SECRET=your_random_32_char_secret_here
+AUTH_TOKEN_SECRET=<generate-a-random-32-char-secret>
 PAYSTACK_SECRET_KEY=sk_live_your_paystack_key_here
 NODE_ENV=production
 ```

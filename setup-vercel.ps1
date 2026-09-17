@@ -30,7 +30,7 @@ if (Test-Path ".env") {
     
     # Check for AUTH_TOKEN_SECRET
     $envContent = Get-Content ".env" -Raw
-    if ($envContent -match "AUTH_TOKEN_SECRET=67xFnPnEHBZcNDsA1Hx") {
+    if ($envContent -match "AUTH_TOKEN_SECRET=\S{32,}") {
         Write-Host "✓ AUTH_TOKEN_SECRET configured" -ForegroundColor Green
     } else {
         Write-Host "⚠️  AUTH_TOKEN_SECRET not configured" -ForegroundColor Yellow
@@ -76,7 +76,7 @@ Write-Host "🔑 Required Environment Variables for Vercel:" -ForegroundColor Ye
 Write-Host ""
 Write-Host "CRITICAL (App won't work without these):" -ForegroundColor Red
 Write-Host "  • DATABASE_URL (from Railway)" -ForegroundColor White
-Write-Host "  • AUTH_TOKEN_SECRET (already generated)" -ForegroundColor White
+Write-Host "  • AUTH_TOKEN_SECRET (generate a new random 64-char secret)" -ForegroundColor White
 Write-Host "  • SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD" -ForegroundColor White
 Write-Host "  • PAYSTACK_SECRET_KEY, PAYSTACK_PUBLIC_KEY" -ForegroundColor White
 Write-Host "  • NEXT_PUBLIC_APP_URL" -ForegroundColor White
@@ -147,8 +147,8 @@ if ($deploy -eq "yes" -or $deploy -eq "y") {
     Write-Host "2. Use: .env.vercel.template (all environment variables)" -ForegroundColor Gray
     Write-Host "3. Deploy via: https://vercel.com/new" -ForegroundColor Gray
     Write-Host ""
-    Write-Host "✅ AUTH_TOKEN_SECRET is already generated:" -ForegroundColor Green
-    Write-Host "   67xFnPnEHBZcNDsA1Hx+4kr/TxeVzOCmnNCLW0xCci0=" -ForegroundColor White
+    Write-Host "✅ AUTH_TOKEN_SECRET: generate one locally (do NOT commit or share):" -ForegroundColor Green
+    Write-Host "   node -e \"console.log(require('crypto').randomBytes(48).toString('base64'))\"" -ForegroundColor White
     Write-Host ""
 }
 
