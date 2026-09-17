@@ -1,8 +1,8 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, Quote } from "lucide-react";
+import { useEffect, useState } from "react";
 
 type SuccessStory = {
   id: string;
@@ -11,6 +11,11 @@ type SuccessStory = {
   amount: number;
   category: string;
   displayName: string;
+};
+
+type SuccessStoriesResponse = {
+  ok?: boolean;
+  stories?: SuccessStory[];
 };
 
 const categoryIcons: Record<string, string> = {
@@ -30,23 +35,22 @@ export default function SuccessStoryCarousel() {
   useEffect(() => {
     const loadStories = async () => {
       try {
-        const response = await fetch(
-          "/api/platform/success-stories?featured=true&limit=10",
-          { cache: "no-store" }
-        );
-        const result = await response.json();
+        const response = await fetch("/api/platform/success-stories?featured=true&limit=10", {
+          cache: "no-store",
+        });
+        const result = (await response.json()) as SuccessStoriesResponse;
 
         if (result.ok && result.stories && result.stories.length > 0) {
           setStories(result.stories);
         }
-      } catch (error) {
-        console.error("Failed to load success stories:", error);
+      } catch {
+        // Stories stay hidden if they cannot be loaded; the empty state below covers it.
       } finally {
         setLoading(false);
       }
     };
 
-    loadStories();
+    void loadStories();
   }, []);
 
   useEffect(() => {
@@ -72,21 +76,32 @@ export default function SuccessStoryCarousel() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green" />
+      <div
+        className="rounded-3xl border-2 border-border bg-card p-8 md:p-12"
+        aria-hidden="true"
+      >
+        <div className="h-7 w-28 rounded-full bg-secondary animate-pulse mb-6" />
+        <div className="h-10 w-3/4 rounded-lg bg-secondary animate-pulse mb-5" />
+        <div className="h-4 w-full rounded bg-secondary animate-pulse mb-2" />
+        <div className="h-4 w-5/6 rounded bg-secondary animate-pulse mb-8" />
+        <div className="h-px bg-green/10 mb-8" />
+        <div className="flex items-center justify-between">
+          <div className="h-8 w-36 rounded bg-secondary animate-pulse" />
+          <div className="h-6 w-28 rounded bg-secondary animate-pulse" />
+        </div>
       </div>
     );
   }
 
   if (stories.length === 0) {
     return (
-      <div className="text-center py-12 bg-secondary/50 rounded-3xl border border-border">
-        <Quote className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-        <p className="text-muted-foreground font-bold">
-          Success stories coming soon
+      <div className="text-center py-14 px-6 bg-secondary/50 rounded-3xl border border-border">
+        <Quote className="w-12 h-12 text-green/40 mx-auto mb-4" />
+        <p className="text-lg font-semibold text-foreground">
+          Stories from our community are on the way
         </p>
-        <p className="text-sm text-muted-foreground mt-2">
-          Be among the first to share your Me2U story
+        <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
+          Real experiences from Me2U members, shared only with their permission.
         </p>
       </div>
     );
@@ -154,18 +169,14 @@ export default function SuccessStoryCarousel() {
             {/* Amount & Author */}
             <div className="flex items-center justify-between pt-6 border-t border-border">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">
-                  Loan Amount
-                </p>
+                <p className="text-sm text-muted-foreground mb-1">Loan Amount</p>
                 <p className="text-2xl font-black text-green">
                   ₦{currentStory.amount.toLocaleString()}
                 </p>
               </div>
               <div className="text-right">
                 <p className="text-sm text-muted-foreground mb-1">Shared by</p>
-                <p className="font-bold text-card-foreground">
-                  {currentStory.displayName}
-                </p>
+                <p className="font-bold text-card-foreground">{currentStory.displayName}</p>
               </div>
             </div>
           </motion.div>

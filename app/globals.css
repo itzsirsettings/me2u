@@ -163,8 +163,8 @@ html[data-theme="dark"] {
   --color-accent-foreground: var(--color-text-primary);
   --color-muted-foreground: var(--color-text-secondary);
   --color-ring: var(--color-accent-primary);
-  --font-sans: "Aptos", "Segoe UI", "DM Sans", system-ui, sans-serif;
-  --font-display: "Aptos Display", "Segoe UI", "DM Sans", system-ui, sans-serif;
+  --font-sans: var(--font-body), "Aptos", "Segoe UI", "DM Sans", system-ui, sans-serif;
+  --font-display: var(--font-display), "Aptos Display", "Playfair Display", Georgia, serif;
   --font-mono: "Cascadia Mono", "SFMono-Regular", "Consolas", ui-monospace, monospace;
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -847,6 +847,12 @@ textarea:focus-visible,
 
 /* ── Reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
   .hero-bg {
     transition: none !important;
     transform: none !important;
@@ -859,4 +865,168 @@ textarea:focus-visible,
   .hero-trust-badge:hover {
     transform: none;
   }
+}
+
+/* ═══════════════════════════════════════════════════════
+   LANDING PAGE 2.0 — Professional redesign tokens
+   ═══════════════════════════════════════════════════════ */
+
+:root {
+  --landing-hero-mesh-1: radial-gradient(ellipse 80% 50% at 20% 10%, color-mix(in srgb, var(--lime) 22%, transparent), transparent 60%);
+  --landing-hero-mesh-2: radial-gradient(ellipse 60% 70% at 85% 30%, color-mix(in srgb, var(--green) 20%, transparent), transparent 55%);
+  --landing-hero-mesh-3: radial-gradient(ellipse 70% 60% at 50% 110%, color-mix(in srgb, var(--navy) 95%, transparent), transparent 60%);
+  --landing-grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.08 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  --landing-section-py: clamp(3.5rem, 8vw, 6rem);
+  --landing-h-size: clamp(2.25rem, 5.2vw, 4.25rem);
+  --landing-h2-size: clamp(1.875rem, 4vw, 3.25rem);
+  --landing-h3-size: clamp(1.25rem, 2vw, 1.65rem);
+  --landing-body-size: clamp(0.95rem, 1.25vw, 1.0625rem);
+  --landing-max-w: 1200px;
+  --landing-card-shadow: 0 1px 2px color-mix(in srgb, var(--navy) 6%, transparent), 0 10px 30px -12px color-mix(in srgb, var(--navy) 20%, transparent);
+}
+
+html[data-theme="dark"] {
+  --landing-hero-mesh-1: radial-gradient(ellipse 80% 50% at 20% 10%, color-mix(in srgb, var(--lime) 16%, transparent), transparent 60%);
+  --landing-hero-mesh-2: radial-gradient(ellipse 60% 70% at 85% 30%, color-mix(in srgb, var(--green) 18%, transparent), transparent 55%);
+  --landing-card-shadow: 0 1px 2px color-mix(in srgb, var(--snow) 4%, transparent), 0 10px 30px -12px rgba(0,0,0,0.6);
+}
+
+.landing-h1 {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 400;
+  font-size: var(--landing-h-size);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  color: var(--color-text-primary);
+}
+
+.landing-h2 {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 400;
+  font-size: var(--landing-h2-size);
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+  color: var(--color-text-primary);
+}
+
+.landing-h3 {
+  font-size: var(--landing-h3-size);
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.landing-body {
+  font-size: var(--landing-body-size);
+  line-height: 1.7;
+  text-wrap: pretty;
+  color: var(--color-muted-foreground);
+}
+
+.landing-section {
+  padding-block: var(--landing-section-py);
+  position: relative;
+  isolation: isolate;
+}
+
+.landing-container {
+  width: 100%;
+  max-width: var(--landing-max-w);
+  margin-inline: auto;
+  padding-inline: clamp(1rem, 4vw, 1.5rem);
+}
+
+.landing-hero-mesh {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background: var(--landing-hero-mesh-1), var(--landing-hero-mesh-2), var(--landing-hero-mesh-3);
+}
+
+.landing-grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.5;
+  background-image: var(--landing-grain);
+  background-size: 240px 240px;
+  mix-blend-mode: overlay;
+}
+
+.landing-accent-word {
+  color: var(--green);
+  font-style: italic;
+  position: relative;
+  display: inline-block;
+}
+
+.landing-accent-word::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -4px;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--green), var(--lime));
+}
+
+.landing-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: color-mix(in srgb, var(--green) 10%, transparent);
+  color: var(--green);
+  border: 1px solid color-mix(in srgb, var(--green) 20%, transparent);
+}
+
+.landing-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--landing-card-shadow);
+  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+}
+
+.landing-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--green) 35%, var(--color-border));
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -100px;
+  z-index: 1000;
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius-md);
+  background: var(--green);
+  color: var(--navy);
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: top 150ms ease;
+}
+
+.skip-link:focus-visible {
+  top: 1rem;
+  outline: 2px solid var(--navy);
+  outline-offset: 2px;
+}
+
+/* Tabular numerals for every metric comparison row */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }

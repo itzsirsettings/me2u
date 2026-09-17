@@ -1,16 +1,21 @@
 import type { Metadata } from "next";
 import LandingHeader from "@/components/landing/LandingHeader";
 import HeroSection from "@/components/landing/HeroSection";
+import HowItWorksSection from "@/components/landing/HowItWorksSection";
 import FeaturesSection from "@/components/landing/FeaturesSection";
+import TrustScoreSection from "@/components/landing/TrustScoreSection";
 import AdvancedToolsSection from "@/components/landing/AdvancedToolsSection";
+import CommunityCirclesSection from "@/components/landing/CommunityCirclesSection";
 import PublicProofSection from "@/components/landing/PublicProofSection";
+import ComparisonSection from "@/components/landing/ComparisonSection";
+import FAQSection from "@/components/landing/FAQSection";
 import LandingCTA from "@/components/landing/LandingCTA";
 import LandingFooter from "@/components/landing/LandingFooter";
 
 export const metadata: Metadata = {
-  title: "Me2U - Trust-Based Interest-Free Peer Lending",
+  title: "Me2U — 0% Interest Loans. Built on Trust. For Every Nigerian.",
   description:
-    "Me2U is a secure peer-to-peer lending app built for individuals and cooperatives, with trust scores, credit builder tools, verified wallets, KYC, marketplace lending, savings goals, daily wallet services, and referral rewards.",
+    "Nigeria's trust-based peer lending platform. Access 0% interest loans, build your Trust Score, join community circles, and save towards goals. No hidden fees, transparent scoring, verified identity. Built for Nigeria and the Diaspora.",
 };
 
 export default function Landing() {
@@ -18,11 +23,16 @@ export default function Landing() {
     <div className="min-h-screen bg-background selection:bg-green/30 font-sans text-foreground">
       <LandingHeader />
       
-      <main>
+      <main id="main-content">
         <HeroSection />
+        <HowItWorksSection />
         <FeaturesSection />
+        <TrustScoreSection />
         <AdvancedToolsSection />
+        <CommunityCirclesSection />
         <PublicProofSection />
+        <ComparisonSection />
+        <FAQSection />
         <LandingCTA />
       </main>
       

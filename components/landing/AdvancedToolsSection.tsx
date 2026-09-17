@@ -11,37 +11,37 @@ import directLoansDarkImage from "@/direct-loans-me2u-transparent-dark.png";
 
 const tools = [
   {
-    id: "deposit",
-    title: "Start with a protected wallet.",
+    id: "wallet",
+    title: "Your wallet, verified and protected.",
     description:
-      "Pay the fixed ₦2,000 deposit, upload your transfer reference and receipt, then complete KYC to unlock withdrawals and loan access.",
+      "Send, receive, and withdraw money with secure identity verification. Every transaction is recorded, giving you a clear financial history that builds trust.",
     imageSrc: protectedWalletImage.src,
     imageDarkSrc: protectedWalletDarkImage.src,
-    imageAlt: "Receipts and calculator for protected wallet onboarding",
+    imageAlt: "Secure digital wallet with verified transaction records",
     imageVariant: "transparent" as const,
-    buttonText: "Start onboarding",
+    buttonText: "Create account",
   },
   {
     id: "marketplace",
-    title: "Peer Marketplace.",
+    title: "Lend or borrow with people you can see.",
     description:
-      "Borrowers and lenders meet in one shared market where listings stay interest-free, transparent, and tied to wallet balances and trust signals.",
+      "Browse verified borrowers and lenders in a transparent marketplace. Match with trusted members based on their Trust Score, repayment history, and community connections.",
     imageSrc: peerMarketplaceImage.src,
     imageDarkSrc: peerMarketplaceDarkImage.src,
-    imageAlt: "People reviewing financial marketplace information",
+    imageAlt: "Peer-to-peer marketplace connecting borrowers and lenders",
     imageVariant: "transparent" as const,
     buttonText: "Explore marketplace",
   },
   {
-    id: "direct-loans",
-    title: "Access 0% loans directly or from matched peers.",
+    id: "loans",
+    title: "Access direct, interest-free loans with clear durations.",
     description:
-      "Use Me2U for direct loans and peer-funded loans with clear durations, wallet checks, repayment visibility, and 0% interest.",
+      "Borrow from Me2U or from verified peers at 0% interest. Every loan comes with a clear repayment schedule, and on-time payments boost your Trust Score.",
     imageSrc: directLoansImage.src,
     imageDarkSrc: directLoansDarkImage.src,
-    imageAlt: "Card payment and digital finance workflow",
+    imageAlt: "Zero-interest loan interface showing repayment schedule",
     imageVariant: "transparent" as const,
-    buttonText: "Request a loan",
+    buttonText: "View loan options",
   },
 ];
 
@@ -56,8 +56,8 @@ export default function AdvancedToolsSection() {
             viewport={{ once: true }}
             className="text-4xl md:text-6xl font-medium text-foreground mb-8 tracking-tight leading-[1.2]"
           >
-            A refined flow from <br/>
-            <span className="text-green">deposit to withdrawal.</span>
+            Built for Trust, <br/>
+            <span className="text-green">Designed for Transparency.</span>
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -66,7 +66,7 @@ export default function AdvancedToolsSection() {
             transition={{ delay: 0.1 }}
             className="max-w-2xl text-lg leading-8 text-muted-foreground md:text-xl"
           >
-            Each step is built for repeat use: clear onboarding, visible marketplace rules, and 0% lending paths that keep trust signals close.
+            From secure wallets to peer lending, every feature puts control in your hands. No hidden fees, no confusing terms—just straightforward tools that help you save, borrow, and lend with confidence.
           </motion.p>
         </div>
 

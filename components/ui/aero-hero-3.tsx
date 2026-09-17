@@ -1,14 +1,12 @@
 "use client";
 
 import { ArrowUpRight } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 
-const ctaBackgroundImage =
-  "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=1800&q=80";
-
-export const Component = () => {
+export default function AeroHeroCta() {
   const router = useRouter();
 
   return (
@@ -24,23 +22,33 @@ export const Component = () => {
       </div>
 
       <div
-        className="landing-cta-image absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${ctaBackgroundImage})` }}
+        className="absolute inset-0"
         aria-hidden="true"
-      >
-      </div>
+        style={{
+          background:
+            "radial-gradient(ellipse 75% 60% at 50% 118%, color-mix(in srgb, var(--green) 18%, transparent), transparent 70%), radial-gradient(ellipse 55% 45% at 88% -12%, color-mix(in srgb, var(--navy) 12%, transparent), transparent 65%)",
+        }}
+      />
       <div className="landing-cta-scrim absolute inset-0" aria-hidden="true" />
       <div className="landing-cta-accent absolute inset-0" aria-hidden="true" />
 
       <div className="relative z-20 mx-auto max-w-5xl px-6 text-center text-foreground">
         <h2 className="mx-auto max-w-4xl text-center font-display text-5xl font-medium leading-[1.04] tracking-tight text-foreground md:text-6xl lg:text-8xl">
-          Build trust first.
+          Join Thousands of Nigerians
           <br />
-          Borrow at 0%.
+          Building Trust Together.
         </h2>
 
         <p className="mx-auto mb-10 mt-8 max-w-2xl text-center text-lg font-normal leading-relaxed text-muted-foreground md:text-xl">
-          Start with a protected wallet, complete KYC, and unlock interest-free peer lending built for real communities.
+          Create your free account, verify your identity, and start borrowing and lending at 0%
+          interest — with no hidden fees. Need a hand?{" "}
+          <Link
+            href="/support"
+            className="text-green hover:text-lime transition-colors underline decoration-green/30 hover:decoration-lime/50"
+          >
+            Our support team is here
+          </Link>
+          .
         </p>
 
         <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -49,7 +57,7 @@ export const Component = () => {
             onClick={() => router.push("/register")}
           >
             <span className="rounded-full bg-green px-7 py-3.5 text-navy transition-colors duration-300 ease-out group-hover:bg-lime">
-              Create account
+              Create Free Account
             </span>
             <div className="relative flex h-fit cursor-pointer items-center overflow-hidden rounded-full bg-green p-5 text-navy transition-colors duration-300 ease-out group-hover:bg-lime">
               <ArrowUpRight className="absolute size-5 -translate-x-1/2 transition-transform duration-300 ease-out group-hover:translate-x-10" />
@@ -58,16 +66,14 @@ export const Component = () => {
           </Button>
 
           <Button
+            asChild
             variant="secondary"
             className="min-h-14 rounded-full border border-[var(--color-border)] bg-card/80 px-8 text-base font-normal text-card-foreground shadow-none backdrop-blur transition-colors hover:bg-card"
-            onClick={() => router.push("/login")}
           >
-            Sign in
+            <Link href="/support">Talk to Support</Link>
           </Button>
         </div>
       </div>
     </section>
   );
-};
-
-export default Component;
+}

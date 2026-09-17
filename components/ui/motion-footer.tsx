@@ -1,11 +1,12 @@
 "use client";
 
-import * as React from "react";
-import { useEffect, useRef } from "react";
-import Link from "next/link";
-import { ArrowUp, LogIn, UserPlus } from "lucide-react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { ArrowUp, LogIn, UserPlus } from "lucide-react";
+import Link from "next/link";
+import * as React from "react";
+import { useEffect, useRef } from "react";
+
 import { cn } from "@/lib/utils";
 
 if (typeof window !== "undefined") {
@@ -323,7 +324,7 @@ export function CinematicFooter() {
                 </MagneticButton>
                 <MagneticButton
                   as={Link}
-                  href="/security"
+                  href="/#trust-score"
                   className="footer-glass-pill rounded-full px-6 py-3 text-xs font-medium text-snow/70 hover:text-snow md:text-sm"
                 >
                   Security
@@ -340,8 +341,16 @@ export function CinematicFooter() {
           </div>
 
           <div className="relative z-20 flex w-full flex-col items-center justify-between gap-6 px-6 pb-8 md:flex-row md:px-12">
-            <div className="order-2 text-[10px] font-semibold uppercase tracking-widest text-snow/52 md:order-1 md:text-xs">
-              © 2026 Me2U. All rights reserved.
+            <div className="order-2 flex flex-col items-center gap-2 text-center md:order-1 md:items-start md:text-left">
+              <div className="text-[10px] font-semibold uppercase tracking-widest text-snow/52 md:text-xs">
+                © 2026 Me2U — Merenity Systems
+              </div>
+              <a
+                href="mailto:admin@me2ulend.online"
+                className="text-[10px] font-medium text-snow/42 hover:text-green transition-colors md:text-xs"
+              >
+                admin@me2ulend.online
+              </a>
             </div>
 
             <MagneticButton
