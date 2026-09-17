@@ -408,13 +408,14 @@ function RegisterContent() {
                   >
                     Change Email
                   </button>
-                  <LoadingButton
-                    label="Verify Email"
-                    loadingText="Verifying..."
-                    successText="Verified!"
-                    disabled={regEmailCode.length !== 6}
-                    onClick={() => {}}
-                  />
+                  <button
+                    type="submit"
+                    className="btn-primary flex-1 h-12 text-sm"
+                    disabled={regEmailCode.length !== 6 || isSubmitting}
+                    aria-busy={isSubmitting}
+                  >
+                    {isSubmitting ? "Verifying..." : "Verify Email"}
+                  </button>
                 </div>
               </form>
             </motion.div>
