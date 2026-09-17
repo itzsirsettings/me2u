@@ -1,0 +1,11 @@
+# Explicit Node provider prevents nested Deno functions from changing detection.
+providers = ["node"]
+
+[variables]
+NIXPACKS_NODE_VERSION = "22"
+
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = ["npm run build"]

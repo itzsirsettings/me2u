@@ -27,7 +27,9 @@ export default function Login() {
   const router = useRouter();
 
   // Forgot password flow states
-  const [forgotStep, setForgotStep] = useState<"none" | "send_code" | "verify_code" | "reset">("none");
+  const [forgotStep, setForgotStep] = useState<"none" | "send_code" | "verify_code" | "reset">(
+    "none",
+  );
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotCode, setForgotCode] = useState("");
   const [forgotToken, setForgotToken] = useState("");
@@ -78,11 +80,7 @@ export default function Login() {
       }
       setForgotToken(data.token);
       setForgotStep("verify_code");
-      if (data.loggedToConsole) {
-        toast.success("Verification code sent! (Check server console in development)");
-      } else {
-        toast.success("Verification code sent to your email!");
-      }
+      toast.success("Verification code sent to your email!");
     } catch (err) {
       toast.error("Failed to send verification code.");
     } finally {
@@ -202,7 +200,10 @@ export default function Login() {
                   });
                 }}
               >
-                <label htmlFor="login-identifier" className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-secondary">
+                <label
+                  htmlFor="login-identifier"
+                  className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-secondary"
+                >
                   Email or username
                 </label>
                 <Input
@@ -214,7 +215,10 @@ export default function Login() {
                   className="mb-4"
                   autoComplete="username"
                 />
-                <label htmlFor="login-password" className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-secondary">
+                <label
+                  htmlFor="login-password"
+                  className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-secondary"
+                >
                   Password
                 </label>
                 <Input
@@ -243,7 +247,6 @@ export default function Login() {
                   successText="Login successful!"
                   onClick={handleLogin}
                 />
-
               </form>
             </motion.div>
           )}
@@ -257,13 +260,18 @@ export default function Login() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <h1 className="mb-2 text-center text-3xl font-display font-bold">Forgot Password</h1>
+              <h1 className="mb-2 text-center text-3xl font-display font-bold">
+                Forgot Password
+              </h1>
               <p className="mb-6 text-center text-sm text-[var(--color-text-secondary)]">
                 Enter your email address and we will send you a verification code.
               </p>
 
               <div className="space-y-6">
-                <label htmlFor="forgot-email" className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-secondary">
+                <label
+                  htmlFor="forgot-email"
+                  className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-secondary"
+                >
                   Email Address
                 </label>
                 <Input
@@ -310,7 +318,10 @@ export default function Login() {
 
               <form onSubmit={verifyForgotCode} className="space-y-6">
                 <div>
-                  <label htmlFor="forgot-otp-input" className="mb-3 block text-base font-sans font-bold text-[var(--color-text-primary)]">
+                  <label
+                    htmlFor="forgot-otp-input"
+                    className="mb-3 block text-base font-sans font-bold text-[var(--color-text-primary)]"
+                  >
                     Enter 6-Digit Code
                   </label>
                   <input
@@ -359,14 +370,19 @@ export default function Login() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <h1 className="mb-2 text-center text-3xl font-display font-bold">Reset Password</h1>
+              <h1 className="mb-2 text-center text-3xl font-display font-bold">
+                Reset Password
+              </h1>
               <p className="mb-6 text-center text-sm text-[var(--color-text-secondary)]">
                 Enter your new password for <strong>{forgotEmail}</strong>.
               </p>
 
               <div className="space-y-6">
                 <div>
-                  <label htmlFor="new-password" className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-secondary">
+                  <label
+                    htmlFor="new-password"
+                    className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-secondary"
+                  >
                     New Password
                   </label>
                   <div className="relative">
@@ -393,7 +409,10 @@ export default function Login() {
                 </div>
 
                 <div>
-                  <label htmlFor="confirm-password" className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-secondary">
+                  <label
+                    htmlFor="confirm-password"
+                    className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-secondary"
+                  >
                     Confirm Password
                   </label>
                   <Input

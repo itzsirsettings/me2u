@@ -3,7 +3,11 @@
 import Me2uIcon, { type Me2uIconName } from "@/components/Me2uIcon";
 import LoadingButton from "@/LoadingButton";
 import { Input } from "@/components/ui/input";
-import { getCountryConfig, globalCountryOptions, languageOptions } from "@/lib/product-features";
+import {
+  getCountryConfig,
+  globalCountryOptions,
+  languageOptions,
+} from "@/lib/product-features";
 import { useStore } from "@/lib/store";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type InputHTMLAttributes, useState, useEffect, Suspense } from "react";
@@ -45,7 +49,10 @@ function RegistrationField({
 }: FieldProps) {
   return (
     <div>
-      <label htmlFor={id} className="mb-3 block text-base font-sans font-bold text-[var(--color-text-primary)]">
+      <label
+        htmlFor={id}
+        className="mb-3 block text-base font-sans font-bold text-[var(--color-text-primary)]"
+      >
         {label}
       </label>
       <div className="relative">
@@ -69,18 +76,24 @@ function RegistrationField({
         />
         {action}
       </div>
-      {helper && <p className="mt-3 text-sm leading-relaxed text-[var(--color-text-secondary)]">{helper}</p>}
+      {helper && (
+        <p className="mt-3 text-sm leading-relaxed text-[var(--color-text-secondary)]">
+          {helper}
+        </p>
+      )}
     </div>
   );
 }
 
 export default function Register() {
   return (
-    <Suspense fallback={
-      <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-primary)] p-4">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-accent-primary)] border-t-transparent" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-primary)] p-4">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-accent-primary)] border-t-transparent" />
+        </div>
+      }
+    >
       <RegisterContent />
     </Suspense>
   );
@@ -92,7 +105,7 @@ function RegisterContent() {
   const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Standard registration email verification states
   const [regStep, setRegStep] = useState<"email" | "verify_email" | "details">("email");
   const [regEmail, setRegEmail] = useState("");
@@ -114,12 +127,12 @@ function RegisterContent() {
   useEffect(() => {
     const ref = searchParams.get("ref");
     if (ref) {
-      setFormData(prev => ({ ...prev, referral: ref }));
+      setFormData((prev) => ({ ...prev, referral: ref }));
     } else {
       // Check localStorage for referral code from /r/[code] redirect
       const storedRef = localStorage.getItem("referral_code");
       if (storedRef) {
-        setFormData(prev => ({ ...prev, referral: storedRef }));
+        setFormData((prev) => ({ ...prev, referral: storedRef }));
         localStorage.removeItem("referral_code");
       }
     }
@@ -177,11 +190,7 @@ function RegisterContent() {
       }
       setRegEmailToken(data.token);
       setRegStep("verify_email");
-      if (data.loggedToConsole) {
-        toast.success("Verification code sent! (Check server console in development)");
-      } else {
-        toast.success("Verification code sent to your email!");
-      }
+      toast.success("Verification code sent to your email!");
     } catch (err) {
       toast.error("Failed to send verification code.");
     } finally {
@@ -266,7 +275,11 @@ function RegisterContent() {
       toast.success(`Welcome ${data.firstName}. Complete your registration deposit next.`);
       router.push("/wallet");
     } catch (err) {
-      if ((err as Error).message !== "Validation failed" && (err as Error).message !== "Unable to create account" && (err as Error).message !== "Login failed") {
+      if (
+        (err as Error).message !== "Validation failed" &&
+        (err as Error).message !== "Unable to create account" &&
+        (err as Error).message !== "Login failed"
+      ) {
         toast.error("Unable to complete registration.");
       }
       throw err;
@@ -311,7 +324,10 @@ function RegisterContent() {
               className="space-y-6"
             >
               <div className="rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-5 shadow-[4px_4px_0px_var(--color-shadow)] md:p-8">
-                <label htmlFor="reg-email-input" className="mb-3 block text-base font-sans font-bold text-[var(--color-text-primary)]">
+                <label
+                  htmlFor="reg-email-input"
+                  className="mb-3 block text-base font-sans font-bold text-[var(--color-text-primary)]"
+                >
                   Email Address
                 </label>
                 <Input
@@ -352,7 +368,10 @@ function RegisterContent() {
                 className="space-y-6 rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-5 shadow-[4px_4px_0px_var(--color-shadow)] md:p-8"
               >
                 <div>
-                  <label htmlFor="reg-otp-input" className="mb-3 block text-base font-sans font-bold text-[var(--color-text-primary)]">
+                  <label
+                    htmlFor="reg-otp-input"
+                    className="mb-3 block text-base font-sans font-bold text-[var(--color-text-primary)]"
+                  >
                     Enter 6-Digit Code
                   </label>
                   <input
@@ -371,7 +390,8 @@ function RegisterContent() {
                     required
                   />
                   <p className="mt-3 text-sm text-[var(--color-text-secondary)]">
-                    Enter the code from the verification email sent to <strong>{regEmail}</strong>.
+                    Enter the code from the verification email sent to{" "}
+                    <strong>{regEmail}</strong>.
                   </p>
                 </div>
 
@@ -448,7 +468,9 @@ function RegisterContent() {
                   placeholder="Username"
                   autoComplete="username"
                   helper="Only letters and numbers allowed, no spaces or symbols."
-                  onChange={(value) => updateField("username")(value.replace(/[^a-zA-Z0-9]/g, ""))}
+                  onChange={(value) =>
+                    updateField("username")(value.replace(/[^a-zA-Z0-9]/g, ""))
+                  }
                 />
                 <RegistrationField
                   id="register-phone"
@@ -462,7 +484,10 @@ function RegisterContent() {
                   onChange={updateField("phone")}
                 />
                 <div>
-                  <label htmlFor="register-country" className="mb-3 block text-base font-sans font-bold text-[var(--color-text-primary)]">
+                  <label
+                    htmlFor="register-country"
+                    className="mb-3 block text-base font-sans font-bold text-[var(--color-text-primary)]"
+                  >
                     Country
                   </label>
                   <select
@@ -491,7 +516,10 @@ function RegisterContent() {
                   </p>
                 </div>
                 <div>
-                  <label htmlFor="register-language" className="mb-3 block text-base font-sans font-bold text-[var(--color-text-primary)]">
+                  <label
+                    htmlFor="register-language"
+                    className="mb-3 block text-base font-sans font-bold text-[var(--color-text-primary)]"
+                  >
                     Preferred Language
                   </label>
                   <select
@@ -508,7 +536,8 @@ function RegisterContent() {
                     ))}
                   </select>
                   <p className="mt-3 text-sm leading-relaxed text-[var(--color-text-secondary)]">
-                    Me2U can localize currency, terms, support text, and KYC guidance as each country is enabled.
+                    Me2U can localize currency, terms, support text, and KYC guidance as each
+                    country is enabled.
                   </p>
                 </div>
                 <RegistrationField

@@ -60,7 +60,9 @@ export async function POST(request: Request) {
 
     // ── STEP 1: Send verification code ──────────────────────────────
     if (step === "send_code") {
-      const email = String(body.email || "").trim().toLowerCase();
+      const email = String(body.email || "")
+        .trim()
+        .toLowerCase();
 
       if (!email) return NextResponse.json({ error: "Email is required." }, { status: 400 });
       if (!isValidEmail(email))
@@ -100,13 +102,14 @@ export async function POST(request: Request) {
         success: true,
         email,
         token,
-        loggedToConsole: !!emailResult.loggedToConsole,
       });
     }
 
     // ── STEP 2: Verify code ──────────────────────────────────────────
     if (step === "verify_code") {
-      const email = String(body.email || "").trim().toLowerCase();
+      const email = String(body.email || "")
+        .trim()
+        .toLowerCase();
       const code = String(body.code || "").trim();
       const token = String(body.token || "").trim();
 
@@ -121,7 +124,9 @@ export async function POST(request: Request) {
 
       if (isRateLimited(`register-verify:${email}`, 8, 15 * 60_000)) {
         return NextResponse.json(
-          { error: "Too many verification attempts for this email. Please request a new code." },
+          {
+            error: "Too many verification attempts for this email. Please request a new code.",
+          },
           { status: 429 },
         );
       }
@@ -154,7 +159,9 @@ export async function POST(request: Request) {
 
     // ── STEP 3: Create account ───────────────────────────────────────
     if (step === "verify_and_register") {
-      const email = String(body.email || "").trim().toLowerCase();
+      const email = String(body.email || "")
+        .trim()
+        .toLowerCase();
       const registrationToken = String(body.registrationToken || "").trim();
 
       if (!email || !registrationToken) {
@@ -164,7 +171,13 @@ export async function POST(request: Request) {
         );
       }
 
-      if (!verifySignedFlowToken({ email, token: registrationToken, purpose: "register_complete" })) {
+      if (
+        !verifySignedFlowToken({
+          email,
+          token: registrationToken,
+          purpose: "register_complete",
+        })
+      ) {
         return NextResponse.json(
           { error: "Email verification has expired. Request a new code." },
           { status: 400 },
@@ -179,13 +192,23 @@ export async function POST(request: Request) {
       }
 
       // ── Validate all fields ──
-      const firstName = String(body.firstName || "").trim().replace(/\s+/g, " ");
-      const lastName = String(body.lastName || "").trim().replace(/\s+/g, " ");
-      const username = String(body.username || "").trim().toLowerCase();
+      const firstName = String(body.firstName || "")
+        .trim()
+        .replace(/\s+/g, " ");
+      const lastName = String(body.lastName || "")
+        .trim()
+        .replace(/\s+/g, " ");
+      const username = String(body.username || "")
+        .trim()
+        .toLowerCase();
       const phone = String(body.phone || "").trim();
       const referral = String(body.referral || "").trim();
-      const countryCode = String(body.countryCode || "NG").trim().toUpperCase();
-      const preferredLanguage = String(body.preferredLanguage || "en").trim().toLowerCase();
+      const countryCode = String(body.countryCode || "NG")
+        .trim()
+        .toUpperCase();
+      const preferredLanguage = String(body.preferredLanguage || "en")
+        .trim()
+        .toLowerCase();
       const password = String(body.password || "");
 
       if (!password)
@@ -196,7 +219,12 @@ export async function POST(request: Request) {
           { status: 400 },
         );
 
-      if (firstName.length < 2 || firstName.length > 80 || lastName.length < 2 || lastName.length > 80)
+      if (
+        firstName.length < 2 ||
+        firstName.length > 80 ||
+        lastName.length < 2 ||
+        lastName.length > 80
+      )
         return NextResponse.json({ error: "Enter your first and last name." }, { status: 400 });
 
       if (!/^[a-z0-9]{3,30}$/.test(username))
@@ -297,7 +325,10 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(
-      { error: "Invalid registration step. Use 'send_code', 'verify_code', or 'verify_and_register'." },
+      {
+        error:
+          "Invalid registration step. Use 'send_code', 'verify_code', or 'verify_and_register'.",
+      },
       { status: 400 },
     );
   } catch (error) {

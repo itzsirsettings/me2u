@@ -17,10 +17,14 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const email = String(body.email || "").trim().toLowerCase();
+    const email = String(body.email || "")
+      .trim()
+      .toLowerCase();
 
-    if (!email) return NextResponse.json({ error: "Email address is required." }, { status: 400 });
-    if (!isValidEmail(email)) return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
+    if (!email)
+      return NextResponse.json({ error: "Email address is required." }, { status: 400 });
+    if (!isValidEmail(email))
+      return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
 
     if (isRateLimited(`forgot-password-email:${email}`, 3, 15 * 60_000)) {
       return NextResponse.json(
@@ -56,7 +60,6 @@ export async function POST(request: Request) {
       success: true,
       email,
       token,
-      loggedToConsole: !!emailResult.loggedToConsole,
     });
   } catch (error) {
     return NextResponse.json(
