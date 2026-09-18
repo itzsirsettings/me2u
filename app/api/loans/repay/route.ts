@@ -10,11 +10,11 @@ import { withUserTransaction } from "@/lib/railway/client";
 export async function POST(request: Request) {
   try {
     const clientIp = getClientIp(request);
-    if (isRateLimited(`loan-repay-ip:${clientIp}`, 30, 60_000)) return tooManyRequestsResponse();
+    if (await isRateLimited(`loan-repay-ip:${clientIp}`, 30, 60_000)) return tooManyRequestsResponse();
 
     const auth = await requireAuthenticatedUser(request);
     if ("response" in auth) return auth.response;
-    if (isRateLimited(`loan-repay-user:${auth.user.id}`, 12, 60_000)) return tooManyRequestsResponse();
+    if (await isRateLimited(`loan-repay-user:${auth.user.id}`, 12, 60_000)) return tooManyRequestsResponse();
 
     const body = await request.json();
     const loanId = String(body.loanId || "");

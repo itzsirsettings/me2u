@@ -157,12 +157,12 @@ export default function SuccessStoryCarousel() {
             <Quote className="w-12 h-12 text-green/20 mb-4" />
 
             {/* Story Title */}
-            <h3 className="text-2xl md:text-3xl font-black text-card-foreground mb-4 leading-tight">
+            <h3 className="landing-h3 mb-4">
               {currentStory.title}
             </h3>
 
             {/* Story Content */}
-            <p className="text-lg text-muted-foreground leading-relaxed mb-6 line-clamp-4">
+            <p className="landing-body mb-6 line-clamp-4">
               {currentStory.story}
             </p>
 

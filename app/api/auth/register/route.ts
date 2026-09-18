@@ -12,10 +12,13 @@ import {
   verifySignedFlowToken,
   verifySignedOtpToken,
 } from "@/lib/server/otp";
+import { createOtp, consumeOtpAttempt } from "@/lib/server/otp-db";
 import { sendOtpEmail } from "@/lib/server/email";
 import { createUser, recordReferral } from "@/lib/railway/auth";
 import { query } from "@/lib/railway/client";
 import { assignPaystackDvaForNewUser } from "@/lib/server/paystack-dva";
+import { requestMeta } from "@/lib/server/idempotency";
+import { tooManyRequestsResponse } from "@/lib/server/auth";
 
 function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -32,113 +35,122 @@ function registrationErrorResponse(error: unknown) {
     normalized.includes("email_exists") ||
     normalized.includes("auth_users_email_key")
   ) {
-    return NextResponse.json({ error: "Email is already registered." }, { status: 409 });
+    return NextResponse.json(
+      { error: "Unable to complete registration at this time." },
+      { status: 400, headers: { "Cache-Control": "no-store" } },
+    );
   }
 
   if (
     normalized.includes("profiles_username_lower_unique_idx") ||
     (normalized.includes("duplicate key") && normalized.includes("username"))
   ) {
-    return NextResponse.json({ error: "Username is already taken." }, { status: 409 });
+    return NextResponse.json(
+      { error: "Username is already taken." },
+      { status: 409, headers: { "Cache-Control": "no-store" } },
+    );
   }
 
-  return NextResponse.json({ error: message }, { status: 400 });
+  return NextResponse.json(
+    { error: message },
+    { status: 400, headers: { "Cache-Control": "no-store" } },
+  );
+}
+
+function buildBlindRegisterResponse(email: string, token: string) {
+  return NextResponse.json(
+    { success: true, email, token },
+    { headers: { "Cache-Control": "no-store" } },
+  );
 }
 
 export async function POST(request: Request) {
   try {
+    const meta = requestMeta(request);
     const clientIp = getClientIp(request);
-    if (isRateLimited(`register:${clientIp}`, 5, 10 * 60_000)) {
-      return NextResponse.json(
-        { error: "Too many registration attempts. Please wait and try again." },
-        { status: 429 },
-      );
+
+    if (await isRateLimited(`register:${clientIp}`, 5, 10 * 60_000)) {
+      return tooManyRequestsResponse();
     }
 
     const body = await request.json();
     const step = String(body.step || "").trim();
 
-    // ── STEP 1: Send verification code ──────────────────────────────
     if (step === "send_code") {
-      const email = String(body.email || "")
-        .trim()
-        .toLowerCase();
+      const email = String(body.email || "").trim().toLowerCase();
 
-      if (!email) return NextResponse.json({ error: "Email is required." }, { status: 400 });
-      if (!isValidEmail(email))
-        return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
-
-      if (isRateLimited(`register-email:${email}`, 3, 15 * 60_000)) {
+      if (!email) {
         return NextResponse.json(
-          { error: "Too many attempts for this email. Please wait and try again." },
-          { status: 429 },
+          { error: "Email is required." },
+          { status: 400, headers: { "Cache-Control": "no-store" } },
+        );
+      }
+      if (!isValidEmail(email)) {
+        return NextResponse.json(
+          { error: "Enter a valid email address." },
+          { status: 400, headers: { "Cache-Control": "no-store" } },
         );
       }
 
-      // Check if email already registered (profiles table)
+      if (await isRateLimited(`register-email:${email}`, 3, 15 * 60_000)) {
+        return tooManyRequestsResponse();
+      }
+
       const { rows } = await query<{ id: string }>(
         `SELECT id FROM profiles WHERE email = $1 LIMIT 1`,
         [email],
       );
-      if (rows.length > 0) {
-        return NextResponse.json(
-          { error: "Email is already registered. Please login instead." },
-          { status: 409 },
-        );
-      }
+      const alreadyRegistered = rows.length > 0;
 
       const code = generateOtpCode();
-      const token = createSignedOtpToken({ email, code, purpose: "register" });
-      const emailResult = await sendOtpEmail(email, code);
+      const signedToken = createSignedOtpToken({ email, code, purpose: "register" });
 
-      if (!emailResult.success) {
-        return NextResponse.json(
-          { error: emailResult.error || "Failed to send verification email." },
-          { status: 500 },
-        );
+      if (!alreadyRegistered) {
+        await createOtp(email, "register", {
+          code,
+          ttlMs: 10 * 60_000,
+          ip: meta.ip,
+          userAgent: meta.userAgent,
+        }).catch(() => undefined);
+        await sendOtpEmail(email, code).catch(() => ({ success: false }));
       }
 
-      return NextResponse.json({
-        success: true,
-        email,
-        token,
-      });
+      return buildBlindRegisterResponse(email, signedToken);
     }
 
-    // ── STEP 2: Verify code ──────────────────────────────────────────
     if (step === "verify_code") {
-      const email = String(body.email || "")
-        .trim()
-        .toLowerCase();
+      const email = String(body.email || "").trim().toLowerCase();
       const code = String(body.code || "").trim();
       const token = String(body.token || "").trim();
 
-      if (!email || !code || !token)
+      if (!email || !code || !token) {
         return NextResponse.json(
           { error: "Email, verification code, and token are required." },
-          { status: 400 },
+          { status: 400, headers: { "Cache-Control": "no-store" } },
         );
-
-      if (!isValidEmail(email))
-        return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
-
-      if (isRateLimited(`register-verify:${email}`, 8, 15 * 60_000)) {
+      }
+      if (!isValidEmail(email)) {
         return NextResponse.json(
-          {
-            error: "Too many verification attempts for this email. Please request a new code.",
-          },
-          { status: 429 },
+          { error: "Enter a valid email address." },
+          { status: 400, headers: { "Cache-Control": "no-store" } },
         );
       }
 
-      if (!verifySignedOtpToken({ email, code, token, purpose: "register" })) {
+      if (await isRateLimited(`register-verify:${email}`, 8, 15 * 60_000)) {
+        return tooManyRequestsResponse();
+      }
+
+      const signedOk = verifySignedOtpToken({ email, code, token, purpose: "register" });
+      const consumeResult = await consumeOtpAttempt(email, "register", code);
+      const dbOk = consumeResult.outcome === "ok";
+
+      if (!signedOk || !dbOk) {
         return NextResponse.json(
           { error: "Invalid or expired verification code." },
-          { status: 400 },
+          { status: 400, headers: { "Cache-Control": "no-store" } },
         );
       }
 
-      // Re-check email isn't registered
       const { rows } = await query<{ id: string }>(
         `SELECT id FROM profiles WHERE email = $1 LIMIT 1`,
         [email],
@@ -146,28 +158,28 @@ export async function POST(request: Request) {
       if (rows.length > 0) {
         return NextResponse.json(
           { error: "Email is already registered. Please login instead." },
-          { status: 409 },
+          { status: 409, headers: { "Cache-Control": "no-store" } },
         );
       }
 
-      return NextResponse.json({
-        success: true,
-        email,
-        registrationToken: createSignedFlowToken({ email, purpose: "register_complete" }),
-      });
+      return NextResponse.json(
+        {
+          success: true,
+          email,
+          registrationToken: createSignedFlowToken({ email, purpose: "register_complete" }),
+        },
+        { headers: { "Cache-Control": "no-store" } },
+      );
     }
 
-    // ── STEP 3: Create account ───────────────────────────────────────
     if (step === "verify_and_register") {
-      const email = String(body.email || "")
-        .trim()
-        .toLowerCase();
+      const email = String(body.email || "").trim().toLowerCase();
       const registrationToken = String(body.registrationToken || "").trim();
 
       if (!email || !registrationToken) {
         return NextResponse.json(
           { error: "Email verification is required before registration." },
-          { status: 400 },
+          { status: 400, headers: { "Cache-Control": "no-store" } },
         );
       }
 
@@ -180,90 +192,103 @@ export async function POST(request: Request) {
       ) {
         return NextResponse.json(
           { error: "Email verification has expired. Request a new code." },
-          { status: 400 },
+          { status: 400, headers: { "Cache-Control": "no-store" } },
         );
       }
 
-      if (isRateLimited(`register-email:${email}`, 3, 15 * 60_000)) {
-        return NextResponse.json(
-          { error: "Too many attempts for this email. Please wait and try again." },
-          { status: 429 },
-        );
+      if (await isRateLimited(`register-email:${email}`, 3, 15 * 60_000)) {
+        return tooManyRequestsResponse();
       }
 
-      // ── Validate all fields ──
-      const firstName = String(body.firstName || "")
-        .trim()
-        .replace(/\s+/g, " ");
-      const lastName = String(body.lastName || "")
-        .trim()
-        .replace(/\s+/g, " ");
-      const username = String(body.username || "")
-        .trim()
-        .toLowerCase();
+      const firstName = String(body.firstName || "").trim().replace(/\s+/g, " ");
+      const lastName = String(body.lastName || "").trim().replace(/\s+/g, " ");
+      const username = String(body.username || "").trim().toLowerCase();
       const phone = String(body.phone || "").trim();
       const referral = String(body.referral || "").trim();
-      const countryCode = String(body.countryCode || "NG")
-        .trim()
-        .toUpperCase();
-      const preferredLanguage = String(body.preferredLanguage || "en")
-        .trim()
-        .toLowerCase();
+      const countryCode = String(body.countryCode || "NG").trim().toUpperCase();
+      const preferredLanguage = String(body.preferredLanguage || "en").trim().toLowerCase();
       const password = String(body.password || "");
 
-      if (!password)
-        return NextResponse.json({ error: "Password is required." }, { status: 400 });
-      if (password.length < 8)
+      if (!password) {
+        return NextResponse.json(
+          { error: "Password is required." },
+          { status: 400, headers: { "Cache-Control": "no-store" } },
+        );
+      }
+      if (password.length < 8) {
         return NextResponse.json(
           { error: "Password must be at least 8 characters." },
-          { status: 400 },
+          { status: 400, headers: { "Cache-Control": "no-store" } },
         );
+      }
 
       if (
         firstName.length < 2 ||
         firstName.length > 80 ||
         lastName.length < 2 ||
         lastName.length > 80
-      )
-        return NextResponse.json({ error: "Enter your first and last name." }, { status: 400 });
+      ) {
+        return NextResponse.json(
+          { error: "Enter your first and last name." },
+          { status: 400, headers: { "Cache-Control": "no-store" } },
+        );
+      }
 
-      if (!/^[a-z0-9]{3,30}$/.test(username))
+      if (!/^[a-z0-9]{3,30}$/.test(username)) {
         return NextResponse.json(
           { error: "Username must be 3 to 30 letters and numbers only." },
-          { status: 400 },
+          { status: 400, headers: { "Cache-Control": "no-store" } },
         );
+      }
 
       const phoneDigits = phone.replace(/\D/g, "");
-      if (phoneDigits.length < 7 || phoneDigits.length > 15)
-        return NextResponse.json({ error: "Enter a valid phone number." }, { status: 400 });
+      if (phoneDigits.length < 7 || phoneDigits.length > 15) {
+        return NextResponse.json(
+          { error: "Enter a valid phone number." },
+          { status: 400, headers: { "Cache-Control": "no-store" } },
+        );
+      }
 
-      if (referral.length > 40)
-        return NextResponse.json({ error: "Referral code is too long." }, { status: 400 });
+      if (referral.length > 40) {
+        return NextResponse.json(
+          { error: "Referral code is too long." },
+          { status: 400, headers: { "Cache-Control": "no-store" } },
+        );
+      }
 
-      if (!isSupportedCountryCode(countryCode))
-        return NextResponse.json({ error: "Choose a supported country." }, { status: 400 });
+      if (!isSupportedCountryCode(countryCode)) {
+        return NextResponse.json(
+          { error: "Choose a supported country." },
+          { status: 400, headers: { "Cache-Control": "no-store" } },
+        );
+      }
 
-      if (!isSupportedLanguageCode(preferredLanguage))
-        return NextResponse.json({ error: "Choose a supported language." }, { status: 400 });
+      if (!isSupportedLanguageCode(preferredLanguage)) {
+        return NextResponse.json(
+          { error: "Choose a supported language." },
+          { status: 400, headers: { "Cache-Control": "no-store" } },
+        );
+      }
 
       const country = getCountryConfig(countryCode);
 
-      // ── Check username uniqueness ──
       const { rows: usernameRows } = await query<{ id: string }>(
         `SELECT id FROM profiles WHERE lower(username) = lower($1) LIMIT 1`,
         [username],
       );
       if (usernameRows.length > 0) {
-        return NextResponse.json({ error: "Username is already taken." }, { status: 409 });
+        return NextResponse.json(
+          { error: "Username is already taken." },
+          { status: 409, headers: { "Cache-Control": "no-store" } },
+        );
       }
 
-      // ── Resolve referrer ──
       let referredBy: string | null = null;
       if (referral) {
         if (referral.toLowerCase() === username.toLowerCase()) {
           return NextResponse.json(
             { error: "You cannot use your own username as a referral." },
-            { status: 400 },
+            { status: 400, headers: { "Cache-Control": "no-store" } },
           );
         }
         const { rows: referrerRows } = await query<{ id: string }>(
@@ -273,13 +298,12 @@ export async function POST(request: Request) {
         if (referrerRows.length === 0) {
           return NextResponse.json(
             { error: "Referral username was not found." },
-            { status: 400 },
+            { status: 400, headers: { "Cache-Control": "no-store" } },
           );
         }
         referredBy = referrerRows[0].id;
       }
 
-      // ── Create user (auth_users + profiles + wallets in one transaction) ──
       const { id: userId } = await createUser({
         email,
         password,
@@ -294,12 +318,10 @@ export async function POST(request: Request) {
         preferredLanguage,
       });
 
-      // ── Record referral relationship ──
       if (referredBy) {
         await recordReferral(referredBy, userId);
       }
 
-      // ── Assign Paystack DVA (optional, non-blocking) ──
       let walletAccountStatus: string | null = null;
       if (process.env.PAYSTACK_DVA_ENABLED === "true") {
         try {
@@ -329,7 +351,7 @@ export async function POST(request: Request) {
         error:
           "Invalid registration step. Use 'send_code', 'verify_code', or 'verify_and_register'.",
       },
-      { status: 400 },
+      { status: 400, headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {
     return registrationErrorResponse(error);

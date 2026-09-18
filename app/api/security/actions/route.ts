@@ -34,7 +34,7 @@ function readAction(value: unknown): SecurityAction {
 export async function GET(request: Request) {
   try {
     const clientIp = getClientIp(request);
-    if (isRateLimited(`security-actions-get-ip:${clientIp}`, 60, 60_000)) return tooManyRequestsResponse();
+    if (await isRateLimited(`security-actions-get-ip:${clientIp}`, 60, 60_000)) return tooManyRequestsResponse();
 
     const auth = await requireAuthenticatedUser(request);
     if ("response" in auth) return auth.response;
@@ -67,11 +67,11 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const clientIp = getClientIp(request);
-    if (isRateLimited(`security-actions-post-ip:${clientIp}`, 30, 60_000)) return tooManyRequestsResponse();
+    if (await isRateLimited(`security-actions-post-ip:${clientIp}`, 30, 60_000)) return tooManyRequestsResponse();
 
     const auth = await requireAuthenticatedUser(request);
     if ("response" in auth) return auth.response;
-    if (isRateLimited(`security-actions-user:${auth.user.id}`, 20, 60_000)) return tooManyRequestsResponse();
+    if (await isRateLimited(`security-actions-user:${auth.user.id}`, 20, 60_000)) return tooManyRequestsResponse();
 
     const body = await request.json().catch(() => ({}));
     const action = readAction(body.action);

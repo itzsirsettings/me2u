@@ -15,11 +15,11 @@ const listingTypes = new Set(["borrow_request", "lending_offer"]);
 export async function POST(request: Request) {
   try {
     const clientIp = getClientIp(request);
-    if (isRateLimited(`marketplace-create-ip:${clientIp}`, 30, 60_000)) return tooManyRequestsResponse();
+    if (await isRateLimited(`marketplace-create-ip:${clientIp}`, 30, 60_000)) return tooManyRequestsResponse();
 
     const auth = await requireAuthenticatedUser(request);
     if ("response" in auth) return auth.response;
-    if (isRateLimited(`marketplace-create-user:${auth.user.id}`, 12, 60_000)) return tooManyRequestsResponse();
+    if (await isRateLimited(`marketplace-create-user:${auth.user.id}`, 12, 60_000)) return tooManyRequestsResponse();
 
     const body = await request.json();
     const type = String(body.type || "");

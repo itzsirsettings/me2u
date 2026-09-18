@@ -11,11 +11,11 @@ import { getSecurityDeposit } from "@/lib/loans";
 export async function POST(request: Request) {
   try {
     const clientIp = getClientIp(request);
-    if (isRateLimited(`marketplace-accept-ip:${clientIp}`, 30, 60_000)) return tooManyRequestsResponse();
+    if (await isRateLimited(`marketplace-accept-ip:${clientIp}`, 30, 60_000)) return tooManyRequestsResponse();
 
     const auth = await requireAuthenticatedUser(request);
     if ("response" in auth) return auth.response;
-    if (isRateLimited(`marketplace-accept-user:${auth.user.id}`, 12, 60_000)) return tooManyRequestsResponse();
+    if (await isRateLimited(`marketplace-accept-user:${auth.user.id}`, 12, 60_000)) return tooManyRequestsResponse();
 
     const body = await request.json();
     const itemId = String(body.itemId || "");

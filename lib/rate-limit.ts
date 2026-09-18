@@ -1,4 +1,5 @@
 import Redis from "ioredis";
+import baseLogger from "@/lib/server/logger";
 
 type Bucket = {
   count: number;
@@ -17,9 +18,19 @@ function getRedis(): Redis | null {
     return redis;
   }
   try {
-    redis = new Redis(url, { maxRetriesPerRequest: 1, enableReadyCheck: false, lazyConnect: true });
-    redis.on("error", () => {
-      // Fall back to in-memory buckets when Redis is unreachable.
+    redis = new Redis(url, {
+      maxRetriesPerRequest: 1,
+      enableReadyCheck: false,
+      lazyConnect: true,
+      connectTimeout: 2000,
+      commandTimeout: 1500,
+    });
+    redis.on("error", (err) => {
+      try {
+        baseLogger.warn({ message: err?.message }, "[redis_rate_limit_error]");
+      } catch {
+        // fall back silently to in-memory
+      }
     });
     redis.connect().catch(() => undefined);
   } catch {
@@ -50,13 +61,20 @@ function isRateLimitedMemory(key: string, limit: number, windowMs: number) {
   }
 
   bucket.count += 1;
+  if (bucket.count === limit + 1) {
+    try {
+      baseLogger.warn({ key, limit, windowMs }, "[rate_limit_memory_hit]");
+    } catch {
+      // ignore
+    }
+  }
   return bucket.count > limit;
 }
 
 /**
  * Distributed-safe rate limiter.
- * Uses Redis (INCR + PEXPIRE) when REDIS_URL is configured, otherwise falls
- * back to the in-process bucket map for local development / single instance.
+ * Uses Redis (INCR + PEXPIRE — sliding-window semantics via PEXPIRE on every call)
+ * when REDIS_URL is configured, otherwise falls back to in-process bucket map.
  */
 export async function isRateLimitedAsync(
   key: string,
@@ -67,9 +85,16 @@ export async function isRateLimitedAsync(
   if (!client) return isRateLimitedMemory(key, limit, windowMs);
 
   try {
-    const count = await client.incr(`ratelimit:${key}`);
-    if (count === 1) {
-      await client.pexpire(`ratelimit:${key}`, windowMs);
+    const redisKey = `ratelimit:${key}`;
+    const count = await client.incr(redisKey);
+    // Sliding window: refresh TTL on every hit so the window resets with activity
+    await client.pexpire(redisKey, windowMs);
+    if (count === limit + 1) {
+      try {
+        baseLogger.warn({ key, limit, windowMs }, "[rate_limit_redis_hit]");
+      } catch {
+        // ignore
+      }
     }
     return count > limit;
   } catch {
@@ -77,8 +102,19 @@ export async function isRateLimitedAsync(
   }
 }
 
-export function isRateLimited(key: string, limit: number, windowMs: number) {
-  return isRateLimitedMemory(key, limit, windowMs);
+/**
+ * Async rate limiter (alias of isRateLimitedAsync). Call with `await`.
+ *
+ * NOTE: The synchronous memory-only `isRateLimitedMemory` is intentionally
+ * unexported — every API route MUST await this function to guarantee
+ * distributed consistency when Redis is present.
+ */
+export function isRateLimited(
+  key: string,
+  limit: number,
+  windowMs: number,
+): Promise<boolean> {
+  return isRateLimitedAsync(key, limit, windowMs);
 }
 
 export function getClientIp(request: Request) {

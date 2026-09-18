@@ -23,7 +23,7 @@ async function assertWalletNotFrozen(userId: string, client: PoolClient) {
 export async function GET(request: Request) {
   try {
     const clientIp = getClientIp(request);
-    if (isRateLimited(`circles-get-ip:${clientIp}`, 30, 60_000)) {
+    if (await isRateLimited(`circles-get-ip:${clientIp}`, 30, 60_000)) {
       return tooManyRequestsResponse();
     }
 
@@ -53,7 +53,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const clientIp = getClientIp(request);
-    if (isRateLimited(`circles-post-ip:${clientIp}`, 30, 60_000)) {
+    if (await isRateLimited(`circles-post-ip:${clientIp}`, 30, 60_000)) {
       return tooManyRequestsResponse();
     }
 

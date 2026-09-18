@@ -9,11 +9,11 @@ import {
 export async function POST(request: Request) {
   try {
     const clientIp = getClientIp(request);
-    if (isRateLimited(`notifications-clear-ip:${clientIp}`, 30, 60_000)) return tooManyRequestsResponse();
+    if (await isRateLimited(`notifications-clear-ip:${clientIp}`, 30, 60_000)) return tooManyRequestsResponse();
 
     const auth = await requireAuthenticatedUser(request);
     if ("response" in auth) return auth.response;
-    if (isRateLimited(`notifications-clear-user:${auth.user.id}`, 20, 60_000)) return tooManyRequestsResponse();
+    if (await isRateLimited(`notifications-clear-user:${auth.user.id}`, 20, 60_000)) return tooManyRequestsResponse();
 
     const body = await request.json();
     const clearAll = Boolean(body.clearAll);

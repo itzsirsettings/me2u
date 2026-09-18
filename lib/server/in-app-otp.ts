@@ -4,19 +4,37 @@
  * OTP codes stored in database and displayed in-app
  */
 
-import { query } from "@/lib/railway/client";
-import { randomInt } from "crypto";
+import { query, withTransaction } from "@/lib/railway/client";
+import { randomInt, createHash } from "crypto";
+import { logInfo } from "@/lib/server/logger";
 
 const OTP_EXPIRY_MINUTES = 10;
+const pepper = process.env.OTP_SIGNING_SECRET || "unused-local-pepper";
 
 export interface OTPRecord {
   id: string;
-  identifier: string; // email or phone
+  identifier: string;
   code: string;
   purpose: "register" | "login" | "password_reset";
   expires_at: string;
   verified: boolean;
   created_at: string;
+}
+
+function safeIdentifierHash(identifier: string): string {
+  return createHash("sha256")
+    .update(`${identifier}:${pepper}`)
+    .digest("hex");
+}
+
+async function requireAdmin(userId: string): Promise<void> {
+  const { rows } = await query(
+    `SELECT 1 FROM profiles WHERE id = $1 AND role = 'admin' LIMIT 1`,
+    [userId]
+  );
+  if (rows.length === 0) {
+    throw new Error("Forbidden: admin only");
+  }
 }
 
 /**
@@ -36,23 +54,34 @@ export async function createOtp(
   const code = generateOtpCode();
   const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
 
-  // Invalidate any existing OTPs for this identifier and purpose
-  await query(
-    `UPDATE otp_codes 
-     SET verified = true, updated_at = NOW() 
-     WHERE identifier = $1 AND purpose = $2 AND verified = false`,
-    [identifier, purpose]
-  );
+  try {
+    await withTransaction(async (client) => {
+      await client.query(
+        `UPDATE otp_codes 
+         SET verified = true, updated_at = NOW() 
+         WHERE identifier = $1 AND purpose = $2 AND verified = false`,
+        [identifier, purpose]
+      );
 
-  // Create new OTP
-  await query(
-    `INSERT INTO otp_codes 
-       (identifier, code, purpose, expires_at, verified, created_at, updated_at)
-     VALUES ($1, $2, $3, $4, false, NOW(), NOW())`,
-    [identifier, code, purpose, expiresAt.toISOString()]
-  );
+      await client.query(
+        `INSERT INTO otp_codes 
+           (identifier, code, purpose, expires_at, verified, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, false, NOW(), NOW())`,
+        [identifier, code, purpose, expiresAt.toISOString()]
+      );
+    });
+  } catch (err: unknown) {
+    if (err && typeof err === "object" && "code" in err && (err as { code: string }).code === "23505") {
+      return { code, expiresAt };
+    }
+    throw err;
+  }
 
-  console.log(`✅ OTP created for ${identifier}: ${code} (expires in ${OTP_EXPIRY_MINUTES} minutes)`);
+  try {
+    logInfo("OTP created", { identifierHash: safeIdentifierHash(identifier), purpose });
+  } catch {
+    console.info(`OTP created: ${safeIdentifierHash(identifier)} (${purpose})`);
+  }
 
   return { code, expiresAt };
 }
@@ -65,73 +94,50 @@ export async function verifyOtp(
   code: string,
   purpose: "register" | "login" | "password_reset"
 ): Promise<{ valid: boolean; error?: string }> {
-  // Validate input
   if (!/^\d{6}$/.test(code)) {
     return {
       valid: false,
-      error: "Invalid code format. Enter 6 digits.",
+      error: "Invalid or expired verification code.",
     };
   }
 
-  // Find matching OTP
-  const { rows } = await query<OTPRecord>(
-    `SELECT * FROM otp_codes 
-     WHERE identifier = $1 
-       AND code = $2 
-       AND purpose = $3 
-       AND verified = false 
-       AND expires_at > NOW()
-     ORDER BY created_at DESC
-     LIMIT 1`,
-    [identifier, code, purpose]
-  );
-
-  if (rows.length === 0) {
-    // Check if code exists but is expired
-    const { rows: expiredRows } = await query<OTPRecord>(
-      `SELECT * FROM otp_codes 
-       WHERE identifier = $1 
-         AND code = $2 
-         AND purpose = $3 
-         AND verified = false
-       ORDER BY created_at DESC
-       LIMIT 1`,
-      [identifier, code, purpose]
-    );
-
-    if (expiredRows.length > 0) {
-      return {
-        valid: false,
-        error: "Verification code has expired. Request a new code.",
-      };
-    }
-
-    return {
-      valid: false,
-      error: "Invalid verification code. Check and try again.",
-    };
-  }
-
-  // Mark as verified
-  await query(
+  const result = await query<{ id: string }>(
     `UPDATE otp_codes 
      SET verified = true, updated_at = NOW() 
-     WHERE id = $1`,
-    [rows[0].id]
+     WHERE identifier = $1 
+       AND purpose = $2 
+       AND code = $3 
+       AND verified = false 
+       AND expires_at > NOW() 
+     RETURNING id`,
+    [identifier, purpose, code]
   );
 
-  console.log(`✅ OTP verified for ${identifier}`);
+  if (result.rows.length === 1) {
+    try {
+      logInfo("OTP verified", { identifierHash: safeIdentifierHash(identifier), purpose });
+    } catch {
+      console.info(`OTP verified: ${safeIdentifierHash(identifier)} (${purpose})`);
+    }
+    return { valid: true };
+  }
 
-  return { valid: true };
+  return {
+    valid: false,
+    error: "Invalid or expired verification code.",
+  };
 }
 
 /**
  * Get current OTP for identifier (for display in UI)
  */
 export async function getCurrentOtp(
+  userId: string,
   identifier: string,
   purpose: "register" | "login" | "password_reset"
 ): Promise<OTPRecord | null> {
+  await requireAdmin(userId);
+
   const { rows } = await query<OTPRecord>(
     `SELECT * FROM otp_codes 
      WHERE identifier = $1 
@@ -160,7 +166,11 @@ export async function cleanupExpiredOtps(): Promise<number> {
   );
 
   const rowCount = rows[0]?.deleted ?? 0;
-  console.log(`🧹 Cleaned up ${rowCount} expired OTP codes`);
+  try {
+    logInfo("Cleaned up expired OTP codes", { count: rowCount });
+  } catch {
+    console.info(`Cleaned up ${rowCount} expired OTP codes`);
+  }
   return rowCount;
 }
 

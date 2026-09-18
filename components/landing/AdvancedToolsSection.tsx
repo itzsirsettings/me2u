@@ -54,17 +54,17 @@ export default function AdvancedToolsSection() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-4xl md:text-6xl font-medium text-foreground mb-8 tracking-tight leading-[1.2]"
+            className="landing-h2 mb-8"
           >
             Built for Trust, <br/>
-            <span className="text-green">Designed for Transparency.</span>
+            <span className="landing-accent-word">Designed for Transparency.</span>
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="max-w-2xl text-lg leading-8 text-muted-foreground md:text-xl"
+            className="landing-body max-w-2xl"
           >
             From secure wallets to peer lending, every feature puts control in your hands. No hidden fees, no confusing terms—just straightforward tools that help you save, borrow, and lend with confidence.
           </motion.p>

@@ -7,8 +7,13 @@ import {
   tooManyRequestsResponse,
 } from "@/lib/server/auth";
 import { getWithdrawalProcessorFee, withdrawalFeeAmount } from "@/lib/revenue";
-import { verifyTransactionPin } from "@/lib/server/pin";
+import {
+  verifyAndRecordPinAttempt,
+  type PinAttemptResult,
+} from "@/lib/server/pin";
 import { withUserTransaction } from "@/lib/railway/client";
+import { requestMeta } from "@/lib/server/idempotency";
+import { logWarn } from "@/lib/server/logger";
 
 const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY || "";
 const MIN_WITHDRAWAL = 1000;
@@ -59,14 +64,39 @@ async function initiatePaystackTransfer(recipientCode: string, amountInKobo: num
   return data.data;
 }
 
+function pinResultToError(result: PinAttemptResult): Error | null {
+  if (result.ok) return null;
+  if (result.needsSetup) return new Error("Please set a transaction PIN in your security settings first.");
+  if (result.locked) {
+    return new Error("Too many incorrect PIN attempts. Your account is locked; please use password reset to unlock.");
+  }
+  const suffix =
+    result.attemptsLeft > 0
+      ? ` ${result.attemptsLeft} attempt${result.attemptsLeft === 1 ? "" : "s"} left before lockout.`
+      : "";
+  return new Error(`Incorrect transaction PIN.${suffix}`);
+}
+
 export async function POST(request: Request) {
   try {
+    const meta = requestMeta(request);
+
+    // ── RL-004: Rate limits FIRST, before any DB or external work ─────
     const clientIp = getClientIp(request);
-    if (isRateLimited(`wallet-withdraw-ip:${clientIp}`, 20, 60_000)) return tooManyRequestsResponse();
+    if (await isRateLimited(`wallet-withdraw-ip:${clientIp}`, 20, 60_000)) {
+      return tooManyRequestsResponse();
+    }
 
     const auth = await requireAuthenticatedUser(request);
     if ("response" in auth) return auth.response;
-    if (isRateLimited(`wallet-withdraw-user:${auth.user.id}`, 10, 60_000)) return tooManyRequestsResponse();
+
+    if (await isRateLimited(`wallet-withdraw-user:${auth.user.id}`, 10, 60 * 60_000)) {
+      return tooManyRequestsResponse("Too many withdrawal attempts. Please try again in one hour.");
+    }
+
+    if (await isRateLimited(`wallet-withdraw-pin:${auth.user.id}`, 20, 10 * 60_000)) {
+      return tooManyRequestsResponse();
+    }
 
     const body = await request.json();
     const amount = readPositiveAmount(body.amount);
@@ -74,28 +104,32 @@ export async function POST(request: Request) {
     const bankCode = String(body.bank_code || "").trim();
     const accountNumber = String(body.account_number || "").trim();
     const accountName = String(body.account_name || "").trim();
+    const userId = auth.user.id;
 
     if (amount < MIN_WITHDRAWAL) {
       return NextResponse.json(
         { error: `Minimum withdrawal is ₦${MIN_WITHDRAWAL.toLocaleString()}.` },
-        { status: 400 },
+        { status: 400, headers: { "Cache-Control": "no-store" } },
       );
     }
 
     if (!PAYSTACK_SECRET) {
       return NextResponse.json(
         { error: "Withdrawal service is not configured. Please contact support." },
-        { status: 503 },
+        { status: 503, headers: { "Cache-Control": "no-store" } },
       );
     }
 
-    const userId = auth.user.id;
+    if (!/^\d{3,6}$/.test(bankCode)) throw new Error("Select and verify your bank before withdrawal.");
+    if (!/^\d{10}$/.test(accountNumber)) throw new Error("Enter a valid 10-digit account number.");
+    if (accountName.length < 2 || accountName.length > 120) {
+      throw new Error("Verify the destination account name before withdrawal.");
+    }
 
-    // Load profile with unlock eligibility
+    // ── Profile eligibility (unlock / KYC / reg-deposit) ─────────────
     const { rows: profileRows } = await auth.db.query<{
       registration_deposit_paid: boolean;
       kyc_verified: boolean;
-      transaction_pin: string | null;
       account_unlocked: boolean;
       verified_referral_count: number;
       created_at: string;
@@ -107,7 +141,6 @@ export async function POST(request: Request) {
       `SELECT 
          p.registration_deposit_paid, 
          p.kyc_verified, 
-         p.transaction_pin,
          COALESCE(p.account_unlocked, false) as account_unlocked,
          COALESCE(p.verified_referral_count, 0) as verified_referral_count,
          p.created_at,
@@ -132,108 +165,101 @@ export async function POST(request: Request) {
     if (!profile) throw new Error("Profile not found.");
     if (!profile.registration_deposit_paid) throw new Error("Confirm your registration deposit before withdrawal.");
     if (!profile.kyc_verified) throw new Error("Complete KYC before withdrawal.");
-    
-    // NEW UNLOCK LOGIC: Check multiple unlock paths
-    // Path 1: Already unlocked
-    if (profile.account_unlocked) {
-      // Account is unlocked, proceed with withdrawal
-    }
-    // Path 2: Active subscription (Plus/Lender Pro) - auto-unlocks
-    else if (profile.has_subscription) {
-      // Auto-unlock for subscribers
-      await auth.db.query(
-        `UPDATE profiles 
-         SET account_unlocked = true, 
-             unlock_method = 'subscription',
-             account_unlock_paid_at = NOW()
-         WHERE id = $1`,
-        [userId]
-      );
-    }
-    // Path 3: 10+ verified referrals - free unlock
-    else if (profile.verified_referral_count >= 10) {
-      // Auto-unlock for referrers
-      await auth.db.query(
-        `UPDATE profiles 
-         SET account_unlocked = true, 
-             unlock_method = 'referrals',
-             account_unlock_paid_at = NOW()
-         WHERE id = $1`,
-        [userId]
-      );
-    }
-    // Path 4: 15 days + payment made - time-based unlock
-    else if (
-      profile.unlock_payment_made && 
-      profile.unlock_eligible_at && 
-      new Date(profile.unlock_eligible_at) <= new Date()
-    ) {
-      // Auto-unlock after 15-day waiting period
-      await auth.db.query(
-        `UPDATE profiles 
-         SET account_unlocked = true, 
-             unlock_method = 'time_based',
-             account_unlock_paid_at = NOW()
-         WHERE id = $1`,
-        [userId]
-      );
-    }
-    // Still locked - show unlock options
-    else {
-      const daysRemaining = profile.unlock_payment_made && profile.unlock_eligible_at
-        ? Math.ceil((new Date(profile.unlock_eligible_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-        : null;
-      
-      const unlockOptions: string[] = [];
-      
-      // Option 1: Wait for 15 days (if payment made)
-      if (profile.unlock_payment_made && daysRemaining !== null && daysRemaining > 0) {
-        unlockOptions.push(`Wait ${daysRemaining} more day${daysRemaining !== 1 ? 's' : ''} (payment received, unlock on ${new Date(profile.unlock_eligible_at!).toLocaleDateString('en-NG')})`);
+
+    if (!profile.account_unlocked) {
+      let unlocked = false;
+      if (profile.has_subscription) {
+        await auth.db.query(
+          `UPDATE profiles 
+           SET account_unlocked = true, 
+               unlock_method = 'subscription',
+               account_unlock_paid_at = NOW()
+           WHERE id = $1`,
+          [userId],
+        );
+        unlocked = true;
+      } else if (profile.verified_referral_count >= 10) {
+        await auth.db.query(
+          `UPDATE profiles 
+           SET account_unlocked = true, 
+               unlock_method = 'referrals',
+               account_unlock_paid_at = NOW()
+           WHERE id = $1`,
+          [userId],
+        );
+        unlocked = true;
+      } else if (
+        profile.unlock_payment_made &&
+        profile.unlock_eligible_at &&
+        new Date(profile.unlock_eligible_at) <= new Date()
+      ) {
+        await auth.db.query(
+          `UPDATE profiles 
+           SET account_unlocked = true, 
+               unlock_method = 'time_based',
+               account_unlock_paid_at = NOW()
+           WHERE id = $1`,
+          [userId],
+        );
+        unlocked = true;
       }
-      // Option 1b: Make payment to start 15-day countdown
-      else if (!profile.unlock_payment_made) {
-        unlockOptions.push(`Pay ₦2,000 one-time fee, then wait 15 days`);
+
+      if (!unlocked) {
+        const daysRemaining = profile.unlock_payment_made && profile.unlock_eligible_at
+          ? Math.ceil((new Date(profile.unlock_eligible_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+          : null;
+        const unlockOptions: string[] = [];
+        if (profile.unlock_payment_made && daysRemaining !== null && daysRemaining > 0) {
+          unlockOptions.push(`Wait ${daysRemaining} more day${daysRemaining !== 1 ? 's' : ''} (payment received, unlock on ${new Date(profile.unlock_eligible_at!).toLocaleDateString('en-NG')})`);
+        } else if (!profile.unlock_payment_made) {
+          unlockOptions.push(`Pay ₦2,000 one-time fee, then wait 15 days`);
+        }
+        const referralsNeeded = 10 - profile.verified_referral_count;
+        if (referralsNeeded > 0) {
+          unlockOptions.push(`Refer ${referralsNeeded} more verified user${referralsNeeded !== 1 ? 's' : ''} (${profile.verified_referral_count}/10) for instant unlock`);
+        }
+        unlockOptions.push(`Upgrade to Me2U Plus (₦1,500/month) for instant unlock + premium features`);
+
+        return NextResponse.json({
+          error: "account_locked",
+          message: `Your account is locked. Choose an unlock option:`,
+          unlock_options: unlockOptions,
+          current_status: {
+            days_since_registration: profile.days_since_registration,
+            payment_made: profile.unlock_payment_made,
+            days_remaining: daysRemaining,
+            unlock_eligible_at: profile.unlock_eligible_at,
+            verified_referrals: profile.verified_referral_count,
+            referrals_needed: Math.max(0, 10 - profile.verified_referral_count),
+            has_subscription: profile.has_subscription,
+          },
+          unlock_fee: 2000,
+          upgrade_url: "/profile/upgrade",
+        }, { status: 403, headers: { "Cache-Control": "no-store" } });
       }
-      
-      // Option 2: Get 10 referrals
-      const referralsNeeded = 10 - profile.verified_referral_count;
-      if (referralsNeeded > 0) {
-        unlockOptions.push(`Refer ${referralsNeeded} more verified user${referralsNeeded !== 1 ? 's' : ''} (${profile.verified_referral_count}/10) for instant unlock`);
-      }
-      
-      // Option 3: Subscribe to Plus
-      unlockOptions.push(`Upgrade to Me2U Plus (₦1,500/month) for instant unlock + premium features`);
-      
-      return NextResponse.json({
-        error: "account_locked",
-        message: `Your account is locked. Choose an unlock option:`,
-        unlock_options: unlockOptions,
-        current_status: {
-          days_since_registration: profile.days_since_registration,
-          payment_made: profile.unlock_payment_made,
-          days_remaining: daysRemaining,
-          unlock_eligible_at: profile.unlock_eligible_at,
-          verified_referrals: profile.verified_referral_count,
-          referrals_needed: Math.max(0, 10 - profile.verified_referral_count),
-          has_subscription: profile.has_subscription,
-        },
-        unlock_fee: 2000,
-        upgrade_url: "/profile/upgrade",
-      }, { status: 403 });
     }
 
-    if (!/^\d{3,6}$/.test(bankCode)) throw new Error("Select and verify your bank before withdrawal.");
-    if (!/^\d{10}$/.test(accountNumber)) throw new Error("Enter a valid 10-digit account number.");
-    if (accountName.length < 2 || accountName.length > 120) {
-      throw new Error("Verify the destination account name before withdrawal.");
+    // ── PIN verify FIRST (before Paystack HTTP) — same tx as eventual debit
+    //    so failed attempt tracking + later balance change are atomic.
+    //    We don't debit yet; this round-trip just validates the PIN.
+    const pinResult = await verifyAndRecordPinAttempt(userId, pin, { lockoutRevokesSessions: true });
+    if (!pinResult.ok) {
+      const err = pinResultToError(pinResult);
+      try {
+        logWarn("withdraw_pin_failed", {
+          userId,
+          locked: pinResult.locked,
+          failedAttempts: pinResult.failedAttempts,
+          attemptsLeft: pinResult.attemptsLeft,
+          ip: meta.ip,
+        });
+      } catch {
+        // ignore
+      }
+      throw err!;
     }
 
-    const resolvedAccountName = await resolvePaystackAccount(accountNumber, bankCode);
-
-    if (!profile.transaction_pin) throw new Error("Please set a transaction PIN in your security settings first.");
-    if (!verifyTransactionPin(profile.transaction_pin, userId, pin)) throw new Error("Incorrect transaction PIN.");
-
-    // Check wallet frozen
+    // ── Security frozen wallet / outstanding loans ────────────────────
     const { rows: secRows } = await auth.db.query<{ wallet_frozen: boolean }>(
       `SELECT wallet_frozen FROM user_security_settings WHERE user_id = $1`,
       [userId],
@@ -242,7 +268,6 @@ export async function POST(request: Request) {
       throw new Error("Your wallet is frozen. Unfreeze it from Security Center before withdrawals.");
     }
 
-    // Block if outstanding borrower loans
     const { rows: loanRows } = await auth.db.query(
       `SELECT id FROM loans WHERE borrower_id = $1 AND status = 'active' LIMIT 1`,
       [userId],
@@ -251,7 +276,6 @@ export async function POST(request: Request) {
       throw new Error("You must repay all outstanding loans before you can withdraw your capital.");
     }
 
-    // Check wallet balance
     const { rows: walletRows } = await auth.db.query<{ balance: number; locked: number }>(
       `SELECT balance, locked FROM wallets WHERE user_id = $1`,
       [userId],
@@ -268,14 +292,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check no pending withdrawal
     const { rows: pendingRows } = await auth.db.query(
       `SELECT id FROM withdrawal_requests WHERE user_id = $1 AND status = 'pending' LIMIT 1`,
       [userId],
     );
     if (pendingRows.length > 0) throw new Error("You already have a pending withdrawal request.");
 
-        // fee_amount: withdrawalFeeAmount (plus Paystack processor fee)
+    // fee_amount: withdrawalFeeAmount (plus Paystack processor fee)
     const fee_amount = withdrawalFeeAmount;
     const paystackFee = getWithdrawalProcessorFee(amount);
     const totalFee = paystackFee + fee_amount;
@@ -288,9 +311,19 @@ export async function POST(request: Request) {
       );
     }
 
-    // Atomic deduct + create withdrawal request
+    // ── Resolve account name (external HTTP) ──────────────────────────
+    const resolvedAccountName = await resolvePaystackAccount(accountNumber, bankCode);
+
+    // ── Atomic debit + PIN re-check (held lock) + withdraw insert ────
     let requestId: string;
     await withUserTransaction(userId, async (client) => {
+      // Re-verify PIN in the same tx that debits so the FOR UPDATE held lock
+      // on profiles covers both the attempt counter AND the wallet debit.
+      const pinAgain = await verifyAndRecordPinAttempt(userId, pin, { client, lockoutRevokesSessions: false });
+      if (!pinAgain.ok) {
+        throw pinResultToError(pinAgain)!;
+      }
+
       const { rows: wRows } = await client.query(
         `UPDATE wallets
          SET balance = balance - $1, updated_at = NOW()
@@ -304,16 +337,16 @@ export async function POST(request: Request) {
         `INSERT INTO withdrawal_requests
            (user_id, amount, fee_amount, fee, net_amount, bank_code, account_number,
             account_name, status, created_at, updated_at)
-         VALUES ($1, $2, $3, $3, $4, $5, $6, $7, 'pending', NOW(), NOW())
+         VALUES ($1, $2, $3, $3, $4, $5, $6, $7, 'processing', NOW(), NOW())
          RETURNING id`,
         [userId, amount, totalFee, netAmount, bankCode, accountNumber, resolvedAccountName],
       );
       requestId = reqRows[0].id;
 
       await client.query(
-        `INSERT INTO transactions (user_id, type, amount, description, created_at)
-         VALUES ($1, 'withdrawal', $2, $3, NOW())`,
-        [userId, amount, `Withdrawal of ₦${amount.toLocaleString()} to ${resolvedAccountName}`],
+        `INSERT INTO transactions (user_id, type, amount, description, withdrawal_request_id, created_at)
+         VALUES ($1, 'withdrawal', $2, $3, $4, NOW())`,
+        [userId, amount, `Withdrawal of ₦${amount.toLocaleString()} to ${resolvedAccountName}`, requestId],
       );
 
       await client.query(
@@ -323,14 +356,13 @@ export async function POST(request: Request) {
       );
     });
 
-    // Create Paystack recipient & transfer
+    // ── Paystack recipient & transfer (external, with guarded rollback)
     let recipientData: any;
     let transferData: any;
 
     try {
       recipientData = await createPaystackRecipient(resolvedAccountName, accountNumber, bankCode);
     } catch (paystackError) {
-      // Rollback: refund wallet
       await auth.db.query(
         `UPDATE wallets SET balance = balance + $1, updated_at = NOW() WHERE user_id = $2`,
         [amount + totalFee, userId],
@@ -371,17 +403,20 @@ export async function POST(request: Request) {
       [recipientData.recipient_code, transferData.transfer_code, transferData.reference, requestId!],
     );
 
-    return NextResponse.json({
-      ok: true,
-      status: "processing",
-      withdrawal_id: requestId!,
-      transfer_code: transferData.transfer_code,
-      reference: transferData.reference,
-      net_amount: netAmount,
-      fee: totalFee,
-      message: `₦${netAmount.toLocaleString()} is being sent to your account. Fee: ₦${totalFee.toLocaleString()}`,
-    });
+    return NextResponse.json(
+      {
+        ok: true,
+        status: "processing",
+        withdrawal_id: requestId!,
+        transfer_code: transferData.transfer_code,
+        reference: transferData.reference,
+        net_amount: netAmount,
+        fee: totalFee,
+        message: `₦${netAmount.toLocaleString()} is being sent to your account. Fee: ₦${totalFee.toLocaleString()}`,
+      },
+      { headers: { "Cache-Control": "no-store" } },
+    );
   } catch (error) {
-    return errorResponse(error, "Unable to withdraw funds.");
+    return errorResponse(error, "Unable to withdraw funds.", "api/wallet/withdraw");
   }
 }

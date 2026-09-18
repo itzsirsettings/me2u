@@ -74,10 +74,10 @@ export const FeatureGrid = React.forwardRef<HTMLDivElement, FeatureGridProps>(
       >
         <div className="flex flex-col lg:flex-row items-center justify-between gap-8 mb-12">
           <div className="text-center lg:text-left">
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground">
+            <h2 className="landing-h2">
               {title}
             </h2>
-            <p className="mt-4 text-lg text-muted-foreground max-w-xl">
+            <p className="landing-body mt-4 max-w-xl">
               {subtitle}
             </p>
           </div>
@@ -117,10 +117,10 @@ export const FeatureGrid = React.forwardRef<HTMLDivElement, FeatureGridProps>(
                 className="flex flex-col items-start"
               >
                 <div className="mb-3 text-green">{category.icon}</div>
-                <h3 className="font-semibold text-foreground mb-2">
+                <h3 className="landing-h3 mb-2">
                   {category.title}
                 </h3>
-                <ul className="flex flex-col gap-1.5 text-muted-foreground">
+                <ul className="flex flex-col gap-1.5 text-base leading-relaxed text-muted-foreground">
                   {category.items.map((item, itemIndex) => (
                     <li key={`${category.title}-${item.text}-${itemIndex}`}>
                       {item.href ? (

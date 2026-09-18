@@ -18,7 +18,7 @@ function hasPlatformAccountDetails() {
 export async function POST(request: Request) {
   try {
     const clientIp = getClientIp(request);
-    if (isRateLimited(`wallet-fund-ip:${clientIp}`, 20, 60_000)) {
+    if (await isRateLimited(`wallet-fund-ip:${clientIp}`, 20, 60_000)) {
       return tooManyRequestsResponse();
     }
 
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
 
     const auth = await requireAuthenticatedUser(request);
     if ("response" in auth) return auth.response;
-    if (isRateLimited(`wallet-fund-user:${auth.user.id}`, 10, 60_000)) {
+    if (await isRateLimited(`wallet-fund-user:${auth.user.id}`, 10, 60_000)) {
       return tooManyRequestsResponse();
     }
 

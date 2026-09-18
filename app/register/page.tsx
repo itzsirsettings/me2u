@@ -202,6 +202,8 @@ function RegisterContent() {
   const verifyEmailCode = async (e: React.FormEvent) => {
     e.preventDefault();
     if (regEmailCode.length !== 6) return;
+    if (isSubmitting) return;
+    
     setIsSubmitting(true);
 
     try {
@@ -220,13 +222,15 @@ function RegisterContent() {
 
       if (!response.ok || typeof data.registrationToken !== "string") {
         toast.error(data.error || "Invalid verification code.");
-        setIsSubmitting(false);
         return;
       }
 
       setRegistrationToken(data.registrationToken);
-      setRegStep("details");
       toast.success("Email verified! Please complete your registration.");
+      // Use setTimeout to ensure state updates properly before showing next step
+      setTimeout(() => {
+        setRegStep("details");
+      }, 100);
     } catch (err) {
       toast.error("Failed to verify code.");
     } finally {
@@ -237,7 +241,10 @@ function RegisterContent() {
   // Step 3: Complete registration with all details
   const completeRegistration = async () => {
     if (isSubmitting) return;
-    if (!validateDetails()) throw new Error("Validation failed");
+    if (!validateDetails()) {
+      setIsSubmitting(false);
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -262,28 +269,30 @@ function RegisterContent() {
 
       if (!response.ok) {
         toast.error(data.error || "Unable to create account.");
-        throw new Error("Unable to create account");
+        setIsSubmitting(false);
+        return;
       }
 
+      // Account created successfully, now sign in
       const signInResult = await signInWithPassword(regEmail, formData.password);
       if (!signInResult.ok) {
-        toast.error(signInResult.error || "Account created, but login failed.");
-        router.push("/login");
-        throw new Error("Login failed");
+        toast.error("Account created! Please log in manually.");
+        setTimeout(() => {
+          router.push("/login");
+        }, 2000);
+        return;
       }
 
-      toast.success(`Welcome ${data.firstName}. Complete your registration deposit next.`);
-      router.push("/wallet");
+      // Successfully signed in
+      toast.success(`Welcome ${data.firstName}! Redirecting to your dashboard...`);
+      
+      // Give time for the toast to show and state to update before redirecting
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 1000);
     } catch (err) {
-      if (
-        (err as Error).message !== "Validation failed" &&
-        (err as Error).message !== "Unable to create account" &&
-        (err as Error).message !== "Login failed"
-      ) {
-        toast.error("Unable to complete registration.");
-      }
-      throw err;
-    } finally {
+      console.error("Registration error:", err);
+      toast.error("Unable to complete registration. Please try again.");
       setIsSubmitting(false);
     }
   };
@@ -437,9 +446,9 @@ function RegisterContent() {
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  completeRegistration().catch(() => {
-                    setIsSubmitting(false);
-                  });
+                  if (!isSubmitting) {
+                    completeRegistration();
+                  }
                 }}
                 className="space-y-6 rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-5 shadow-[4px_4px_0px_var(--color-shadow)] md:p-8"
               >

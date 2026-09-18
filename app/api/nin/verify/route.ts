@@ -6,7 +6,7 @@ import { requireAuthenticatedUser } from "@/lib/server/auth";
 export async function POST(request: Request) {
   try {
     const clientIp = getClientIp(request);
-    if (isRateLimited(`nin:${clientIp}`, 5, 60_000)) {
+    if (await isRateLimited(`nin:${clientIp}`, 5, 60_000)) {
       return NextResponse.json(
         { error: "Too many verification attempts. Please wait a minute and try again." },
         { status: 429 },

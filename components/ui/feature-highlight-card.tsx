@@ -162,12 +162,12 @@ export const FeatureHighlightCard = React.forwardRef<
 
           <motion.h2
             variants={itemVariants}
-            className="text-3xl font-bold tracking-tight text-card-foreground md:text-4xl"
+            className="landing-h2 text-card-foreground"
           >
             {title}
           </motion.h2>
 
-          <motion.p variants={itemVariants} className="mt-4 text-base leading-7 text-muted-foreground">
+          <motion.p variants={itemVariants} className="landing-body mt-4">
             {description}
           </motion.p>
 

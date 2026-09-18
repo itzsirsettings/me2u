@@ -569,7 +569,7 @@ export async function POST(request: Request) {
   try {
     const clientIp = getClientIp(request);
     const dailyLimit = Number(process.env.ASSISTANT_DAILY_LIMIT || 80);
-    if (isRateLimited(`assistant-ip:${clientIp}`, dailyLimit, 24 * 60 * 60_000)) {
+    if (await isRateLimited(`assistant-ip:${clientIp}`, dailyLimit, 24 * 60 * 60_000)) {
       return NextResponse.json({ error: "Me2U Guide is busy. Please wait and try again." }, { status: 429 });
     }
 

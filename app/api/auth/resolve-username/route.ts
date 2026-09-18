@@ -5,7 +5,7 @@ import { query } from "@/lib/railway/client";
 export async function POST(request: Request) {
   try {
     const clientIp = getClientIp(request);
-    if (isRateLimited(`login-username-ip:${clientIp}`, 20, 10 * 60_000)) {
+    if (await isRateLimited(`login-username-ip:${clientIp}`, 20, 10 * 60_000)) {
       return NextResponse.json(
         { error: "Too many login attempts. Please wait and try again." },
         { status: 429 },
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Enter a valid username." }, { status: 400 });
     }
 
-    if (isRateLimited(`login-username:${username}`, 10, 10 * 60_000)) {
+    if (await isRateLimited(`login-username:${username}`, 10, 10 * 60_000)) {
       return NextResponse.json(
         { error: "Too many login attempts. Please wait and try again." },
         { status: 429 },
