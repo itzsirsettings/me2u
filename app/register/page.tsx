@@ -182,6 +182,7 @@ function RegisterContent() {
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ step: "send_code", email: regEmail }),
       });
       const data = await response.json();
@@ -211,6 +212,7 @@ function RegisterContent() {
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           step: "verify_code",
           email: regEmail,
@@ -252,6 +254,7 @@ function RegisterContent() {
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           step: "verify_and_register",
           email: regEmail,

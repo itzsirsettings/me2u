@@ -11,8 +11,10 @@ import {
   Users,
   Wallet,
   Award,
+  AlertCircle,
 } from "lucide-react";
 import Link from "next/link";
+import { makeEffectController, isAbortError } from "@/lib/fetch";
 
 type EducationArticle = {
   id: string;
@@ -60,32 +62,57 @@ export default function EducationHub() {
   const [data, setData] = useState<EducationData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const { signal, cancel } = makeEffectController();
+    let settled = false;
+
     const loadContent = async () => {
       try {
         const response = await fetch("/api/education/content", {
           cache: "no-store",
+          signal,
         });
-        const result = await response.json();
+        const result = await response.json().catch(() => ({}));
 
         if (result.ok) {
           setData(result);
+          setError(null);
+        } else if (typeof result.error === "string") {
+          setError(result.error);
         }
-      } catch (error) {
-        console.error("Failed to load education content:", error);
+      } catch (err) {
+        if (isAbortError(err)) return;
+        const msg = err instanceof Error ? err.message : "Failed to load";
+        setError(msg);
+        console.error("Failed to load education content:", err);
       } finally {
-        setLoading(false);
+        if (!settled) setLoading(false);
       }
     };
 
     loadContent();
+    return () => {
+      settled = true;
+      cancel();
+    };
   }, []);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green" />
+      </div>
+    );
+  }
+
+  if (error && !data) {
+    return (
+      <div className="text-center py-12 px-6 rounded-2xl border border-amber-500/30 bg-amber-500/5">
+        <AlertCircle className="w-10 h-10 text-amber-500 mx-auto mb-3" />
+        <p className="font-bold text-card-foreground">Couldn&apos;t load education content</p>
+        <p className="text-sm text-muted-foreground mt-1">{error}</p>
       </div>
     );
   }

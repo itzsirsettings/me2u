@@ -6,15 +6,41 @@ import {
   tooManyRequestsResponse,
 } from "@/lib/server/auth";
 import { withUserTransaction } from "@/lib/railway/client";
+import {
+  readIdempotencyKey,
+  replayIfDuplicate,
+  rememberIdempotentResponse,
+} from "@/lib/server/idempotency";
+import {
+  buildLedgerRef,
+  recordWalletMove,
+} from "@/lib/server/wallet-ledger";
 
 export async function POST(request: Request) {
+  const route = "api/loans/repay";
   try {
     const clientIp = getClientIp(request);
-    if (await isRateLimited(`loan-repay-ip:${clientIp}`, 100, 15 * 60_000)) return tooManyRequestsResponse();
+    if (await isRateLimited(`loan-repay-ip:${clientIp}`, 100, 15 * 60_000))
+      return tooManyRequestsResponse();
 
     const auth = await requireAuthenticatedUser(request);
     if ("response" in auth) return auth.response;
-    if (await isRateLimited(`loan-repay-user:${auth.user.id}`, 50, 60 * 60_000)) return tooManyRequestsResponse();
+    if (
+      await isRateLimited(
+        `loan-repay-user:${auth.user.id}`,
+        50,
+        60 * 60_000,
+      )
+    )
+      return tooManyRequestsResponse();
+
+    const idempotencyKey = readIdempotencyKey(request);
+    const duplicate = await replayIfDuplicate(auth.db, {
+      key: idempotencyKey,
+      userId: auth.user.id,
+      route,
+    });
+    if (duplicate) return duplicate;
 
     const body = await request.json();
     const loanId = String(body.loanId || "");
@@ -22,6 +48,8 @@ export async function POST(request: Request) {
 
     const userId = auth.user.id;
 
+    let repaymentAmountUsed = 0;
+    let lenderIdUsed: string | null = null;
     await withUserTransaction(userId, async (client) => {
       const { rows: loanRows } = await client.query<{
         id: string;
@@ -39,61 +67,95 @@ export async function POST(request: Request) {
 
       const loan = loanRows[0];
       if (!loan) throw new Error("Loan not found.");
-      if (loan.borrower_id !== userId) throw new Error("This loan cannot be repaid from this account.");
-      if (loan.status === "completed") throw new Error("This loan has already been repaid.");
+      if (loan.borrower_id !== userId)
+        throw new Error("This loan cannot be repaid from this account.");
+      if (loan.status === "completed")
+        throw new Error("This loan has already been repaid.");
 
-      const repaymentAmount = Number(loan.amount) + (Number(loan.amount) * Number(loan.rate)) / 100;
+      const repaymentAmount =
+        Number(loan.amount) +
+        (Number(loan.amount) * Number(loan.rate)) / 100;
+      repaymentAmountUsed = repaymentAmount;
       const securityDeposit = Number(loan.security_deposit || 0);
+      lenderIdUsed = loan.lender_id;
 
-      // Check borrower wallet
-      const { rows: walletRows } = await client.query<{ balance: number; locked: number }>(
-        `SELECT balance, locked FROM wallets WHERE user_id = $1 FOR UPDATE`,
-        [userId],
-      );
-      const wallet = walletRows[0];
-      if (!wallet) throw new Error("Wallet not found.");
-      if (Number(wallet.balance) < repaymentAmount) {
-        throw new Error("Insufficient balance to repay this loan.");
-      }
+      await recordWalletMove(client, {
+        userId,
+        txType: "debit",
+        source: "repayment",
+        reference: buildLedgerRef("loan-repay", userId),
+        description: `Loan repayment of ₦${repaymentAmount.toLocaleString()} (security deposit ₦${securityDeposit.toLocaleString()} released)`,
+        balanceDelta: -repaymentAmount,
+        lockedDelta: -securityDeposit,
+        metadata: {
+          loanId,
+          loanAmount: Number(loan.amount),
+          rate: Number(loan.rate),
+          repaymentAmount,
+          securityDepositReleased: securityDeposit,
+        },
+      });
 
-      // Deduct repayment from borrower
-      await client.query(
-        `UPDATE wallets
-         SET balance = balance - $1,
-             locked  = GREATEST(0, locked - $2),
-             updated_at = NOW()
-         WHERE user_id = $3`,
-        [repaymentAmount, securityDeposit, userId],
-      );
-
-      // If peer loan, credit lender
       if (loan.lender_id) {
+        await recordWalletMove(client, {
+          userId: loan.lender_id,
+          txType: "credit",
+          source: "repayment",
+          reference: buildLedgerRef("loan-repay-lender", loan.lender_id),
+          description: `Repayment received for loan ${loanId}`,
+          balanceDelta: repaymentAmount,
+          metadata: {
+            loanId,
+            borrowerId: userId,
+            loanAmount: Number(loan.amount),
+            repaymentAmount,
+          },
+        });
+
         await client.query(
-          `UPDATE wallets SET balance = balance + $1, updated_at = NOW() WHERE user_id = $2`,
-          [repaymentAmount, loan.lender_id],
-        );
-        await client.query(
-          `INSERT INTO transactions (user_id, type, amount, description, created_at)
-           VALUES ($1, 'repayment_received', $2, $3, NOW())`,
-          [loan.lender_id, repaymentAmount, `Repayment received for loan ${loanId}`],
+          `INSERT INTO transactions (user_id, type, amount, description, loan_id, created_at)
+           VALUES ($1, 'repayment_received', $2, $3, $4, NOW())`,
+          [
+            loan.lender_id,
+            repaymentAmount,
+            `Repayment received for loan ${loanId}`,
+            loanId,
+          ],
         );
       }
 
-      // Mark loan complete
       await client.query(
         `UPDATE loans SET status = 'completed', updated_at = NOW() WHERE id = $1`,
         [loanId],
       );
 
       await client.query(
-        `INSERT INTO transactions (user_id, type, amount, description, created_at)
-         VALUES ($1, 'loan_repayment', $2, $3, NOW())`,
-        [userId, repaymentAmount, `Loan repayment of ₦${repaymentAmount.toLocaleString()}`],
+        `INSERT INTO transactions (user_id, type, amount, description, loan_id, created_at)
+         VALUES ($1, 'loan_repayment', $2, $3, $4, NOW())`,
+        [
+          userId,
+          repaymentAmount,
+          `Loan repayment of ₦${repaymentAmount.toLocaleString()}`,
+          loanId,
+        ],
       );
     });
 
-    return NextResponse.json({ ok: true });
+    const responseBody = {
+      ok: true,
+      repayment_amount: repaymentAmountUsed,
+      lender_paid: lenderIdUsed !== null,
+    };
+    await rememberIdempotentResponse(auth.db, {
+      key: idempotencyKey,
+      userId: auth.user.id,
+      route,
+      status: 200,
+      body: responseBody,
+    });
+
+    return NextResponse.json(responseBody);
   } catch (error) {
-    return errorResponse(error, "Unable to repay loan.");
+    return errorResponse(error, "Unable to repay loan.", route);
   }
 }

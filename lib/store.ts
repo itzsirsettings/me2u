@@ -9,7 +9,17 @@ import {
 import { isMarketplaceBoostActive, withdrawalFeeAmount } from "@/lib/revenue";
 import { uploadPrivateImage } from "@/lib/uploads";
 import { getRequiredWithdrawalBalance } from "@/lib/withdrawal";
-import { saveToken, getToken, clearToken, hasToken } from "@/lib/railway/token";
+import {
+  saveToken,
+  clearToken,
+  hasToken,
+  saveCsrfHeaderValue,
+} from "@/lib/railway/token";
+import {
+  authHeaders,
+  authorizedFetch,
+  isAbortError,
+} from "@/lib/fetch";
 import type {
   LoanRow,
   MarketplaceRow,
@@ -145,6 +155,9 @@ export interface AppNotification {
 
 type ActionResult = { ok: boolean; error?: string };
 
+let loadCurrentUserInflight: Promise<ActionResult> | null = null;
+let loadCurrentUserAbort: (() => void) | null = null;
+
 interface AppStore {
   user: User | null;
   isAuthenticated: boolean;
@@ -189,24 +202,17 @@ function clearSessionState() {
   };
 }
 
-/** All authenticated API calls go through here — attaches the Railway JWT. */
+/** All authenticated API calls go through here — attaches CSRF + httpOnly cookie auth. */
 export async function getAuthToken(): Promise<string | null> {
-  return getToken();
+  return null;
 }
 
 export async function postAuthenticatedJson(
   path: string,
   body: Record<string, unknown>,
 ): Promise<ActionResult> {
-  const token = getToken();
-  if (!token) return { ok: false, error: "Please log in first." };
-
-  const response = await fetch(path, {
+  const response = await authorizedFetch(path, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
     body: JSON.stringify(body),
   });
 
@@ -324,63 +330,90 @@ export const useStore = create<AppStore>((set, get) => ({
   // ── load session ─────────────────────────────────────────────────────────
 
   loadCurrentUser: async () => {
-    const token = getToken();
-    if (!token) {
+    if (!hasToken()) {
       set(clearSessionState());
       return { ok: false, error: "Please log in first." };
     }
 
-    set({ isLoading: true });
+    if (loadCurrentUserInflight) {
+      return loadCurrentUserInflight;
+    }
 
-    try {
-      const headers = { Authorization: `Bearer ${token}` };
+    if (loadCurrentUserAbort) {
+      try { loadCurrentUserAbort(); } catch {}
+    }
 
-      const [meRes, txRes, loansRes, mktRes, notifRes] = await Promise.all([
-        fetch("/api/auth/me", { headers }),
-        fetch("/api/auth/me/transactions", { headers }),
-        fetch("/api/auth/me/loans", { headers }),
-        fetch("/api/auth/me/marketplace", { headers }),
-        fetch("/api/auth/me/notifications", { headers }),
-      ]);
+    const abortCtrl =
+      typeof AbortController !== "undefined" ? new AbortController() : null;
+    loadCurrentUserAbort = () => {
+      try { abortCtrl?.abort(new DOMException("Superseded", "AbortError")); } catch {}
+    };
 
-      if (meRes.status === 401) {
-        clearToken();
+    const promise = (async (): Promise<ActionResult> => {
+      set({ isLoading: true });
+
+      try {
+        const signal = abortCtrl?.signal ?? undefined;
+
+        const [meRes, txRes, loansRes, mktRes, notifRes] = await Promise.all([
+          authorizedFetch("/api/auth/me", { signal }),
+          authorizedFetch("/api/auth/me/transactions", { signal }),
+          authorizedFetch("/api/auth/me/loans", { signal }),
+          authorizedFetch("/api/auth/me/marketplace", { signal }),
+          authorizedFetch("/api/auth/me/notifications", { signal }),
+        ]);
+
+        if (meRes.status === 401) {
+          clearToken();
+          set(clearSessionState());
+          return { ok: false, error: "Session expired. Please log in again." };
+        }
+
+        if (!meRes.ok) {
+          const err = await meRes.json().catch(() => ({}));
+          throw new Error(err.error || "Failed to load user.");
+        }
+
+        const meData = await meRes.json();
+        const user: User = meData.user;
+
+        const txData = txRes.ok ? await txRes.json().catch(() => ({})) : {};
+        const loansData = loansRes.ok ? await loansRes.json().catch(() => ({})) : {};
+        const mktData = mktRes.ok ? await mktRes.json().catch(() => ({})) : {};
+        const notifData = notifRes.ok ? await notifRes.json().catch(() => ({})) : {};
+
+        const rawLoans: any[] = loansData.loans || [];
+
+        set({
+          user,
+          isAuthenticated: true,
+          isLoading: false,
+          transactions: (txData.transactions || []).map(toTransaction),
+          activeLoans: rawLoans.map((l) => toLoan(l, user.id)),
+          marketplace: sortMarketplaceItems(
+            (mktData.items || []).map(toMarketplaceItem),
+          ),
+          notifications: (notifData.notifications || []).map(toNotification),
+        });
+
+        return { ok: true };
+      } catch (error) {
+        if (isAbortError(error)) {
+          return { ok: false, error: "Request cancelled." };
+        }
         set(clearSessionState());
-        return { ok: false, error: "Session expired. Please log in again." };
+        return { ok: false, error: toErrorMessage(error) };
       }
+    })();
 
-      if (!meRes.ok) {
-        const err = await meRes.json().catch(() => ({}));
-        throw new Error(err.error || "Failed to load user.");
-      }
-
-      const meData = await meRes.json();
-      const user: User = meData.user;
-
-      const txData = txRes.ok ? await txRes.json().catch(() => ({})) : {};
-      const loansData = loansRes.ok ? await loansRes.json().catch(() => ({})) : {};
-      const mktData = mktRes.ok ? await mktRes.json().catch(() => ({})) : {};
-      const notifData = notifRes.ok ? await notifRes.json().catch(() => ({})) : {};
-
-      const rawLoans: any[] = loansData.loans || [];
-
-      set({
-        user,
-        isAuthenticated: true,
-        isLoading: false,
-        transactions: (txData.transactions || []).map(toTransaction),
-        activeLoans: rawLoans.map((l) => toLoan(l, user.id)),
-        marketplace: sortMarketplaceItems(
-          (mktData.items || []).map(toMarketplaceItem),
-        ),
-        notifications: (notifData.notifications || []).map(toNotification),
+    loadCurrentUserInflight = promise;
+    promise
+      .catch(() => {})
+      .finally(() => {
+        loadCurrentUserInflight = null;
       });
 
-      return { ok: true };
-    } catch (error) {
-      set(clearSessionState());
-      return { ok: false, error: toErrorMessage(error) };
-    }
+    return promise;
   },
 
   // ── sign in ───────────────────────────────────────────────────────────────
@@ -408,6 +441,7 @@ export const useStore = create<AppStore>((set, get) => ({
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ email: loginEmail, password }),
       });
 
@@ -420,6 +454,8 @@ export const useStore = create<AppStore>((set, get) => ({
 
       if (!data.token) throw new Error("No token returned from server.");
       saveToken(data.token);
+      const csrf = res.headers.get("x-csrf-token");
+      if (csrf) saveCsrfHeaderValue(csrf);
 
       return await get().loadCurrentUser();
     } catch (error) {

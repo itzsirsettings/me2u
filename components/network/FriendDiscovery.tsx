@@ -2,8 +2,9 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { Users, UserPlus, Sparkles, Upload, Check } from "lucide-react";
+import { Users, UserPlus, Sparkles, Upload, Check, AlertCircle } from "lucide-react";
 import Link from "next/link";
+import { authorizedFetch, isAbortError } from "@/lib/fetch";
 
 type DiscoveredFriend = {
   contactName: string;
@@ -18,11 +19,12 @@ export default function FriendDiscovery() {
   const [discovered, setDiscovered] = useState<DiscoveredFriend[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploaded, setUploaded] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleContactUpload = async () => {
     setLoading(true);
+    setError(null);
 
-    // Request contacts permission (browser API)
     if ("contacts" in navigator && "ContactsManager" in window) {
       try {
         // @ts-ignore - Contacts API is experimental
@@ -36,24 +38,31 @@ export default function FriendDiscovery() {
           phone: contact.tel?.[0] || "",
         }));
 
-        // Upload to server
-        const response = await fetch("/api/contacts/discover", {
+        const response = await authorizedFetch("/api/contacts/discover", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ contacts: formattedContacts }),
         });
 
-        const result = await response.json();
+        const result = await response.json().catch(() => ({}));
 
         if (result.ok) {
           setDiscovered(result.discovered || []);
           setUploaded(true);
+        } else {
+          const msg = typeof result.error === "string" ? result.error : "Discovery failed";
+          setError(msg);
         }
-      } catch (error) {
-        console.error("Failed to access contacts:", error);
+      } catch (err) {
+        if (isAbortError(err)) {
+          setLoading(false);
+          return;
+        }
+        const msg = err instanceof Error ? err.message : "Failed to access contacts";
+        setError(msg);
+        console.error("Failed to access contacts:", err);
       }
     } else {
-      // Fallback: manual input or alternative method
       alert(
         "Contact access not supported in this browser. You can manually invite friends by username."
       );
@@ -77,6 +86,20 @@ export default function FriendDiscovery() {
           Discover which of your contacts are already on Me2U
         </p>
       </div>
+
+      {error && (
+        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold text-card-foreground text-sm">
+                Something didn&apos;t work
+              </p>
+              <p className="text-sm text-muted-foreground">{error}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Upload Section */}
       {!uploaded && (

@@ -11,7 +11,7 @@ import { getWithdrawalProcessorFee, withdrawalFeeAmount } from "@/lib/revenue";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import Me2uIcon from "@/components/Me2uIcon";
-import { getToken } from "@/lib/railway/token";
+import { authorizedFetch } from "@/lib/fetch";
 import { PinInput } from "@/components/ui/PinInput";
 
 const MIN_WITHDRAWAL = 1000;
@@ -96,14 +96,8 @@ export default function WithdrawPage() {
     
     setVerifying(true);
     try {
-      const token = getToken();
-      
-      const res = await fetch("/api/wallet/resolve-account", {
+      const res = await authorizedFetch("/api/wallet/resolve-account", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({ bank_code: bankCode, account_number: accountNumber }),
       });
 
@@ -159,14 +153,8 @@ export default function WithdrawPage() {
 
     setSubmitting(true);
     try {
-      const token = getToken();
-
-      const res = await fetch("/api/wallet/withdraw", {
+      const res = await authorizedFetch("/api/wallet/withdraw", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({
           amount: withdrawalAmount,
           bank_code: bankCode,

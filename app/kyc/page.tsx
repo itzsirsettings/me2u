@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import LoadingButton from "@/LoadingButton";
-import { getToken } from "@/lib/railway/token";
+import { authorizedFetch } from "@/lib/fetch";
 import { uploadPrivateImage } from "@/lib/uploads";
 
 function toErrorMessage(error: unknown) {
@@ -114,17 +114,10 @@ export default function KYCPage() {
     }
 
     try {
-      const token = getToken();
-      if (!token) throw new Error("Session expired. Please log in again.");
-
       const filePath = await uploadPrivateImage("kyc-documents", user.id, passportFile);
 
-      const response = await fetch("/api/onboarding/kyc", {
+      const response = await authorizedFetch("/api/onboarding/kyc", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify({
           bankName,
           accountNumber,

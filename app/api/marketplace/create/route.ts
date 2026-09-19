@@ -9,17 +9,43 @@ import {
 import { loanDurationMaxDays, loanDurationMinDays } from "@/lib/loans";
 import { marketplaceBoostFeeAmount } from "@/lib/revenue";
 import { withUserTransaction } from "@/lib/railway/client";
+import {
+  readIdempotencyKey,
+  replayIfDuplicate,
+  rememberIdempotentResponse,
+} from "@/lib/server/idempotency";
+import {
+  buildLedgerRef,
+  recordWalletMove,
+} from "@/lib/server/wallet-ledger";
 
 const listingTypes = new Set(["borrow_request", "lending_offer"]);
 
 export async function POST(request: Request) {
+  const route = "api/marketplace/create";
   try {
     const clientIp = getClientIp(request);
-    if (await isRateLimited(`marketplace-create-ip:${clientIp}`, 100, 15 * 60_000)) return tooManyRequestsResponse();
+    if (await isRateLimited(`marketplace-create-ip:${clientIp}`, 100, 15 * 60_000))
+      return tooManyRequestsResponse();
 
     const auth = await requireAuthenticatedUser(request);
     if ("response" in auth) return auth.response;
-    if (await isRateLimited(`marketplace-create-user:${auth.user.id}`, 50, 60 * 60_000)) return tooManyRequestsResponse();
+    if (
+      await isRateLimited(
+        `marketplace-create-user:${auth.user.id}`,
+        50,
+        60 * 60_000,
+      )
+    )
+      return tooManyRequestsResponse();
+
+    const idempotencyKey = readIdempotencyKey(request);
+    const duplicate = await replayIfDuplicate(auth.db, {
+      key: idempotencyKey,
+      userId: auth.user.id,
+      route,
+    });
+    if (duplicate) return duplicate;
 
     const body = await request.json();
     const type = String(body.type || "");
@@ -28,15 +54,24 @@ export async function POST(request: Request) {
     const boost = Boolean(body.boost);
 
     if (!listingTypes.has(type)) throw new Error("Choose a valid listing type.");
-    if (!Number.isInteger(days) || days < loanDurationMinDays || days > loanDurationMaxDays) {
-      throw new Error(`Duration must be between ${loanDurationMinDays} and ${loanDurationMaxDays} days.`);
+    if (
+      !Number.isInteger(days) ||
+      days < loanDurationMinDays ||
+      days > loanDurationMaxDays
+    ) {
+      throw new Error(
+        `Duration must be between ${loanDurationMinDays} and ${loanDurationMaxDays} days.`,
+      );
     }
     if (boost && type !== "borrow_request") {
-      throw new Error(`Only borrow requests can be promoted. The boost fee is ₦${marketplaceBoostFeeAmount.toLocaleString()}.`);
+      throw new Error(
+        `Only borrow requests can be promoted. The boost fee is ₦${marketplaceBoostFeeAmount.toLocaleString()}.`,
+      );
     }
 
     const userId = auth.user.id;
 
+    let itemCreatedId: string | null = null;
     await withUserTransaction(userId, async (client) => {
       const { rows: profileRows } = await client.query<{
         kyc_verified: boolean;
@@ -48,29 +83,34 @@ export async function POST(request: Request) {
       );
       const profile = profileRows[0];
       if (!profile) throw new Error("Profile not found.");
-      if (!profile.kyc_verified) throw new Error("Complete KYC before posting a listing.");
+      if (!profile.kyc_verified)
+        throw new Error("Complete KYC before posting a listing.");
 
-            let boostedAt: string | null = null;
+      let boostedAt: string | null = null;
       let boostedUntil: string | null = null;
       let boostFeeAmount = 0;
 
-      // When calling me2u_create_marketplace_item, p_boost: boost controls visibility promotion
       if (boost) {
-        // Deduct boost fee atomically
-        const { rows: wRows } = await client.query(
-          `UPDATE wallets
-           SET balance = balance - $1, updated_at = NOW()
-           WHERE user_id = $2 AND balance >= $1
-           RETURNING balance`,
-          [marketplaceBoostFeeAmount, userId],
-        );
-        if (!wRows[0]) {
-          throw new Error(`Insufficient balance for the ₦${marketplaceBoostFeeAmount.toLocaleString()} boost fee.`);
-        }
+        await recordWalletMove(client, {
+          userId,
+          txType: "debit",
+          source: "admin_adjustment",
+          reference: buildLedgerRef("mp-boost", userId),
+          description: `Marketplace listing boost fee`,
+          balanceDelta: -marketplaceBoostFeeAmount,
+          metadata: {
+            fee: marketplaceBoostFeeAmount,
+            listingType: type,
+            amount,
+            days,
+          },
+        });
 
         const now = new Date();
         boostedAt = now.toISOString();
-        boostedUntil = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
+        boostedUntil = new Date(
+          now.getTime() + 24 * 60 * 60 * 1000,
+        ).toISOString();
         boostFeeAmount = marketplaceBoostFeeAmount;
 
         await client.query(
@@ -86,11 +126,12 @@ export async function POST(request: Request) {
         );
       }
 
-      await client.query(
+      const { rows: itemRows } = await client.query<{ id: string }>(
         `INSERT INTO marketplace_items
            (type, amount, rate, days, author_id, author_name, trust_score,
             status, boosted_at, boosted_until, boost_fee_amount, created_at)
-         VALUES ($1, $2, 0, $3, $4, $5, $6, 'active', $7, $8, $9, NOW())`,
+         VALUES ($1, $2, 0, $3, $4, $5, $6, 'active', $7, $8, $9, NOW())
+         RETURNING id`,
         [
           type,
           amount,
@@ -103,10 +144,20 @@ export async function POST(request: Request) {
           boostFeeAmount,
         ],
       );
+      itemCreatedId = itemRows[0]?.id ?? null;
     });
 
-    return NextResponse.json({ ok: true });
+    const responseBody = { ok: true, item_id: itemCreatedId };
+    await rememberIdempotentResponse(auth.db, {
+      key: idempotencyKey,
+      userId: auth.user.id,
+      route,
+      status: 200,
+      body: responseBody,
+    });
+
+    return NextResponse.json(responseBody);
   } catch (error) {
-    return errorResponse(error, "Unable to create listing.");
+    return errorResponse(error, "Unable to create listing.", route);
   }
 }

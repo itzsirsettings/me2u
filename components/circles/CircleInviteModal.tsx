@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
+import { authorizedFetch, isAbortError } from "@/lib/fetch";
 import { X, UserPlus, Search, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 
@@ -32,13 +33,12 @@ export default function CircleInviteModal({
     setSuccess(false);
 
     try {
-      const response = await fetch(`/api/circles/${circleId}/invite`, {
+      const response = await authorizedFetch(`/api/circles/${circleId}/invite`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: username.trim() }),
       });
 
-      const result = await response.json();
+      const result = await response.json().catch(() => ({}));
 
       if (result.ok) {
         setSuccess(true);
@@ -52,7 +52,9 @@ export default function CircleInviteModal({
         toast.error(result.error || "Failed to invite user");
       }
     } catch (error) {
-      toast.error("Failed to send invitation");
+      if (!isAbortError(error)) {
+        toast.error("Failed to send invitation");
+      }
     } finally {
       setLoading(false);
     }

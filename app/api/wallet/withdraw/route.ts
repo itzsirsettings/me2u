@@ -11,14 +11,30 @@ import {
   verifyAndRecordPinAttempt,
   type PinAttemptResult,
 } from "@/lib/server/pin";
-import { withUserTransaction } from "@/lib/railway/client";
-import { requestMeta } from "@/lib/server/idempotency";
+import {
+  withTransaction,
+  withUserTransaction,
+} from "@/lib/railway/client";
+import {
+  readIdempotencyKey,
+  replayIfDuplicate,
+  rememberIdempotentResponse,
+  requestMeta,
+} from "@/lib/server/idempotency";
+import {
+  buildLedgerRef,
+  recordWalletMove,
+} from "@/lib/server/wallet-ledger";
 import { logWarn } from "@/lib/server/logger";
 
 const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY || "";
 const MIN_WITHDRAWAL = 1000;
 
-async function createPaystackRecipient(accountName: string, accountNumber: string, bankCode: string) {
+async function createPaystackRecipient(
+  accountName: string,
+  accountNumber: string,
+  bankCode: string,
+) {
   const res = await fetch("https://api.paystack.co/transferrecipient", {
     method: "POST",
     headers: {
@@ -34,15 +50,23 @@ async function createPaystackRecipient(accountName: string, accountNumber: strin
     }),
   });
   const data = await res.json();
-  if (!data.status) throw new Error(data.message || "Failed to create transfer recipient");
+  if (!data.status)
+    throw new Error(data.message || "Failed to create transfer recipient");
   return data.data;
 }
 
-async function resolvePaystackAccount(accountNumber: string, bankCode: string) {
-  const params = new URLSearchParams({ account_number: accountNumber, bank_code: bankCode });
-  const res = await fetch(`https://api.paystack.co/bank/resolve?${params}`, {
-    headers: { Authorization: `Bearer ${PAYSTACK_SECRET}` },
+async function resolvePaystackAccount(
+  accountNumber: string,
+  bankCode: string,
+) {
+  const params = new URLSearchParams({
+    account_number: accountNumber,
+    bank_code: bankCode,
   });
+  const res = await fetch(
+    `https://api.paystack.co/bank/resolve?${params}`,
+    { headers: { Authorization: `Bearer ${PAYSTACK_SECRET}` } },
+  );
   const data = await res.json();
   if (!data.status || !data.data?.account_name) {
     throw new Error("Could not verify the destination bank account.");
@@ -50,14 +74,23 @@ async function resolvePaystackAccount(accountNumber: string, bankCode: string) {
   return String(data.data.account_name).trim();
 }
 
-async function initiatePaystackTransfer(recipientCode: string, amountInKobo: number, reason: string) {
+async function initiatePaystackTransfer(
+  recipientCode: string,
+  amountInKobo: number,
+  reason: string,
+) {
   const res = await fetch("https://api.paystack.co/transfer", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${PAYSTACK_SECRET}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ source: "balance", amount: amountInKobo, recipient: recipientCode, reason }),
+    body: JSON.stringify({
+      source: "balance",
+      amount: amountInKobo,
+      recipient: recipientCode,
+      reason,
+    }),
   });
   const data = await res.json();
   if (!data.status) throw new Error(data.message || "Transfer failed");
@@ -66,22 +99,29 @@ async function initiatePaystackTransfer(recipientCode: string, amountInKobo: num
 
 function pinResultToError(result: PinAttemptResult): Error | null {
   if (result.ok) return null;
-  if (result.needsSetup) return new Error("Please set a transaction PIN in your security settings first.");
+  if (result.needsSetup)
+    return new Error(
+      "Please set a transaction PIN in your security settings first.",
+    );
   if (result.locked) {
-    return new Error("Too many incorrect PIN attempts. Your account is locked; please use password reset to unlock.");
+    return new Error(
+      "Too many incorrect PIN attempts. Your account is locked; please use password reset to unlock.",
+    );
   }
   const suffix =
     result.attemptsLeft > 0
-      ? ` ${result.attemptsLeft} attempt${result.attemptsLeft === 1 ? "" : "s"} left before lockout.`
+      ? ` ${result.attemptsLeft} attempt${
+          result.attemptsLeft === 1 ? "" : "s"
+        } left before lockout.`
       : "";
   return new Error(`Incorrect transaction PIN.${suffix}`);
 }
 
 export async function POST(request: Request) {
+  const route = "api/wallet/withdraw";
   try {
     const meta = requestMeta(request);
 
-    // ── RL-004: Rate limits FIRST, before any DB or external work ─────
     const clientIp = getClientIp(request);
     if (await isRateLimited(`wallet-withdraw-ip:${clientIp}`, 100, 15 * 60_000)) {
       return tooManyRequestsResponse();
@@ -90,13 +130,35 @@ export async function POST(request: Request) {
     const auth = await requireAuthenticatedUser(request);
     if ("response" in auth) return auth.response;
 
-    if (await isRateLimited(`wallet-withdraw-user:${auth.user.id}`, 50, 60 * 60_000)) {
-      return tooManyRequestsResponse("Too many withdrawal attempts. Please try again in one hour.");
+    if (
+      await isRateLimited(
+        `wallet-withdraw-user:${auth.user.id}`,
+        50,
+        60 * 60_000,
+      )
+    ) {
+      return tooManyRequestsResponse(
+        "Too many withdrawal attempts. Please try again in one hour.",
+      );
     }
 
-    if (await isRateLimited(`wallet-withdraw-pin:${auth.user.id}`, 10, 10 * 60_000)) {
+    if (
+      await isRateLimited(
+        `wallet-withdraw-pin:${auth.user.id}`,
+        10,
+        10 * 60_000,
+      )
+    ) {
       return tooManyRequestsResponse();
     }
+
+    const idempotencyKey = readIdempotencyKey(request);
+    const duplicate = await replayIfDuplicate(auth.db, {
+      key: idempotencyKey,
+      userId: auth.user.id,
+      route,
+    });
+    if (duplicate) return duplicate;
 
     const body = await request.json();
     const amount = readPositiveAmount(body.amount);
@@ -115,18 +177,22 @@ export async function POST(request: Request) {
 
     if (!PAYSTACK_SECRET) {
       return NextResponse.json(
-        { error: "Withdrawal service is not configured. Please contact support." },
+        {
+          error:
+            "Withdrawal service is not configured. Please contact support.",
+        },
         { status: 503, headers: { "Cache-Control": "no-store" } },
       );
     }
 
-    if (!/^\d{3,6}$/.test(bankCode)) throw new Error("Select and verify your bank before withdrawal.");
-    if (!/^\d{10}$/.test(accountNumber)) throw new Error("Enter a valid 10-digit account number.");
+    if (!/^\d{3,6}$/.test(bankCode))
+      throw new Error("Select and verify your bank before withdrawal.");
+    if (!/^\d{10}$/.test(accountNumber))
+      throw new Error("Enter a valid 10-digit account number.");
     if (accountName.length < 2 || accountName.length > 120) {
       throw new Error("Verify the destination account name before withdrawal.");
     }
 
-    // ── Profile eligibility (unlock / KYC / reg-deposit) ─────────────
     const { rows: profileRows } = await auth.db.query<{
       registration_deposit_paid: boolean;
       kyc_verified: boolean;
@@ -163,7 +229,8 @@ export async function POST(request: Request) {
     );
     const profile = profileRows[0];
     if (!profile) throw new Error("Profile not found.");
-    if (!profile.registration_deposit_paid) throw new Error("Confirm your registration deposit before withdrawal.");
+    if (!profile.registration_deposit_paid)
+      throw new Error("Confirm your registration deposit before withdrawal.");
     if (!profile.kyc_verified) throw new Error("Complete KYC before withdrawal.");
 
     if (!profile.account_unlocked) {
@@ -205,44 +272,66 @@ export async function POST(request: Request) {
       }
 
       if (!unlocked) {
-        const daysRemaining = profile.unlock_payment_made && profile.unlock_eligible_at
-          ? Math.ceil((new Date(profile.unlock_eligible_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-          : null;
+        const daysRemaining =
+          profile.unlock_payment_made && profile.unlock_eligible_at
+            ? Math.ceil(
+                (new Date(profile.unlock_eligible_at).getTime() - Date.now()) /
+                  (1000 * 60 * 60 * 24),
+              )
+            : null;
         const unlockOptions: string[] = [];
-        if (profile.unlock_payment_made && daysRemaining !== null && daysRemaining > 0) {
-          unlockOptions.push(`Wait ${daysRemaining} more day${daysRemaining !== 1 ? 's' : ''} (payment received, unlock on ${new Date(profile.unlock_eligible_at!).toLocaleDateString('en-NG')})`);
+        if (
+          profile.unlock_payment_made &&
+          daysRemaining !== null &&
+          daysRemaining > 0
+        ) {
+          unlockOptions.push(
+            `Wait ${daysRemaining} more day${
+              daysRemaining !== 1 ? "s" : ""
+            } (payment received, unlock on ${new Date(
+              profile.unlock_eligible_at!,
+            ).toLocaleDateString("en-NG")})`,
+          );
         } else if (!profile.unlock_payment_made) {
           unlockOptions.push(`Pay ₦2,000 one-time fee, then wait 15 days`);
         }
         const referralsNeeded = 10 - profile.verified_referral_count;
         if (referralsNeeded > 0) {
-          unlockOptions.push(`Refer ${referralsNeeded} more verified user${referralsNeeded !== 1 ? 's' : ''} (${profile.verified_referral_count}/10) for instant unlock`);
+          unlockOptions.push(
+            `Refer ${referralsNeeded} more verified user${
+              referralsNeeded !== 1 ? "s" : ""
+            } (${profile.verified_referral_count}/10) for instant unlock`,
+          );
         }
-        unlockOptions.push(`Upgrade to Me2U Plus (₦1,500/month) for instant unlock + premium features`);
+        unlockOptions.push(
+          `Upgrade to Me2U Plus (₦1,500/month) for instant unlock + premium features`,
+        );
 
-        return NextResponse.json({
-          error: "account_locked",
-          message: `Your account is locked. Choose an unlock option:`,
-          unlock_options: unlockOptions,
-          current_status: {
-            days_since_registration: profile.days_since_registration,
-            payment_made: profile.unlock_payment_made,
-            days_remaining: daysRemaining,
-            unlock_eligible_at: profile.unlock_eligible_at,
-            verified_referrals: profile.verified_referral_count,
-            referrals_needed: Math.max(0, 10 - profile.verified_referral_count),
-            has_subscription: profile.has_subscription,
+        return NextResponse.json(
+          {
+            error: "account_locked",
+            message: `Your account is locked. Choose an unlock option:`,
+            unlock_options: unlockOptions,
+            current_status: {
+              days_since_registration: profile.days_since_registration,
+              payment_made: profile.unlock_payment_made,
+              days_remaining: daysRemaining,
+              unlock_eligible_at: profile.unlock_eligible_at,
+              verified_referrals: profile.verified_referral_count,
+              referrals_needed: Math.max(0, 10 - profile.verified_referral_count),
+              has_subscription: profile.has_subscription,
+            },
+            unlock_fee: 2000,
+            upgrade_url: "/profile/upgrade",
           },
-          unlock_fee: 2000,
-          upgrade_url: "/profile/upgrade",
-        }, { status: 403, headers: { "Cache-Control": "no-store" } });
+          { status: 403, headers: { "Cache-Control": "no-store" } },
+        );
       }
     }
 
-    // ── PIN verify FIRST (before Paystack HTTP) — same tx as eventual debit
-    //    so failed attempt tracking + later balance change are atomic.
-    //    We don't debit yet; this round-trip just validates the PIN.
-    const pinResult = await verifyAndRecordPinAttempt(userId, pin, { lockoutRevokesSessions: true });
+    const pinResult = await verifyAndRecordPinAttempt(userId, pin, {
+      lockoutRevokesSessions: true,
+    });
     if (!pinResult.ok) {
       const err = pinResultToError(pinResult);
       try {
@@ -259,13 +348,14 @@ export async function POST(request: Request) {
       throw err!;
     }
 
-    // ── Security frozen wallet / outstanding loans ────────────────────
     const { rows: secRows } = await auth.db.query<{ wallet_frozen: boolean }>(
       `SELECT wallet_frozen FROM user_security_settings WHERE user_id = $1`,
       [userId],
     );
     if (secRows[0]?.wallet_frozen) {
-      throw new Error("Your wallet is frozen. Unfreeze it from Security Center before withdrawals.");
+      throw new Error(
+        "Your wallet is frozen. Unfreeze it from Security Center before withdrawals.",
+      );
     }
 
     const { rows: loanRows } = await auth.db.query(
@@ -273,22 +363,8 @@ export async function POST(request: Request) {
       [userId],
     );
     if (loanRows.length > 0) {
-      throw new Error("You must repay all outstanding loans before you can withdraw your capital.");
-    }
-
-    const { rows: walletRows } = await auth.db.query<{ balance: number; locked: number }>(
-      `SELECT balance, locked FROM wallets WHERE user_id = $1`,
-      [userId],
-    );
-    const wallet = walletRows[0];
-    if (!wallet) throw new Error("Wallet not found.");
-
-    const balance = Number(wallet.balance);
-    const locked = Number(wallet.locked);
-    const availableBalance = balance - locked;
-    if (availableBalance < amount) {
       throw new Error(
-        `Insufficient available balance. Available: ₦${availableBalance.toLocaleString()}, Required: ₦${amount.toLocaleString()}`,
+        "You must repay all outstanding loans before you can withdraw your capital.",
       );
     }
 
@@ -296,42 +372,46 @@ export async function POST(request: Request) {
       `SELECT id FROM withdrawal_requests WHERE user_id = $1 AND status = 'pending' LIMIT 1`,
       [userId],
     );
-    if (pendingRows.length > 0) throw new Error("You already have a pending withdrawal request.");
+    if (pendingRows.length > 0)
+      throw new Error("You already have a pending withdrawal request.");
 
-    // fee_amount: withdrawalFeeAmount (plus Paystack processor fee)
     const fee_amount = withdrawalFeeAmount;
     const paystackFee = getWithdrawalProcessorFee(amount);
     const totalFee = paystackFee + fee_amount;
     const netAmount = amount;
 
-    if (balance < amount + totalFee) {
-      const shortfall = Math.max(0, amount + totalFee - balance);
-      throw new Error(
-        `Insufficient balance. Fund ₦${shortfall.toLocaleString()} more to cover the withdrawal and ₦${totalFee.toLocaleString()} fee.`,
-      );
-    }
+    const resolvedAccountName = await resolvePaystackAccount(
+      accountNumber,
+      bankCode,
+    );
 
-    // ── Resolve account name (external HTTP) ──────────────────────────
-    const resolvedAccountName = await resolvePaystackAccount(accountNumber, bankCode);
-
-    // ── Atomic debit + PIN re-check (held lock) + withdraw insert ────
     let requestId: string;
     await withUserTransaction(userId, async (client) => {
-      // Re-verify PIN in the same tx that debits so the FOR UPDATE held lock
-      // on profiles covers both the attempt counter AND the wallet debit.
-      const pinAgain = await verifyAndRecordPinAttempt(userId, pin, { client, lockoutRevokesSessions: false });
+      const pinAgain = await verifyAndRecordPinAttempt(userId, pin, {
+        client,
+        lockoutRevokesSessions: false,
+      });
       if (!pinAgain.ok) {
         throw pinResultToError(pinAgain)!;
       }
 
-      const { rows: wRows } = await client.query(
-        `UPDATE wallets
-         SET balance = balance - $1, updated_at = NOW()
-         WHERE user_id = $2 AND balance >= $1
-         RETURNING balance`,
-        [amount + totalFee, userId],
-      );
-      if (!wRows[0]) throw new Error("Insufficient balance.");
+      await recordWalletMove(client, {
+        userId,
+        txType: "debit",
+        source: "withdrawal",
+        reference: buildLedgerRef("wdr-debit", userId),
+        description: `Withdrawal of ₦${amount.toLocaleString()} to ${resolvedAccountName} (fee ₦${totalFee.toLocaleString()})`,
+        balanceDelta: -(amount + totalFee),
+        metadata: {
+          withdrawalAmount: amount,
+          feeAmount: fee_amount,
+          processorFee: paystackFee,
+          totalFee,
+          bankCode,
+          accountNumber,
+          accountName: resolvedAccountName,
+        },
+      });
 
       const { rows: reqRows } = await client.query<{ id: string }>(
         `INSERT INTO withdrawal_requests
@@ -339,14 +419,27 @@ export async function POST(request: Request) {
             account_name, status, created_at, updated_at)
          VALUES ($1, $2, $3, $3, $4, $5, $6, $7, 'processing', NOW(), NOW())
          RETURNING id`,
-        [userId, amount, totalFee, netAmount, bankCode, accountNumber, resolvedAccountName],
+        [
+          userId,
+          amount,
+          totalFee,
+          netAmount,
+          bankCode,
+          accountNumber,
+          resolvedAccountName,
+        ],
       );
       requestId = reqRows[0].id;
 
       await client.query(
         `INSERT INTO transactions (user_id, type, amount, description, withdrawal_request_id, created_at)
          VALUES ($1, 'withdrawal', $2, $3, $4, NOW())`,
-        [userId, amount, `Withdrawal of ₦${amount.toLocaleString()} to ${resolvedAccountName}`, requestId],
+        [
+          userId,
+          amount,
+          `Withdrawal of ₦${amount.toLocaleString()} to ${resolvedAccountName}`,
+          requestId,
+        ],
       );
 
       await client.query(
@@ -356,21 +449,38 @@ export async function POST(request: Request) {
       );
     });
 
-    // ── Paystack recipient & transfer (external, with guarded rollback)
     let recipientData: any;
     let transferData: any;
 
     try {
-      recipientData = await createPaystackRecipient(resolvedAccountName, accountNumber, bankCode);
+      recipientData = await createPaystackRecipient(
+        resolvedAccountName,
+        accountNumber,
+        bankCode,
+      );
     } catch (paystackError) {
-      await auth.db.query(
-        `UPDATE wallets SET balance = balance + $1, updated_at = NOW() WHERE user_id = $2`,
-        [amount + totalFee, userId],
-      );
-      await auth.db.query(
-        `UPDATE withdrawal_requests SET status = 'failed', admin_note = $1, updated_at = NOW() WHERE id = $2`,
-        ["Failed to create transfer recipient", requestId!],
-      );
+      await withTransaction(async (client) => {
+        await recordWalletMove(client, {
+          userId,
+          txType: "reversal",
+          source: "withdrawal",
+          reference: buildLedgerRef("wdr-rev", requestId!),
+          description: `Withdrawal reversal: failed to create transfer recipient`,
+          balanceDelta: amount + totalFee,
+          sourceDetail: requestId!,
+          metadata: {
+            reason: "create_transfer_recipient_failed",
+            errorMessage:
+              paystackError instanceof Error
+                ? paystackError.message
+                : String(paystackError),
+          },
+        });
+        await client.query(
+          `UPDATE withdrawal_requests SET status = 'failed', admin_note = $1, updated_at = NOW() WHERE id = $2`,
+          ["Failed to create transfer recipient", requestId!],
+        );
+      });
       throw paystackError;
     }
 
@@ -381,17 +491,33 @@ export async function POST(request: Request) {
         `Me2U withdrawal - ${userId}`,
       );
     } catch (paystackError) {
-      await auth.db.query(
-        `UPDATE wallets SET balance = balance + $1, updated_at = NOW() WHERE user_id = $2`,
-        [amount + totalFee, userId],
-      );
-      await auth.db.query(
-        `UPDATE withdrawal_requests SET status = 'failed', admin_note = $1, updated_at = NOW() WHERE id = $2`,
-        [
-          paystackError instanceof Error ? paystackError.message : "Transfer failed",
-          requestId!,
-        ],
-      );
+      await withTransaction(async (client) => {
+        await recordWalletMove(client, {
+          userId,
+          txType: "reversal",
+          source: "withdrawal",
+          reference: buildLedgerRef("wdr-rev", requestId!),
+          description: `Withdrawal reversal: transfer initiation failed`,
+          balanceDelta: amount + totalFee,
+          sourceDetail: requestId!,
+          metadata: {
+            reason: "transfer_init_failed",
+            errorMessage:
+              paystackError instanceof Error
+                ? paystackError.message
+                : String(paystackError),
+          },
+        });
+        await client.query(
+          `UPDATE withdrawal_requests SET status = 'failed', admin_note = $1, updated_at = NOW() WHERE id = $2`,
+          [
+            paystackError instanceof Error
+              ? paystackError.message
+              : "Transfer failed",
+            requestId!,
+          ],
+        );
+      });
       throw paystackError;
     }
 
@@ -400,23 +526,37 @@ export async function POST(request: Request) {
        SET paystack_recipient_code = $1, paystack_transfer_code = $2,
            paystack_reference = $3, updated_at = NOW()
        WHERE id = $4`,
-      [recipientData.recipient_code, transferData.transfer_code, transferData.reference, requestId!],
+      [
+        recipientData.recipient_code,
+        transferData.transfer_code,
+        transferData.reference,
+        requestId!,
+      ],
     );
 
-    return NextResponse.json(
-      {
-        ok: true,
-        status: "processing",
-        withdrawal_id: requestId!,
-        transfer_code: transferData.transfer_code,
-        reference: transferData.reference,
-        net_amount: netAmount,
-        fee: totalFee,
-        message: `₦${netAmount.toLocaleString()} is being sent to your account. Fee: ₦${totalFee.toLocaleString()}`,
-      },
-      { headers: { "Cache-Control": "no-store" } },
-    );
+    const responseBody = {
+      ok: true,
+      status: "processing",
+      withdrawal_id: requestId!,
+      transfer_code: transferData.transfer_code,
+      reference: transferData.reference,
+      net_amount: netAmount,
+      fee: totalFee,
+      message: `₦${netAmount.toLocaleString()} is being sent to your account. Fee: ₦${totalFee.toLocaleString()}`,
+    };
+
+    await rememberIdempotentResponse(auth.db, {
+      key: idempotencyKey,
+      userId: auth.user.id,
+      route,
+      status: 200,
+      body: responseBody,
+    });
+
+    return NextResponse.json(responseBody, {
+      headers: { "Cache-Control": "no-store" },
+    });
   } catch (error) {
-    return errorResponse(error, "Unable to withdraw funds.", "api/wallet/withdraw");
+    return errorResponse(error, "Unable to withdraw funds.", route);
   }
 }

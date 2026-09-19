@@ -14,9 +14,26 @@
  */
 
 export const TOKEN_KEY = "me2u_token";
+export const CSRF_KEY = "me2u_csrf_value";
 
 export function saveToken(_token: string) {
   return;
+}
+
+export function saveCsrfHeaderValue(value: string) {
+  if (typeof localStorage === "undefined") return;
+  localStorage.setItem(CSRF_KEY, value);
+}
+
+export function getCsrfHeaderValue(): string | null {
+  if (typeof localStorage === "undefined") return null;
+  return localStorage.getItem(CSRF_KEY) || null;
+}
+
+export function clearCsrfHeaderValue() {
+  if (typeof localStorage !== "undefined") {
+    localStorage.removeItem(CSRF_KEY);
+  }
 }
 
 export function getToken(): string | null {
@@ -27,6 +44,7 @@ export function getToken(): string | null {
 export function clearToken() {
   if (typeof localStorage !== "undefined") {
     localStorage.removeItem(TOKEN_KEY);
+    clearCsrfHeaderValue();
   }
 }
 
