@@ -247,6 +247,18 @@ export default function Login() {
                   successText="Login successful!"
                   onClick={handleLogin}
                 />
+
+                <div className="mt-6 text-center">
+                  <p className="text-sm text-[var(--color-text-secondary)]">
+                    Don't have an account?{" "}
+                    <a
+                      href="/register"
+                      className="font-bold text-[var(--color-accent-primary)] hover:underline"
+                    >
+                      Create Account
+                    </a>
+                  </p>
+                </div>
               </form>
             </motion.div>
           )}

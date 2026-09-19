@@ -590,6 +590,18 @@ function RegisterContent() {
                   icon={<Me2uIcon name="profile" size={23} />}
                   onClick={completeRegistration}
                 />
+
+                <div className="mt-6 text-center">
+                  <p className="text-sm text-[var(--color-text-secondary)]">
+                    Already have an account?{" "}
+                    <a
+                      href="/login"
+                      className="font-bold text-[var(--color-accent-primary)] hover:underline"
+                    >
+                      Login
+                    </a>
+                  </p>
+                </div>
               </form>
             </motion.div>
           )}
