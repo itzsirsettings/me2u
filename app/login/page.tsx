@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import Me2uIcon from "@/components/Me2uIcon";
+import AuthParticleBackground from "@/components/AuthParticleBackground";
 
 function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -178,8 +179,9 @@ export default function Login() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-primary p-4">
-      <div className="w-full max-w-md rounded-[5px] border border-[var(--color-border)] bg-card p-8 shadow-[4px_4px_0px_var(--color-shadow)]">
+    <div className="relative flex min-h-screen items-center justify-center bg-white p-4">
+      <AuthParticleBackground />
+      <div className="relative z-10 w-full max-w-md rounded-[5px] border border-[var(--color-border)] bg-white p-8 shadow-[4px_4px_0px_rgba(8,19,32,0.05)]">
         <AnimatePresence mode="wait">
           {/* Standard login form */}
           {forgotStep === "none" && (

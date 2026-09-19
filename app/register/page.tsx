@@ -13,6 +13,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { type InputHTMLAttributes, useState, useEffect, Suspense } from "react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import AuthParticleBackground from "@/components/AuthParticleBackground";
 
 type FieldProps = {
   id: string;
@@ -310,8 +311,9 @@ function RegisterContent() {
   };
 
   return (
-    <main className="min-h-screen bg-[var(--color-bg-primary)] px-4 py-8 text-[var(--color-text-primary)]">
-      <section className="mx-auto w-full max-w-xl">
+    <main className="relative min-h-screen bg-white px-4 py-8 text-[var(--color-text-primary)]">
+      <AuthParticleBackground />
+      <section className="relative z-10 mx-auto w-full max-w-xl">
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-display font-bold leading-none tracking-tight md:text-5xl">
             {getPageTitle()}
@@ -332,7 +334,7 @@ function RegisterContent() {
               transition={{ duration: 0.2 }}
               className="space-y-6"
             >
-              <div className="rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-5 shadow-[4px_4px_0px_var(--color-shadow)] md:p-8">
+              <div className="rounded-[8px] border border-[var(--color-border)] bg-white p-5 shadow-[4px_4px_0px_rgba(8,19,32,0.05)] md:p-8">
                 <label
                   htmlFor="reg-email-input"
                   className="mb-3 block text-base font-sans font-bold text-[var(--color-text-primary)]"
@@ -374,7 +376,7 @@ function RegisterContent() {
             >
               <form
                 onSubmit={verifyEmailCode}
-                className="space-y-6 rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-5 shadow-[4px_4px_0px_var(--color-shadow)] md:p-8"
+                className="space-y-6 rounded-[8px] border border-[var(--color-border)] bg-white p-5 shadow-[4px_4px_0px_rgba(8,19,32,0.05)] md:p-8"
               >
                 <div>
                   <label
@@ -450,7 +452,7 @@ function RegisterContent() {
                     completeRegistration();
                   }
                 }}
-                className="space-y-6 rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-5 shadow-[4px_4px_0px_var(--color-shadow)] md:p-8"
+                className="space-y-6 rounded-[8px] border border-[var(--color-border)] bg-white p-5 shadow-[4px_4px_0px_rgba(8,19,32,0.05)] md:p-8"
               >
                 <RegistrationField
                   id="register-first-name"
