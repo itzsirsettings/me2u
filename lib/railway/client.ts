@@ -62,7 +62,11 @@ export function getRailwayDbClient(): Pool {
 
     let ssl: boolean | { rejectUnauthorized: boolean; ca?: string } = false;
     if (sslEnforced) {
-      ssl = { rejectUnauthorized: true };
+      // Allow self-signed certificates in development/Railway environments
+      // Set PGSSLMODE=verify-full to enforce strict certificate validation
+      const rejectUnauthorized = process.env.PGSSLMODE === "verify-full";
+      ssl = { rejectUnauthorized };
+      
       if (process.env.PGSSLROOTCERT) {
         ssl = { ...ssl, ca: process.env.PGSSLROOTCERT };
       }
