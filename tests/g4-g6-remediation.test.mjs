@@ -86,6 +86,24 @@ test("G5: skipped features are labelled Coming Soon (NIN + bill idempotency)", (
   assert.match(checklist, /FROM cron_runs/);
 });
 
+test("G5: bill payments are labelled Coming Soon and purchases disabled", () => {
+  const bills = read("app/bills/page.tsx");
+  const dashboard = read("app/dashboard/page.tsx");
+  const wallet = read("app/wallet/page.tsx");
+  const checklist = read("FINAL_PRODUCTION_CHECKLIST.md");
+
+  // Single launch flag gates the entire bills surface
+  assert.match(bills, /const BILLS_COMING_SOON = true;/);
+  assert.match(bills, /Bill payments — coming\s+soon/);
+  assert.match(bills, /BILLS_COMING_SOON \|\| submitting/);
+  assert.match(bills, /\? "Coming Soon"/);
+  // Entry points advertise the same state
+  assert.match(dashboard, /comingSoon: true/);
+  assert.match(dashboard, /Coming soon/);
+  assert.match(wallet, /Bill payments are coming soon/);
+  assert.match(checklist, /Bill payments \(airtime\/data\/electricity\/cable\)/);
+});
+
 test("G6: lint script does not use removed `next lint` command", () => {
   const pkg = JSON.parse(read("package.json"));
   assert.equal(pkg.scripts.lint, "eslint . --max-warnings 0");

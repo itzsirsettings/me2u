@@ -162,7 +162,6 @@ export default function WalletPage() {
       </motion.h1>
 
       <motion.div variants={itemVariants} className="w-full space-y-4 md:space-y-6">
-
         {/* Locked balance breakdown */}
         {user && user.locked > 0 && (
           <Card className="kinetic-border bg-[var(--color-bg-card)] p-5 shadow-[4px_4px_0px_var(--color-shadow)] md:p-6">
@@ -181,7 +180,10 @@ export default function WalletPage() {
             <div className="space-y-2">
               {(() => {
                 const loanDeposits = activeLoans
-                  .filter((l) => l.role === "borrower" && l.status === "active" && l.securityDeposit > 0)
+                  .filter(
+                    (l) =>
+                      l.role === "borrower" && l.status === "active" && l.securityDeposit > 0,
+                  )
                   .map((l) => ({
                     id: l.id,
                     source: l.source,
@@ -214,7 +216,9 @@ export default function WalletPage() {
                     {otherLocked > 0 && (
                       <div className="flex items-center justify-between rounded-[5px] bg-[var(--color-bg-secondary)] p-3 text-sm">
                         <div>
-                          <p className="font-semibold text-[var(--color-text-primary)]">Other Locked</p>
+                          <p className="font-semibold text-[var(--color-text-primary)]">
+                            Other Locked
+                          </p>
                           <p className="text-xs text-[var(--color-text-secondary)]">
                             Savings goals or pending transactions
                           </p>
@@ -241,8 +245,8 @@ export default function WalletPage() {
               <div className="min-w-0">
                 <h2 className="text-xl font-display md:text-3xl">Registration Deposit</h2>
                 <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
-                  Submit the ₦{registrationDepositAmount.toLocaleString()} deposit proof, then complete
-                  KYC to unlock full access.
+                  Submit the ₦{registrationDepositAmount.toLocaleString()} deposit proof, then
+                  complete KYC to unlock full access.
                 </p>
               </div>
               <span className="shrink-0 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-warning-bg)] px-3 py-1 text-xs font-bold uppercase text-[var(--color-warning-text)]">
@@ -261,13 +265,17 @@ export default function WalletPage() {
                       </span>
                     </div>
                     <div className="flex min-w-0 items-center justify-between gap-3">
-                      <span className="shrink-0 text-[var(--color-text-secondary)]">Account Name</span>
+                      <span className="shrink-0 text-[var(--color-text-secondary)]">
+                        Account Name
+                      </span>
                       <span className="overflow-anywhere min-w-0 text-right font-semibold">
                         {platformAccountName}
                       </span>
                     </div>
                     <div className="flex min-w-0 items-center justify-between gap-3">
-                      <span className="shrink-0 text-[var(--color-text-secondary)]">Account Number</span>
+                      <span className="shrink-0 text-[var(--color-text-secondary)]">
+                        Account Number
+                      </span>
                       <span className="overflow-anywhere min-w-0 text-right font-mono font-semibold">
                         {platformAccountNumber}
                       </span>
@@ -275,8 +283,8 @@ export default function WalletPage() {
                   </div>
                 ) : (
                   <p className="text-[var(--color-text-secondary)]">
-                    Payment account details will be shared soon. After payment, enter the transfer
-                    reference below.
+                    Payment account details will be shared soon. After payment, enter the
+                    transfer reference below.
                   </p>
                 )}
               </div>
@@ -352,13 +360,17 @@ export default function WalletPage() {
                   </span>
                 </div>
                 <div className="flex min-w-0 items-center justify-between gap-3">
-                  <span className="shrink-0 text-[var(--color-text-secondary)]">Account Name</span>
+                  <span className="shrink-0 text-[var(--color-text-secondary)]">
+                    Account Name
+                  </span>
                   <span className="overflow-anywhere min-w-0 text-right font-semibold">
                     {platformAccountName}
                   </span>
                 </div>
                 <div className="flex min-w-0 items-center justify-between gap-3">
-                  <span className="shrink-0 text-[var(--color-text-secondary)]">Account Number</span>
+                  <span className="shrink-0 text-[var(--color-text-secondary)]">
+                    Account Number
+                  </span>
                   <span className="overflow-anywhere min-w-0 text-right font-mono font-semibold">
                     {platformAccountNumber}
                   </span>
@@ -448,17 +460,25 @@ export default function WalletPage() {
               className="mobile-soft-card flex min-w-0 items-center justify-between gap-4 rounded-[18px] p-4 text-left transition active:scale-[0.99] hover:bg-[var(--color-hover-soft)]"
             >
               <div className="flex min-w-0 items-center gap-3">
-                <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--mobile-surface-muted)] ${link.tone}`}>
+                <div
+                  className={`grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--mobile-surface-muted)] ${link.tone}`}
+                >
                   <Me2uIcon name={link.icon} size={20} />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-black text-[var(--color-text-primary)]">{link.label}</p>
+                  <p className="text-sm font-black text-[var(--color-text-primary)]">
+                    {link.label}
+                  </p>
                   <p className="mt-0.5 text-xs text-[var(--color-text-secondary)] leading-snug">
                     {link.description}
                   </p>
                 </div>
               </div>
-              <Me2uIcon name="back" size={16} className="shrink-0 rotate-180 text-[var(--color-text-secondary)]" />
+              <Me2uIcon
+                name="back"
+                size={16}
+                className="shrink-0 rotate-180 text-[var(--color-text-secondary)]"
+              />
             </button>
           ))}
         </div>
@@ -469,7 +489,8 @@ export default function WalletPage() {
             <div className="min-w-0">
               <h2 className="text-xl font-display md:text-3xl">Pay Bills</h2>
               <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">
-                Airtime and data are live. Electricity and Cable TV coming in the next phase.
+                Bill payments are coming soon. Airtime, data, electricity, and cable TV are
+                launching together in the next phase.
               </p>
             </div>
             <Me2uIcon
@@ -480,18 +501,17 @@ export default function WalletPage() {
           </div>
           <div className="grid gap-3 rounded-[5px] bg-[var(--color-bg-secondary)] p-3.5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
             <p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">
-              VTpass-powered fulfilment with automatic refunds on failure.
+              VTpass-powered fulfilment with automatic refunds on failure — arriving soon.
             </p>
             <button
               type="button"
-              className="btn-primary min-h-11 px-5 text-sm font-bold"
+              className="btn-ghost min-h-11 px-5 text-sm font-bold"
               onClick={() => router.push("/bills")}
             >
-              Open Bills
+              Preview Bills
             </button>
           </div>
         </Card>
-
       </motion.div>
 
       <div className="h-24" />

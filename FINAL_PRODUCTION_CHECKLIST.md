@@ -201,6 +201,8 @@ The following features are **intentionally not implemented in this release** —
   Current state: `lib/nin.ts` accepts provider-based NIN checks with a demo fallback; KYC unlocks via bank-account ownership + passport admin review. Post-launch: verified NIN-hash storage + automated rejection of mismatched records.
 - **VTPass bill-service idempotency audit** — `[Coming Soon / Post-launch]`
   Current state: bill purchases already dedup via VTPass `request_id` + `Idempotency-Key` header. Post-launch: cross-service idempotency audit (Next.js ↔ NestJS bills service) with provider-reference uniqueness checks.
+- **Bill payments (airtime/data/electricity/cable)** — `[Coming Soon]`
+  Current state: the bills UI is labelled "Coming Soon" across `/bills`, `/dashboard`, and `/wallet` (`BILLS_COMING_SOON` flag in `app/bills/page.tsx`); purchases are disabled. Before launch: VTPass production credentials, the idempotency audit above, then flip `BILLS_COMING_SOON` to `false`.
 - **Load/stress testing at 50 concurrent users** — `[Coming Soon / Post-launch]`
   Run after soft launch with a staging database clone; gate on 0 double-withdraws / 0 negative balances.
 

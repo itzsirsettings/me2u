@@ -57,6 +57,13 @@ function statusClass(status: BillTransaction["status"]) {
   return "bg-[var(--color-negative-bg)] text-[var(--color-negative-text)]";
 }
 
+/**
+ * G5 launch directive: bill payments are labelled Coming Soon until the
+ * VTPass production credential + idempotency audit are signed off.
+ * Flip to false to re-enable purchases without touching the UI elsewhere.
+ */
+const BILLS_COMING_SOON = true;
+
 export default function BillsPage() {
   const router = useRouter();
   const user = useStore((state) => state.user);
@@ -199,6 +206,21 @@ export default function BillsPage() {
         </p>
       </div>
 
+      {BILLS_COMING_SOON && (
+        <div className="mb-4 flex items-start gap-3 rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3.5 md:mb-6">
+          <span aria-hidden className="shrink-0 text-sm">
+            ℹ️
+          </span>
+          <p className="text-xs leading-relaxed text-[var(--color-text-secondary)]">
+            <span className="font-black text-[var(--color-text-primary)]">
+              Bill payments — coming soon.
+            </span>{" "}
+            Airtime, data, electricity, and cable TV purchases are launching soon. Your wallet,
+            loans, and transfers are unaffected in the meantime.
+          </p>
+        </div>
+      )}
+
       <div className="grid gap-4 lg:grid-cols-[minmax(0,0.95fr)_minmax(340px,0.55fr)]">
         <section className="mobile-soft-card min-w-0 rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[4px_4px_0px_var(--color-shadow)] md:p-6">
           <div className="mb-4 grid grid-cols-2 gap-2 md:grid-cols-4">
@@ -319,13 +341,15 @@ export default function BillsPage() {
 
             <button
               type="button"
-              disabled={submitting || loadingData || !selectedProduct}
+              disabled={BILLS_COMING_SOON || submitting || loadingData || !selectedProduct}
               onClick={submitPurchase}
               className="btn-primary min-h-12 w-full text-sm font-black disabled:opacity-55"
             >
-              {submitting
-                ? "Processing..."
-                : `Pay from Me2U Wallet ${payableAmount > 0 ? money(payableAmount) : ""}`}
+              {BILLS_COMING_SOON
+                ? "Coming Soon"
+                : submitting
+                  ? "Processing..."
+                  : `Pay from Me2U Wallet ${payableAmount > 0 ? money(payableAmount) : ""}`}
             </button>
           </div>
         </section>

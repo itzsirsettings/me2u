@@ -6,7 +6,11 @@ import Me2uIcon, { type Me2uIconName } from "@/components/Me2uIcon";
 import NotificationBell from "@/components/NotificationBell";
 import { registrationDepositAmount } from "@/lib/loans";
 import { useStore, type Transaction } from "@/lib/store";
-import { getCreditBuilderBadges, getCreditLevel, getTrustScoreBreakdown } from "@/lib/product-features";
+import {
+  getCreditBuilderBadges,
+  getCreditLevel,
+  getTrustScoreBreakdown,
+} from "@/lib/product-features";
 import { motion, type Variants } from "framer-motion";
 
 const serviceActions: Array<{
@@ -16,11 +20,36 @@ const serviceActions: Array<{
   tone: string;
   requiresKyc?: boolean;
   requiresDeposit?: boolean;
+  comingSoon?: boolean;
 }> = [
-  { label: "Pay Bills", path: "/bills", icon: "bill", tone: "bg-lime/20 text-lime" },
-  { label: "Market", path: "/marketplace", icon: "market", tone: "bg-green/20 text-green", requiresKyc: true },
-  { label: "Loans", path: "/loans", icon: "loans", tone: "bg-lime text-navy", requiresKyc: true },
-  { label: "KYC", path: "/kyc", icon: "shield", tone: "bg-green text-navy", requiresDeposit: true },
+  {
+    label: "Pay Bills",
+    path: "/bills",
+    icon: "bill",
+    tone: "bg-lime/20 text-lime",
+    comingSoon: true,
+  },
+  {
+    label: "Market",
+    path: "/marketplace",
+    icon: "market",
+    tone: "bg-green/20 text-green",
+    requiresKyc: true,
+  },
+  {
+    label: "Loans",
+    path: "/loans",
+    icon: "loans",
+    tone: "bg-lime text-navy",
+    requiresKyc: true,
+  },
+  {
+    label: "KYC",
+    path: "/kyc",
+    icon: "shield",
+    tone: "bg-green text-navy",
+    requiresDeposit: true,
+  },
 ];
 
 const simpleShortcuts: Array<{
@@ -39,20 +68,34 @@ const simpleShortcuts: Array<{
 
 function getInitials(name?: string | null) {
   const parts = (name || "Me2U User").trim().split(/\s+/).filter(Boolean);
-  return parts
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("") || "MU";
+  return (
+    parts
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join("") || "MU"
+  );
 }
 
 function transactionAmountTone(transaction: Transaction) {
-  return ["deposit", "loan_disbursed", "repayment_received", "affiliate_reward", "bill_refund"].includes(transaction.type)
+  return [
+    "deposit",
+    "loan_disbursed",
+    "repayment_received",
+    "affiliate_reward",
+    "bill_refund",
+  ].includes(transaction.type)
     ? "text-[var(--color-positive-text)]"
     : "text-[var(--color-negative-text)]";
 }
 
 function transactionPrefix(transaction: Transaction) {
-  return ["deposit", "loan_disbursed", "repayment_received", "affiliate_reward", "bill_refund"].includes(transaction.type)
+  return [
+    "deposit",
+    "loan_disbursed",
+    "repayment_received",
+    "affiliate_reward",
+    "bill_refund",
+  ].includes(transaction.type)
     ? "+"
     : "-";
 }
@@ -96,11 +139,12 @@ export default function Dashboard() {
   const visibleLoans = activeLoans;
   const activeLoanCount = visibleLoans.filter((loan) => loan.status === "active").length;
   const balance = user?.balance || 0;
-  const bankLabel = user?.bankName && user.accountNumber
-    ? `${user.bankName} • ${user.accountNumber}`
+  const bankLabel =
+    user?.bankName && user.accountNumber
+      ? `${user.bankName} • ${user.accountNumber}`
       : user?.kycVerified
-      ? "Wallet account ready"
-      : "Verify to add bank";
+        ? "Wallet account ready"
+        : "Verify to add bank";
   const creditLevel = getCreditLevel(user?.trustScore || 0);
   const trustBreakdown = getTrustScoreBreakdown(user, transactions, activeLoans).slice(0, 4);
   const creditBadges = getCreditBuilderBadges(user, transactions, activeLoans);
@@ -114,13 +158,18 @@ export default function Dashboard() {
       initial="hidden"
       animate="show"
     >
-      <motion.header variants={itemVariants} className="mb-3.5 flex w-full min-w-0 items-center justify-between gap-2.5 md:mb-10">
+      <motion.header
+        variants={itemVariants}
+        className="mb-3.5 flex w-full min-w-0 items-center justify-between gap-2.5 md:mb-10"
+      >
         <div className="flex min-w-0 items-center gap-2">
           <div className="relative grid h-[3.15rem] w-[3.15rem] shrink-0 place-items-center rounded-full bg-[var(--color-accent-primary)] text-lg font-black text-[var(--color-on-accent)] shadow-[0_8px_18px_rgba(34,197,94,0.22)]">
             {getInitials(user?.name)}
           </div>
           <div className="min-w-0">
-            <p className="text-[0.92rem] font-medium leading-tight text-[var(--color-text-primary)]">Welcome</p>
+            <p className="text-[0.92rem] font-medium leading-tight text-[var(--color-text-primary)]">
+              Welcome
+            </p>
             <h1 className="truncate text-[1.15rem] font-black leading-tight tracking-normal text-[var(--color-text-primary)]">
               @{username}
             </h1>
@@ -133,9 +182,14 @@ export default function Dashboard() {
 
       <div className="grid min-w-0 gap-2.5 md:grid-cols-[minmax(0,1.05fr)_minmax(360px,0.95fr)] md:items-start md:gap-6">
         <div className="grid min-w-0 gap-2.5">
-          <motion.section variants={itemVariants} className="mobile-soft-card relative min-w-0 overflow-hidden p-3">
+          <motion.section
+            variants={itemVariants}
+            className="mobile-soft-card relative min-w-0 overflow-hidden p-3"
+          >
             <div className="mb-2.5 flex items-start justify-between gap-2.5">
-              <p className="text-[1rem] font-extrabold leading-none tracking-normal">Main Balance</p>
+              <p className="text-[1rem] font-extrabold leading-none tracking-normal">
+                Main Balance
+              </p>
               <div className="min-w-0 max-w-[55%] rounded-full bg-[var(--mobile-surface-muted)] px-2.5 py-1 text-right text-[9px] font-black leading-tight text-[var(--color-text-primary)]">
                 <span className="block truncate">{bankLabel}</span>
               </div>
@@ -167,7 +221,10 @@ export default function Dashboard() {
             </div>
           </motion.section>
 
-          <motion.section variants={itemVariants} className="mobile-soft-card grid min-w-0 grid-cols-4 overflow-hidden px-1 py-2">
+          <motion.section
+            variants={itemVariants}
+            className="mobile-soft-card grid min-w-0 grid-cols-4 overflow-hidden px-1 py-2"
+          >
             {serviceActions.map((action, index) => {
               const disabled =
                 (action.requiresDeposit && !user?.registrationDepositPaid) ||
@@ -184,18 +241,28 @@ export default function Dashboard() {
                     if (!disabled) router.push(action.path);
                   }}
                 >
-                  <span className={`grid h-8 w-8 place-items-center rounded-full ${action.tone}`}>
+                  <span
+                    className={`grid h-8 w-8 place-items-center rounded-full ${action.tone}`}
+                  >
                     <Me2uIcon name={action.icon} size={17} />
                   </span>
                   <span className="text-[0.72rem] font-black leading-none text-[var(--color-text-primary)]">
                     {action.label}
                   </span>
+                  {action.comingSoon ? (
+                    <span className="text-[0.6rem] font-bold leading-none text-[var(--color-text-secondary)]">
+                      Coming soon
+                    </span>
+                  ) : null}
                 </button>
               );
             })}
           </motion.section>
 
-          <motion.section variants={itemVariants} className="mobile-soft-card grid min-w-0 grid-cols-3 overflow-hidden px-1 py-2">
+          <motion.section
+            variants={itemVariants}
+            className="mobile-soft-card grid min-w-0 grid-cols-3 overflow-hidden px-1 py-2"
+          >
             {simpleShortcuts.map((action, index) => (
               <button
                 key={action.label}
@@ -233,12 +300,19 @@ export default function Dashboard() {
             </div>
             <div className="grid gap-2">
               {trustBreakdown.map((item) => (
-                <div key={item.label} className="rounded-[12px] bg-[var(--mobile-surface-muted)] p-2.5">
+                <div
+                  key={item.label}
+                  className="rounded-[12px] bg-[var(--mobile-surface-muted)] p-2.5"
+                >
                   <div className="flex items-center justify-between gap-2 text-xs font-black">
                     <span>{item.label}</span>
-                    <span>{item.earned}/{item.weight}</span>
+                    <span>
+                      {item.earned}/{item.weight}
+                    </span>
                   </div>
-                  <p className="mt-1 text-[11px] font-semibold text-[var(--color-text-secondary)]">{item.detail}</p>
+                  <p className="mt-1 text-[11px] font-semibold text-[var(--color-text-secondary)]">
+                    {item.detail}
+                  </p>
                 </div>
               ))}
             </div>
@@ -261,7 +335,10 @@ export default function Dashboard() {
         </div>
 
         <div className="grid min-w-0 gap-3">
-          <motion.section variants={itemVariants} className="relative min-w-0 overflow-hidden rounded-[22px] bg-navy p-4 text-snow">
+          <motion.section
+            variants={itemVariants}
+            className="relative min-w-0 overflow-hidden rounded-[22px] bg-navy p-4 text-snow"
+          >
             <div className="mb-4 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5">
                 <span className="grid h-8 w-8 place-items-center rounded-full bg-lime text-navy">
@@ -292,7 +369,9 @@ export default function Dashboard() {
               onClick={() => router.push("/admin")}
             >
               <div>
-                <p className="text-sm font-bold text-[var(--color-text-secondary)]">Operations</p>
+                <p className="text-sm font-bold text-[var(--color-text-secondary)]">
+                  Operations
+                </p>
                 <p className="mt-1 text-base font-black">Admin Dashboard</p>
               </div>
               <span className="grid h-11 w-11 place-items-center rounded-full bg-[var(--mobile-surface-muted)] text-[var(--color-text-primary)]">
@@ -335,7 +414,9 @@ export default function Dashboard() {
                             {new Date(transaction.date).toLocaleString()}
                           </p>
                         </div>
-                        <p className={`max-w-[36%] shrink-0 truncate text-right text-xs font-black sm:text-sm ${transactionAmountTone(transaction)}`}>
+                        <p
+                          className={`max-w-[36%] shrink-0 truncate text-right text-xs font-black sm:text-sm ${transactionAmountTone(transaction)}`}
+                        >
                           {transactionPrefix(transaction)}₦{transaction.amount.toLocaleString()}
                         </p>
                       </div>
@@ -349,19 +430,27 @@ export default function Dashboard() {
                         >
                           <div className="flex justify-between gap-2">
                             <span>Transaction ID</span>
-                            <span className="font-mono text-[var(--color-text-primary)] select-all">{transaction.id}</span>
+                            <span className="font-mono text-[var(--color-text-primary)] select-all">
+                              {transaction.id}
+                            </span>
                           </div>
                           <div className="flex justify-between gap-2">
                             <span>Type</span>
-                            <span className="capitalize text-[var(--color-text-primary)]">{transaction.type.replace(/_/g, " ")}</span>
+                            <span className="capitalize text-[var(--color-text-primary)]">
+                              {transaction.type.replace(/_/g, " ")}
+                            </span>
                           </div>
                           <div className="flex justify-between gap-2">
                             <span>Processing Fee</span>
-                            <span className="text-[var(--color-text-primary)]">{transaction.type === "withdrawal" ? "₦100" : "₦0"}</span>
+                            <span className="text-[var(--color-text-primary)]">
+                              {transaction.type === "withdrawal" ? "₦100" : "₦0"}
+                            </span>
                           </div>
                           <div className="flex justify-between gap-2">
                             <span>Status</span>
-                            <span className="font-bold text-[var(--color-positive-text)]">SUCCESSFUL</span>
+                            <span className="font-bold text-[var(--color-positive-text)]">
+                              SUCCESSFUL
+                            </span>
                           </div>
                         </motion.div>
                       )}
