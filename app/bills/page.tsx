@@ -27,7 +27,8 @@ type BillTransaction = {
   network: string | null;
   customer_identifier: string;
   selling_price: number;
-  status: "initiated" | "debited" | "pending" | "successful" | "failed" | "reversed" | "refunded";
+  status:
+    "initiated" | "debited" | "pending" | "successful" | "failed" | "reversed" | "refunded";
   created_at: string;
   product?: { name: string; network: string | null } | null;
 };
@@ -49,8 +50,10 @@ function money(value: number) {
 }
 
 function statusClass(status: BillTransaction["status"]) {
-  if (status === "successful") return "bg-[var(--color-positive-bg)] text-[var(--color-positive-text)]";
-  if (status === "pending" || status === "debited" || status === "initiated") return "bg-[var(--color-warning-bg)] text-[var(--color-warning-text)]";
+  if (status === "successful")
+    return "bg-[var(--color-positive-bg)] text-[var(--color-positive-text)]";
+  if (status === "pending" || status === "debited" || status === "initiated")
+    return "bg-[var(--color-warning-bg)] text-[var(--color-warning-text)]";
   return "bg-[var(--color-negative-bg)] text-[var(--color-negative-text)]";
 }
 
@@ -82,14 +85,21 @@ export default function BillsPage() {
     () =>
       products.filter((product) => {
         const categorySlug = product.category?.slug;
-        return categorySlug === selectedCategory && product.network?.toLowerCase() === selectedNetwork.toLowerCase();
+        return (
+          categorySlug === selectedCategory &&
+          product.network?.toLowerCase() === selectedNetwork.toLowerCase()
+        );
       }),
     [products, selectedCategory, selectedNetwork],
   );
 
-  const selectedProduct = filteredProducts.find((product) => product.id === productId) || filteredProducts[0];
-  const isFixedPrice = selectedCategory === "data" || Number(selectedProduct?.selling_price || 0) > 0;
-  const payableAmount = isFixedPrice ? Number(selectedProduct?.selling_price || 0) : Number(amount || 0);
+  const selectedProduct =
+    filteredProducts.find((product) => product.id === productId) || filteredProducts[0];
+  const isFixedPrice =
+    selectedCategory === "data" || Number(selectedProduct?.selling_price || 0) > 0;
+  const payableAmount = isFixedPrice
+    ? Number(selectedProduct?.selling_price || 0)
+    : Number(amount || 0);
 
   const loadBillsData = async () => {
     setLoadingData(true);
@@ -100,7 +110,9 @@ export default function BillsPage() {
       ]);
       setProducts(productRows);
       setTransactions(transactionRows);
-      const firstProduct = productRows.find((item) => item.category?.slug === selectedCategory && item.network === selectedNetwork);
+      const firstProduct = productRows.find(
+        (item) => item.category?.slug === selectedCategory && item.network === selectedNetwork,
+      );
       setProductId((current) => current || firstProduct?.id || "");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Unable to load bills.");
@@ -178,9 +190,12 @@ export default function BillsPage() {
   return (
     <main className="app-mobile-screen mx-auto w-full max-w-md px-3.5 pt-[4.85rem] md:max-w-6xl md:px-6 md:py-24">
       <div className="mb-5 min-w-0 md:mb-8">
-        <h1 className="font-display text-3xl font-black leading-none md:text-5xl">Bills & Utilities</h1>
+        <h1 className="font-display text-3xl font-black leading-none md:text-5xl">
+          Bills & Utilities
+        </h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--color-text-secondary)]">
-          Buy airtime and data from your Me2U wallet with provider tracking, automatic refunds, and trust-score activity.
+          Buy airtime and data from your Me2U wallet with provider tracking, automatic refunds,
+          and trust-score activity.
         </p>
       </div>
 
@@ -203,15 +218,27 @@ export default function BillsPage() {
                 >
                   <Me2uIcon name={category.icon} size={20} />
                   <span className="mt-2 block text-sm font-black">{category.label}</span>
-                  {!category.ready ? <span className="mt-1 block text-[10px] font-bold text-[var(--color-text-secondary)]">Next phase</span> : null}
+                  {!category.ready ? (
+                    <span className="mt-1 block text-[10px] font-bold text-[var(--color-text-secondary)]">
+                      Next phase
+                    </span>
+                  ) : null}
                 </button>
               );
             })}
           </div>
 
+          <p className="mb-4 text-[10px] leading-relaxed text-[var(--color-text-secondary)]">
+            ℹ️ Enhanced receipt-level dedup &amp; VTPass bill-service idempotency audit — coming
+            soon. Airtime and data purchases today already use VTPass request dedup plus
+            Idempotency-Key headers.
+          </p>
+
           <div className="grid gap-4 rounded-[5px] bg-[var(--color-bg-secondary)] p-3.5">
             <div>
-              <label className="mb-2 block text-xs font-black uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Network</label>
+              <label className="mb-2 block text-xs font-black uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">
+                Network
+              </label>
               <div className="grid grid-cols-4 gap-2">
                 {networks.map((network) => (
                   <button
@@ -232,7 +259,9 @@ export default function BillsPage() {
 
             {selectedCategory === "data" ? (
               <div>
-                <label className="mb-2 block text-xs font-black uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Data plan</label>
+                <label className="mb-2 block text-xs font-black uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">
+                  Data plan
+                </label>
                 <select
                   value={productId}
                   onChange={(event) => setProductId(event.target.value)}
@@ -248,7 +277,9 @@ export default function BillsPage() {
             ) : null}
 
             <div>
-              <label className="mb-2 block text-xs font-black uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Phone number</label>
+              <label className="mb-2 block text-xs font-black uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">
+                Phone number
+              </label>
               <input
                 value={phone}
                 onChange={(event) => setPhone(event.target.value)}
@@ -259,7 +290,9 @@ export default function BillsPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-xs font-black uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Amount</label>
+              <label className="mb-2 block text-xs font-black uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">
+                Amount
+              </label>
               <input
                 value={isFixedPrice ? money(payableAmount) : amount}
                 onChange={(event) => setAmount(event.target.value)}
@@ -271,7 +304,9 @@ export default function BillsPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-xs font-black uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Transaction PIN</label>
+              <label className="mb-2 block text-xs font-black uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">
+                Transaction PIN
+              </label>
               <input
                 value={pin}
                 onChange={(event) => setPin(event.target.value.replace(/\D/g, "").slice(0, 4))}
@@ -288,7 +323,9 @@ export default function BillsPage() {
               onClick={submitPurchase}
               className="btn-primary min-h-12 w-full text-sm font-black disabled:opacity-55"
             >
-              {submitting ? "Processing..." : `Pay from Me2U Wallet ${payableAmount > 0 ? money(payableAmount) : ""}`}
+              {submitting
+                ? "Processing..."
+                : `Pay from Me2U Wallet ${payableAmount > 0 ? money(payableAmount) : ""}`}
             </button>
           </div>
         </section>
@@ -299,7 +336,11 @@ export default function BillsPage() {
           <section className="mobile-soft-card rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[4px_4px_0px_var(--color-shadow)]">
             <div className="mb-3 flex items-center justify-between gap-3">
               <h2 className="font-display text-xl font-black">Recent Bills</h2>
-              <button type="button" className="btn-ghost min-h-9 px-3 text-xs font-bold" onClick={loadBillsData}>
+              <button
+                type="button"
+                className="btn-ghost min-h-9 px-3 text-xs font-bold"
+                onClick={loadBillsData}
+              >
                 Refresh
               </button>
             </div>
@@ -317,12 +358,20 @@ export default function BillsPage() {
                     className="flex min-w-0 items-center justify-between gap-2 rounded-[5px] bg-[var(--color-bg-secondary)] p-3 text-left text-sm"
                   >
                     <span className="min-w-0">
-                      <b className="block truncate">{transaction.product?.name || transaction.category}</b>
-                      <span className="block truncate text-xs text-[var(--color-text-secondary)]">{transaction.customer_identifier}</span>
+                      <b className="block truncate">
+                        {transaction.product?.name || transaction.category}
+                      </b>
+                      <span className="block truncate text-xs text-[var(--color-text-secondary)]">
+                        {transaction.customer_identifier}
+                      </span>
                     </span>
                     <span className="shrink-0 text-right">
-                      <b className="block font-mono">{money(Number(transaction.selling_price))}</b>
-                      <span className={`mt-1 inline-block rounded-[5px] px-2 py-0.5 text-[10px] font-black uppercase ${statusClass(transaction.status)}`}>
+                      <b className="block font-mono">
+                        {money(Number(transaction.selling_price))}
+                      </b>
+                      <span
+                        className={`mt-1 inline-block rounded-[5px] px-2 py-0.5 text-[10px] font-black uppercase ${statusClass(transaction.status)}`}
+                      >
                         {transaction.status}
                       </span>
                     </span>

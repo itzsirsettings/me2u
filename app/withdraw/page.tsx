@@ -61,7 +61,7 @@ export default function WithdrawPage() {
   const [verifying, setVerifying] = useState(false);
   const [verified, setVerified] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  
+
   const user = useStore((s) => s.user);
   const activeLoans = useStore((s) => s.activeLoans);
   const loadCurrentUser = useStore((s) => s.loadCurrentUser);
@@ -86,14 +86,17 @@ export default function WithdrawPage() {
   const shortfall = Math.max(0, requiredBalance - currentBalance);
 
   const hasOutstandingLoans = activeLoans.some(
-    (loan) => loan.role === "borrower" && loan.status === "active"
+    (loan) => loan.role === "borrower" && loan.status === "active",
   );
 
-  const canProceedToBank = withdrawalAmount >= MIN_WITHDRAWAL && currentBalance >= requiredBalance && !hasOutstandingLoans;
+  const canProceedToBank =
+    withdrawalAmount >= MIN_WITHDRAWAL &&
+    currentBalance >= requiredBalance &&
+    !hasOutstandingLoans;
 
   const resolveAccount = useCallback(async () => {
     if (!bankCode || accountNumber.length !== 10) return;
-    
+
     setVerifying(true);
     try {
       const res = await authorizedFetch("/api/wallet/resolve-account", {
@@ -102,7 +105,7 @@ export default function WithdrawPage() {
       });
 
       const data = await res.json();
-      
+
       if (!res.ok) {
         toast.error(data.error || "Could not resolve account");
         setVerified(false);
@@ -183,39 +186,50 @@ export default function WithdrawPage() {
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
-    show: { opacity: 1, transition: { staggerChildren: 0.1 } }
+    show: { opacity: 1, transition: { staggerChildren: 0.1 } },
   };
 
   const itemVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } }
+    show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
   };
 
   if (!isAuthenticated && !isLoading) return null;
 
   return (
-    <motion.div 
+    <motion.div
       className="app-mobile-screen mx-auto flex w-full max-w-md flex-col items-center px-3.5 pt-[4.85rem] md:max-w-xl md:px-6 md:py-24"
       variants={containerVariants}
       initial="hidden"
       animate="show"
     >
-      <motion.h1 variants={itemVariants} className="sr-only md:not-sr-only md:mb-8 md:text-5xl md:font-display md:leading-[0.85] md:tracking-tighter">
+      <motion.h1
+        variants={itemVariants}
+        className="sr-only md:not-sr-only md:mb-8 md:text-5xl md:font-display md:leading-[0.85] md:tracking-tighter"
+      >
         Withdraw
       </motion.h1>
-      
+
       <motion.div variants={itemVariants} className="w-full">
         <Card className="kinetic-border p-5 shadow-[4px_4px_0px_var(--color-shadow)] bg-[var(--color-bg-card)] md:p-8">
           {/* Balance Header */}
           <div className="mb-6 flex items-center justify-between border-b border-[var(--color-border)] pb-4">
             <div>
-              <p className="text-xs font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)] mb-1">Available Balance</p>
-              <p className="text-2xl font-display leading-none md:text-3xl">₦{currentBalance.toLocaleString()}</p>
+              <p className="text-xs font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)] mb-1">
+                Available Balance
+              </p>
+              <p className="text-2xl font-display leading-none md:text-3xl">
+                ₦{currentBalance.toLocaleString()}
+              </p>
             </div>
             {(user?.locked ?? 0) > 0 && (
               <div className="text-right">
-                <p className="text-xs font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)] mb-1">Locked</p>
-                <p className="text-lg font-mono text-[var(--color-text-secondary)]">₦{(user?.locked ?? 0).toLocaleString()}</p>
+                <p className="text-xs font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)] mb-1">
+                  Locked
+                </p>
+                <p className="text-lg font-mono text-[var(--color-text-secondary)]">
+                  ₦{(user?.locked ?? 0).toLocaleString()}
+                </p>
               </div>
             )}
           </div>
@@ -223,18 +237,28 @@ export default function WithdrawPage() {
           {/* Blockers */}
           {hasOutstandingLoans && (
             <div className="mb-4 rounded-[12px] border border-[var(--color-warning-text)] bg-[var(--color-warning-bg)] p-4 flex gap-3 items-start">
-              <Me2uIcon name="alert" size={20} className="shrink-0 text-[var(--color-warning-text)] mt-0.5" />
+              <Me2uIcon
+                name="alert"
+                size={20}
+                className="shrink-0 text-[var(--color-warning-text)] mt-0.5"
+              />
               <div className="text-xs font-sans leading-relaxed text-[var(--color-warning-text)]">
-                <span className="font-bold">Repayment Required:</span> Repay outstanding loans before withdrawing.
+                <span className="font-bold">Repayment Required:</span> Repay outstanding loans
+                before withdrawing.
               </div>
             </div>
           )}
 
           {!user?.transactionPin && !hasOutstandingLoans && (
             <div className="mb-4 rounded-[12px] border border-[var(--color-warning-text)] bg-[var(--color-warning-bg)] p-4 flex gap-3 items-start">
-              <Me2uIcon name="shield" size={20} className="shrink-0 text-[var(--color-warning-text)] mt-0.5" />
+              <Me2uIcon
+                name="shield"
+                size={20}
+                className="shrink-0 text-[var(--color-warning-text)] mt-0.5"
+              />
               <div className="text-xs font-sans leading-relaxed text-[var(--color-warning-text)]">
-                <span className="font-bold">PIN Required:</span> Set up a transaction PIN in Security settings.
+                <span className="font-bold">PIN Required:</span> Set up a transaction PIN in
+                Security settings.
               </div>
             </div>
           )}
@@ -266,15 +290,49 @@ export default function WithdrawPage() {
                   <div className="grid gap-2.5 rounded-[12px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3.5 text-xs">
                     <div className="flex items-center justify-between">
                       <span className="text-[var(--color-text-secondary)]">Amount</span>
-                      <span className="overflow-anywhere min-w-0 text-right font-mono font-semibold">₦{withdrawalAmount.toLocaleString()}</span>
+                      <span className="overflow-anywhere min-w-0 text-right font-mono font-semibold">
+                        ₦{withdrawalAmount.toLocaleString()}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-[var(--color-text-secondary)]">Fee (1.5% + ₦{withdrawalFeeAmount})</span>
-                      <span className="overflow-anywhere min-w-0 text-right font-mono font-semibold">₦{totalFee.toLocaleString()}</span>
+                      <span className="text-[var(--color-text-secondary)]">
+                        Me2U processing fee
+                      </span>
+                      <span className="overflow-anywhere min-w-0 text-right font-mono font-semibold">
+                        ₦{withdrawalFeeAmount.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[var(--color-text-secondary)]">
+                        Paystack fee (1.5%)
+                      </span>
+                      <span className="overflow-anywhere min-w-0 text-right font-mono font-semibold">
+                        ₦
+                        {fee.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[var(--color-text-secondary)]">Total fee</span>
+                      <span className="overflow-anywhere min-w-0 text-right font-mono font-semibold">
+                        ₦
+                        {totalFee.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between border-t border-[var(--color-border)] pt-2 font-semibold">
                       <span>You receive</span>
-                      <span className="font-mono text-[var(--color-positive-text)]">₦{netAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="font-mono text-[var(--color-positive-text)]">
+                        ₦
+                        {netAmount.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </span>
                     </div>
                     {shortfall > 0 && (
                       <p className="rounded-[8px] bg-[var(--color-warning-bg)] p-3 text-[var(--color-warning-text)]">
@@ -290,11 +348,17 @@ export default function WithdrawPage() {
                 )}
 
                 {hasOutstandingLoans ? (
-                  <button onClick={() => router.push("/loans")} className="btn-primary h-11 w-full text-sm md:h-12">
+                  <button
+                    onClick={() => router.push("/loans")}
+                    className="btn-primary h-11 w-full text-sm md:h-12"
+                  >
                     Repay Loans
                   </button>
                 ) : !user?.transactionPin ? (
-                  <button onClick={() => router.push("/security")} className="btn-primary h-11 w-full text-sm md:h-12">
+                  <button
+                    onClick={() => router.push("/security")}
+                    className="btn-primary h-11 w-full text-sm md:h-12"
+                  >
                     Set up Transaction PIN
                   </button>
                 ) : (
@@ -321,15 +385,49 @@ export default function WithdrawPage() {
                 <div className="rounded-[12px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 space-y-2 text-xs">
                   <div className="flex items-center justify-between">
                     <span className="text-[var(--color-text-secondary)]">Withdraw</span>
-                    <span className="overflow-anywhere min-w-0 text-right font-mono font-semibold">₦{withdrawalAmount.toLocaleString()}</span>
+                    <span className="overflow-anywhere min-w-0 text-right font-mono font-semibold">
+                      ₦{withdrawalAmount.toLocaleString()}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-[var(--color-text-secondary)]">Fee</span>
-                    <span className="overflow-anywhere min-w-0 text-right font-mono font-semibold">₦{totalFee.toLocaleString()}</span>
+                    <span className="text-[var(--color-text-secondary)]">
+                      Me2U processing fee
+                    </span>
+                    <span className="overflow-anywhere min-w-0 text-right font-mono font-semibold">
+                      ₦{withdrawalFeeAmount.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[var(--color-text-secondary)]">
+                      Paystack fee (1.5%)
+                    </span>
+                    <span className="overflow-anywhere min-w-0 text-right font-mono font-semibold">
+                      ₦
+                      {fee.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[var(--color-text-secondary)]">Total fee</span>
+                    <span className="overflow-anywhere min-w-0 text-right font-mono font-semibold">
+                      ₦
+                      {totalFee.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between border-t border-[var(--color-border)] pt-2 font-semibold">
                     <span>You receive</span>
-                    <span className="font-mono text-[var(--color-positive-text)]">₦{netAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    <span className="font-mono text-[var(--color-positive-text)]">
+                      ₦
+                      {netAmount.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
                   </div>
                 </div>
 
@@ -349,7 +447,9 @@ export default function WithdrawPage() {
                   >
                     <option value="">— select bank —</option>
                     {NIGERIAN_BANKS.map((bank) => (
-                      <option key={bank.code} value={bank.code}>{bank.name}</option>
+                      <option key={bank.code} value={bank.code}>
+                        {bank.name}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -383,7 +483,9 @@ export default function WithdrawPage() {
                     </button>
                   </div>
                   {accountNumber.length > 0 && accountNumber.length < 10 && (
-                    <p className="mt-1 text-xs text-[var(--color-text-danger)]">Enter a valid 10-digit account number</p>
+                    <p className="mt-1 text-xs text-[var(--color-text-danger)]">
+                      Enter a valid 10-digit account number
+                    </p>
                   )}
                 </div>
 
@@ -411,10 +513,14 @@ export default function WithdrawPage() {
                 <div className="space-y-2 pt-2">
                   <button
                     onClick={handleSubmit}
-                    disabled={submitting || !verified || !accountName || transactionPin.length !== 4}
+                    disabled={
+                      submitting || !verified || !accountName || transactionPin.length !== 4
+                    }
                     className="btn-primary h-11 w-full text-sm md:h-12 disabled:opacity-40"
                   >
-                    {submitting ? "Processing…" : `Withdraw ₦${netAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                    {submitting
+                      ? "Processing…"
+                      : `Withdraw ₦${netAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                   </button>
                   <button
                     onClick={() => {

@@ -7,24 +7,15 @@ import {
   tooManyRequestsResponse,
 } from "@/lib/server/auth";
 import { getWithdrawalProcessorFee, withdrawalFeeAmount } from "@/lib/revenue";
-import {
-  verifyAndRecordPinAttempt,
-  type PinAttemptResult,
-} from "@/lib/server/pin";
-import {
-  withTransaction,
-  withUserTransaction,
-} from "@/lib/railway/client";
+import { verifyAndRecordPinAttempt, type PinAttemptResult } from "@/lib/server/pin";
+import { withTransaction, withUserTransaction } from "@/lib/railway/client";
 import {
   readIdempotencyKey,
   replayIfDuplicate,
   rememberIdempotentResponse,
   requestMeta,
 } from "@/lib/server/idempotency";
-import {
-  buildLedgerRef,
-  recordWalletMove,
-} from "@/lib/server/wallet-ledger";
+import { buildLedgerRef, recordWalletMove } from "@/lib/server/wallet-ledger";
 import { logWarn } from "@/lib/server/logger";
 
 const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY || "";
@@ -50,23 +41,18 @@ async function createPaystackRecipient(
     }),
   });
   const data = await res.json();
-  if (!data.status)
-    throw new Error(data.message || "Failed to create transfer recipient");
+  if (!data.status) throw new Error(data.message || "Failed to create transfer recipient");
   return data.data;
 }
 
-async function resolvePaystackAccount(
-  accountNumber: string,
-  bankCode: string,
-) {
+async function resolvePaystackAccount(accountNumber: string, bankCode: string) {
   const params = new URLSearchParams({
     account_number: accountNumber,
     bank_code: bankCode,
   });
-  const res = await fetch(
-    `https://api.paystack.co/bank/resolve?${params}`,
-    { headers: { Authorization: `Bearer ${PAYSTACK_SECRET}` } },
-  );
+  const res = await fetch(`https://api.paystack.co/bank/resolve?${params}`, {
+    headers: { Authorization: `Bearer ${PAYSTACK_SECRET}` },
+  });
   const data = await res.json();
   if (!data.status || !data.data?.account_name) {
     throw new Error("Could not verify the destination bank account.");
@@ -100,9 +86,7 @@ async function initiatePaystackTransfer(
 function pinResultToError(result: PinAttemptResult): Error | null {
   if (result.ok) return null;
   if (result.needsSetup)
-    return new Error(
-      "Please set a transaction PIN in your security settings first.",
-    );
+    return new Error("Please set a transaction PIN in your security settings first.");
   if (result.locked) {
     return new Error(
       "Too many incorrect PIN attempts. Your account is locked; please use password reset to unlock.",
@@ -130,25 +114,13 @@ export async function POST(request: Request) {
     const auth = await requireAuthenticatedUser(request);
     if ("response" in auth) return auth.response;
 
-    if (
-      await isRateLimited(
-        `wallet-withdraw-user:${auth.user.id}`,
-        50,
-        60 * 60_000,
-      )
-    ) {
+    if (await isRateLimited(`wallet-withdraw-user:${auth.user.id}`, 50, 60 * 60_000)) {
       return tooManyRequestsResponse(
         "Too many withdrawal attempts. Please try again in one hour.",
       );
     }
 
-    if (
-      await isRateLimited(
-        `wallet-withdraw-pin:${auth.user.id}`,
-        10,
-        10 * 60_000,
-      )
-    ) {
+    if (await isRateLimited(`wallet-withdraw-pin:${auth.user.id}`, 10, 10 * 60_000)) {
       return tooManyRequestsResponse();
     }
 
@@ -178,8 +150,7 @@ export async function POST(request: Request) {
     if (!PAYSTACK_SECRET) {
       return NextResponse.json(
         {
-          error:
-            "Withdrawal service is not configured. Please contact support.",
+          error: "Withdrawal service is not configured. Please contact support.",
         },
         { status: 503, headers: { "Cache-Control": "no-store" } },
       );
@@ -280,11 +251,7 @@ export async function POST(request: Request) {
               )
             : null;
         const unlockOptions: string[] = [];
-        if (
-          profile.unlock_payment_made &&
-          daysRemaining !== null &&
-          daysRemaining > 0
-        ) {
+        if (profile.unlock_payment_made && daysRemaining !== null && daysRemaining > 0) {
           unlockOptions.push(
             `Wait ${daysRemaining} more day${
               daysRemaining !== 1 ? "s" : ""
@@ -380,10 +347,7 @@ export async function POST(request: Request) {
     const totalFee = paystackFee + fee_amount;
     const netAmount = amount;
 
-    const resolvedAccountName = await resolvePaystackAccount(
-      accountNumber,
-      bankCode,
-    );
+    const resolvedAccountName = await resolvePaystackAccount(accountNumber, bankCode);
 
     let requestId: string;
     await withUserTransaction(userId, async (client) => {
@@ -404,7 +368,7 @@ export async function POST(request: Request) {
         balanceDelta: -(amount + totalFee),
         metadata: {
           withdrawalAmount: amount,
-          feeAmount: fee_amount,
+          feeAmount: withdrawalFeeAmount,
           processorFee: paystackFee,
           totalFee,
           bankCode,
@@ -419,15 +383,7 @@ export async function POST(request: Request) {
             account_name, status, created_at, updated_at)
          VALUES ($1, $2, $3, $3, $4, $5, $6, $7, 'processing', NOW(), NOW())
          RETURNING id`,
-        [
-          userId,
-          amount,
-          totalFee,
-          netAmount,
-          bankCode,
-          accountNumber,
-          resolvedAccountName,
-        ],
+        [userId, amount, totalFee, netAmount, bankCode, accountNumber, resolvedAccountName],
       );
       requestId = reqRows[0].id;
 
@@ -447,6 +403,17 @@ export async function POST(request: Request) {
          VALUES ('withdrawal_fee', $1, $2, 'Withdrawal processing fee', NOW())`,
         [fee_amount, userId],
       );
+
+      // G4 fee transparency: book the Paystack 1.5% processor cost as a
+      // separate revenue event for reconciliation (cost-visibility only;
+      // the full amount + fees was already debited from the wallet above).
+      if (paystackFee > 0) {
+        await client.query(
+          `INSERT INTO revenue_events (type, amount, user_id, description, created_at)
+           VALUES ('withdrawal_processor_cost', $1, $2, 'Paystack withdrawal processor cost', NOW())`,
+          [paystackFee, userId],
+        );
+      }
     });
 
     let recipientData: any;
@@ -471,9 +438,7 @@ export async function POST(request: Request) {
           metadata: {
             reason: "create_transfer_recipient_failed",
             errorMessage:
-              paystackError instanceof Error
-                ? paystackError.message
-                : String(paystackError),
+              paystackError instanceof Error ? paystackError.message : String(paystackError),
           },
         });
         await client.query(
@@ -503,17 +468,13 @@ export async function POST(request: Request) {
           metadata: {
             reason: "transfer_init_failed",
             errorMessage:
-              paystackError instanceof Error
-                ? paystackError.message
-                : String(paystackError),
+              paystackError instanceof Error ? paystackError.message : String(paystackError),
           },
         });
         await client.query(
           `UPDATE withdrawal_requests SET status = 'failed', admin_note = $1, updated_at = NOW() WHERE id = $2`,
           [
-            paystackError instanceof Error
-              ? paystackError.message
-              : "Transfer failed",
+            paystackError instanceof Error ? paystackError.message : "Transfer failed",
             requestId!,
           ],
         );

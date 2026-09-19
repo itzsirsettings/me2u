@@ -46,9 +46,24 @@ export default function KYCPage() {
     return (
       <div className="app-mobile-screen mx-auto flex w-full max-w-lg flex-col items-center justify-center px-3.5 pt-[4.85rem] text-center md:py-24">
         <div className="mb-4 grid h-16 w-16 place-items-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-positive-bg)] text-[var(--color-positive-text)] shadow-[3px_3px_0px_var(--color-shadow)]">
-          <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="34"
+            height="34"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
         </div>
-        <h2 className="mb-2 font-display text-xl font-bold text-[var(--color-text-primary)] md:text-2xl">KYC Verified</h2>
+        <h2 className="mb-2 font-display text-xl font-bold text-[var(--color-text-primary)] md:text-2xl">
+          KYC Verified
+        </h2>
         <p className="max-w-md text-[var(--color-text-secondary)]">
           Your identity has been verified. You now have full Me2U access.
         </p>
@@ -72,7 +87,10 @@ export default function KYCPage() {
           <p className="mt-4 text-base leading-relaxed text-[var(--color-text-secondary)]">
             Confirm your registration deposit first.
           </p>
-          <button className="btn-primary mt-5 h-11 w-full md:mt-6 md:h-12" onClick={() => router.push("/wallet")}>
+          <button
+            className="btn-primary mt-5 h-11 w-full md:mt-6 md:h-12"
+            onClick={() => router.push("/wallet")}
+          >
             Complete Registration Deposit
           </button>
         </div>
@@ -84,11 +102,27 @@ export default function KYCPage() {
     return (
       <div className="app-mobile-screen mx-auto flex w-full max-w-lg flex-col items-center justify-center px-3.5 pt-[4.85rem] text-center md:py-24">
         <div className="mb-4 grid h-16 w-16 place-items-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-warning-bg)] text-[var(--color-warning-text)] shadow-[3px_3px_0px_var(--color-shadow)]">
-          <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8v4l3 3"></path><circle cx="12" cy="12" r="10"></circle></svg>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="34"
+            height="34"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M12 8v4l3 3"></path>
+            <circle cx="12" cy="12" r="10"></circle>
+          </svg>
         </div>
-        <h2 className="mb-2 font-display text-xl font-bold text-[var(--color-text-primary)] md:text-2xl">KYC Under Review</h2>
+        <h2 className="mb-2 font-display text-xl font-bold text-[var(--color-text-primary)] md:text-2xl">
+          KYC Under Review
+        </h2>
         <p className="max-w-md text-[var(--color-text-secondary)]">
-          Your bank details and passport photo have been submitted. Me2U will unlock withdrawals and lending after review.
+          Your bank details and passport photo have been submitted. Me2U will unlock withdrawals
+          and lending after review.
         </p>
         <button
           onClick={() => router.push("/dashboard")}
@@ -132,7 +166,9 @@ export default function KYCPage() {
 
       const loadResult = await loadCurrentUser();
       if (!loadResult.ok) {
-        throw new Error(loadResult.error || "KYC saved, but the profile could not be refreshed.");
+        throw new Error(
+          loadResult.error || "KYC saved, but the profile could not be refreshed.",
+        );
       }
 
       setPassportFile(null);
@@ -153,10 +189,38 @@ export default function KYCPage() {
         </p>
       </div>
 
+      <div className="mb-4 flex items-start gap-3 rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3.5 text-left md:mb-6">
+        <span aria-hidden className="shrink-0 text-sm">
+          ℹ️
+        </span>
+        <p className="text-xs leading-relaxed text-[var(--color-text-secondary)]">
+          <span className="font-black text-[var(--color-text-primary)]">
+            NIN verification — coming soon.
+          </span>{" "}
+          Automated NIN identity verification is launching soon. For now, KYC unlocks via
+          bank-account ownership plus passport review (1–2 business days).
+        </p>
+      </div>
+
       <div className="space-y-5 rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[4px_4px_0px_var(--color-shadow)] md:space-y-8 md:p-8 kinetic-border">
         {error && (
           <div className="flex min-w-0 items-center gap-3 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-negative-bg)] p-4 text-[var(--color-negative-text)]">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="shrink-0"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
             <p className="text-sm font-bold font-sans">{error}</p>
           </div>
         )}
@@ -170,7 +234,10 @@ export default function KYCPage() {
             This account will receive your withdrawals and peer-to-peer loan funds.
           </p>
           <div>
-            <label htmlFor="bank-name" className="mb-2 block text-xs font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
+            <label
+              htmlFor="bank-name"
+              className="mb-2 block text-xs font-bold uppercase tracking-wider text-[var(--color-text-secondary)]"
+            >
               Bank Name
             </label>
             <input
@@ -184,7 +251,10 @@ export default function KYCPage() {
             />
           </div>
           <div>
-            <label htmlFor="account-number" className="mb-2 block text-xs font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
+            <label
+              htmlFor="account-number"
+              className="mb-2 block text-xs font-bold uppercase tracking-wider text-[var(--color-text-secondary)]"
+            >
               Account Number
             </label>
             <input
@@ -225,14 +295,43 @@ export default function KYCPage() {
             >
               {passportFile ? (
                 <>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--color-positive-text)]"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="32"
+                    height="32"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-[var(--color-positive-text)]"
+                  >
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
                   <span className="overflow-anywhere text-center text-sm font-bold font-sans text-[var(--color-positive-text)]">
                     {passportFile.name}
                   </span>
                 </>
               ) : (
                 <>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--color-text-secondary)]"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="32"
+                    height="32"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-[var(--color-text-secondary)]"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                  </svg>
                   <span className="text-sm font-bold font-sans text-[var(--color-text-primary)]">
                     Click to upload image
                   </span>
@@ -255,10 +354,26 @@ export default function KYCPage() {
           <div className="flex min-w-0 items-center justify-between gap-3 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 opacity-50">
             <div className="flex min-w-0 items-center gap-3">
               <div className="shrink-0 rounded-[5px] bg-[var(--color-bg-card)] p-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--color-text-secondary)]"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></svg>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-[var(--color-text-secondary)]"
+                >
+                  <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path>
+                  <circle cx="12" cy="13" r="3"></circle>
+                </svg>
               </div>
               <div className="min-w-0">
-                <p className="font-bold font-sans text-[var(--color-text-primary)]">Live Face Scan</p>
+                <p className="font-bold font-sans text-[var(--color-text-primary)]">
+                  Live Face Scan
+                </p>
                 <p className="text-xs font-sans text-[var(--color-text-secondary)]">
                   Enhanced biometric security
                 </p>

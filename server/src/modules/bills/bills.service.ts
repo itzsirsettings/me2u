@@ -16,13 +16,17 @@ type PurchaseBody = {
 
 function readAmount(value: unknown) {
   const amount = Math.round(Number(value || 0) * 100) / 100;
-  if (!Number.isFinite(amount) || amount <= 0) throw new BadRequestException("Amount must be greater than zero.");
-  if (amount > 250_000) throw new BadRequestException("Bill amount is above the allowed limit.");
+  if (!Number.isFinite(amount) || amount <= 0)
+    throw new BadRequestException("Amount must be greater than zero.");
+  if (amount > 250_000)
+    throw new BadRequestException("Bill amount is above the allowed limit.");
   return amount;
 }
 
 function transactionReference() {
-  return `M2UB${Date.now()}${Math.floor(Math.random() * 100_000).toString().padStart(5, "0")}`;
+  return `M2UB${Date.now()}${Math.floor(Math.random() * 100_000)
+    .toString()
+    .padStart(5, "0")}`;
 }
 
 @Injectable()
@@ -95,7 +99,11 @@ export class BillsService {
     if (!customerIdentifier) throw new BadRequestException("Customer identifier is required.");
 
     if (["airtime", "data"].includes(product.category.slug)) {
-      return { ok: true, customer: { identifier: customerIdentifier }, message: "Customer validation is not required for airtime/data." };
+      return {
+        ok: true,
+        customer: { identifier: customerIdentifier },
+        message: "Customer validation is not required for airtime/data.",
+      };
     }
 
     const provider = this.providers.get(product.provider as BillProviderName);
@@ -108,14 +116,24 @@ export class BillsService {
     });
   }
 
-  async purchase(user: AuthenticatedRequestUser, body: PurchaseBody, idempotencyHeader?: string) {
+  async purchase(
+    user: AuthenticatedRequestUser,
+    body: PurchaseBody,
+    idempotencyHeader?: string,
+  ) {
     const product = await this.loadProduct(String(body.productId || ""));
-    const amount = Number(product.selling_price || 0) > 0 ? Number(product.selling_price) : readAmount(body.amount);
+    const amount =
+      Number(product.selling_price || 0) > 0
+        ? Number(product.selling_price)
+        : readAmount(body.amount);
     const customerIdentifier = String(body.customerIdentifier || "").trim();
     const pin = String(body.pin || "").trim();
 
     if (!customerIdentifier) throw new BadRequestException("Customer identifier is required.");
-    if (["airtime", "data"].includes(product.category.slug) && !/^(?:\+?234|0)?[789][01]\d{8}$/.test(customerIdentifier.replace(/\s+/g, ""))) {
+    if (
+      ["airtime", "data"].includes(product.category.slug) &&
+      !/^(?:\+?234|0)?[789][01]\d{8}$/.test(customerIdentifier.replace(/\s+/g, ""))
+    ) {
       throw new BadRequestException("Enter a valid Nigerian phone number.");
     }
 
@@ -126,9 +144,12 @@ export class BillsService {
       .maybeSingle();
 
     if (profileError) throw new BadRequestException(profileError.message);
-    if (!profile?.kyc_verified) throw new BadRequestException("Complete KYC before paying bills.");
-    if (!profile.transaction_pin) throw new BadRequestException("Please set a transaction PIN first.");
-    if (!verifyTransactionPin(profile.transaction_pin, user.id, pin)) throw new BadRequestException("Incorrect transaction PIN.");
+    if (!profile?.kyc_verified)
+      throw new BadRequestException("Complete KYC before paying bills.");
+    if (!profile.transaction_pin)
+      throw new BadRequestException("Please set a transaction PIN first.");
+    if (!verifyTransactionPin(profile.transaction_pin, user.id, pin))
+      throw new BadRequestException("Incorrect transaction PIN.");
 
     const { data: security, error: securityError } = await this.supabase.admin
       .from("user_security_settings")
@@ -140,7 +161,8 @@ export class BillsService {
     if (security?.wallet_frozen) throw new BadRequestException("Your wallet is frozen.");
 
     const reference = transactionReference();
-    const idempotencyKey = String(body.idempotencyKey || idempotencyHeader || "").trim() || reference;
+    const idempotencyKey =
+      String(body.idempotencyKey || idempotencyHeader || "").trim() || reference;
 
     const { data, error } = await this.supabase.admin.rpc("me2u_create_bill_debit", {
       p_user_id: user.id,
@@ -176,7 +198,13 @@ export class BillsService {
       phone: bill.customer_identifier,
     });
 
-    await this.logProvider(bill.provider, "purchase", bill.reference, result.raw, result.providerReference);
+    await this.logProvider(
+      bill.provider,
+      "purchase",
+      bill.reference,
+      result.raw,
+      result.providerReference,
+    );
 
     const status = result.status === "reversed" ? "failed" : result.status;
     const { error } = await this.supabase.admin
@@ -185,19 +213,35 @@ export class BillsService {
         status,
         provider_reference: result.providerReference,
         provider_response: result.raw as any,
-        failure_reason: status === "failed" ? result.message || "Provider failed transaction." : null,
+        failure_reason:
+          status === "failed" ? result.message || "Provider failed transaction." : null,
         completed_at: status === "successful" ? new Date().toISOString() : null,
-        next_requery_at: status === "pending" ? new Date(Date.now() + 5 * 60_000).toISOString() : null,
+        next_requery_at:
+          status === "pending" ? new Date(Date.now() + 5 * 60_000).toISOString() : null,
       })
       .eq("reference", reference);
 
     if (error) throw new BadRequestException(error.message);
-    if (status === "failed") await this.refund(reference, result.message || "Provider failed transaction.");
+
+    // G4 fee transparency: book the platform margin on a successful bill as
+    // a `bills_convenience_fee` revenue event. The wallet debit already
+    // captured the full `selling_price` (which contains the Me2U margin);
+    // this row is cost/margin visibility only — no extra wallet movement.
+    if (status === "successful" && String(bill.status) !== "successful") {
+      await this.recordConvenienceFee(bill);
+    }
+
+    if (status === "failed")
+      await this.refund(reference, result.message || "Provider failed transaction.");
     return this.loadBill(reference);
   }
 
   async requery(reference: string) {
-    await this.requeryQueue.add("requery", { reference }, { jobId: `requery:${reference}:${Date.now()}` });
+    await this.requeryQueue.add(
+      "requery",
+      { reference },
+      { jobId: `requery:${reference}:${Date.now()}` },
+    );
     return { ok: true };
   }
 
@@ -206,7 +250,13 @@ export class BillsService {
     const provider = this.providers.get(bill.provider as BillProviderName);
     const result = await provider.requery(bill.provider_reference || bill.reference);
 
-    await this.logProvider(bill.provider, "requery", bill.reference, result.raw, result.providerReference);
+    await this.logProvider(
+      bill.provider,
+      "requery",
+      bill.reference,
+      result.raw,
+      result.providerReference,
+    );
 
     const status = result.status === "reversed" ? "failed" : result.status;
     const { error } = await this.supabase.admin
@@ -214,15 +264,24 @@ export class BillsService {
       .update({
         status,
         provider_response: result.raw as any,
-        failure_reason: status === "failed" ? result.message || "Provider failed transaction." : null,
+        failure_reason:
+          status === "failed" ? result.message || "Provider failed transaction." : null,
         requery_count: Number(bill.requery_count || 0) + 1,
         completed_at: status === "successful" ? new Date().toISOString() : bill.completed_at,
-        next_requery_at: status === "pending" ? new Date(Date.now() + 5 * 60_000).toISOString() : null,
+        next_requery_at:
+          status === "pending" ? new Date(Date.now() + 5 * 60_000).toISOString() : null,
       })
       .eq("reference", reference);
 
     if (error) throw new BadRequestException(error.message);
-    if (status === "failed") await this.refund(reference, result.message || "Provider failed transaction.");
+
+    // Pending → successful via requery: book margin once, guarded so the
+    // requery loop cannot double-book the convenience fee.
+    if (status === "successful" && String(bill.status) !== "successful") {
+      await this.recordConvenienceFee(bill);
+    }
+    if (status === "failed")
+      await this.refund(reference, result.message || "Provider failed transaction.");
     return this.loadBill(reference);
   }
 
@@ -244,8 +303,35 @@ export class BillsService {
       .limit(50);
 
     if (error) throw new ServiceUnavailableException(error.message);
-    await Promise.all((data || []).map((bill: any) => this.requeryQueue.add("requery", { reference: bill.reference })));
+    await Promise.all(
+      (data || []).map((bill: any) =>
+        this.requeryQueue.add("requery", { reference: bill.reference }),
+      ),
+    );
     return { queued: data?.length || 0 };
+  }
+
+  /**
+   * G4 fee transparency: book the platform margin on a successful bill as a
+   * `bills_convenience_fee` revenue event. The wallet debit already captured
+   * the full `selling_price` (which contains the Me2U margin); this row is
+   * cost/margin visibility only — no extra wallet movement. Best-effort:
+   * a failed insert must never fail bill fulfilment.
+   */
+  private async recordConvenienceFee(bill: any) {
+    try {
+      const selling = Number(bill.selling_price || 0);
+      const cost = Number(bill.cost_price ?? 0);
+      const margin = cost > 0 && cost <= selling ? Math.round((selling - cost) * 100) / 100 : 0;
+      await this.supabase.admin.from("revenue_events").insert({
+        type: "bills_convenience_fee",
+        amount: margin,
+        user_id: bill.user_id ?? null,
+        description: `Bills convenience fee for ${bill.reference} (sold ₦${selling.toFixed(2)})`,
+      });
+    } catch {
+      // revenue tracking is non-critical; ignore insert failures
+    }
   }
 
   private async loadProduct(productId: string) {
@@ -273,7 +359,13 @@ export class BillsService {
     return data as any;
   }
 
-  private async logProvider(provider: string, endpoint: string, reference: string, responsePayload: unknown, providerReference?: string) {
+  private async logProvider(
+    provider: string,
+    endpoint: string,
+    reference: string,
+    responsePayload: unknown,
+    providerReference?: string,
+  ) {
     await this.supabase.admin.from("provider_logs").insert({
       provider,
       endpoint,

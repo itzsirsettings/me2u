@@ -87,7 +87,10 @@ test("admin dashboard uses overflow-safe grids and contained ledger scrolling", 
   assert.match(admin, /scroll-x-contained mt-4/);
   assert.match(admin, /max-w-full shrink-0 items-center justify-center/);
   assert.match(globals, /overflow-x: clip/);
-  assert.match(globals, /:where\(main, section, article, aside, header, footer, nav, form, div\)/);
+  assert.match(
+    globals,
+    /:where\(main, section, article, aside, header, footer, nav, form, div\)/,
+  );
   assert.match(globals, /\.overflow-anywhere/);
 });
 
@@ -138,7 +141,9 @@ test("username login and the new loan minimum are wired", () => {
   const store = read("lib/store.ts");
   const loans = read("lib/loans.ts");
   const resolver = read("app/api/auth/resolve-username/route.ts");
-  const migration = read("migrations/migrations/20260518204542_loan_minimum_5000_copy_cleanup.sql");
+  const migration = read(
+    "migrations/migrations/20260518204542_loan_minimum_5000_copy_cleanup.sql",
+  );
 
   assert.match(login, /Email or username/);
   assert.match(store, /\/api\/auth\/resolve-username/);
@@ -156,7 +161,9 @@ test("auth and identity flows avoid release-blocking shortcuts", () => {
   const securityPin = read("app/api/security/pin/route.ts");
   const kyc = read("app/api/onboarding/kyc/route.ts");
   const adminActions = read("app/api/admin/actions/route.ts");
-  const source = [otp, resetPassword, register, store, securityPin, kyc, adminActions].join("\n");
+  const source = [otp, resetPassword, register, store, securityPin, kyc, adminActions].join(
+    "\n",
+  );
 
   assert.match(otp, /randomInt\(100000, 1000000\)/);
   assert.match(otp, /timingSafeEqual/);
@@ -177,14 +184,21 @@ test("bill payments and withdrawals use hardened financial paths", () => {
   const withdrawal = read("app/api/wallet/withdraw/route.ts");
   const withdrawPage = read("app/withdraw/page.tsx");
   const revenue = read("lib/revenue.ts");
-  const migration = read("migrations/migrations/20260523110905_harden_auth_and_atomic_bill_payments.sql");
-  const billsMigration = read("migrations/migrations/20260526170504_me2u_bills_architecture.sql");
+  const migration = read(
+    "migrations/migrations/20260523110905_harden_auth_and_atomic_bill_payments.sql",
+  );
+  const billsMigration = read(
+    "migrations/migrations/20260526170504_me2u_bills_architecture.sql",
+  );
 
   assert.match(payBill, /Legacy wallet bill debit is retired/);
   assert.match(migration, /create or replace function private\.me2u_pay_bill/);
   assert.match(billsMigration, /create table if not exists public\.bill_transactions/);
   assert.match(billsMigration, /create or replace function private\.me2u_create_bill_debit/);
-  assert.match(billsMigration, /create or replace function private\.me2u_refund_bill_transaction/);
+  assert.match(
+    billsMigration,
+    /create or replace function private\.me2u_refund_bill_transaction/,
+  );
   assert.match(migration, /revoke execute on function public\.me2u_pay_bill/);
   assert.match(migration, /revoke insert, update on public\.referrals from authenticated/);
   assert.match(migration, /You can only read your own referral stats/);
@@ -239,12 +253,14 @@ test("licensed partner revenue model is backend-enforced", () => {
   const revenue = read("lib/revenue.ts");
   const withdrawal = read("app/api/wallet/withdraw/route.ts");
   const marketplace = read("app/api/marketplace/create/route.ts");
-  const migration = read("migrations/migrations/20260519152449_licensed_partner_revenue_model.sql");
+  const migration = read(
+    "migrations/migrations/20260519152449_licensed_partner_revenue_model.sql",
+  );
   const adminOverview = read("app/api/admin/overview/route.ts");
 
   assert.match(revenue, /withdrawalFeeAmount = 100/);
-  assert.match(withdrawal, /fee_amount: withdrawalFeeAmount/);
-  assert.match(marketplace, /p_boost: boost/);
+  assert.match(withdrawal, /feeAmount: withdrawalFeeAmount/);
+  assert.match(marketplace, /'marketplace_boost'/);
   assert.match(migration, /create table if not exists public\.revenue_events/);
   assert.match(migration, /boosted_until/);
   assert.match(migration, /partner_offer_consent_at/);
@@ -273,7 +289,11 @@ test("customer UI does not expose platform revenue or investor-side benefits", (
   ];
 
   for (const phrase of hiddenFromCustomers) {
-    assert.equal(source.includes(phrase), false, `Customer UI exposes platform-side copy: ${phrase}`);
+    assert.equal(
+      source.includes(phrase),
+      false,
+      `Customer UI exposes platform-side copy: ${phrase}`,
+    );
   }
 });
 

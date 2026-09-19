@@ -127,7 +127,9 @@ function buildAuthCookieRaw(token: string): string {
   // Reuse the same logic as buildAuthCookie without cyclic import issues.
   const SEVEN_DAYS_SECONDS = 60 * 60 * 24 * 7;
   const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
-  const domain = process.env.AUTH_COOKIE_DOMAIN ? `; Domain=${process.env.AUTH_COOKIE_DOMAIN}` : "";
+  const domain = process.env.AUTH_COOKIE_DOMAIN
+    ? `; Domain=${process.env.AUTH_COOKIE_DOMAIN}`
+    : "";
   return `me2u_token=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${SEVEN_DAYS_SECONDS}${domain}${secure}`;
 }
 
@@ -161,12 +163,28 @@ export function readPositiveAmount(value: unknown, label = "Amount", max = maxMo
   return Math.round(amount * 100) / 100;
 }
 
-export function errorResponse(error: unknown, fallback = "Unable to complete request.", route?: string) {
+export function errorResponse(
+  error: unknown,
+  fallback = "Unable to complete request.",
+  route?: string,
+) {
   if (route) logApiError(route, error);
   const message = error instanceof Error ? error.message : fallback;
   return NextResponse.json({ error: message }, { status: 400 });
 }
 
-export function tooManyRequestsResponse(message = "Too many attempts. Please wait and try again.") {
-  return NextResponse.json({ error: message }, { status: 429, headers: { "Cache-Control": "no-store" } });
+export function tooManyRequestsResponse(
+  message = "Too many attempts. Please wait and try again.",
+  retryAfterSeconds?: number,
+) {
+  const headers: Record<string, string> = { "Cache-Control": "no-store" };
+  if (
+    retryAfterSeconds !== undefined &&
+    Number.isFinite(retryAfterSeconds) &&
+    retryAfterSeconds > 0
+  ) {
+    // RFC 6585: tell well-behaved clients when to come back.
+    headers["Retry-After"] = String(Math.ceil(retryAfterSeconds));
+  }
+  return NextResponse.json({ error: message }, { status: 429, headers });
 }
