@@ -108,7 +108,7 @@ function RegisterContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Standard registration email verification states
-  const [regStep, setRegStep] = useState<"email" | "verify_email" | "details">("email");
+  const [regStep, setRegStep] = useState<"email" | "verify_email" | "set_password">("email");
   const [regEmail, setRegEmail] = useState("");
   const [regEmailCode, setRegEmailCode] = useState("");
   const [regEmailToken, setRegEmailToken] = useState("");
@@ -117,12 +117,9 @@ function RegisterContent() {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
-    username: "",
-    phone: "",
-    countryCode: "NG",
-    preferredLanguage: "en",
-    referral: searchParams.get("ref") || "",
     password: "",
+    confirmPassword: "",
+    referral: searchParams.get("ref") || "",
   });
 
   useEffect(() => {
@@ -142,27 +139,20 @@ function RegisterContent() {
   const updateField = (field: keyof typeof formData) => (value: string) => {
     setFormData((current) => ({ ...current, [field]: value }));
   };
-  const selectedCountry = getCountryConfig(formData.countryCode);
 
-  const validateDetails = () => {
+  const validatePasswordForm = () => {
     if (formData.firstName.trim().length < 2 || formData.lastName.trim().length < 2) {
       toast.error("Enter your first and last name.");
       return false;
     }
 
-    if (!/^[a-zA-Z0-9]{3,30}$/.test(formData.username.trim())) {
-      toast.error("Username must be 3 to 30 letters and numbers only.");
-      return false;
-    }
-
-    const phoneDigits = formData.phone.replace(/\D/g, "");
-    if (phoneDigits.length < 7 || phoneDigits.length > 15) {
-      toast.error("Enter a valid phone number.");
-      return false;
-    }
-
     if (formData.password.length < 8) {
-      toast.error("Enter a password with at least 8 characters.");
+      toast.error("Password must be at least 8 characters.");
+      return false;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      toast.error("Passwords do not match.");
       return false;
     }
 
@@ -227,10 +217,10 @@ function RegisterContent() {
       }
 
       setRegistrationToken(data.registrationToken);
-      toast.success("Email verified! Please complete your registration.");
+      toast.success("Email verified! Please set your password.");
       // Use setTimeout to ensure state updates properly before showing next step
       setTimeout(() => {
-        setRegStep("details");
+        setRegStep("set_password");
       }, 100);
     } catch (err) {
       toast.error("Failed to verify code.");
@@ -239,10 +229,10 @@ function RegisterContent() {
     }
   };
 
-  // Step 3: Complete registration with all details
+  // Step 3: Complete registration with password and create account
   const completeRegistration = async () => {
     if (isSubmitting) return;
-    if (!validateDetails()) {
+    if (!validatePasswordForm()) {
       setIsSubmitting(false);
       return;
     }
@@ -258,10 +248,6 @@ function RegisterContent() {
           registrationToken,
           firstName: formData.firstName.trim(),
           lastName: formData.lastName.trim(),
-          username: formData.username.trim().toLowerCase(),
-          phone: formData.phone.trim(),
-          countryCode: formData.countryCode,
-          preferredLanguage: formData.preferredLanguage,
           referral: formData.referral.trim(),
           password: formData.password,
         }),
@@ -284,8 +270,8 @@ function RegisterContent() {
         return;
       }
 
-      // Successfully signed in
-      toast.success(`Welcome ${data.firstName}! Redirecting to your dashboard...`);
+      // Successfully signed in - redirect to dashboard for KYC completion
+      toast.success(`Welcome ${data.firstName}! Please complete your profile.`);
       
       // Give time for the toast to show and state to update before redirecting
       setTimeout(() => {
@@ -301,13 +287,13 @@ function RegisterContent() {
   const getPageTitle = () => {
     if (regStep === "email") return "Create Account";
     if (regStep === "verify_email") return "Verify Email";
-    return "Complete Registration";
+    return "Set Your Password";
   };
 
   const getPageSubtitle = () => {
     if (regStep === "email") return "Join me2u today and start your journey";
     if (regStep === "verify_email") return `Verification code sent to ${regEmail}`;
-    return "Fill in your details to complete registration";
+    return "Almost there! Create your password to complete registration";
   };
 
   return (
@@ -432,7 +418,116 @@ function RegisterContent() {
             </motion.div>
           )}
 
-          {regStep === "details" && (
+          {regStep === "set_password" && (
+            <motion.div
+              key="reg-password"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="mb-4 rounded-[8px] border border-green/30 bg-green/10 p-4 text-center">
+                <p className="text-sm font-bold text-green">Email Verified</p>
+                <p className="text-xs text-[var(--color-text-secondary)]">{regEmail}</p>
+              </div>
+
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!isSubmitting) {
+                    completeRegistration();
+                  }
+                }}
+                className="space-y-6 rounded-[8px] border border-[var(--color-border)] bg-white p-5 shadow-[4px_4px_0px_rgba(8,19,32,0.05)] md:p-8"
+              >
+                <RegistrationField
+                  id="register-first-name"
+                  label="First Name"
+                  icon="profile"
+                  value={formData.firstName}
+                  placeholder="First name"
+                  autoComplete="given-name"
+                  onChange={updateField("firstName")}
+                />
+                <RegistrationField
+                  id="register-last-name"
+                  label="Last Name"
+                  icon="profile"
+                  value={formData.lastName}
+                  placeholder="Last name"
+                  autoComplete="family-name"
+                  onChange={updateField("lastName")}
+                />
+                <RegistrationField
+                  id="register-password"
+                  label="Password"
+                  icon="lock"
+                  value={formData.password}
+                  placeholder="At least 8 characters"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  onChange={updateField("password")}
+                  action={
+                    <button
+                      type="button"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      aria-pressed={showPassword}
+                      className="absolute right-4 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-[8px] text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-hover-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)]"
+                      onClick={() => setShowPassword((current) => !current)}
+                    >
+                      <Me2uIcon name={showPassword ? "invisible" : "visible"} size={22} />
+                    </button>
+                  }
+                />
+                <RegistrationField
+                  id="register-confirm-password"
+                  label="Confirm Password"
+                  icon="lock"
+                  value={formData.confirmPassword}
+                  placeholder="Re-enter your password"
+                  type="password"
+                  autoComplete="new-password"
+                  onChange={updateField("confirmPassword")}
+                />
+                <RegistrationField
+                  id="register-referral"
+                  label="Referral (Optional)"
+                  icon="referral"
+                  value={formData.referral}
+                  placeholder="Referrer's username or code"
+                  autoComplete="off"
+                  maxLength={40}
+                  helper="Have a referral code? Enter it here to get bonus rewards."
+                  onChange={updateField("referral")}
+                />
+
+                <LoadingButton
+                  label="Create Account"
+                  loadingText="Creating Account..."
+                  successText="Account Created!"
+                  icon={<Me2uIcon name="profile" size={23} />}
+                  onClick={completeRegistration}
+                />
+
+                <div className="mt-6 text-center">
+                  <p className="text-sm text-[var(--color-text-secondary)]">
+                    Already have an account?{" "}
+                    <a
+                      href="/login"
+                      className="font-bold text-[var(--color-accent-primary)] hover:underline"
+                    >
+                      Login
+                    </a>
+                  </p>
+                </div>
+              </form>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </section>
+    </main>
+  );
+}
             <motion.div
               key="reg-details"
               initial={{ opacity: 0, y: 10 }}
