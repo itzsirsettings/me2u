@@ -11,11 +11,11 @@ import { getUserByEmail, verifyPassword, revokeAllSessionsForUser } from "@/lib/
 export async function POST(request: Request) {
   try {
     const clientIp = getClientIp(request);
-    if (await isRateLimited(`security-pin-ip:${clientIp}`, 20, 60_000)) return tooManyRequestsResponse();
+    if (await isRateLimited(`security-pin-ip:${clientIp}`, 50, 15 * 60_000)) return tooManyRequestsResponse();
 
     const auth = await requireAuthenticatedUser(request);
     if ("response" in auth) return auth.response;
-    if (await isRateLimited(`security-pin-user:${auth.user.id}`, 10, 60_000)) return tooManyRequestsResponse();
+    if (await isRateLimited(`security-pin-user:${auth.user.id}`, 20, 60 * 60_000)) return tooManyRequestsResponse();
 
     const body = await request.json();
     const pin = typeof body.pin === "string" ? body.pin.trim() : "";
@@ -29,11 +29,11 @@ export async function POST(request: Request) {
     const account = await getUserByEmail(auth.user.email!);
     if (!account) throw new Error("Account not found.");
 
-    if (await isRateLimited(`pin-pw-verify:${auth.user.id}`, 8, 5 * 60_000)) return tooManyRequestsResponse();
+    if (await isRateLimited(`pin-pw-verify:${auth.user.id}`, 10, 10 * 60_000)) return tooManyRequestsResponse();
 
     const valid = await verifyPassword(password, account.password_hash);
     if (!valid) {
-      if (await isRateLimited(`pin-pw-fail:${auth.user.id}`, 5, 10 * 60_000)) {
+      if (await isRateLimited(`pin-pw-fail:${auth.user.id}`, 5, 15 * 60_000)) {
         return tooManyRequestsResponse("Too many failed password attempts. Try again later.");
       }
       throw new Error("Incorrect password. Please verify and try again.");

@@ -9,7 +9,7 @@ import {
 export async function POST(request: Request) {
   try {
     const clientIp = getClientIp(request);
-    if (await isRateLimited(`security-group-lending-ip:${clientIp}`, 20, 60_000)) return tooManyRequestsResponse();
+    if (await isRateLimited(`security-group-lending-ip:${clientIp}`, 100, 15 * 60_000)) return tooManyRequestsResponse();
 
     const auth = await requireAuthenticatedUser(request);
     if ("response" in auth) return auth.response;

@@ -21,7 +21,7 @@ async function assertWalletNotFrozen(userId: string, client: import("pg").PoolCl
 export async function GET(request: Request) {
   try {
     const clientIp = getClientIp(request);
-    if (await isRateLimited(`savings-get-ip:${clientIp}`, 30, 60_000)) return tooManyRequestsResponse();
+    if (await isRateLimited(`savings-get-ip:${clientIp}`, 300, 15 * 60_000)) return tooManyRequestsResponse();
 
     const auth = await requireAuthenticatedUser(request);
     if ("response" in auth) return auth.response;
@@ -43,11 +43,11 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const clientIp = getClientIp(request);
-    if (await isRateLimited(`savings-post-ip:${clientIp}`, 30, 60_000)) return tooManyRequestsResponse();
+    if (await isRateLimited(`savings-post-ip:${clientIp}`, 100, 15 * 60_000)) return tooManyRequestsResponse();
 
     const auth = await requireAuthenticatedUser(request);
     if ("response" in auth) return auth.response;
-    if (await isRateLimited(`savings-post-user:${auth.user.id}`, 15, 60_000)) return tooManyRequestsResponse();
+    if (await isRateLimited(`savings-post-user:${auth.user.id}`, 50, 60 * 60_000)) return tooManyRequestsResponse();
 
     const body = await request.json().catch(() => ({}));
     const action = String(body.action || "").trim().toLowerCase();

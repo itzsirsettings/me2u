@@ -7,7 +7,7 @@ const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY || "";
 export async function POST(request: Request) {
   try {
     const clientIp = getClientIp(request);
-    if (await isRateLimited(`resolve-account-ip:${clientIp}`, 30, 60_000)) {
+    if (await isRateLimited(`resolve-account-ip:${clientIp}`, 100, 15 * 60_000)) {
       return tooManyRequestsResponse();
     }
 

@@ -9,13 +9,13 @@ import {
 export async function POST(request: Request) {
   try {
     const clientIp = getClientIp(request);
-    if (await isRateLimited(`registration-deposit-ip:${clientIp}`, 20, 60_000)) {
+    if (await isRateLimited(`registration-deposit-ip:${clientIp}`, 50, 15 * 60_000)) {
       return tooManyRequestsResponse();
     }
 
     const auth = await requireAuthenticatedUser(request);
     if ("response" in auth) return auth.response;
-    if (await isRateLimited(`registration-deposit-user:${auth.user.id}`, 6, 60_000)) {
+    if (await isRateLimited(`registration-deposit-user:${auth.user.id}`, 20, 60 * 60_000)) {
       return tooManyRequestsResponse();
     }
 

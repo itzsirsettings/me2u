@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     const meta = requestMeta(request);
     const clientIp = getClientIp(request);
 
-    if (await isRateLimited(`forgot-password:${clientIp}`, 5, 10 * 60_000)) {
+    if (await isRateLimited(`forgot-password:${clientIp}`, 10, 60 * 60_000)) {
       return tooManyRequestsResponse();
     }
 
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
       );
     }
 
-    if (await isRateLimited(`forgot-password-email:${email}`, 3, 15 * 60_000)) {
+    if (await isRateLimited(`forgot-password-email:${email}`, 5, 60 * 60_000)) {
       return tooManyRequestsResponse();
     }
 

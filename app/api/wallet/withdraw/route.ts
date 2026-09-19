@@ -83,18 +83,18 @@ export async function POST(request: Request) {
 
     // ── RL-004: Rate limits FIRST, before any DB or external work ─────
     const clientIp = getClientIp(request);
-    if (await isRateLimited(`wallet-withdraw-ip:${clientIp}`, 20, 60_000)) {
+    if (await isRateLimited(`wallet-withdraw-ip:${clientIp}`, 100, 15 * 60_000)) {
       return tooManyRequestsResponse();
     }
 
     const auth = await requireAuthenticatedUser(request);
     if ("response" in auth) return auth.response;
 
-    if (await isRateLimited(`wallet-withdraw-user:${auth.user.id}`, 10, 60 * 60_000)) {
+    if (await isRateLimited(`wallet-withdraw-user:${auth.user.id}`, 50, 60 * 60_000)) {
       return tooManyRequestsResponse("Too many withdrawal attempts. Please try again in one hour.");
     }
 
-    if (await isRateLimited(`wallet-withdraw-pin:${auth.user.id}`, 20, 10 * 60_000)) {
+    if (await isRateLimited(`wallet-withdraw-pin:${auth.user.id}`, 10, 10 * 60_000)) {
       return tooManyRequestsResponse();
     }
 

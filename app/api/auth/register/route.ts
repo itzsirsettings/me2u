@@ -69,7 +69,7 @@ export async function POST(request: Request) {
     const meta = requestMeta(request);
     const clientIp = getClientIp(request);
 
-    if (await isRateLimited(`register:${clientIp}`, 5, 10 * 60_000)) {
+    if (await isRateLimited(`register:${clientIp}`, 20, 60 * 60_000)) {
       return tooManyRequestsResponse();
     }
 
@@ -92,7 +92,7 @@ export async function POST(request: Request) {
         );
       }
 
-      if (await isRateLimited(`register-email:${email}`, 3, 15 * 60_000)) {
+      if (await isRateLimited(`register-email:${email}`, 10, 60 * 60_000)) {
         return tooManyRequestsResponse();
       }
 
@@ -136,7 +136,7 @@ export async function POST(request: Request) {
         );
       }
 
-      if (await isRateLimited(`register-verify:${email}`, 8, 15 * 60_000)) {
+      if (await isRateLimited(`register-verify:${email}`, 10, 15 * 60_000)) {
         return tooManyRequestsResponse();
       }
 
@@ -196,7 +196,7 @@ export async function POST(request: Request) {
         );
       }
 
-      if (await isRateLimited(`register-email:${email}`, 3, 15 * 60_000)) {
+      if (await isRateLimited(`register-email:${email}`, 10, 60 * 60_000)) {
         return tooManyRequestsResponse();
       }
 
