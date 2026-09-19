@@ -302,6 +302,19 @@ export async function POST(request: Request) {
           );
         }
         referredBy = referrerRows[0].id;
+      } else {
+        // No referral code provided - assign to platform user if configured
+        const platformUserId = process.env.PLATFORM_USER_ID;
+        if (platformUserId) {
+          // Verify platform user exists before assigning
+          const { rows: platformUserRows } = await query<{ id: string }>(
+            `SELECT id FROM profiles WHERE id = $1 LIMIT 1`,
+            [platformUserId],
+          );
+          if (platformUserRows.length > 0) {
+            referredBy = platformUserId;
+          }
+        }
       }
 
       const { id: userId } = await createUser({
