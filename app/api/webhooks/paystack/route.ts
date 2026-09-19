@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { query, withTransaction } from "@/lib/railway/client";
 import { buildLedgerRef, recordWalletMove } from "@/lib/server/wallet-ledger";
 import { logApiError, logInfo } from "@/lib/server/logger";
+import { WITHDRAWAL_IN_FLIGHT_SQL } from "@/lib/server/withdrawal-status";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -22,28 +23,36 @@ function verifySignature(rawBody: string, signatureHeader: string | null): boole
   }
 }
 
+/**
+ * At-least-once webhook dedup.
+ *
+ * The INSERT *is* the lock: `provider_webhooks` carries
+ * UNIQUE (provider, reference) since migration 20260920000001, so
+ * `ON CONFLICT DO NOTHING RETURNING id` yields a row exactly once per event id —
+ * even when two deliveries race (the previous COUNT-then-INSERT did not).
+ * A truthful `false` is only returned when a row already exists.
+ */
 async function ensureProcessedUnique(eventId: string): Promise<boolean> {
-  const { rows } = await query<{ cnt: string }>(
-    `SELECT COUNT(*)::text AS cnt FROM provider_webhooks WHERE provider = 'paystack' AND reference = $1`,
-    [eventId],
-  );
-  if (Number(rows[0]?.cnt ?? 0) > 0) return false;
-  await query(
+  if (!eventId) return true;
+  const { rows } = await query<{ id: string }>(
     `INSERT INTO provider_webhooks (provider, reference, processed, created_at)
      VALUES ('paystack', $1, true, NOW())
-     ON CONFLICT DO NOTHING`,
+     ON CONFLICT DO NOTHING
+     RETURNING id`,
     [eventId],
   );
-  return true;
+  return rows.length > 0;
 }
 
 function ngnFromKobo(kobo: number): number {
-  return Math.round(Number(kobo) / 100 * 100) / 100;
+  return Math.round((Number(kobo) / 100) * 100) / 100;
 }
 
 async function findUserIdByPaystackCustomer(payload: any): Promise<string | null> {
   const customerCode = String(payload?.data?.customer?.customer_code || "").trim();
-  const email = String(payload?.data?.customer?.email || "").trim().toLowerCase();
+  const email = String(payload?.data?.customer?.email || "")
+    .trim()
+    .toLowerCase();
   const accountNumber = String(payload?.data?.dedicated_account?.account_number || "").trim();
 
   if (customerCode) {
@@ -70,8 +79,12 @@ async function findUserIdByPaystackCustomer(payload: any): Promise<string | null
     if (rows[0]?.id) return rows[0].id;
   }
 
-  const metadataEmail = String(payload?.data?.metadata?.email || "").trim().toLowerCase();
-  const metadataUserId = String(payload?.data?.metadata?.user_id || payload?.data?.metadata?.userId || "").trim();
+  const metadataEmail = String(payload?.data?.metadata?.email || "")
+    .trim()
+    .toLowerCase();
+  const metadataUserId = String(
+    payload?.data?.metadata?.user_id || payload?.data?.metadata?.userId || "",
+  ).trim();
   if (metadataUserId) return metadataUserId;
   if (metadataEmail) {
     const { rows } = await query<{ id: string }>(
@@ -103,46 +116,37 @@ async function handleChargeSuccess(eventId: string, payload: any): Promise<void>
     `SELECT id FROM wallet_inflows WHERE provider = 'paystack' AND provider_reference = $1 LIMIT 1`,
     [providerRef],
   );
-  if (existing.rows.length > 0) return;
+  if (existing.rows.length > 0) {
+    logInfo("paystack:charge.success:duplicate_skipped", { userId, reference: providerRef });
+    return;
+  }
 
   const senderName =
-    String(data?.customer?.first_name || "") +
-      " " +
-      String(data?.customer?.last_name || "") ||
+    String(data?.customer?.first_name || "") + " " + String(data?.customer?.last_name || "") ||
     data?.authorization?.receiver_bank ||
     null;
 
   const narration = String(data?.narration || "Paystack deposit");
 
+  let credited = false;
   await withTransaction(async (client) => {
-    await recordWalletMove(client, {
-      userId,
-      txType: "credit",
-      source: "deposit",
-      reference: buildLedgerRef("ps-chg", userId),
-      description: `Wallet funding via Paystack: ₦${amount.toLocaleString()} (${narration})`,
-      balanceDelta: amount,
-      metadata: {
-        event: "charge.success",
-        eventId,
-        providerReference: providerRef,
-        channel: data.channel,
-        paymentMethod: data?.authorization?.channel,
-      },
-    });
-
     const { rows: wRows } = await client.query<{ id: string }>(
       `SELECT id FROM wallets WHERE user_id = $1 LIMIT 1`,
       [userId],
     );
     const walletId = wRows[0]?.id ?? null;
 
-    await client.query(
+    // Atomic claim: `wallet_inflows` carries UNIQUE (provider, provider_reference),
+    // so writing the inflow BEFORE the credit means exactly one concurrent
+    // delivery can claim it. The loser gets zero rows back and must not credit.
+    const { rows: claimed } = await client.query<{ id: string }>(
       `INSERT INTO wallet_inflows
          (user_id, wallet_id, provider, provider_reference, amount, currency,
           status, sender_name, sender_account_number, narration, raw_payload, credited_at, created_at)
        VALUES ($1, $2, 'paystack', $3, $4::numeric(14,2), 'NGN',
-          'successful', $5, $6, $7, $8::jsonb, NOW(), NOW())`,
+          'successful', $5, $6, $7, $8::jsonb, NOW(), NOW())
+       ON CONFLICT DO NOTHING
+       RETURNING id`,
       [
         userId,
         walletId,
@@ -154,15 +158,38 @@ async function handleChargeSuccess(eventId: string, payload: any): Promise<void>
         JSON.stringify(data),
       ],
     );
+    if (claimed.length === 0) return;
+
+    await recordWalletMove(client, {
+      userId,
+      txType: "credit",
+      source: "deposit",
+      reference: buildLedgerRef("ps-chg", providerRef),
+      description: `Wallet funding via Paystack: ₦${amount.toLocaleString()} (${narration})`,
+      balanceDelta: amount,
+      metadata: {
+        event: "charge.success",
+        eventId,
+        providerReference: providerRef,
+        channel: data.channel,
+        paymentMethod: data?.authorization?.channel,
+      },
+    });
 
     await client.query(
       `INSERT INTO transactions (user_id, type, amount, description, created_at)
        VALUES ($1, 'deposit', $2::numeric(14,2), $3, NOW())`,
       [userId, amount, `Wallet funding via Paystack reference ${providerRef}`],
     );
+    credited = true;
   });
 
-  logInfo("paystack:charge.success:credited", { userId, amount, reference: providerRef });
+  logInfo("paystack:charge.success:credited", {
+    userId,
+    amount,
+    reference: providerRef,
+    credited,
+  });
 }
 
 async function handleTransferSuccess(eventId: string, payload: any): Promise<void> {
@@ -174,11 +201,11 @@ async function handleTransferSuccess(eventId: string, payload: any): Promise<voi
   await withTransaction(async (client) => {
     const { rows } = await client.query<{ id: string }>(
       `UPDATE withdrawal_requests
-          SET status = 'successful',
+          SET status = 'success',
               paystack_reference = COALESCE($1, paystack_reference),
               updated_at = NOW()
         WHERE (paystack_transfer_code = $2 OR paystack_reference = $1)
-          AND status IN ('processing', 'pending', 'initiated')
+          AND status IN (${WITHDRAWAL_IN_FLIGHT_SQL})
         RETURNING id`,
       [reference, transferCode],
     );
@@ -208,7 +235,7 @@ async function handleTransferFailed(eventId: string, payload: any): Promise<void
       `SELECT id, user_id, amount, fee
          FROM withdrawal_requests
         WHERE (paystack_transfer_code = $1 OR paystack_reference = $2)
-          AND status IN ('processing', 'pending', 'initiated')
+          AND status IN (${WITHDRAWAL_IN_FLIGHT_SQL})
           FOR UPDATE`,
       [transferCode, reference],
     );
@@ -267,41 +294,32 @@ async function handleDvaPaymentCreated(eventId: string, payload: any): Promise<v
     `SELECT id FROM wallet_inflows WHERE provider = 'paystack' AND provider_reference = $1 LIMIT 1`,
     [providerRef],
   );
-  if (existing.rows.length > 0) return;
+  if (existing.rows.length > 0) {
+    logInfo("paystack:dva:duplicate_skipped", { userId, reference: providerRef });
+    return;
+  }
 
   const senderName = String(data?.sender_name || data?.sender?.name || "");
   const senderAccount = String(data?.sender_bank_account_number || "");
   const narration = String(data?.narration || "DVA transfer");
 
+  let credited = false;
   await withTransaction(async (client) => {
-    await recordWalletMove(client, {
-      userId,
-      txType: "credit",
-      source: "bank_transfer",
-      reference: buildLedgerRef("ps-dva", userId),
-      description: `DVA funding via Paystack: ₦${amount.toLocaleString()} (${narration})`,
-      balanceDelta: amount,
-      metadata: {
-        event: "dedicatedaccount.paymentcreated",
-        eventId,
-        accountNumber,
-        senderName,
-        senderAccount,
-      },
-    });
-
     const { rows: wRows } = await client.query<{ id: string }>(
       `SELECT id FROM wallets WHERE user_id = $1 LIMIT 1`,
       [userId],
     );
     const walletId = wRows[0]?.id ?? null;
 
-    await client.query(
+    // Atomic claim — see handleChargeSuccess for the rationale.
+    const { rows: claimed } = await client.query<{ id: string }>(
       `INSERT INTO wallet_inflows
          (user_id, wallet_id, provider, provider_reference, amount, currency,
           status, sender_name, sender_account_number, narration, raw_payload, credited_at, created_at)
        VALUES ($1, $2, 'paystack', $3, $4::numeric(14,2), 'NGN',
-          'successful', $5, $6, $7, $8::jsonb, NOW(), NOW())`,
+          'successful', $5, $6, $7, $8::jsonb, NOW(), NOW())
+       ON CONFLICT DO NOTHING
+       RETURNING id`,
       [
         userId,
         walletId,
@@ -313,15 +331,33 @@ async function handleDvaPaymentCreated(eventId: string, payload: any): Promise<v
         JSON.stringify(data),
       ],
     );
+    if (claimed.length === 0) return;
+
+    await recordWalletMove(client, {
+      userId,
+      txType: "credit",
+      source: "bank_transfer",
+      reference: buildLedgerRef("ps-dva", providerRef),
+      description: `DVA funding via Paystack: ₦${amount.toLocaleString()} (${narration})`,
+      balanceDelta: amount,
+      metadata: {
+        event: "dedicatedaccount.paymentcreated",
+        eventId,
+        accountNumber,
+        senderName,
+        senderAccount,
+      },
+    });
 
     await client.query(
       `INSERT INTO transactions (user_id, type, amount, description, created_at)
        VALUES ($1, 'deposit', $2::numeric(14,2), $3, NOW())`,
       [userId, amount, `DVA transfer funding reference ${providerRef}`],
     );
+    credited = true;
   });
 
-  logInfo("paystack:dva:credited", { userId, amount, accountNumber });
+  logInfo("paystack:dva:credited", { userId, amount, accountNumber, credited });
 }
 
 export async function POST(request: Request) {
@@ -329,10 +365,7 @@ export async function POST(request: Request) {
   const signature = request.headers.get("x-paystack-signature");
 
   if (!verifySignature(rawBody, signature)) {
-    return NextResponse.json(
-      { error: "Invalid signature" },
-      { status: 401 },
-    );
+    return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }
 
   let payload: any = {};
@@ -343,11 +376,7 @@ export async function POST(request: Request) {
   }
 
   const event = String(payload?.event || "unknown");
-  const eventId = String(
-    payload?.id ||
-      payload?.data?.id ||
-      `evt:${event}:${Date.now()}`,
-  );
+  const eventId = String(payload?.id || payload?.data?.id || `evt:${event}:${Date.now()}`);
 
   try {
     const fresh = await ensureProcessedUnique(eventId);
@@ -379,10 +408,7 @@ export async function POST(request: Request) {
     }
   } catch (err) {
     logApiError(`paystack:handler:${event}`, err);
-    return NextResponse.json(
-      { error: "Processing error, will retry" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Processing error, will retry" }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });

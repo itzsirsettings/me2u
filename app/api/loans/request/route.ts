@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import { getClientIp, isRateLimited } from "@/lib/rate-limit";
 import {
@@ -6,21 +7,14 @@ import {
   requireAuthenticatedUser,
   tooManyRequestsResponse,
 } from "@/lib/server/auth";
-import {
-  repeatPlatformLoanMinimum,
-  getSecurityDeposit,
-  getMaxLoanDuration,
-} from "@/lib/loans";
+import { repeatPlatformLoanMinimum, getSecurityDeposit, getMaxLoanDuration } from "@/lib/loans";
 import { withUserTransaction } from "@/lib/railway/client";
 import {
   readIdempotencyKey,
   replayIfDuplicate,
   rememberIdempotentResponse,
 } from "@/lib/server/idempotency";
-import {
-  buildLedgerRef,
-  recordWalletMove,
-} from "@/lib/server/wallet-ledger";
+import { buildLedgerRef, recordWalletMove } from "@/lib/server/wallet-ledger";
 
 export async function POST(request: Request) {
   const route = "api/loans/request";
@@ -31,13 +25,7 @@ export async function POST(request: Request) {
 
     const auth = await requireAuthenticatedUser(request);
     if ("response" in auth) return auth.response;
-    if (
-      await isRateLimited(
-        `loan-request-user:${auth.user.id}`,
-        20,
-        60 * 60_000,
-      )
-    )
+    if (await isRateLimited(`loan-request-user:${auth.user.id}`, 20, 60 * 60_000))
       return tooManyRequestsResponse();
 
     const idempotencyKey = readIdempotencyKey(request);
@@ -50,14 +38,16 @@ export async function POST(request: Request) {
 
     const body = await request.json().catch(() => ({}));
     const amount =
-      body.amount === undefined ||
-      body.amount === null ||
-      body.amount === ""
+      body.amount === undefined || body.amount === null || body.amount === ""
         ? repeatPlatformLoanMinimum
         : readPositiveAmount(body.amount, "Loan amount");
     const requestedDays = body.days ? Number(body.days) : 14;
 
     const userId = auth.user.id;
+    // Mint the loan id up front so the ledger entries written below carry
+    // deterministic references tied to this specific loan (wallet_ledger.reference
+    // is UNIQUE — a replay must fail loudly instead of double-moving money).
+    const loanId = randomUUID();
 
     let loanResult: { loanId: string | null } = { loanId: null };
     await withUserTransaction(userId, async (client) => {
@@ -71,8 +61,7 @@ export async function POST(request: Request) {
       );
       const profile = profileRows[0];
       if (!profile) throw new Error("Profile not found.");
-      if (!profile.kyc_verified)
-        throw new Error("Complete KYC before requesting a loan.");
+      if (!profile.kyc_verified) throw new Error("Complete KYC before requesting a loan.");
       if (!profile.registration_deposit_paid)
         throw new Error("Pay your registration deposit first.");
 
@@ -84,9 +73,7 @@ export async function POST(request: Request) {
         throw new Error("Repay your active loan before requesting another one.");
 
       if (amount < repeatPlatformLoanMinimum) {
-        throw new Error(
-          `Loans start from ₦${repeatPlatformLoanMinimum.toLocaleString()}.`,
-        );
+        throw new Error(`Loans start from ₦${repeatPlatformLoanMinimum.toLocaleString()}.`);
       }
 
       const maxDays = getMaxLoanDuration(profile.trust_score);
@@ -97,7 +84,7 @@ export async function POST(request: Request) {
         userId,
         txType: "debit",
         source: "loan",
-        reference: buildLedgerRef("loan-sd-lock", userId),
+        reference: buildLedgerRef("loan-sd-lock", loanId),
         description: `Security deposit locked for platform loan of ₦${amount.toLocaleString()}`,
         balanceDelta: 0,
         lockedDelta: securityDeposit,
@@ -113,7 +100,7 @@ export async function POST(request: Request) {
         userId,
         txType: "credit",
         source: "loan",
-        reference: buildLedgerRef("loan-disburse", userId),
+        reference: buildLedgerRef("loan-disburse", loanId),
         description: `Platform loan of ₦${amount.toLocaleString()} for ${days} days`,
         balanceDelta: amount,
         metadata: {
@@ -125,17 +112,15 @@ export async function POST(request: Request) {
       });
 
       const startDate = new Date().toISOString();
-      const dueDate = new Date(
-        Date.now() + days * 86_400_000,
-      ).toISOString();
+      const dueDate = new Date(Date.now() + days * 86_400_000).toISOString();
 
       const { rows: loanRows } = await client.query<{ id: string }>(
         `INSERT INTO loans
-           (borrower_id, lender_id, amount, rate, days, status, funding_source,
+           (id, borrower_id, lender_id, amount, rate, days, status, funding_source,
             security_deposit, start_date, due_date, created_at)
-         VALUES ($1, NULL, $2, 0, $3, 'active', 'me2u_balance_sheet', $4, $5, $6, NOW())
+         VALUES ($1, $2, NULL, $3, 0, $4, 'active', 'me2u_balance_sheet', $5, $6, $7, NOW())
          RETURNING id`,
-        [userId, amount, days, securityDeposit, startDate, dueDate],
+        [loanId, userId, amount, days, securityDeposit, startDate, dueDate],
       );
       loanResult.loanId = loanRows[0]?.id ?? null;
 

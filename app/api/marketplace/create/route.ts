@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import { getClientIp, isRateLimited } from "@/lib/rate-limit";
 import {
@@ -14,10 +15,7 @@ import {
   replayIfDuplicate,
   rememberIdempotentResponse,
 } from "@/lib/server/idempotency";
-import {
-  buildLedgerRef,
-  recordWalletMove,
-} from "@/lib/server/wallet-ledger";
+import { buildLedgerRef, recordWalletMove } from "@/lib/server/wallet-ledger";
 
 const listingTypes = new Set(["borrow_request", "lending_offer"]);
 
@@ -30,13 +28,7 @@ export async function POST(request: Request) {
 
     const auth = await requireAuthenticatedUser(request);
     if ("response" in auth) return auth.response;
-    if (
-      await isRateLimited(
-        `marketplace-create-user:${auth.user.id}`,
-        50,
-        60 * 60_000,
-      )
-    )
+    if (await isRateLimited(`marketplace-create-user:${auth.user.id}`, 50, 60 * 60_000))
       return tooManyRequestsResponse();
 
     const idempotencyKey = readIdempotencyKey(request);
@@ -54,11 +46,7 @@ export async function POST(request: Request) {
     const boost = Boolean(body.boost);
 
     if (!listingTypes.has(type)) throw new Error("Choose a valid listing type.");
-    if (
-      !Number.isInteger(days) ||
-      days < loanDurationMinDays ||
-      days > loanDurationMaxDays
-    ) {
+    if (!Number.isInteger(days) || days < loanDurationMinDays || days > loanDurationMaxDays) {
       throw new Error(
         `Duration must be between ${loanDurationMinDays} and ${loanDurationMaxDays} days.`,
       );
@@ -70,6 +58,9 @@ export async function POST(request: Request) {
     }
 
     const userId = auth.user.id;
+    // Mint the listing id up front so the boost fee ledger entry below carries a
+    // deterministic reference for this specific listing.
+    const itemId = randomUUID();
 
     let itemCreatedId: string | null = null;
     await withUserTransaction(userId, async (client) => {
@@ -77,14 +68,10 @@ export async function POST(request: Request) {
         kyc_verified: boolean;
         first_name: string;
         trust_score: number;
-      }>(
-        `SELECT kyc_verified, first_name, trust_score FROM profiles WHERE id = $1`,
-        [userId],
-      );
+      }>(`SELECT kyc_verified, first_name, trust_score FROM profiles WHERE id = $1`, [userId]);
       const profile = profileRows[0];
       if (!profile) throw new Error("Profile not found.");
-      if (!profile.kyc_verified)
-        throw new Error("Complete KYC before posting a listing.");
+      if (!profile.kyc_verified) throw new Error("Complete KYC before posting a listing.");
 
       let boostedAt: string | null = null;
       let boostedUntil: string | null = null;
@@ -95,7 +82,7 @@ export async function POST(request: Request) {
           userId,
           txType: "debit",
           source: "admin_adjustment",
-          reference: buildLedgerRef("mp-boost", userId),
+          reference: buildLedgerRef("mp-boost", itemId),
           description: `Marketplace listing boost fee`,
           balanceDelta: -marketplaceBoostFeeAmount,
           metadata: {
@@ -108,9 +95,7 @@ export async function POST(request: Request) {
 
         const now = new Date();
         boostedAt = now.toISOString();
-        boostedUntil = new Date(
-          now.getTime() + 24 * 60 * 60 * 1000,
-        ).toISOString();
+        boostedUntil = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
         boostFeeAmount = marketplaceBoostFeeAmount;
 
         await client.query(
@@ -128,11 +113,12 @@ export async function POST(request: Request) {
 
       const { rows: itemRows } = await client.query<{ id: string }>(
         `INSERT INTO marketplace_items
-           (type, amount, rate, days, author_id, author_name, trust_score,
+           (id, type, amount, rate, days, author_id, author_name, trust_score,
             status, boosted_at, boosted_until, boost_fee_amount, created_at)
-         VALUES ($1, $2, 0, $3, $4, $5, $6, 'active', $7, $8, $9, NOW())
+         VALUES ($1, $2, $3, 0, $4, $5, $6, $7, 'active', $8, $9, $10, NOW())
          RETURNING id`,
         [
+          itemId,
           type,
           amount,
           days,

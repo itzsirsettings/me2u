@@ -109,3 +109,37 @@ test("G6: lint script does not use removed `next lint` command", () => {
   assert.equal(pkg.scripts.lint, "eslint . --max-warnings 0");
   assert.ok(!pkg.scripts.lint.includes("next lint"));
 });
+
+test("G7: withdrawal reconciliation cron is safe by construction", () => {
+  const helper = read("lib/server/withdrawal-reconcile.ts");
+  const cron = read("app/api/cron/reconcile-withdrawals/route.ts");
+  const vercel = JSON.parse(read("vercel.json"));
+
+  // Deterministic reference lives in the shared helper both sides import
+  assert.match(helper, /me2u-wdr-/);
+  assert.match(read("lib/server/withdrawal-status.ts"), /me2u-wdr-/);
+  assert.match(
+    read("app/api/wallet/withdraw/route.ts"),
+    /withdrawalTransferReference,\s*\n?\s*\} from "@\/lib\/server\/withdrawal-status"/,
+  );
+  // Only positive failure signals refund: 404 / failed / reversed / abandoned
+  assert.match(helper, /res\.status === 404/);
+  assert.match(helper, /"reversed"/);
+  // Ambiguity never refunds — unknown maps to skip, pending stays pending
+  assert.match(helper, /kind: "unknown"/);
+  assert.match(helper, /return "skipped"/);
+  // Terminal writes reuse the webhook idempotency guards
+  assert.match(helper, /AND status IN \(\$\{WITHDRAWAL_IN_FLIGHT_SQL\}\)/);
+  assert.match(helper, /buildLedgerRef\("wdr-rev", withdrawal\.id\)/);
+  // Cron: auth-gated, heartbeat-instrumented, grace window before sweeping
+  assert.match(cron, /Bearer \$\{cronSecret\}/);
+  assert.match(cron, /markCronStarted\(CRON_JOB_NAME\)/);
+  assert.match(cron, /markCronFinished\(/);
+  assert.match(cron, /RECONCILE_AFTER_MINUTES/);
+  assert.ok(
+    vercel.crons.some(
+      (c) => c.path === "/api/cron/reconcile-withdrawals" && c.schedule === "*/15 * * * *",
+    ),
+    "expected reconcile-withdrawals on a */15 schedule in vercel.json",
+  );
+});

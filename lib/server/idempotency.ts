@@ -1,22 +1,34 @@
 /**
  * Idempotency + audit helpers for financial API routes.
  * Idempotency: clients send `Idempotency-Key` header; first response is cached
- * in `request_idempotency` table and replayed for duplicates (24h TTL).
+ * in the `api_idempotency_cache` table and replayed for duplicates (24h TTL).
  * Audit: every money movement writes to `audit_events` table.
+ *
+ * NOTE: this cache intentionally does NOT use the `request_idempotency` table
+ * created by migration 20260918000001 — that table has a different shape
+ * (PK (user_id, key) with status_code/response_jsonb). Because `CREATE TABLE IF
+ * NOT EXISTS` is a no-op when the migration won the race, the app's previous
+ * SELECT/INSERT against it failed with "column does not exist", the errors were
+ * swallowed, and replay protection silently did nothing. `api_idempotency_cache`
+ * is owned by this module alone (see migrations/20260920000001).
  */
 import type { PoolClient } from "pg";
 import { query } from "@/lib/railway/client";
 import { logApiError, logInfo } from "@/lib/server/logger";
 
 const IDEMPOTENCY_TTL_HOURS = 24;
+const IDEMPOTENCY_TABLE = "api_idempotency_cache";
 
 type DbLike = {
-  query: (text: string, params?: unknown[]) => Promise<{ rows: Array<Record<string, unknown>> }>;
+  query: (
+    text: string,
+    params?: unknown[],
+  ) => Promise<{ rows: Array<Record<string, unknown>> }>;
 };
 
 async function ensureTables(db: DbLike): Promise<void> {
   await db.query(`
-    CREATE TABLE IF NOT EXISTS request_idempotency (
+    CREATE TABLE IF NOT EXISTS ${IDEMPOTENCY_TABLE} (
       key TEXT PRIMARY KEY,
       user_id TEXT,
       route TEXT NOT NULL,
@@ -35,10 +47,12 @@ async function ensureTables(db: DbLike): Promise<void> {
       metadata JSONB,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )`);
-  await db.query(
-    `DELETE FROM request_idempotency WHERE created_at < NOW() - ($1 || ' hours')::interval`,
-    [String(IDEMPOTENCY_TTL_HOURS)],
-  ).catch((err) => logApiError("idempotency-cleanup", err));
+  await db
+    .query(
+      `DELETE FROM ${IDEMPOTENCY_TABLE} WHERE created_at < NOW() - ($1 || ' hours')::interval`,
+      [String(IDEMPOTENCY_TTL_HOURS)],
+    )
+    .catch((err) => logApiError("idempotency-cleanup", err));
 }
 
 export function readIdempotencyKey(request: Request): string {
@@ -46,7 +60,9 @@ export function readIdempotencyKey(request: Request): string {
     request.headers.get("idempotency-key") ||
     request.headers.get("x-idempotency-key") ||
     ""
-  ).trim().slice(0, 128);
+  )
+    .trim()
+    .slice(0, 128);
 }
 
 function toJsonBody(value: unknown): Record<string, unknown> {
@@ -65,7 +81,7 @@ export async function replayIfDuplicate(
   try {
     await ensureTables(db);
     const { rows } = await db.query(
-      `SELECT status, body FROM request_idempotency WHERE key = $1 AND user_id = $2 LIMIT 1`,
+      `SELECT status, body FROM ${IDEMPOTENCY_TABLE} WHERE key = $1 AND user_id = $2 LIMIT 1`,
       [opts.key, opts.userId],
     );
     const hit = rows[0];
@@ -87,7 +103,7 @@ export async function rememberIdempotentResponse(
   try {
     await ensureTables(db);
     await db.query(
-      `INSERT INTO request_idempotency (key, user_id, route, status, body)
+      `INSERT INTO ${IDEMPOTENCY_TABLE} (key, user_id, route, status, body)
        VALUES ($1, $2, $3, $4, $5::jsonb)
        ON CONFLICT (key) DO NOTHING`,
       [opts.key, opts.userId, opts.route, opts.status, JSON.stringify(toJsonBody(opts.body))],

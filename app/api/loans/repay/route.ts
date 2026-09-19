@@ -11,10 +11,7 @@ import {
   replayIfDuplicate,
   rememberIdempotentResponse,
 } from "@/lib/server/idempotency";
-import {
-  buildLedgerRef,
-  recordWalletMove,
-} from "@/lib/server/wallet-ledger";
+import { buildLedgerRef, recordWalletMove } from "@/lib/server/wallet-ledger";
 
 export async function POST(request: Request) {
   const route = "api/loans/repay";
@@ -25,13 +22,7 @@ export async function POST(request: Request) {
 
     const auth = await requireAuthenticatedUser(request);
     if ("response" in auth) return auth.response;
-    if (
-      await isRateLimited(
-        `loan-repay-user:${auth.user.id}`,
-        50,
-        60 * 60_000,
-      )
-    )
+    if (await isRateLimited(`loan-repay-user:${auth.user.id}`, 50, 60 * 60_000))
       return tooManyRequestsResponse();
 
     const idempotencyKey = readIdempotencyKey(request);
@@ -69,12 +60,10 @@ export async function POST(request: Request) {
       if (!loan) throw new Error("Loan not found.");
       if (loan.borrower_id !== userId)
         throw new Error("This loan cannot be repaid from this account.");
-      if (loan.status === "completed")
-        throw new Error("This loan has already been repaid.");
+      if (loan.status === "completed") throw new Error("This loan has already been repaid.");
 
       const repaymentAmount =
-        Number(loan.amount) +
-        (Number(loan.amount) * Number(loan.rate)) / 100;
+        Number(loan.amount) + (Number(loan.amount) * Number(loan.rate)) / 100;
       repaymentAmountUsed = repaymentAmount;
       const securityDeposit = Number(loan.security_deposit || 0);
       lenderIdUsed = loan.lender_id;
@@ -83,7 +72,7 @@ export async function POST(request: Request) {
         userId,
         txType: "debit",
         source: "repayment",
-        reference: buildLedgerRef("loan-repay", userId),
+        reference: buildLedgerRef("loan-repay", loanId),
         description: `Loan repayment of ₦${repaymentAmount.toLocaleString()} (security deposit ₦${securityDeposit.toLocaleString()} released)`,
         balanceDelta: -repaymentAmount,
         lockedDelta: -securityDeposit,
@@ -101,7 +90,7 @@ export async function POST(request: Request) {
           userId: loan.lender_id,
           txType: "credit",
           source: "repayment",
-          reference: buildLedgerRef("loan-repay-lender", loan.lender_id),
+          reference: buildLedgerRef("loan-repay-lender", loanId),
           description: `Repayment received for loan ${loanId}`,
           balanceDelta: repaymentAmount,
           metadata: {
@@ -115,12 +104,7 @@ export async function POST(request: Request) {
         await client.query(
           `INSERT INTO transactions (user_id, type, amount, description, loan_id, created_at)
            VALUES ($1, 'repayment_received', $2, $3, $4, NOW())`,
-          [
-            loan.lender_id,
-            repaymentAmount,
-            `Repayment received for loan ${loanId}`,
-            loanId,
-          ],
+          [loan.lender_id, repaymentAmount, `Repayment received for loan ${loanId}`, loanId],
         );
       }
 

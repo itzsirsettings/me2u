@@ -7,3 +7,11 @@ coverage
 .next/types
 supabase/functions
 server/dist
+# Kilo worktrees are separate checkouts — never format them from the root.
+.kilo
+# Playwright artifacts
+playwright-report
+test-results
+# Standalone SQL snapshots (hand-maintained, not app code)
+COMPLETE_MIGRATION.sql
+RAILWAY_MIGRATION.sql

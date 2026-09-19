@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Quality gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      CI: "true"
+      NEXT_TELEMETRY_DISABLED: "1"
+      # Placeholder values so `next build` can resolve module-scope env reads.
+      # Real secrets are never required to compile the app.
+      DATABASE_URL: "postgres://ci:ci@127.0.0.1:5432/ci"
+      AUTH_TOKEN_SECRET: "ci-auth-token-secret"
+      PIN_PEPPER: "ci-pin-pepper"
+      OTP_SIGNING_SECRET: "ci-otp-signing-secret"
+      CRON_SECRET: "ci-cron-secret"
+      NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prettier (format check)
+        run: npm run check:changed-format
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: TypeScript
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm run test
+
+      - name: Build
+        run: npm run build

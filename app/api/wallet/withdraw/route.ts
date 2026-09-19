@@ -15,11 +15,21 @@ import {
   rememberIdempotentResponse,
   requestMeta,
 } from "@/lib/server/idempotency";
+import { randomUUID } from "crypto";
 import { buildLedgerRef, recordWalletMove } from "@/lib/server/wallet-ledger";
 import { logWarn } from "@/lib/server/logger";
+import { isUniqueViolation } from "@/lib/server/pg-errors";
+import {
+  WITHDRAWAL_IN_FLIGHT_SQL,
+  WITHDRAWAL_QUEUED_STATUS,
+  withdrawalTransferReference,
+} from "@/lib/server/withdrawal-status";
 
 const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY || "";
 const MIN_WITHDRAWAL = 1000;
+
+const DUPLICATE_WITHDRAWAL_MESSAGE =
+  "You already have a withdrawal in progress. Wait for it to finish before starting another.";
 
 async function createPaystackRecipient(
   accountName: string,
@@ -64,6 +74,7 @@ async function initiatePaystackTransfer(
   recipientCode: string,
   amountInKobo: number,
   reason: string,
+  reference: string,
 ) {
   const res = await fetch("https://api.paystack.co/transfer", {
     method: "POST",
@@ -76,12 +87,18 @@ async function initiatePaystackTransfer(
       amount: amountInKobo,
       recipient: recipientCode,
       reason,
+      reference,
     }),
   });
   const data = await res.json();
   if (!data.status) throw new Error(data.message || "Transfer failed");
   return data.data;
 }
+
+/**
+ * Withdrawal reference helper lives in `@/lib/server/withdrawal-status`
+ * (single source of truth, shared with the reconciliation cron).
+ */
 
 function pinResultToError(result: PinAttemptResult): Error | null {
   if (result.ok) return null;
@@ -335,12 +352,16 @@ export async function POST(request: Request) {
       );
     }
 
+    // Friendly fast path. The authoritative guard is the partial UNIQUE index
+    // idx_withdrawal_requests_one_pending_per_user (SQLSTATE 23505 below), which
+    // covers the concurrent-double-submit race this SELECT cannot.
     const { rows: pendingRows } = await auth.db.query(
-      `SELECT id FROM withdrawal_requests WHERE user_id = $1 AND status = 'pending' LIMIT 1`,
+      `SELECT id FROM withdrawal_requests
+        WHERE user_id = $1 AND status IN (${WITHDRAWAL_IN_FLIGHT_SQL})
+        LIMIT 1`,
       [userId],
     );
-    if (pendingRows.length > 0)
-      throw new Error("You already have a pending withdrawal request.");
+    if (pendingRows.length > 0) throw new Error(DUPLICATE_WITHDRAWAL_MESSAGE);
 
     const fee_amount = withdrawalFeeAmount;
     const paystackFee = getWithdrawalProcessorFee(amount);
@@ -349,7 +370,9 @@ export async function POST(request: Request) {
 
     const resolvedAccountName = await resolvePaystackAccount(accountNumber, bankCode);
 
-    let requestId: string;
+    // The withdrawal id is minted before the debit so every ledger entry for this
+    // request can carry a deterministic, reconcilable reference.
+    const requestId = randomUUID();
     await withUserTransaction(userId, async (client) => {
       const pinAgain = await verifyAndRecordPinAttempt(userId, pin, {
         client,
@@ -363,7 +386,7 @@ export async function POST(request: Request) {
         userId,
         txType: "debit",
         source: "withdrawal",
-        reference: buildLedgerRef("wdr-debit", userId),
+        reference: buildLedgerRef("wdr-debit", requestId),
         description: `Withdrawal of ₦${amount.toLocaleString()} to ${resolvedAccountName} (fee ₦${totalFee.toLocaleString()})`,
         balanceDelta: -(amount + totalFee),
         metadata: {
@@ -379,13 +402,28 @@ export async function POST(request: Request) {
 
       const { rows: reqRows } = await client.query<{ id: string }>(
         `INSERT INTO withdrawal_requests
-           (user_id, amount, fee_amount, fee, net_amount, bank_code, account_number,
+           (id, user_id, amount, fee_amount, fee, net_amount, bank_code, account_number,
             account_name, status, created_at, updated_at)
-         VALUES ($1, $2, $3, $3, $4, $5, $6, $7, 'processing', NOW(), NOW())
+         VALUES ($1, $2, $3, $4, $4, $5, $6, $7, $8, '${WITHDRAWAL_QUEUED_STATUS}', NOW(), NOW())
          RETURNING id`,
-        [userId, amount, totalFee, netAmount, bankCode, accountNumber, resolvedAccountName],
+        [
+          requestId,
+          userId,
+          amount,
+          totalFee,
+          netAmount,
+          bankCode,
+          accountNumber,
+          resolvedAccountName,
+        ],
       );
-      requestId = reqRows[0].id;
+      // Keep the ledger references honest: the row we just wrote must be the id
+      // the debit and any later reversal were referenced with.
+      if (reqRows[0]?.id !== requestId) {
+        throw new Error(
+          "Withdrawal could not be recorded consistently. No funds were moved — please try again.",
+        );
+      }
 
       await client.query(
         `INSERT INTO transactions (user_id, type, amount, description, withdrawal_request_id, created_at)
@@ -418,6 +456,17 @@ export async function POST(request: Request) {
 
     let recipientData: any;
     let transferData: any;
+    const transferReference = withdrawalTransferReference(requestId);
+
+    // Persist the provider reference BEFORE calling Paystack. If this process dies
+    // after the transfer is created, the reconciliation cron can verify this exact
+    // reference instead of guessing whether money left the platform.
+    await auth.db.query(
+      `UPDATE withdrawal_requests
+          SET paystack_reference = $1, updated_at = NOW()
+        WHERE id = $2`,
+      [transferReference, requestId],
+    );
 
     try {
       recipientData = await createPaystackRecipient(
@@ -431,10 +480,10 @@ export async function POST(request: Request) {
           userId,
           txType: "reversal",
           source: "withdrawal",
-          reference: buildLedgerRef("wdr-rev", requestId!),
+          reference: buildLedgerRef("wdr-rev", requestId),
           description: `Withdrawal reversal: failed to create transfer recipient`,
           balanceDelta: amount + totalFee,
-          sourceDetail: requestId!,
+          sourceDetail: requestId,
           metadata: {
             reason: "create_transfer_recipient_failed",
             errorMessage:
@@ -443,7 +492,7 @@ export async function POST(request: Request) {
         });
         await client.query(
           `UPDATE withdrawal_requests SET status = 'failed', admin_note = $1, updated_at = NOW() WHERE id = $2`,
-          ["Failed to create transfer recipient", requestId!],
+          ["Failed to create transfer recipient", requestId],
         );
       });
       throw paystackError;
@@ -454,6 +503,7 @@ export async function POST(request: Request) {
         recipientData.recipient_code,
         Math.round(netAmount * 100),
         `Me2U withdrawal - ${userId}`,
+        transferReference,
       );
     } catch (paystackError) {
       await withTransaction(async (client) => {
@@ -461,10 +511,10 @@ export async function POST(request: Request) {
           userId,
           txType: "reversal",
           source: "withdrawal",
-          reference: buildLedgerRef("wdr-rev", requestId!),
+          reference: buildLedgerRef("wdr-rev", requestId),
           description: `Withdrawal reversal: transfer initiation failed`,
           balanceDelta: amount + totalFee,
-          sourceDetail: requestId!,
+          sourceDetail: requestId,
           metadata: {
             reason: "transfer_init_failed",
             errorMessage:
@@ -475,7 +525,7 @@ export async function POST(request: Request) {
           `UPDATE withdrawal_requests SET status = 'failed', admin_note = $1, updated_at = NOW() WHERE id = $2`,
           [
             paystackError instanceof Error ? paystackError.message : "Transfer failed",
-            requestId!,
+            requestId,
           ],
         );
       });
@@ -484,21 +534,23 @@ export async function POST(request: Request) {
 
     await auth.db.query(
       `UPDATE withdrawal_requests
-       SET paystack_recipient_code = $1, paystack_transfer_code = $2,
-           paystack_reference = $3, updated_at = NOW()
+       SET paystack_recipient_code = $1,
+           paystack_transfer_code = $2,
+           paystack_reference = COALESCE($3, paystack_reference),
+           updated_at = NOW()
        WHERE id = $4`,
       [
         recipientData.recipient_code,
         transferData.transfer_code,
-        transferData.reference,
-        requestId!,
+        transferData.reference || transferReference,
+        requestId,
       ],
     );
 
     const responseBody = {
       ok: true,
-      status: "processing",
-      withdrawal_id: requestId!,
+      status: WITHDRAWAL_QUEUED_STATUS,
+      withdrawal_id: requestId,
       transfer_code: transferData.transfer_code,
       reference: transferData.reference,
       net_amount: netAmount,
@@ -518,6 +570,15 @@ export async function POST(request: Request) {
       headers: { "Cache-Control": "no-store" },
     });
   } catch (error) {
+    // The partial UNIQUE index idx_withdrawal_requests_one_pending_per_user is the
+    // authoritative double-submit guard; translate it into a friendly 409 instead
+    // of leaking a Postgres constraint name to the client.
+    if (isUniqueViolation(error, "idx_withdrawal_requests_one_pending_per_user")) {
+      return NextResponse.json(
+        { error: DUPLICATE_WITHDRAWAL_MESSAGE },
+        { status: 409, headers: { "Cache-Control": "no-store" } },
+      );
+    }
     return errorResponse(error, "Unable to withdraw funds.", route);
   }
 }

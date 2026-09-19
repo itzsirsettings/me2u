@@ -13,9 +13,7 @@ const WEMA_SECRET = process.env.WEMA_WEBHOOK_SECRET || "";
 function verifyWemaSignature(rawBody: string, signatureHeader: string | null): boolean {
   if (!WEMA_SECRET || !signatureHeader) return false;
   try {
-    const expected = createHmac("sha256", WEMA_SECRET)
-      .update(rawBody)
-      .digest("hex");
+    const expected = createHmac("sha256", WEMA_SECRET).update(rawBody).digest("hex");
     const a = Buffer.from(signatureHeader);
     const b = Buffer.from(expected);
     return a.length === b.length && timingSafeEqual(a, b);
@@ -24,22 +22,30 @@ function verifyWemaSignature(rawBody: string, signatureHeader: string | null): b
   }
 }
 
+/**
+ * At-least-once webhook dedup.
+ *
+ * The INSERT *is* the lock: `provider_webhooks` carries
+ * UNIQUE (provider, reference) since migration 20260920000001, so
+ * `ON CONFLICT DO NOTHING RETURNING id` yields a row exactly once per event ref —
+ * even when two deliveries race (the previous COUNT-then-INSERT did not).
+ */
 async function ensureProcessedUnique(eventRef: string): Promise<boolean> {
-  const { rows } = await query<{ cnt: string }>(
-    `SELECT COUNT(*)::text AS cnt FROM provider_webhooks WHERE provider = 'wema' AND reference = $1`,
-    [eventRef],
-  );
-  if (Number(rows[0]?.cnt ?? 0) > 0) return false;
-  await query(
+  if (!eventRef) return true;
+  const { rows } = await query<{ id: string }>(
     `INSERT INTO provider_webhooks (provider, reference, processed, created_at)
      VALUES ('wema', $1, true, NOW())
-     ON CONFLICT DO NOTHING`,
+     ON CONFLICT DO NOTHING
+     RETURNING id`,
     [eventRef],
   );
-  return true;
+  return rows.length > 0;
 }
 
-async function findUserIdByWemaAccount(accountNumber: string, customerRef?: string): Promise<string | null> {
+async function findUserIdByWemaAccount(
+  accountNumber: string,
+  customerRef?: string,
+): Promise<string | null> {
   if (customerRef) {
     const { rows: crRows } = await query<{ user_id: string }>(
       `SELECT user_id FROM virtual_accounts WHERE provider = 'wema' AND provider_reference = $1 LIMIT 1`,
@@ -61,18 +67,38 @@ async function handleInflow(payload: any): Promise<void> {
   const amount = Number(payload?.amount || payload?.Amount || 0);
   if (amount <= 0) return;
 
-  const accountNumber =
-    String(payload?.virtualAccountNumber || payload?.account_number || payload?.AccountNumber || "").trim();
-  const customerRef =
-    String(payload?.customerReference || payload?.customer_reference || payload?.CustomerRef || "").trim();
-  const providerRef =
-    String(payload?.transactionReference || payload?.transaction_reference || payload?.reference || payload?.Reference || Date.now().toString()).trim();
-  const senderName =
-    String(payload?.senderAccountName || payload?.sender_name || payload?.SourceAccountName || "").trim();
-  const senderAccount =
-    String(payload?.senderAccountNumber || payload?.sender_account || payload?.SourceAccountNumber || "").trim();
-  const narration =
-    String(payload?.narration || payload?.Narration || payload?.PaymentNarration || "Wema virtual account transfer").trim();
+  const accountNumber = String(
+    payload?.virtualAccountNumber || payload?.account_number || payload?.AccountNumber || "",
+  ).trim();
+  const customerRef = String(
+    payload?.customerReference || payload?.customer_reference || payload?.CustomerRef || "",
+  ).trim();
+  const providerRef = String(
+    payload?.transactionReference ||
+      payload?.transaction_reference ||
+      payload?.reference ||
+      payload?.Reference ||
+      "",
+  ).trim();
+  if (!providerRef) {
+    logApiError("wema:inflow:no_reference", { accountNumber });
+    return;
+  }
+  const senderName = String(
+    payload?.senderAccountName || payload?.sender_name || payload?.SourceAccountName || "",
+  ).trim();
+  const senderAccount = String(
+    payload?.senderAccountNumber ||
+      payload?.sender_account ||
+      payload?.SourceAccountNumber ||
+      "",
+  ).trim();
+  const narration = String(
+    payload?.narration ||
+      payload?.Narration ||
+      payload?.PaymentNarration ||
+      "Wema virtual account transfer",
+  ).trim();
 
   const userId = await findUserIdByWemaAccount(accountNumber, customerRef);
   if (!userId) {
@@ -84,25 +110,13 @@ async function handleInflow(payload: any): Promise<void> {
     `SELECT id FROM wallet_inflows WHERE provider = 'wema' AND provider_reference = $1 LIMIT 1`,
     [providerRef],
   );
-  if (existing.rows.length > 0) return;
+  if (existing.rows.length > 0) {
+    logInfo("wema:inflow:duplicate_skipped", { userId, providerRef });
+    return;
+  }
 
+  let credited = false;
   await withTransaction(async (client) => {
-    await recordWalletMove(client, {
-      userId,
-      txType: "credit",
-      source: "bank_transfer",
-      reference: buildLedgerRef("wema-dep", userId),
-      description: `Wema virtual account funding: ₦${amount.toLocaleString()} (${narration})`,
-      balanceDelta: amount,
-      metadata: {
-        accountNumber,
-        customerRef,
-        providerReference: providerRef,
-        senderName,
-        senderAccount,
-      },
-    });
-
     const { rows: wRows } = await client.query<{ id: string }>(
       `SELECT id FROM wallets WHERE user_id = $1 LIMIT 1`,
       [userId],
@@ -115,12 +129,17 @@ async function handleInflow(payload: any): Promise<void> {
     );
     const virtualAccountId = vaRows[0]?.id ?? null;
 
-    await client.query(
+    // Atomic claim: `wallet_inflows` carries UNIQUE (provider, provider_reference),
+    // so writing the inflow BEFORE the credit guarantees exactly one credit even
+    // when the provider delivers the same notification twice concurrently.
+    const { rows: claimed } = await client.query<{ id: string }>(
       `INSERT INTO wallet_inflows
          (user_id, wallet_id, virtual_account_id, provider, provider_reference, amount, currency,
           status, sender_name, sender_account_number, narration, raw_payload, credited_at, created_at)
        VALUES ($1, $2, $3, 'wema', $4, $5::numeric(14,2), 'NGN',
-          'successful', $6, $7, $8, $9::jsonb, NOW(), NOW())`,
+          'successful', $6, $7, $8, $9::jsonb, NOW(), NOW())
+       ON CONFLICT DO NOTHING
+       RETURNING id`,
       [
         userId,
         walletId,
@@ -133,15 +152,33 @@ async function handleInflow(payload: any): Promise<void> {
         JSON.stringify(payload),
       ],
     );
+    if (claimed.length === 0) return;
+
+    await recordWalletMove(client, {
+      userId,
+      txType: "credit",
+      source: "bank_transfer",
+      reference: buildLedgerRef("wema-dep", providerRef),
+      description: `Wema virtual account funding: ₦${amount.toLocaleString()} (${narration})`,
+      balanceDelta: amount,
+      metadata: {
+        accountNumber,
+        customerRef,
+        providerReference: providerRef,
+        senderName,
+        senderAccount,
+      },
+    });
 
     await client.query(
       `INSERT INTO transactions (user_id, type, amount, description, created_at)
        VALUES ($1, 'deposit', $2::numeric(14,2), $3, NOW())`,
       [userId, amount, `Wema virtual account funding ref ${providerRef}`],
     );
+    credited = true;
   });
 
-  logInfo("wema:inflow:credited", { userId, amount, providerRef });
+  logInfo("wema:inflow:credited", { userId, amount, providerRef, credited });
 }
 
 export async function POST(request: Request) {
@@ -162,10 +199,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const eventType =
-    String(payload?.event || payload?.EventType || payload?.notificationType || "inflow").toLowerCase();
-  const eventRef =
-    String(payload?.reference || payload?.Reference || payload?.transactionReference || Date.now().toString()).trim();
+  const eventType = String(
+    payload?.event || payload?.EventType || payload?.notificationType || "inflow",
+  ).toLowerCase();
+  // No Date.now() fallback: a fabricated reference defeats at-least-once dedup.
+  const eventRef = String(
+    payload?.reference ||
+      payload?.Reference ||
+      payload?.transactionReference ||
+      payload?.transaction_reference ||
+      "",
+  ).trim();
+  if (!eventRef) {
+    // Without a provider reference we cannot dedup or reconcile this delivery.
+    logApiError("wema:webhook:missing_reference", { eventType });
+    return NextResponse.json({ ok: true, skipped: "missing_reference" });
+  }
 
   try {
     const fresh = await ensureProcessedUnique(eventRef);
@@ -188,10 +237,7 @@ export async function POST(request: Request) {
     }
   } catch (err) {
     logApiError(`wema:handler:${eventType}`, err);
-    return NextResponse.json(
-      { error: "Processing error, will retry" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Processing error, will retry" }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });

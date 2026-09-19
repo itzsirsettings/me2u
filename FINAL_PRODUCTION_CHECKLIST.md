@@ -180,14 +180,16 @@ This creates all tables for:
 
 Railway cron schedules are managed in the **Railway Dashboard → Project → Service → Settings → Cron Jobs** (not in `railway.json`). Vercel deployments already declare both schedules in `vercel.json`.
 
-| Job                  | Path                                  | Schedule                | Auth header                          |
-| -------------------- | ------------------------------------- | ----------------------- | ------------------------------------ |
-| Account unlock sweep | `GET /api/cron/unlock-eligible-users` | `0 * * * *` (hourly)    | `Authorization: Bearer $CRON_SECRET` |
-| OTP cleanup          | `GET /api/cron/cleanup-otp`           | `0 2 * * *` (daily 2am) | `Authorization: Bearer $CRON_SECRET` |
+| Job                  | Path                                  | Schedule                      | Auth header                          |
+| -------------------- | ------------------------------------- | ----------------------------- | ------------------------------------ |
+| Account unlock sweep | `GET /api/cron/unlock-eligible-users` | `0 * * * *` (hourly)          | `Authorization: Bearer $CRON_SECRET` |
+| OTP cleanup          | `GET /api/cron/cleanup-otp`           | `0 2 * * *` (daily 2am)       | `Authorization: Bearer $CRON_SECRET` |
+| Withdrawal reconcile | `GET /api/cron/reconcile-withdrawals` | `*/15 * * * *` (every 15 min) | `Authorization: Bearer $CRON_SECRET` |
 
-1. Add both cron entries with the paths + schedules above; set the auth header value to the `CRON_SECRET` environment variable (already required in env config).
+1. Add all three cron entries with the paths + schedules above; set the auth header value to the `CRON_SECRET` environment variable (already required in env config).
 2. After the first scheduled run, verify the heartbeat: `SELECT job_name, last_started_at, last_status, last_run_count FROM cron_runs;`
-   - `cron_runs` is the last-run/last-error tracker written by both cron routes. A stale `last_started_at` or `last_status = 'failed'` means the cron is silently broken — investigate before launch.
+   - `cron_runs` is the last-run/last-error tracker written by all three cron routes. A stale `last_started_at` or `last_status = 'failed'` means the cron is silently broken — investigate before launch.
+   - The withdrawal reconcile sweep only touches in-flight withdrawals older than 15 min and only refunds when Paystack positively reports failure/404 — unknown states are left for the next sweep.
 
 **Status**: ⚠️ NOT DONE YET
 

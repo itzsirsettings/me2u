@@ -1,4 +1,5 @@
 import type { PoolClient } from "pg";
+import { createHash } from "crypto";
 
 export type LedgerTransactionType = "credit" | "debit" | "refund" | "reversal";
 export type LedgerSource =
@@ -132,8 +133,31 @@ export async function recordWalletMove(
   return { walletId: snap.walletId, balance: balanceAfter, locked: lockedAfter };
 }
 
-export function buildLedgerRef(prefix: string, id: string, suffix?: string): string {
-  const ts = Date.now().toString(36);
-  const rand = Math.random().toString(36).slice(2, 8);
-  return [prefix, id, suffix, ts, rand].filter(Boolean).join(":").slice(0, 120);
+const MAX_REFERENCE_LENGTH = 120;
+
+/**
+ * Build a ledger reference for a business event.
+ *
+ * Contract (enforced by `wallet_ledger.reference` being UNIQUE):
+ *  - DETERMINISTIC: the same (prefix, key, suffix) triple always yields the same
+ *    string, so a replayed/retried request can be detected — a second write for
+ *    the same business event fails loudly with a UNIQUE violation instead of
+ *    silently double-charging. Never pass a `Date.now()`/`Math.random()` value.
+ *  - `key` must therefore be a stable business identifier (withdrawal id, loan
+ *    id, marketplace item id, provider reference) — NOT a bare user id.
+ *  - Prefixes are global and must be unique per money-movement kind.
+ *
+ * Over-long references are truncated deterministically with a sha256 tail so
+ * they stay reproducible and collision-resistant inside the column.
+ */
+export function buildLedgerRef(prefix: string, key: string, suffix?: string): string {
+  const reference = [prefix, key, suffix]
+    .filter((part): part is string => Boolean(part))
+    .join(":");
+
+  if (reference.length <= MAX_REFERENCE_LENGTH) return reference;
+
+  // 87 + 1 + 32 = 120 characters, fully deterministic for the same input.
+  const digest = createHash("sha256").update(reference).digest("hex").slice(0, 32);
+  return `${reference.slice(0, 87)}:${digest}`;
 }

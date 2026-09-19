@@ -11,10 +11,7 @@ import {
   replayIfDuplicate,
   rememberIdempotentResponse,
 } from "@/lib/server/idempotency";
-import {
-  buildLedgerRef,
-  recordWalletMove,
-} from "@/lib/server/wallet-ledger";
+import { buildLedgerRef, recordWalletMove } from "@/lib/server/wallet-ledger";
 import { getSecurityDeposit } from "@/lib/loans";
 
 export async function POST(request: Request) {
@@ -26,13 +23,7 @@ export async function POST(request: Request) {
 
     const auth = await requireAuthenticatedUser(request);
     if ("response" in auth) return auth.response;
-    if (
-      await isRateLimited(
-        `marketplace-accept-user:${auth.user.id}`,
-        50,
-        60 * 60_000,
-      )
-    )
+    if (await isRateLimited(`marketplace-accept-user:${auth.user.id}`, 50, 60 * 60_000))
       return tooManyRequestsResponse();
 
     const idempotencyKey = readIdempotencyKey(request);
@@ -67,18 +58,13 @@ export async function POST(request: Request) {
       );
       const item = itemRows[0];
       if (!item) throw new Error("Listing not found.");
-      if (item.status !== "active")
-        throw new Error("This listing is no longer available.");
-      if (item.author_id === userId)
-        throw new Error("You cannot accept your own listing.");
+      if (item.status !== "active") throw new Error("This listing is no longer available.");
+      if (item.author_id === userId) throw new Error("You cannot accept your own listing.");
 
       const { rows: profileRows } = await client.query<{
         kyc_verified: boolean;
         trust_score: number;
-      }>(
-        `SELECT kyc_verified, trust_score FROM profiles WHERE id = $1`,
-        [userId],
-      );
+      }>(`SELECT kyc_verified, trust_score FROM profiles WHERE id = $1`, [userId]);
       const profile = profileRows[0];
       if (!profile?.kyc_verified)
         throw new Error("Complete KYC before participating in the marketplace.");
@@ -89,40 +75,26 @@ export async function POST(request: Request) {
       const isBorrower = item.type === "lending_offer";
       const borrowerId = isBorrower ? userId : item.author_id;
       const lenderId = isBorrower ? item.author_id : userId;
-      const borrowerTrustScore = isBorrower
-        ? profile.trust_score
-        : item.trust_score;
+      const borrowerTrustScore = isBorrower ? profile.trust_score : item.trust_score;
       const securityDeposit = getSecurityDeposit(amount, borrowerTrustScore);
 
       const [first, second] = [borrowerId, lenderId].sort();
-      await client.query(
-        `SELECT id FROM wallets WHERE user_id = $1 FOR UPDATE`,
-        [first],
-      );
+      await client.query(`SELECT id FROM wallets WHERE user_id = $1 FOR UPDATE`, [first]);
       if (first !== second) {
-        await client.query(
-          `SELECT id FROM wallets WHERE user_id = $1 FOR UPDATE`,
-          [second],
-        );
+        await client.query(`SELECT id FROM wallets WHERE user_id = $1 FOR UPDATE`, [second]);
       }
 
       const { rows: lenderWalletRows } = await client.query<{
         balance: number;
       }>(`SELECT balance FROM wallets WHERE user_id = $1`, [lenderId]);
-      if (
-        !lenderWalletRows[0] ||
-        Number(lenderWalletRows[0].balance) < amount
-      ) {
+      if (!lenderWalletRows[0] || Number(lenderWalletRows[0].balance) < amount) {
         throw new Error("Insufficient lender balance to fund this loan.");
       }
 
       const { rows: borrowerWalletRows } = await client.query<{
         balance: number;
       }>(`SELECT balance FROM wallets WHERE user_id = $1`, [borrowerId]);
-      if (
-        !borrowerWalletRows[0] ||
-        Number(borrowerWalletRows[0].balance) < securityDeposit
-      ) {
+      if (!borrowerWalletRows[0] || Number(borrowerWalletRows[0].balance) < securityDeposit) {
         throw new Error(
           `Borrower needs ₦${securityDeposit.toLocaleString()} as a security deposit.`,
         );
@@ -132,7 +104,7 @@ export async function POST(request: Request) {
         userId: lenderId,
         txType: "debit",
         source: "loan",
-        reference: buildLedgerRef("mp-lender-out", lenderId),
+        reference: buildLedgerRef("mp-lender-out", itemId),
         description: `Funded peer loan of ₦${amount.toLocaleString()} via marketplace listing ${itemId}`,
         balanceDelta: -amount,
         metadata: {
@@ -150,7 +122,7 @@ export async function POST(request: Request) {
         userId: borrowerId,
         txType: "credit",
         source: "loan",
-        reference: buildLedgerRef("mp-borrower-in", borrowerId),
+        reference: buildLedgerRef("mp-borrower-in", itemId),
         description: `Peer loan of ₦${amount.toLocaleString()} for ${days} days from marketplace listing ${itemId}`,
         balanceDelta: amount,
         metadata: {
@@ -168,7 +140,7 @@ export async function POST(request: Request) {
         userId: borrowerId,
         txType: "debit",
         source: "loan",
-        reference: buildLedgerRef("mp-borrower-sd", borrowerId),
+        reference: buildLedgerRef("mp-borrower-sd", itemId),
         description: `Security deposit locked for peer loan from listing ${itemId}`,
         balanceDelta: 0,
         lockedDelta: securityDeposit,
@@ -181,9 +153,7 @@ export async function POST(request: Request) {
       });
 
       const startDate = new Date().toISOString();
-      const dueDate = new Date(
-        Date.now() + days * 86_400_000,
-      ).toISOString();
+      const dueDate = new Date(Date.now() + days * 86_400_000).toISOString();
 
       const { rows: loanRows } = await client.query<{ id: string }>(
         `INSERT INTO loans
