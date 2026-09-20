@@ -10,6 +10,13 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { motion, type Variants } from "framer-motion";
 import PaystackFundingAccount from "@/components/PaystackFundingAccount";
+import { authorizedFetch } from "@/lib/fetch";
+
+type RegistrationDepositAccount = {
+  bank: string;
+  name: string;
+  number: string;
+};
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -59,6 +66,9 @@ export default function WalletPage() {
   const [fundReceiptFile, setFundReceiptFile] = useState<File | null>(null);
   const [registrationReference, setRegistrationReference] = useState("");
   const [regReceiptFile, setRegReceiptFile] = useState<File | null>(null);
+  const [registrationAccount, setRegistrationAccount] =
+    useState<RegistrationDepositAccount | null>(null);
+  const [isLoadingRegistrationAccount, setIsLoadingRegistrationAccount] = useState(false);
 
   const fundWallet = useStore((state) => state.fundWallet);
   const confirmRegistrationDeposit = useStore((state) => state.confirmRegistrationDeposit);
@@ -81,17 +91,11 @@ export default function WalletPage() {
 
   if (!mounted || (!isAuthenticated && !isLoading)) return null;
 
-  const platformAccountName = process.env.NEXT_PUBLIC_PLATFORM_ACCOUNT_NAME?.trim();
-  const platformAccountBank = process.env.NEXT_PUBLIC_PLATFORM_ACCOUNT_BANK?.trim();
-  const platformAccountNumber = process.env.NEXT_PUBLIC_PLATFORM_ACCOUNT_NUMBER?.trim();
-  const hasPlatformAccountDetails = Boolean(
-    platformAccountName && platformAccountBank && platformAccountNumber,
-  );
-
   const registrationProofReady =
-    registrationReference.trim().length >= 4 && Boolean(regReceiptFile);
+    Boolean(registrationAccount) &&
+    registrationReference.trim().length >= 4 &&
+    Boolean(regReceiptFile);
   const fundingProofReady =
-    hasPlatformAccountDetails &&
     Boolean(amount) &&
     Number(amount) > 0 &&
     fundingReference.trim().length >= 4 &&
@@ -115,6 +119,27 @@ export default function WalletPage() {
     toast.success("Receipt submitted! After approval, complete KYC to unlock full access.");
     setRegistrationReference("");
     setRegReceiptFile(null);
+  };
+
+  const showRegistrationAccount = async () => {
+    setIsLoadingRegistrationAccount(true);
+    try {
+      const response = await authorizedFetch("/api/onboarding/registration-deposit");
+      const data = (await response.json()) as {
+        account?: RegistrationDepositAccount;
+        error?: string;
+      };
+      if (!response.ok || !data.account) {
+        throw new Error(data.error || "Unable to load registration payment details.");
+      }
+      setRegistrationAccount(data.account);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Unable to load registration payment details.",
+      );
+    } finally {
+      setIsLoadingRegistrationAccount(false);
+    }
   };
 
   const handleFund = async () => {
@@ -255,13 +280,24 @@ export default function WalletPage() {
             </div>
 
             <div className="space-y-4">
-              <div className="rounded-[5px] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 text-sm">
-                {hasPlatformAccountDetails ? (
+              {!registrationAccount ? (
+                <button
+                  type="button"
+                  onClick={showRegistrationAccount}
+                  disabled={isLoadingRegistrationAccount}
+                  className="btn-secondary min-h-11 w-full disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isLoadingRegistrationAccount
+                    ? "Loading payment details..."
+                    : "View payment account details"}
+                </button>
+              ) : (
+                <div className="rounded-[5px] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 text-sm">
                   <div className="grid gap-2">
                     <div className="flex min-w-0 items-center justify-between gap-3">
                       <span className="shrink-0 text-[var(--color-text-secondary)]">Bank</span>
                       <span className="overflow-anywhere min-w-0 text-right font-semibold">
-                        {platformAccountBank}
+                        {registrationAccount.bank}
                       </span>
                     </div>
                     <div className="flex min-w-0 items-center justify-between gap-3">
@@ -269,7 +305,7 @@ export default function WalletPage() {
                         Account Name
                       </span>
                       <span className="overflow-anywhere min-w-0 text-right font-semibold">
-                        {platformAccountName}
+                        {registrationAccount.name}
                       </span>
                     </div>
                     <div className="flex min-w-0 items-center justify-between gap-3">
@@ -277,67 +313,66 @@ export default function WalletPage() {
                         Account Number
                       </span>
                       <span className="overflow-anywhere min-w-0 text-right font-mono font-semibold">
-                        {platformAccountNumber}
+                        {registrationAccount.number}
                       </span>
                     </div>
                   </div>
-                ) : (
-                  <p className="text-[var(--color-text-secondary)]">
-                    Payment account details will be shared soon. After payment, enter the
-                    transfer reference below.
-                  </p>
-                )}
-              </div>
+                </div>
+              )}
 
-              <div>
-                <label className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
-                  Payment Reference
-                </label>
-                <input
-                  type="text"
-                  placeholder="Bank transfer reference"
-                  value={registrationReference}
-                  onChange={(e) => setRegistrationReference(e.target.value)}
-                  className="w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 font-sans text-base focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)]"
-                />
-              </div>
+              {registrationAccount && (
+                <>
+                  <div>
+                    <label className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
+                      Payment Reference
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Bank transfer reference"
+                      value={registrationReference}
+                      onChange={(e) => setRegistrationReference(e.target.value)}
+                      className="w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 font-sans text-base focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)]"
+                    />
+                  </div>
 
-              <div>
-                <label className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
-                  Proof of Payment
-                </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    if (e.target.files?.[0]) setRegReceiptFile(e.target.files[0]);
-                  }}
-                  className="hidden"
-                  id="reg-receipt-upload"
-                />
-                <label
-                  htmlFor="reg-receipt-upload"
-                  className="flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] py-4 text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]"
-                >
-                  {regReceiptFile ? (
-                    <span className="text-sm font-medium text-[var(--color-positive-text)]">
-                      {regReceiptFile.name}
-                    </span>
-                  ) : (
-                    <span className="text-sm font-medium">Click to upload screenshot</span>
-                  )}
-                </label>
-              </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
+                      Proof of Payment
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files?.[0]) setRegReceiptFile(e.target.files[0]);
+                      }}
+                      className="hidden"
+                      id="reg-receipt-upload"
+                    />
+                    <label
+                      htmlFor="reg-receipt-upload"
+                      className="flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] py-4 text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]"
+                    >
+                      {regReceiptFile ? (
+                        <span className="text-sm font-medium text-[var(--color-positive-text)]">
+                          {regReceiptFile.name}
+                        </span>
+                      ) : (
+                        <span className="text-sm font-medium">Click to upload screenshot</span>
+                      )}
+                    </label>
+                  </div>
 
-              <div className="w-full [&>button]:w-full">
-                <LoadingButton
-                  label="Submit Deposit Proof"
-                  loadingText="Submitting..."
-                  successText="Submitted!"
-                  disabled={!registrationProofReady}
-                  onClick={handleConfirmRegistrationDeposit}
-                />
-              </div>
+                  <div className="w-full [&>button]:w-full">
+                    <LoadingButton
+                      label="Submit Deposit Proof"
+                      loadingText="Submitting..."
+                      successText="Submitted!"
+                      disabled={!registrationProofReady}
+                      onClick={handleConfirmRegistrationDeposit}
+                    />
+                  </div>
+                </>
+              )}
             </div>
           </Card>
         )}
@@ -348,39 +383,6 @@ export default function WalletPage() {
 
           <div className="mb-4 md:mb-6">
             <PaystackFundingAccount />
-          </div>
-
-          <div className="mb-4 rounded-[5px] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3 text-sm md:p-4">
-            {hasPlatformAccountDetails ? (
-              <div className="grid gap-2">
-                <div className="flex min-w-0 items-center justify-between gap-3">
-                  <span className="shrink-0 text-[var(--color-text-secondary)]">Bank</span>
-                  <span className="overflow-anywhere min-w-0 text-right font-semibold">
-                    {platformAccountBank}
-                  </span>
-                </div>
-                <div className="flex min-w-0 items-center justify-between gap-3">
-                  <span className="shrink-0 text-[var(--color-text-secondary)]">
-                    Account Name
-                  </span>
-                  <span className="overflow-anywhere min-w-0 text-right font-semibold">
-                    {platformAccountName}
-                  </span>
-                </div>
-                <div className="flex min-w-0 items-center justify-between gap-3">
-                  <span className="shrink-0 text-[var(--color-text-secondary)]">
-                    Account Number
-                  </span>
-                  <span className="overflow-anywhere min-w-0 text-right font-mono font-semibold">
-                    {platformAccountNumber}
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <p className="text-[var(--color-text-secondary)]">
-                Payment account details are not configured yet.
-              </p>
-            )}
           </div>
 
           <div className="mb-5">
@@ -408,7 +410,8 @@ export default function WalletPage() {
               className="w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 font-sans text-base focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)]"
             />
             <p className="mt-2 text-xs leading-relaxed text-[var(--color-text-secondary)]">
-              Transfer to the payment account first, then submit the amount and reference here.
+              Transfer to your dedicated wallet account first, then submit the amount and
+              reference here.
             </p>
           </div>
 

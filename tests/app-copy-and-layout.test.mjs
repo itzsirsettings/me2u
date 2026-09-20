@@ -158,7 +158,10 @@ test("cookie-backed sessions load after login and registration", () => {
   const token = read("lib/railway/token.ts");
   const uploads = read("lib/uploads.ts");
 
-  assert.match(store, /initialize: async \(\) => \{[\s\S]*?await get\(\)\.loadCurrentUser\(\);/);
+  assert.match(
+    store,
+    /initialize: async \(\) => \{[\s\S]*?await get\(\)\.loadCurrentUser\(\);/,
+  );
   assert.doesNotMatch(
     store,
     /loadCurrentUser: async \(\) => \{\s*if \(!hasToken\(\)\)/,
@@ -167,6 +170,23 @@ test("cookie-backed sessions load after login and registration", () => {
   assert.match(token, /saveToken\(_token: string\) \{\s*return;\s*\}/);
   assert.match(uploads, /authorizedFetch\("\/api\/uploads\/private-image"/);
   assert.doesNotMatch(uploads, /getToken\(\)|Authorization: `Bearer/);
+});
+
+test("registration payment details are disclosed only from the authenticated deposit step", () => {
+  const wallet = read("app/wallet/page.tsx");
+  const depositRoute = read("app/api/onboarding/registration-deposit/route.ts");
+  const fundingAccount = read("components/PaystackFundingAccount.tsx");
+  const referrals = read("app/api/referrals/route.ts");
+
+  assert.match(wallet, /View payment account details/);
+  assert.match(wallet, /authorizedFetch\("\/api\/onboarding\/registration-deposit"\)/);
+  assert.doesNotMatch(wallet, /NEXT_PUBLIC_PLATFORM_ACCOUNT/);
+  assert.doesNotMatch(fundingAccount, /NEXT_PUBLIC_PLATFORM_ACCOUNT/);
+  assert.match(depositRoute, /export async function GET/);
+  assert.match(depositRoute, /auth\.user\.registrationDepositPaid/);
+  assert.match(referrals, /r\.first_withdrawal_rewarded/);
+  assert.match(referrals, /r\.first_repayment_rewarded/);
+  assert.doesNotMatch(referrals, /registration_deposit_paid/);
 });
 
 test("auth and identity flows avoid release-blocking shortcuts", () => {

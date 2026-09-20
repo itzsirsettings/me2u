@@ -3,11 +3,11 @@
 :root {
   /* Me2U core palette */
   --color-dark: #081320;
-  --color-slate: #1E293B;
-  --color-green: #22C55E;
-  --color-lime: #A3E635;
-  --color-rose: #F43F5E;
-  --color-light: #F8FAFC;
+  --color-slate: #1e293b;
+  --color-green: #22c55e;
+  --color-lime: #a3e635;
+  --color-rose: #f43f5e;
+  --color-light: #f8fafc;
 
   --navy: var(--color-dark);
   --slate: var(--color-slate);
@@ -63,15 +63,15 @@
   --color-negative-bg: var(--color-danger-bg);
   --color-negative-text: var(--color-danger-text);
   --color-page-background: var(--snow);
-  
+
   --gradient-primary: linear-gradient(135deg, var(--green) 0%, var(--lime) 100%);
   --gradient-premium: linear-gradient(135deg, var(--green) 0%, var(--lime) 100%);
-  
+
   --mobile-app-bg: var(--snow);
   --mobile-surface: var(--snow);
   --mobile-surface-muted: color-mix(in srgb, var(--slate) 6%, var(--snow));
   --mobile-screen-bg:
-    radial-gradient(circle at 85% 0%, rgba(34, 197, 94, 0.10), transparent 18rem),
+    radial-gradient(circle at 85% 0%, rgba(34, 197, 94, 0.1), transparent 18rem),
     linear-gradient(180deg, var(--snow), color-mix(in srgb, var(--lime) 10%, var(--snow))),
     var(--mobile-app-bg);
   --mobile-pill: var(--gradient-primary);
@@ -116,14 +116,13 @@ html[data-theme="dark"] {
   --color-negative-bg: var(--color-danger-bg);
   --color-negative-text: var(--color-danger-text);
   --color-page-background: var(--navy);
-  
+
   --mobile-app-bg: var(--navy);
   --mobile-surface: var(--slate);
   --mobile-surface-muted: var(--navy);
   --mobile-screen-bg:
     radial-gradient(circle at 85% 0%, rgba(163, 230, 53, 0.13), transparent 18rem),
-    linear-gradient(180deg, rgba(30, 41, 59, 0.72), rgba(8, 19, 32, 0.98)),
-    var(--mobile-app-bg);
+    linear-gradient(180deg, rgba(30, 41, 59, 0.72), rgba(8, 19, 32, 0.98)), var(--mobile-app-bg);
   --mobile-pill: rgba(163, 230, 53, 0.24);
   --mobile-pill-text: var(--snow);
 
@@ -174,15 +173,33 @@ html[data-theme="dark"] {
 }
 
 @keyframes aurora {
-  from { background-position: 50% 50%, 50% 50%; }
-  to { background-position: 350% 50%, 350% 50%; }
+  from {
+    background-position:
+      50% 50%,
+      50% 50%;
+  }
+  to {
+    background-position:
+      350% 50%,
+      350% 50%;
+  }
 }
 
 body {
   background: var(--color-page-background);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
-  transition: background-color 180ms ease, color 180ms ease;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
+}
+
+/* Keep form controls aligned with the body typeface across browsers. */
+button,
+input,
+select,
+textarea {
+  font: inherit;
 }
 
 html,
@@ -245,12 +262,12 @@ body {
   --glow-color: var(--green);
   --glow-highlight: var(--lime);
   --glow-soft: var(--snow);
-  background-image:
-    radial-gradient(
-      var(--spotlight-size) var(--spotlight-size) at calc(var(--x, 0) * 1px) calc(var(--y, 0) * 1px),
-      color-mix(in srgb, var(--glow-color) 10%, transparent),
-      transparent
-    );
+  background-image: radial-gradient(
+    var(--spotlight-size) var(--spotlight-size) at calc(var(--x, 0) * 1px)
+      calc(var(--y, 0) * 1px),
+    color-mix(in srgb, var(--glow-color) 10%, transparent),
+    transparent
+  );
   background-size: calc(100% + (2 * var(--border-size))) calc(100% + (2 * var(--border-size)));
   background-position: 50% 50%;
   background-attachment: fixed;
@@ -307,12 +324,12 @@ body {
 .hero-trust-badge::before,
 .footer-glass-pill::before,
 .mobile-icon-button::before {
-  background-image:
-    radial-gradient(
-      calc(var(--spotlight-size) * 0.75) calc(var(--spotlight-size) * 0.75) at calc(var(--x, 0) * 1px) calc(var(--y, 0) * 1px),
-      color-mix(in srgb, var(--glow-highlight) 82%, transparent),
-      transparent 100%
-    );
+  background-image: radial-gradient(
+    calc(var(--spotlight-size) * 0.75) calc(var(--spotlight-size) * 0.75) at
+      calc(var(--x, 0) * 1px) calc(var(--y, 0) * 1px),
+    color-mix(in srgb, var(--glow-highlight) 82%, transparent),
+    transparent 100%
+  );
   filter: brightness(2);
 }
 
@@ -328,12 +345,12 @@ body {
 .hero-trust-badge::after,
 .footer-glass-pill::after,
 .mobile-icon-button::after {
-  background-image:
-    radial-gradient(
-      calc(var(--spotlight-size) * 0.5) calc(var(--spotlight-size) * 0.5) at calc(var(--x, 0) * 1px) calc(var(--y, 0) * 1px),
-      color-mix(in srgb, var(--glow-soft) 55%, transparent),
-      transparent 100%
-    );
+  background-image: radial-gradient(
+    calc(var(--spotlight-size) * 0.5) calc(var(--spotlight-size) * 0.5) at
+      calc(var(--x, 0) * 1px) calc(var(--y, 0) * 1px),
+    color-mix(in srgb, var(--glow-soft) 55%, transparent),
+    transparent 100%
+  );
 }
 
 [data-glow] > [data-glow] {
@@ -386,11 +403,7 @@ html[data-theme="dark"] .feature-highlight-image-dark {
 }
 
 .landing-cta-accent {
-  background: radial-gradient(
-    circle at 50% 25%,
-    var(--landing-cta-accent),
-    transparent 38%
-  );
+  background: radial-gradient(circle at 50% 25%, var(--landing-cta-accent), transparent 38%);
 }
 
 /* Design System Components */
@@ -430,20 +443,40 @@ html[data-theme="dark"] .btn-ghost {
 .card {
   @apply rounded-md p-5;
 }
-.card-light { @apply bg-snow border border-black/8; }
-.card-snow  { @apply bg-snow border border-black/6; }
-.card-slate { @apply bg-slate; }
-.card-navy  { @apply bg-navy; }
+.card-light {
+  @apply bg-snow border border-black/8;
+}
+.card-snow {
+  @apply bg-snow border border-black/6;
+}
+.card-slate {
+  @apply bg-slate;
+}
+.card-navy {
+  @apply bg-navy;
+}
 
 .badge {
   @apply inline-block px-2.5 py-1 rounded-pill text-[11px] font-medium;
 }
-.badge-green  { @apply bg-green/15 text-green; }
-.badge-lime   { @apply bg-lime/20 text-navy; }
-.badge-navy   { @apply bg-navy text-snow; }
-.badge-slate  { @apply bg-slate text-snow; }
-.badge-warn   { @apply bg-lime/20 text-navy; }
-.badge-error  { @apply bg-lime/12 text-navy; }
+.badge-green {
+  @apply bg-green/15 text-green;
+}
+.badge-lime {
+  @apply bg-lime/20 text-navy;
+}
+.badge-navy {
+  @apply bg-navy text-snow;
+}
+.badge-slate {
+  @apply bg-slate text-snow;
+}
+.badge-warn {
+  @apply bg-lime/20 text-navy;
+}
+.badge-error {
+  @apply bg-lime/12 text-navy;
+}
 
 .input {
   @apply w-full py-2.5 px-3.5 rounded-sm border border-black/12 bg-snow text-sm text-navy focus:outline-none focus:border-green focus:ring-3 focus:ring-green/15 transition-all;
@@ -454,8 +487,10 @@ html[data-theme="dark"] .btn-ghost {
 
 /* Mobile Specifics */
 @media (max-width: 767px) {
-  body { background: var(--mobile-app-bg); }
-  
+  body {
+    background: var(--mobile-app-bg);
+  }
+
   .app-mobile-screen {
     @apply w-full min-h-screen bg-transparent pb-[calc(5.65rem+env(safe-area-inset-bottom))];
     color: var(--color-text-primary);
@@ -532,23 +567,18 @@ html[data-theme="dark"] .btn-ghost {
       rgba(8, 19, 32, 0.18) 55%,
       transparent 70%
     ),
-    linear-gradient(
-      180deg,
-      transparent 60%,
-      rgba(8, 19, 32, 0.35) 100%
-    );
+    linear-gradient(180deg, transparent 60%, rgba(8, 19, 32, 0.35) 100%);
 }
 
 @media (max-width: 767px) {
   .hero-overlay {
-    background:
-      linear-gradient(
-        180deg,
-        rgba(8, 19, 32, 0.30) 0%,
-        rgba(8, 19, 32, 0.55) 40%,
-        rgba(8, 19, 32, 0.78) 70%,
-        rgba(8, 19, 32, 0.92) 100%
-      );
+    background: linear-gradient(
+      180deg,
+      rgba(8, 19, 32, 0.3) 0%,
+      rgba(8, 19, 32, 0.55) 40%,
+      rgba(8, 19, 32, 0.78) 70%,
+      rgba(8, 19, 32, 0.92) 100%
+    );
   }
 }
 
@@ -705,20 +735,21 @@ html[data-theme="dark"] .btn-ghost {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.35),
-    transparent
-  );
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
   animation: btn-shine 3s infinite;
   pointer-events: none;
 }
 
 @keyframes btn-shine {
-  0%   { left: -100%; }
-  20%  { left: 100%; }
-  100% { left: 100%; }
+  0% {
+    left: -100%;
+  }
+  20% {
+    left: 100%;
+  }
+  100% {
+    left: 100%;
+  }
 }
 
 .hero-btn-secondary {
@@ -847,7 +878,9 @@ textarea:focus-visible,
 
 /* ── Reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -872,9 +905,21 @@ textarea:focus-visible,
    ═══════════════════════════════════════════════════════ */
 
 :root {
-  --landing-hero-mesh-1: radial-gradient(ellipse 80% 50% at 20% 10%, color-mix(in srgb, var(--lime) 22%, transparent), transparent 60%);
-  --landing-hero-mesh-2: radial-gradient(ellipse 60% 70% at 85% 30%, color-mix(in srgb, var(--green) 20%, transparent), transparent 55%);
-  --landing-hero-mesh-3: radial-gradient(ellipse 70% 60% at 50% 110%, color-mix(in srgb, var(--navy) 95%, transparent), transparent 60%);
+  --landing-hero-mesh-1: radial-gradient(
+    ellipse 80% 50% at 20% 10%,
+    color-mix(in srgb, var(--lime) 22%, transparent),
+    transparent 60%
+  );
+  --landing-hero-mesh-2: radial-gradient(
+    ellipse 60% 70% at 85% 30%,
+    color-mix(in srgb, var(--green) 20%, transparent),
+    transparent 55%
+  );
+  --landing-hero-mesh-3: radial-gradient(
+    ellipse 70% 60% at 50% 110%,
+    color-mix(in srgb, var(--navy) 95%, transparent),
+    transparent 60%
+  );
   --landing-grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.08 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
   --landing-section-py: clamp(3.5rem, 8vw, 6rem);
   --landing-h-size: clamp(2.25rem, 5.2vw, 4.25rem);
@@ -882,13 +927,25 @@ textarea:focus-visible,
   --landing-h3-size: clamp(1.25rem, 2vw, 1.65rem);
   --landing-body-size: clamp(0.95rem, 1.25vw, 1.0625rem);
   --landing-max-w: 1200px;
-  --landing-card-shadow: 0 1px 2px color-mix(in srgb, var(--navy) 6%, transparent), 0 10px 30px -12px color-mix(in srgb, var(--navy) 20%, transparent);
+  --landing-card-shadow:
+    0 1px 2px color-mix(in srgb, var(--navy) 6%, transparent),
+    0 10px 30px -12px color-mix(in srgb, var(--navy) 20%, transparent);
 }
 
 html[data-theme="dark"] {
-  --landing-hero-mesh-1: radial-gradient(ellipse 80% 50% at 20% 10%, color-mix(in srgb, var(--lime) 16%, transparent), transparent 60%);
-  --landing-hero-mesh-2: radial-gradient(ellipse 60% 70% at 85% 30%, color-mix(in srgb, var(--green) 18%, transparent), transparent 55%);
-  --landing-card-shadow: 0 1px 2px color-mix(in srgb, var(--snow) 4%, transparent), 0 10px 30px -12px rgba(0,0,0,0.6);
+  --landing-hero-mesh-1: radial-gradient(
+    ellipse 80% 50% at 20% 10%,
+    color-mix(in srgb, var(--lime) 16%, transparent),
+    transparent 60%
+  );
+  --landing-hero-mesh-2: radial-gradient(
+    ellipse 60% 70% at 85% 30%,
+    color-mix(in srgb, var(--green) 18%, transparent),
+    transparent 55%
+  );
+  --landing-card-shadow:
+    0 1px 2px color-mix(in srgb, var(--snow) 4%, transparent),
+    0 10px 30px -12px rgba(0, 0, 0, 0.6);
 }
 
 .landing-h1 {
@@ -944,7 +1001,8 @@ html[data-theme="dark"] {
   inset: 0;
   pointer-events: none;
   z-index: -1;
-  background: var(--landing-hero-mesh-1), var(--landing-hero-mesh-2), var(--landing-hero-mesh-3);
+  background:
+    var(--landing-hero-mesh-1), var(--landing-hero-mesh-2), var(--landing-hero-mesh-3);
 }
 
 .landing-grain::after {
@@ -997,7 +1055,10 @@ html[data-theme="dark"] {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--landing-card-shadow);
-  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    border-color 220ms ease;
 }
 
 .landing-card:hover {

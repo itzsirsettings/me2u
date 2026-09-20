@@ -6,14 +6,7 @@ import {
   requireAuthenticatedUser,
   tooManyRequestsResponse,
 } from "@/lib/server/auth";
-
-function hasPlatformAccountDetails() {
-  return Boolean(
-    process.env.NEXT_PUBLIC_PLATFORM_ACCOUNT_BANK?.trim() &&
-      process.env.NEXT_PUBLIC_PLATFORM_ACCOUNT_NAME?.trim() &&
-      process.env.NEXT_PUBLIC_PLATFORM_ACCOUNT_NUMBER?.trim(),
-  );
-}
+import { getPlatformAccountDetails } from "@/lib/server/platform-account";
 
 export async function POST(request: Request) {
   try {
@@ -22,7 +15,7 @@ export async function POST(request: Request) {
       return tooManyRequestsResponse();
     }
 
-    if (!hasPlatformAccountDetails()) {
+    if (!getPlatformAccountDetails()) {
       return NextResponse.json(
         { error: "Payment account details are not configured yet." },
         { status: 503 },
@@ -52,14 +45,7 @@ export async function POST(request: Request) {
       `INSERT INTO payment_proofs (
         user_id, amount, reference, receipt_image_url, type, status, created_at
       ) VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
-      [
-        auth.user.id,
-        amount,
-        reference,
-        receiptImageUrl,
-        "wallet_funding",
-        "pending"
-      ]
+      [auth.user.id, amount, reference, receiptImageUrl, "wallet_funding", "pending"],
     );
 
     return NextResponse.json({ ok: true });
