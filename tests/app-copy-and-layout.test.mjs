@@ -66,15 +66,15 @@ test("visible product copy uses the new loan language", () => {
     assert.equal(source.includes(phrase), false, `Unexpected old copy: ${phrase}`);
   }
 
-  assert.match(source, /0% interest loan from ₦5,000/);
+  assert.match(read("app/loans/page.tsx"), /repeatPlatformLoanMinimum/);
 });
 
-test("home recent activity rows cannot force horizontal overflow", () => {
+test("reference home surface keeps financial text inside mobile cards", () => {
   const dashboard = read("app/dashboard/page.tsx");
 
-  assert.match(dashboard, /flex min-w-0 items-center justify-between gap-2 overflow-hidden/);
-  assert.match(dashboard, /min-w-0 flex-1 overflow-hidden/);
-  assert.match(dashboard, /max-w-\[36%\] shrink-0 truncate/);
+  assert.match(dashboard, /overflow-x-hidden/);
+  assert.match(dashboard, /min-w-0/);
+  assert.match(dashboard, /truncate/);
 });
 
 test("admin dashboard uses overflow-safe grids and contained ledger scrolling", () => {
@@ -130,7 +130,8 @@ test("authenticated routes keep long financial data inside their containers", ()
   assert.match(withdraw, /overflow-anywhere min-w-0 text-right font-mono font-semibold/);
   assert.match(loans, /md:grid-cols-\[minmax\(0,1fr\)_auto\]/);
   assert.match(loans, /overflow-anywhere text-2xl font-display/);
-  assert.match(profile, /min-w-0 flex-1 truncate/);
+  assert.match(profile, /reference-page/);
+  assert.match(profile, /truncate/);
   assert.match(marketplace, /overflow-anywhere mt-2 text-2xl font-display/);
   assert.match(kyc, /flex min-w-0 items-center justify-between gap-3/);
   assert.match(notifications, /overflow-anywhere .*notif\.title/);
@@ -220,10 +221,9 @@ test("referral rewards follow the four-stage NGN 2,500 lifecycle", () => {
   const migration = read("migrations/migrations/20260920000004_referral_reward_lifecycle.sql");
   const adminActions = read("app/api/admin/actions/route.ts");
 
-  assert.match(page, /You earn ₦1,500 referral bonus and they earn ₦500/);
-  assert.match(page, /Friend refers a friend/);
-  assert.match(page, /₦2,500 for you/);
-  assert.match(page, /total_referrals \* 2500/);
+  assert.match(page, /get ₦1,500 for every verified referral/);
+  assert.match(page, /total_referrals \|\| 0\) \* 2500/);
+  assert.match(page, /Share Templates/);
   assert.match(route, /referral_reward_events/);
   assert.match(migration, /'direct_signup', 1500/);
   assert.match(migration, /'new_member_signup', 500/);

@@ -1,126 +1,34 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import BrandLogo from "@/components/BrandLogo";
 import Me2uIcon from "@/components/Me2uIcon";
+import NotificationBell from "@/components/NotificationBell";
+import ThemeToggleIcon from "@/components/ThemeToggleIcon";
 import ThemeModeSelector from "@/components/ThemeModeSelector";
 import { useStore } from "@/lib/store";
 import { getCountryConfig, getCreditLevel, getReferralProgramProgress } from "@/lib/product-features";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
 export default function Profile() {
-  const user = useStore((state) => state.user);
-  const isAuthenticated = useStore((state) => state.isAuthenticated);
-  const isLoading = useStore((state) => state.isLoading);
-  const logout = useStore((state) => state.logout);
-  const router = useRouter();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (mounted && !isLoading && !isAuthenticated) {
-      router.push("/login");
-    }
-  }, [mounted, isLoading, isAuthenticated, router]);
-
-  if (!mounted || (!isAuthenticated && !isLoading)) return null;
-  const country = getCountryConfig(user?.countryCode);
-  const creditLevel = getCreditLevel(user?.trustScore || 0);
-  const referralProgress = getReferralProgramProgress(user);
-
-  return (
-    <div className="app-mobile-screen mx-auto w-full max-w-md px-3.5 pt-[4.85rem] md:max-w-3xl md:p-6 md:py-24">
-      <h1 className="sr-only md:not-sr-only md:mb-8 md:text-3xl md:font-display md:font-bold md:leading-none">
-        Profile
-      </h1>
-      <div className="mobile-soft-card space-y-3 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3.5 shadow-[4px_4px_0px_var(--color-shadow)] md:space-y-6 md:p-8">
-        
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-accent-primary)]">
-            <Me2uIcon name="profile" size={22} />
-          </span>
-          <div className="min-w-0 flex-1 truncate">
-            <p className="text-xs font-bold uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Name</p>
-            <p className="overflow-anywhere font-medium text-[var(--color-text-primary)]">
-              {user?.name || "No name"}
-            </p>
-          </div>
-        </div>
-
-        <div className="grid gap-3 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3.5 md:grid-cols-3">
-          <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Trust level</p>
-            <p className={`mt-1 font-black ${creditLevel.color}`}>{creditLevel.name} • {user?.trustScore || 0}</p>
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Country</p>
-            <p className="mt-1 font-black text-[var(--color-text-primary)]">{country.name} • {country.currency}</p>
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Referral level</p>
-            <p className="mt-1 font-black text-[var(--color-text-primary)]">
-              {referralProgress.currentLevel?.name || "Starter"} • {referralProgress.verifiedReferralCount} verified
-            </p>
-          </div>
-        </div>
-
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-accent-primary)]">
-            <Me2uIcon name="email" size={22} />
-          </span>
-          <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Email</p>
-            <p className="overflow-anywhere font-medium text-[var(--color-text-primary)]">
-              {user?.email || "No email"}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-positive-bg)] text-[var(--color-positive-text)]">
-            <Me2uIcon name={user?.kycVerified ? "check" : "shield"} size={22} />
-          </span>
-          <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">KYC Status</p>
-            <p className={user?.kycVerified ? "font-medium text-[var(--color-positive-text)]" : "font-medium text-[var(--color-warning-text)]"}>
-              {user?.kycVerified ? "Approved" : "Pending"}
-            </p>
-          </div>
-        </div>
-        
-        <div className="flex min-w-0 items-start gap-3">
-          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-accent-primary)]">
-            <Me2uIcon name="bank" size={22} />
-          </span>
-          <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Bank details</p>
-            <p className="overflow-anywhere font-medium text-[var(--color-text-primary)]">
-              {user?.bankName || "Not added"} • {user?.accountNumber || "No account number"}
-            </p>
-          </div>
-        </div>
-        
-        <ThemeModeSelector />
-        
-        <button
-          className="btn-primary h-11 w-full text-sm md:h-14 md:text-base"
-          onClick={() => router.push("/security")}
-        >
-          Open Security Center
-        </button>
-        <button
-          className="btn-ghost h-11 w-full text-sm md:h-12 md:text-base text-[var(--color-negative-text)]"
-          onClick={async () => {
-            await logout();
-            router.push("/");
-          }}
-        >
-          Logout
-        </button>
-
-      </div>
-    </div>
-  );
+  const user = useStore((s) => s.user); const authenticated = useStore((s) => s.isAuthenticated); const loading = useStore((s) => s.isLoading); const logout = useStore((s) => s.logout); const router = useRouter(); const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []); useEffect(() => { if (mounted && !loading && !authenticated) router.push("/login"); }, [authenticated, loading, mounted, router]);
+  if (!mounted || (!authenticated && !loading)) return null;
+  const level = getCreditLevel(user?.trustScore || 0); const country = getCountryConfig(user?.countryCode); const referral = getReferralProgramProgress(user); const initials = (user?.name || "Me2U User").split(/\s+/).map((part) => part[0]).slice(0, 2).join("").toUpperCase();
+  const rows = [
+    { label: "Email", value: user?.email || "No email", detail: undefined, icon: "email" as const, path: "/security" },
+    { label: "KYC Status", value: user?.kycVerified ? "Approved" : "Pending", detail: user?.kycVerified ? "Your identity has been verified." : "Complete your KYC to unlock full features.", icon: user?.kycVerified ? "check" as const : "shield" as const, path: "/kyc" },
+    { label: "Bank Details", value: user?.bankName ? `${user.bankName} · ${user.accountNumber || "No account number"}` : "Not added · No account number", detail: "Add your bank account to receive payments.", icon: "bank" as const, path: "/wallet" },
+  ];
+  return <main className="reference-page app-mobile-screen mx-auto w-full max-w-md overflow-x-hidden px-4 pt-[calc(1.25rem+env(safe-area-inset-top))] md:max-w-5xl md:px-8 md:py-12">
+    <header className="mb-6 flex items-start justify-between"><BrandLogo src="/me2u_nav_logo.svg" className="reference-logo" /><div className="flex gap-2"><ThemeToggleIcon className="mobile-icon-button h-11 w-11 rounded-full border border-white bg-white text-slate-950 shadow-sm" /><NotificationBell /></div></header>
+    <section className="mb-5"><h1 className="text-4xl font-black text-slate-950">Profile</h1><p className="mt-1 text-lg text-slate-500">Manage your account and preferences</p></section>
+    <section className="reference-hero mb-5 flex min-h-[12.8rem] items-center gap-5 p-6"><div className="grid h-28 w-28 shrink-0 place-items-center rounded-full border-[10px] border-white/50 bg-emerald-50 text-4xl font-black text-emerald-700">{initials}</div><div className="min-w-0 flex-1"><h2 className="truncate text-3xl font-black">{user?.name || "Me2U Member"}</h2><p className="mt-1 text-xl text-white/90">Good to see you again!</p></div><button type="button" onClick={() => router.push("/security")} className="hidden shrink-0 items-center gap-2 rounded-full bg-white px-5 py-3 font-bold text-emerald-700 hover:bg-emerald-50 sm:flex"><Me2uIcon name="edit" size={20} /> Edit Profile</button></section>
+    <section className="reference-card mb-5 grid grid-cols-3 divide-x divide-slate-100 p-5"><Metric title="Trust Level" value={`${level.name} · ${user?.trustScore || 0}`} detail="Complete more steps to unlock higher benefits." icon="star" /><Metric title="Country" value={`${country.name} · ${country.currency}`} detail="Your location and currency." icon="globe" /><Metric title="Referral Level" value={`${referral.currentLevel?.name || "Starter"} · ${referral.verifiedReferralCount} verified`} detail="Refer friends and earn rewards." icon="referral" /></section>
+    <section className="reference-card mb-5 px-5">{rows.map((row) => <button key={row.label} onClick={() => router.push(row.path)} className="reference-row w-full text-left"><span className="reference-icon rounded-2xl"><Me2uIcon name={row.icon} size={24} /></span><span className="min-w-0"><small className="block font-bold uppercase tracking-[.08em] text-slate-500">{row.label}</small><b className="block truncate text-lg text-slate-950">{row.value}</b>{row.detail && <small className="block truncate text-sm text-slate-500">{row.detail}</small>}</span><span className="reference-chevron text-3xl">›</span></button>)}</section>
+    <section className="reference-card mb-5 p-5"><ThemeModeSelector /></section>
+    <div className="grid gap-3"><button onClick={() => router.push("/security")} className="min-h-14 rounded-full bg-gradient-to-r from-emerald-600 to-green-400 px-5 font-bold text-white shadow-lg shadow-emerald-200 hover:brightness-105"><Me2uIcon name="shield" size={20} className="mr-2 inline" /> Open Security Center <span aria-hidden="true">›</span></button><button onClick={async () => { await logout(); router.push("/"); }} className="min-h-14 rounded-full border border-slate-200 bg-white px-5 font-bold text-slate-950 hover:bg-slate-50"><Me2uIcon name="logout" size={22} className="mr-2 inline" /> Logout</button></div>
+  </main>;
 }
+
+function Metric({ title, value, detail, icon }: { title: string; value: string; detail: string; icon: "star" | "globe" | "referral" }) { return <div className="min-w-0 px-3 first:pl-0 last:pr-0"><p className="truncate text-xs font-bold uppercase tracking-[.08em] text-slate-500">{title}</p><span className="reference-icon mt-3 h-11 w-11"><Me2uIcon name={icon} size={20} /></span><b className="mt-2 block break-words text-base text-slate-950">{value}</b><small className="mt-1 block text-xs leading-relaxed text-slate-500">{detail}</small></div>; }

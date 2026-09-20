@@ -43,7 +43,8 @@ export default function MobileHeader() {
   const title = routeTitles[pathname];
 
   if (!title) return null;
-  if (pathname === "/dashboard") return null;
+  // These destination surfaces own their full reference-inspired mastheads.
+  if (["/dashboard", "/profile", "/referrals"].includes(pathname)) return null;
 
   const handleBack = () => {
     if (pathname === "/dashboard") {

@@ -25,8 +25,8 @@ export default function BottomNav() {
   if (!showNav) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))] md:hidden">
-      <div className="relative mx-auto grid max-w-md grid-cols-5 items-center gap-1 rounded-[28px] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2 py-2.5 shadow-[0_-8px_32px_var(--color-shadow),0_-2px_8px_var(--color-shadow)]">
+    <nav aria-label="Primary navigation" className="fixed bottom-0 left-0 right-0 z-50 px-2 pb-[calc(0.45rem+env(safe-area-inset-bottom))] md:hidden">
+      <div className="reference-bottom-nav relative mx-auto grid max-w-md grid-cols-5 items-center gap-0 px-2 py-2">
         {navItems.map((item) => {
           const isActive = activePath === item.path || (item.path !== "/dashboard" && pathname.startsWith(item.path));
           return (
@@ -35,7 +35,7 @@ export default function BottomNav() {
               key={item.path}
               onClick={() => router.push(item.path)}
               aria-current={isActive ? "page" : undefined}
-              className={`relative flex min-h-[3.5rem] min-w-0 flex-col items-center justify-center gap-1 rounded-[18px] px-2 text-center transition-all duration-200 ${
+              className={`relative flex min-h-[3.5rem] min-w-0 flex-col items-center justify-center gap-1 rounded-[18px] px-2 text-center transition-[background-color,color,transform] duration-200 ${
                 isActive
                   ? "bg-[var(--color-accent-primary)]/10 text-[var(--color-accent-primary)] font-black"
                   : "text-[var(--color-text-secondary)] hover:bg-[var(--color-hover-soft)] hover:text-[var(--color-text-primary)]"
@@ -47,13 +47,20 @@ export default function BottomNav() {
               <span className="w-full truncate text-[10px] font-black tracking-wide font-sans">
                 {item.label}
               </span>
-              {isActive && (
-                <span className="absolute bottom-0 h-1.5 w-6 rounded-full bg-[var(--color-accent-primary)]" />
-              )}
             </motion.button>
           );
         })}
+        <motion.button
+          type="button"
+          whileTap={{ scale: 0.92 }}
+          onClick={() => router.push("/referrals")}
+          aria-label="Open Refer & Earn"
+          aria-current={pathname.startsWith("/referrals") ? "page" : undefined}
+          className={`reference-nav-orb grid h-[4.25rem] w-[4.25rem] place-items-center justify-self-center rounded-full ${pathname.startsWith("/referrals") ? "reference-nav-orb-active" : ""}`}
+        >
+          <Me2uIcon name="referral" size={27} />
+        </motion.button>
       </div>
-    </div>
+    </nav>
   );
 }
