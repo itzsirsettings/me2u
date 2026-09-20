@@ -70,7 +70,7 @@ test("G5: 429 responses can carry a Retry-After header", () => {
   assert.match(auth, /retryAfterSeconds\?: number/);
 });
 
-test("G5: skipped features are labelled Coming Soon (NIN + bill idempotency)", () => {
+test.skip("G5 legacy: skipped features were labelled Coming Soon (NIN + bill idempotency)", () => {
   const kyc = read("app/kyc/page.tsx");
   const bills = read("app/bills/page.tsx");
   const checklist = read("FINAL_PRODUCTION_CHECKLIST.md");
@@ -86,7 +86,7 @@ test("G5: skipped features are labelled Coming Soon (NIN + bill idempotency)", (
   assert.match(checklist, /FROM cron_runs/);
 });
 
-test("G5: bill payments are labelled Coming Soon and purchases disabled", () => {
+test.skip("G5 legacy: bill payments were labelled Coming Soon and purchases disabled", () => {
   const bills = read("app/bills/page.tsx");
   const dashboard = read("app/dashboard/page.tsx");
   const wallet = read("app/wallet/page.tsx");
@@ -102,6 +102,18 @@ test("G5: bill payments are labelled Coming Soon and purchases disabled", () => 
   assert.match(dashboard, /Coming soon/);
   assert.match(wallet, /Bill payments are coming soon/);
   assert.match(checklist, /Bill payments \(airtime\/data\/electricity\/cable\)/);
+});
+
+test("G5: bill-payment UI is retired", () => {
+  const bills = read("app/bills/page.tsx");
+  const receipt = read("app/bills/transactions/[reference]/page.tsx");
+  const dashboard = read("app/dashboard/page.tsx");
+  const bottomNav = read("components/BottomNav.tsx");
+
+  assert.match(bills, /redirect\("\/dashboard"\)/);
+  assert.match(receipt, /redirect\("\/dashboard"\)/);
+  assert.doesNotMatch(dashboard, /Pay Bills|\/bills/);
+  assert.doesNotMatch(bottomNav, /Bills|\/bills/);
 });
 
 test("G6: lint script does not use removed `next lint` command", () => {

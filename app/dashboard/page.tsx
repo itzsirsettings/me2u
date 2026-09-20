@@ -20,15 +20,7 @@ const serviceActions: Array<{
   tone: string;
   requiresKyc?: boolean;
   requiresDeposit?: boolean;
-  comingSoon?: boolean;
 }> = [
-  {
-    label: "Pay Bills",
-    path: "/bills",
-    icon: "bill",
-    tone: "bg-lime/20 text-lime",
-    comingSoon: true,
-  },
   {
     label: "Market",
     path: "/marketplace",
@@ -249,11 +241,6 @@ export default function Dashboard() {
                   <span className="text-[0.72rem] font-black leading-none text-[var(--color-text-primary)]">
                     {action.label}
                   </span>
-                  {action.comingSoon ? (
-                    <span className="text-[0.6rem] font-bold leading-none text-[var(--color-text-secondary)]">
-                      Coming soon
-                    </span>
-                  ) : null}
                 </button>
               );
             })}

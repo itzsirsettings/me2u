@@ -8,7 +8,6 @@ const authRoutes = new Set(["/login", "/register"]);
 
 const protectedPrefixes = [
   "/admin",
-  "/bills",
   "/dashboard",
   "/kyc",
   "/loans",

@@ -48,9 +48,30 @@ export const me2uIcons: Record<string, ReactNode> = {
       <rect x="2.4" y="10.9" width="3.6" height="2.2" rx="1.1" />
       <rect x="18" y="10.9" width="3.6" height="2.2" rx="1.1" />
       <rect x="4.7" y="4.7" width="2.2" height="3.4" rx="1.1" transform="rotate(45 5.8 6.4)" />
-      <rect x="17.1" y="17.1" width="2.2" height="3.4" rx="1.1" transform="rotate(45 18.2 18.8)" />
-      <rect x="4.7" y="15.9" width="2.2" height="3.4" rx="1.1" transform="rotate(45 5.8 17.6)" />
-      <rect x="17.1" y="3.5" width="2.2" height="3.4" rx="1.1" transform="rotate(45 18.2 5.2)" />
+      <rect
+        x="17.1"
+        y="17.1"
+        width="2.2"
+        height="3.4"
+        rx="1.1"
+        transform="rotate(45 18.2 18.8)"
+      />
+      <rect
+        x="4.7"
+        y="15.9"
+        width="2.2"
+        height="3.4"
+        rx="1.1"
+        transform="rotate(45 5.8 17.6)"
+      />
+      <rect
+        x="17.1"
+        y="3.5"
+        width="2.2"
+        height="3.4"
+        rx="1.1"
+        transform="rotate(45 18.2 5.2)"
+      />
     </>
   ),
   moon: <path d="M13.4 3.1a8.9 8.9 0 1 0 7.6 13.4A7.2 7.2 0 0 1 13.4 3.1Z" />,
@@ -195,9 +216,7 @@ export const me2uIcons: Record<string, ReactNode> = {
       d="M7 3.2h8.6L18.8 6.4v12.4A2.2 2.2 0 0 1 16.6 21H7a2.2 2.2 0 0 1-2.2-2.2V5.4A2.2 2.2 0 0 1 7 3.2Zm6.4 2.2v2.2h2.2Zm-7.8 4h7v1.4h-7Zm0 3.4h9v1.4h-9Zm0 3.4h6.5v1.4h-6.5Z"
     />
   ),
-  star: (
-    <path d="M12 3.4l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.7l-5.2 2.9 1-5.9-4.3-4.1 5.9-.8Z" />
-  ),
+  star: <path d="M12 3.4l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.7l-5.2 2.9 1-5.9-4.3-4.1 5.9-.8Z" />,
   qr: (
     <path
       fillRule="evenodd"
@@ -314,7 +333,12 @@ export const me2uIcons: Record<string, ReactNode> = {
       <circle cx="6.8" cy="12" r="2.8" />
       <circle cx="17.2" cy="6.8" r="2.8" />
       <circle cx="17.2" cy="17.2" r="2.8" />
-      <path d="M9.2 10.8 14.8 8M9.2 13.2 14.8 16" strokeWidth="1.6" stroke="currentColor" fill="none" />
+      <path
+        d="M9.2 10.8 14.8 8M9.2 13.2 14.8 16"
+        strokeWidth="1.6"
+        stroke="currentColor"
+        fill="none"
+      />
     </>
   ),
   info: (
@@ -325,7 +349,12 @@ export const me2uIcons: Record<string, ReactNode> = {
   ),
   close: (
     <>
-      <path d="M6.4 6.4 17.6 17.6M17.6 6.4 6.4 17.6" strokeWidth="2" stroke="currentColor" strokeLinecap="round" />
+      <path
+        d="M6.4 6.4 17.6 17.6M17.6 6.4 6.4 17.6"
+        strokeWidth="2"
+        stroke="currentColor"
+        strokeLinecap="round"
+      />
     </>
   ),
   history: (
@@ -335,14 +364,17 @@ export const me2uIcons: Record<string, ReactNode> = {
     />
   ),
   send: (
-    <path d="M3.4 12 20.6 3.4 12 20.6l-2.4-7.2ZM12 12l5.2-5.2M12 12 9.6 9.6Z" strokeWidth="1.6" stroke="currentColor" fill="none" />
+    <path
+      d="M3.4 12 20.6 3.4 12 20.6l-2.4-7.2ZM12 12l5.2-5.2M12 12 9.6 9.6Z"
+      strokeWidth="1.6"
+      stroke="currentColor"
+      fill="none"
+    />
   ),
   plus: (
     <path d="M12 5v14M5 12h14" strokeWidth="2" stroke="currentColor" strokeLinecap="round" />
   ),
-  minus: (
-    <path d="M5 12h14" strokeWidth="2" stroke="currentColor" strokeLinecap="round" />
-  ),
+  minus: <path d="M5 12h14" strokeWidth="2" stroke="currentColor" strokeLinecap="round" />,
   search: (
     <>
       <circle cx="10.5" cy="10.5" r="6.5" strokeWidth="2" stroke="currentColor" fill="none" />
@@ -351,7 +383,12 @@ export const me2uIcons: Record<string, ReactNode> = {
   ),
   filter: (
     <>
-      <path d="M4 6h16M7 12h10M10 18h4" strokeWidth="2" stroke="currentColor" strokeLinecap="round" />
+      <path
+        d="M4 6h16M7 12h10M10 18h4"
+        strokeWidth="2"
+        stroke="currentColor"
+        strokeLinecap="round"
+      />
     </>
   ),
   edit: (
@@ -369,7 +406,12 @@ export const me2uIcons: Record<string, ReactNode> = {
   settings: (
     <>
       <circle cx="12" cy="12" r="3" />
-      <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M16.9 16.9l1.4 1.4M5.6 18.4l1.4-1.4M16.9 7.1l1.4-1.4" strokeWidth="2" stroke="currentColor" strokeLinecap="round" />
+      <path
+        d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M16.9 16.9l1.4 1.4M5.6 18.4l1.4-1.4M16.9 7.1l1.4-1.4"
+        strokeWidth="2"
+        stroke="currentColor"
+        strokeLinecap="round"
+      />
     </>
   ),
   calendar: (
@@ -394,20 +436,56 @@ export const me2uIcons: Record<string, ReactNode> = {
   ),
   logout: (
     <>
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" strokeWidth="2" stroke="currentColor" strokeLinecap="round" fill="none" />
-      <path d="M16 17l5-5-5-5M21 12H9" strokeWidth="2" stroke="currentColor" strokeLinecap="round" fill="none" />
+      <path
+        d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"
+        strokeWidth="2"
+        stroke="currentColor"
+        strokeLinecap="round"
+        fill="none"
+      />
+      <path
+        d="M16 17l5-5-5-5M21 12H9"
+        strokeWidth="2"
+        stroke="currentColor"
+        strokeLinecap="round"
+        fill="none"
+      />
     </>
   ),
   refresh: (
     <>
-      <path d="M3 12a9 9 0 0 1 9-9c2.5 0 4.8 1 6.4 2.6L21 8" strokeWidth="2" stroke="currentColor" strokeLinecap="round" fill="none" />
-      <path d="M21 3v5h-5M21 12a9 9 0 0 1-9 9c-2.5 0-4.8-1-6.4-2.6L3 16" strokeWidth="2" stroke="currentColor" strokeLinecap="round" fill="none" />
-      <path d="M3 21v-5h5" strokeWidth="2" stroke="currentColor" strokeLinecap="round" fill="none" />
+      <path
+        d="M3 12a9 9 0 0 1 9-9c2.5 0 4.8 1 6.4 2.6L21 8"
+        strokeWidth="2"
+        stroke="currentColor"
+        strokeLinecap="round"
+        fill="none"
+      />
+      <path
+        d="M21 3v5h-5M21 12a9 9 0 0 1-9 9c-2.5 0-4.8-1-6.4-2.6L3 16"
+        strokeWidth="2"
+        stroke="currentColor"
+        strokeLinecap="round"
+        fill="none"
+      />
+      <path
+        d="M3 21v-5h5"
+        strokeWidth="2"
+        stroke="currentColor"
+        strokeLinecap="round"
+        fill="none"
+      />
     </>
   ),
   upload: (
     <>
-      <path d="M12 16V4M8 8l4-4 4 4" strokeWidth="2" stroke="currentColor" strokeLinecap="round" fill="none" />
+      <path
+        d="M12 16V4M8 8l4-4 4 4"
+        strokeWidth="2"
+        stroke="currentColor"
+        strokeLinecap="round"
+        fill="none"
+      />
       <rect x="4" y="16" width="16" height="4" rx="1" />
     </>
   ),
@@ -425,17 +503,40 @@ export const me2uIcons: Record<string, ReactNode> = {
   ),
   link: (
     <>
-      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" strokeWidth="2" stroke="currentColor" strokeLinecap="round" fill="none" />
-      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" strokeWidth="2" stroke="currentColor" strokeLinecap="round" fill="none" />
+      <path
+        d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"
+        strokeWidth="2"
+        stroke="currentColor"
+        strokeLinecap="round"
+        fill="none"
+      />
+      <path
+        d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
+        strokeWidth="2"
+        stroke="currentColor"
+        strokeLinecap="round"
+        fill="none"
+      />
     </>
   ),
   menu: (
-    <path d="M4 6h16M4 12h16M4 18h16" strokeWidth="2" stroke="currentColor" strokeLinecap="round" />
+    <path
+      d="M4 6h16M4 12h16M4 18h16"
+      strokeWidth="2"
+      stroke="currentColor"
+      strokeLinecap="round"
+    />
   ),
   checkCircle: (
     <>
       <circle cx="12" cy="12" r="9" />
-      <path d="M8 12l2 2 4-4" strokeWidth="2" stroke="white" strokeLinecap="round" fill="none" />
+      <path
+        d="M8 12l2 2 4-4"
+        strokeWidth="2"
+        stroke="white"
+        strokeLinecap="round"
+        fill="none"
+      />
     </>
   ),
   xCircle: (
@@ -470,10 +571,15 @@ export default function Me2uIcon({
       height={size}
       className={className}
       fill="currentColor"
+      stroke="currentColor"
+      strokeWidth={1.65}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      focusable="false"
       aria-hidden={decorative ? "true" : undefined}
       role={decorative ? undefined : "img"}
       aria-label={decorative ? undefined : label || `${name} icon`}
-      style={{ flexShrink: 0 } as CSSProperties}
+      style={{ flexShrink: 0, vectorEffect: "non-scaling-stroke" } as CSSProperties}
     >
       {me2uIcons[name]}
     </svg>

@@ -9,14 +9,7 @@ import Me2UAssistantWidget from "@/components/Me2UAssistantWidget";
 import { SpotlightPointer } from "@/components/ui/spotlight-card";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
 import GlobalClientProviders from "@/components/GlobalClientProviders";
-import { DM_Serif_Display, Outfit } from "next/font/google";
-
-const display = DM_Serif_Display({
-  subsets: ["latin"],
-  weight: ["400"],
-  display: "swap",
-  variable: "--font-display",
-});
+import { Outfit } from "next/font/google";
 
 const body = Outfit({
   subsets: ["latin"],
@@ -96,13 +89,9 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable}`} suppressHydrationWarning>
+    <html lang="en" className={body.variable} suppressHydrationWarning>
       <body className="font-sans antialiased" suppressHydrationWarning>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <GlobalClientProviders />
@@ -110,14 +99,14 @@ export default function RootLayout({
         <AuthBootstrap />
         <ProtectedOnboarding />
         <MobileHeader />
-        <ErrorBoundary>
-          {children}
-        </ErrorBoundary>
+        <ErrorBoundary>{children}</ErrorBoundary>
         <ErrorBoundary
           fallback={
             <div className="fixed bottom-20 right-4 z-40 max-w-xs rounded-2xl border border-border bg-card p-4 shadow-2xl">
               <p className="text-xs font-bold text-card-foreground">Assistant unavailable</p>
-              <p className="text-xs text-muted-foreground mt-1">Refresh the page to try again.</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Refresh the page to try again.
+              </p>
             </div>
           }
         >

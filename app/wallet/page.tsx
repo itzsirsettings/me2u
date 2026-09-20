@@ -372,8 +372,8 @@ export default function WalletPage() {
           ))}
         </div>
 
-        {/* Bills redirect */}
-        <Card className="kinetic-border bg-[var(--color-bg-card)] p-5 shadow-[4px_4px_0px_var(--color-shadow)] md:p-8">
+        {false && (
+          <Card className="kinetic-border bg-[var(--color-bg-card)] p-5 shadow-[4px_4px_0px_var(--color-shadow)] md:p-8">
           <div className="mb-4 flex min-w-0 items-start justify-between gap-3 md:mb-6">
             <div className="min-w-0">
               <h2 className="text-xl font-display md:text-3xl">Pay Bills</h2>
@@ -400,7 +400,8 @@ export default function WalletPage() {
               Preview Bills
             </button>
           </div>
-        </Card>
+          </Card>
+        )}
       </motion.div>
 
       <div className="h-24" />

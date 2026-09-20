@@ -9,7 +9,6 @@ import ThemeToggleIcon from "@/components/ThemeToggleIcon";
 const routeTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/wallet": "Wallet",
-  "/bills": "Bills & Utilities",
   "/withdraw": "Withdraw",
   "/kyc": "KYC",
   "/marketplace": "Marketplace",
@@ -41,7 +40,7 @@ const routeTitles: Record<string, string> = {
 export default function MobileHeader() {
   const pathname = usePathname();
   const router = useRouter();
-  const title = routeTitles[pathname] || (pathname.startsWith("/bills/transactions") ? "Bill Receipt" : undefined);
+  const title = routeTitles[pathname];
 
   if (!title) return null;
   if (pathname === "/dashboard") return null;

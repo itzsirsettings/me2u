@@ -8,7 +8,6 @@ const navItems: Array<{ label: string; icon: Me2uIconName; path: string }> = [
   { label: "Home", icon: "home", path: "/dashboard" },
   { label: "Market", icon: "market", path: "/marketplace" },
   { label: "Wallet", icon: "wallet", path: "/wallet" },
-  { label: "Bills", icon: "bill", path: "/bills" },
   { label: "Profile", icon: "profile", path: "/profile" },
 ];
 

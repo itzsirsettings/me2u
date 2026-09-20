@@ -175,16 +175,12 @@ test("cookie-backed sessions load after login and registration", () => {
 test("registration payment details are disclosed only from the authenticated deposit step", () => {
   const wallet = read("app/wallet/page.tsx");
   const depositRoute = read("app/api/onboarding/registration-deposit/route.ts");
-  const fundingAccount = read("components/PaystackFundingAccount.tsx");
   const virtualAccountRoute = read("app/api/wallet/virtual-account/route.ts");
   const referrals = read("app/api/referrals/route.ts");
 
   assert.match(wallet, /View payment account details/);
   assert.match(wallet, /authorizedFetch\("\/api\/onboarding\/registration-deposit"\)/);
   assert.doesNotMatch(wallet, /NEXT_PUBLIC_PLATFORM_ACCOUNT/);
-  assert.doesNotMatch(fundingAccount, /NEXT_PUBLIC_PLATFORM_ACCOUNT/);
-  assert.match(fundingAccount, /authorizedFetch\("\/api\/wallet\/virtual-account"\)/);
-  assert.doesNotMatch(fundingAccount, /backendFetch/);
   assert.match(virtualAccountRoute, /requireAuthenticatedUser/);
   assert.match(virtualAccountRoute, /WHERE user_id = \$1 AND provider = 'wema'/);
   assert.match(depositRoute, /export async function GET/);

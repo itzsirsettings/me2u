@@ -41,7 +41,7 @@ const quickPrompts = [
   "How do referral rewards work?",
 ];
 
-const navBackedRoutes = ["/dashboard", "/marketplace", "/wallet", "/bills", "/profile"];
+const navBackedRoutes = ["/dashboard", "/marketplace", "/wallet", "/profile"];
 
 function newId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
