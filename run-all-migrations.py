@@ -27,6 +27,13 @@ MIGRATIONS = [
     '006_enhanced_viral_referral_system.sql',
     '007_upgrade_unlock_subscriptions.sql',
     '008_in_app_otp_system.sql',
+    '009_add_idempotency_sessions_tables.sql',
+    '010_financial_unique_invariants.sql',
+    '011_wallet_ledger_and_tx_refs.sql',
+    '012_profile_otp_hardening.sql',
+    '013_g4_fee_transparency.sql',
+    '014_money_path_invariants.sql',
+    '015_referral_reward_consolidation.sql',
 ]
 
 def get_connection_params():

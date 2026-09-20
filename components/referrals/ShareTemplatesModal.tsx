@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
 import { toast } from "sonner";
+
 import Me2uIcon from "@/components/Me2uIcon";
 import { authorizedFetch } from "@/lib/fetch";
 
@@ -17,7 +18,7 @@ export default function ShareTemplatesModal({
   isOpen,
   onClose,
   referralLink,
-  username,
+  username: _username,
 }: ShareTemplatesModalProps) {
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
 
@@ -26,36 +27,37 @@ export default function ShareTemplatesModal({
       id: "casual",
       icon: "chat" as const,
       title: "Casual Friend",
-      message: `Hey! 👋 I've been using Me2U to get quick loans with 0% interest. No stress, no long forms. Just sign up with my link and get ₦1,500 welcome bonus instantly: ${referralLink}`,
+      message: `Hey! Join Me2U with my referral link. You earn ₦500 when you sign up, and I earn ₦1,500. Withdrawal eligibility requirements apply: ${referralLink}`,
     },
     {
       id: "family",
       icon: "users" as const,
       title: "Family Member",
-      message: `Hi! I wanted to share this with you. Me2U helped me get instant loans when I needed money urgently. They give you ₦1,500 just for signing up with this link: ${referralLink}. It's safe and legit - I've been using it myself!`,
+      message: `Hi! I wanted to share Me2U with you. Sign up through my link to receive a ₦500 referral signup reward. Complete the account requirements to access withdrawals: ${referralLink}`,
     },
     {
       id: "business",
       icon: "moneyBag" as const,
       title: "Business Contact",
-      message: `Hello! I'm using Me2U for quick business funding. Zero interest on first loan + instant ₦1,500 bonus when you sign up. Professional and reliable. Check it out: ${referralLink}`,
+      message: `Hello! Explore Me2U for savings, community lending, and referral rewards. Join with my link for a ₦500 signup reward. Lending and withdrawal eligibility requirements apply: ${referralLink}`,
     },
     {
       id: "urgent",
       icon: "alert" as const,
       title: "Urgent Money",
-      message: `Need cash urgently? Me2U gives instant loans (0% interest first time) + ₦1,500 welcome bonus. Takes 5 minutes to set up. Use my link: ${referralLink}`,
+      message: `Explore your borrowing options with Me2U. Sign up using my link for a ₦500 referral signup reward. Loans require eligibility checks, and withdrawals have unlock requirements: ${referralLink}`,
     },
     {
       id: "benefits",
       icon: "trophy" as const,
       title: "List Benefits",
       message: `Join Me2U and get:
-✅ ₦1,500 welcome bonus (instant!)
-✅ First loan at 0% interest
-✅ Borrow up to ₦250K
-✅ No collateral needed
-✅ Quick approval
+• ₦500 referral signup reward
+• Community lending options
+• Savings tools
+• Referral rewards
+
+Lending and withdrawal eligibility requirements apply.
 
 Sign up with my link: ${referralLink}`,
     },
@@ -63,7 +65,7 @@ Sign up with my link: ${referralLink}`,
       id: "simple",
       icon: "link" as const,
       title: "Simple & Direct",
-      message: `Get ₦1,500 free + access to instant loans. Sign up here: ${referralLink}`,
+      message: `Join Me2U with my link for a ₦500 referral signup reward. Withdrawal eligibility requirements apply: ${referralLink}`,
     },
   ];
 
@@ -94,7 +96,7 @@ Sign up with my link: ${referralLink}`,
     const encoded = encodeURIComponent(message);
     const url = `https://wa.me/?text=${encoded}`;
     window.open(url, "_blank");
-    trackShare("whatsapp");
+    void trackShare("whatsapp");
     toast.success("Opening WhatsApp...");
     setTimeout(onClose, 1500);
   }
@@ -103,7 +105,7 @@ Sign up with my link: ${referralLink}`,
     const encoded = encodeURIComponent(message);
     const url = `sms:?body=${encoded}`;
     window.location.href = url;
-    trackShare("sms");
+    void trackShare("sms");
     toast.success("Opening Messages...");
     setTimeout(onClose, 1500);
   }
@@ -118,10 +120,12 @@ Sign up with my link: ${referralLink}`,
         await trackShare("native_share");
         setTimeout(onClose, 1500);
       } catch (error) {
-        // User cancelled share
+        if (!(error instanceof DOMException && error.name === "AbortError")) {
+          toast.error("Sharing failed. Try copying the message instead.");
+        }
       }
     } else {
-      copyToClipboard(message);
+      void copyToClipboard(message);
     }
   }
 
@@ -213,7 +217,7 @@ Sign up with my link: ${referralLink}`,
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        copyToClipboard(template.message);
+                        void copyToClipboard(template.message);
                       }}
                       className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)] font-bold hover:bg-[var(--color-hover-soft)] transition-colors"
                     >
@@ -224,7 +228,7 @@ Sign up with my link: ${referralLink}`,
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        shareViaNavigator(template.message);
+                        void shareViaNavigator(template.message);
                       }}
                       className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-accent-primary)] text-[var(--color-on-accent)] font-bold hover:bg-[var(--color-accent-primary)]/90 transition-colors"
                     >

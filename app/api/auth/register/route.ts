@@ -19,6 +19,7 @@ import { query } from "@/lib/railway/client";
 import { assignPaystackDvaForNewUser } from "@/lib/server/paystack-dva";
 import { requestMeta } from "@/lib/server/idempotency";
 import { tooManyRequestsResponse } from "@/lib/server/auth";
+import { logWarn } from "@/lib/server/logger";
 
 function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -77,7 +78,9 @@ export async function POST(request: Request) {
     const step = String(body.step || "").trim();
 
     if (step === "send_code") {
-      const email = String(body.email || "").trim().toLowerCase();
+      const email = String(body.email || "")
+        .trim()
+        .toLowerCase();
 
       if (!email) {
         return NextResponse.json(
@@ -119,7 +122,9 @@ export async function POST(request: Request) {
     }
 
     if (step === "verify_code") {
-      const email = String(body.email || "").trim().toLowerCase();
+      const email = String(body.email || "")
+        .trim()
+        .toLowerCase();
       const code = String(body.code || "").trim();
       const token = String(body.token || "").trim();
 
@@ -173,7 +178,9 @@ export async function POST(request: Request) {
     }
 
     if (step === "verify_and_register") {
-      const email = String(body.email || "").trim().toLowerCase();
+      const email = String(body.email || "")
+        .trim()
+        .toLowerCase();
       const registrationToken = String(body.registrationToken || "").trim();
 
       if (!email || !registrationToken) {
@@ -200,13 +207,23 @@ export async function POST(request: Request) {
         return tooManyRequestsResponse();
       }
 
-      const firstName = String(body.firstName || "").trim().replace(/\s+/g, " ");
-      const lastName = String(body.lastName || "").trim().replace(/\s+/g, " ");
-      const username = String(body.username || "").trim().toLowerCase();
+      const firstName = String(body.firstName || "")
+        .trim()
+        .replace(/\s+/g, " ");
+      const lastName = String(body.lastName || "")
+        .trim()
+        .replace(/\s+/g, " ");
+      const username = String(body.username || "")
+        .trim()
+        .toLowerCase();
       const phone = String(body.phone || "").trim();
       const referral = String(body.referral || "").trim();
-      const countryCode = String(body.countryCode || "NG").trim().toUpperCase();
-      const preferredLanguage = String(body.preferredLanguage || "en").trim().toLowerCase();
+      const countryCode = String(body.countryCode || "NG")
+        .trim()
+        .toUpperCase();
+      const preferredLanguage = String(body.preferredLanguage || "en")
+        .trim()
+        .toLowerCase();
       const password = String(body.password || "");
 
       if (!password) {
@@ -332,7 +349,17 @@ export async function POST(request: Request) {
       });
 
       if (referredBy) {
-        await recordReferral(referredBy, userId);
+        // Referral crediting runs inside AFTER INSERT triggers; a failure there
+        // must never block registration, so log and continue.
+        try {
+          await recordReferral(referredBy, userId);
+        } catch (referralError) {
+          logWarn("referral_record_failed", {
+            userId,
+            referredBy,
+            error: referralError instanceof Error ? referralError.message : "unknown",
+          });
+        }
       }
 
       let walletAccountStatus: string | null = null;

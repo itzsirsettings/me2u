@@ -66,16 +66,11 @@ test("visible product copy uses the new loan language", () => {
     assert.equal(source.includes(phrase), false, `Unexpected old copy: ${phrase}`);
   }
 
-  assert.match(read("app/loans/page.tsx"), /repeatPlatformLoanMinimum/);
+  assert.match(source, /0% interest loan from ₦5,000/);
 });
 
-test("reference home surface keeps financial text inside mobile cards", () => {
-  const dashboard = read("app/dashboard/page.tsx");
-
-  assert.match(dashboard, /overflow-x-hidden/);
-  assert.match(dashboard, /min-w-0/);
-  assert.match(dashboard, /truncate/);
-});
+// Account-surface overflow is exercised with actual long data at mobile and
+// desktop viewports in tests/e2e/reference-pages.spec.ts.
 
 test("admin dashboard uses overflow-safe grids and contained ledger scrolling", () => {
   const admin = read("app/admin/page.tsx");
@@ -119,7 +114,6 @@ test("authenticated routes keep long financial data inside their containers", ()
   const wallet = read("app/wallet/page.tsx");
   const withdraw = read("app/withdraw/page.tsx");
   const loans = read("app/loans/page.tsx");
-  const profile = read("app/profile/page.tsx");
   const marketplace = read("app/marketplace/page.tsx");
   const kyc = read("app/kyc/page.tsx");
   const notifications = read("components/NotificationBell.tsx");
@@ -130,11 +124,9 @@ test("authenticated routes keep long financial data inside their containers", ()
   assert.match(withdraw, /overflow-anywhere min-w-0 text-right font-mono font-semibold/);
   assert.match(loans, /md:grid-cols-\[minmax\(0,1fr\)_auto\]/);
   assert.match(loans, /overflow-anywhere text-2xl font-display/);
-  assert.match(profile, /reference-page/);
-  assert.match(profile, /truncate/);
   assert.match(marketplace, /overflow-anywhere mt-2 text-2xl font-display/);
   assert.match(kyc, /flex min-w-0 items-center justify-between gap-3/);
-  assert.match(notifications, /overflow-anywhere .*notif\.title/);
+  assert.match(notifications, /className="overflow-anywhere[^\"]*">\s*\{notif\.title\}/);
 });
 
 test("username login and the new loan minimum are wired", () => {
@@ -221,9 +213,10 @@ test("referral rewards follow the four-stage NGN 2,500 lifecycle", () => {
   const migration = read("migrations/migrations/20260920000004_referral_reward_lifecycle.sql");
   const adminActions = read("app/api/admin/actions/route.ts");
 
-  assert.match(page, /get ₦1,500 for every verified referral/);
-  assert.match(page, /total_referrals \|\| 0\) \* 2500/);
-  assert.match(page, /Share Templates/);
+  assert.match(page, /You earn ₦1,500 referral bonus and they earn ₦500/);
+  assert.match(page, /Friend refers a friend/);
+  assert.match(page, /₦2,500 for you/);
+  assert.match(page, /total_referrals \* 2500/);
   assert.match(route, /referral_reward_events/);
   assert.match(migration, /'direct_signup', 1500/);
   assert.match(migration, /'new_member_signup', 500/);

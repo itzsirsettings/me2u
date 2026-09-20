@@ -12,10 +12,11 @@ export default function ReferralRedirectPage({
 
   useEffect(() => {
     params.then(({ code }) => {
-      // Store referral code in localStorage for registration flow to pick up
+      // Store referral code in localStorage for registration flow to pick up,
+      // and pass it as a URL param so it survives cross-device/browser redirects
+      // (opening the link from WhatsApp/telegram/another browser).
       localStorage.setItem("referral_code", code);
-      // Redirect to registration
-      router.push("/register");
+      router.push(`/register?ref=${encodeURIComponent(code)}`);
     });
   }, [params, router]);
 

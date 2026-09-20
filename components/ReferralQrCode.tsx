@@ -9,21 +9,19 @@ type ReferralQrCodeProps = {
 };
 
 export default function ReferralQrCode({ value, className = "" }: ReferralQrCodeProps) {
-  const [dataUrl, setDataUrl] = useState("");
-  const [hasError, setHasError] = useState(false);
+  const [result, setResult] = useState<{ value: string; dataUrl: string; hasError: boolean } | null>(null);
+  const dataUrl = result?.value === value ? result.dataUrl : "";
+  const hasError = result?.value === value && result.hasError;
 
   useEffect(() => {
     let isActive = true;
 
     if (!value) {
-      setDataUrl("");
-      setHasError(false);
       return () => {
         isActive = false;
       };
     }
 
-    setHasError(false);
     QRCode.toDataURL(value, {
       errorCorrectionLevel: "M",
       margin: 1,
@@ -34,12 +32,11 @@ export default function ReferralQrCode({ value, className = "" }: ReferralQrCode
       },
     })
       .then((url) => {
-        if (isActive) setDataUrl(url);
+        if (isActive) setResult({ value, dataUrl: url, hasError: false });
       })
       .catch(() => {
         if (isActive) {
-          setDataUrl("");
-          setHasError(true);
+          setResult({ value, dataUrl: "", hasError: true });
         }
       });
 
@@ -55,6 +52,8 @@ export default function ReferralQrCode({ value, className = "" }: ReferralQrCode
       {dataUrl ? (
         <img
           src={dataUrl}
+          width={192}
+          height={192}
           alt="Referral invite QR code"
           className="h-full w-full object-contain"
           draggable={false}

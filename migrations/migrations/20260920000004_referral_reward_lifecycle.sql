@@ -35,7 +35,13 @@ BEGIN
   ON CONFLICT (recipient_id, source_user_id, reward_type) DO NOTHING RETURNING id INTO v_event_id;
   IF v_event_id IS NULL THEN RETURN false; END IF;
   UPDATE public.wallets SET balance = balance + p_amount, updated_at = now() WHERE user_id = p_recipient_id;
-  IF NOT FOUND THEN RAISE EXCEPTION 'Wallet not found for referral reward recipient.'; END IF;
+  IF NOT FOUND THEN
+    -- a missing wallet must never break registration or withdrawal/repayment flows
+    DELETE FROM public.referral_reward_events WHERE id = v_event_id;
+    INSERT INTO public.notifications (user_id, title, message, is_read, created_at)
+    VALUES (p_recipient_id, p_notification_title, p_notification_message || ' (reward pending: wallet not ready — contact support.)', false, now());
+    RETURN false;
+  END IF;
   INSERT INTO public.transactions (user_id, type, amount, description, created_at) VALUES (p_recipient_id, 'affiliate_reward', p_amount, p_description, now());
   INSERT INTO public.notifications (user_id, title, message, is_read, created_at) VALUES (p_recipient_id, p_notification_title, p_notification_message, false, now());
   RETURN true;

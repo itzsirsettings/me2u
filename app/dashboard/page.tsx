@@ -1,34 +1,221 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import BrandLogo from "@/components/BrandLogo";
-import Me2uIcon, { type Me2uIconName } from "@/components/Me2uIcon";
-import NotificationBell from "@/components/NotificationBell";
-import { useStore } from "@/lib/store";
-import { getCreditLevel, getTrustScoreBreakdown } from "@/lib/product-features";
+import {
+  ArrowDown,
+  ArrowUp,
+  ChevronRight,
+  CircleAlert,
+  Eye,
+  EyeOff,
+  Sprout,
+} from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
 
-const primaryActions: Array<{ label: string; detail: string; path: string; icon: Me2uIconName; tone: string }> = [
-  { label: "Market", detail: "Buy & sell", path: "/marketplace", icon: "market", tone: "reference-icon" },
-  { label: "Loans", detail: "Get funds", path: "/loans", icon: "loans", tone: "reference-icon reference-icon-lime" },
-  { label: "KYC", detail: "Verify identity", path: "/kyc", icon: "shield", tone: "reference-icon" },
+import {
+  Initials,
+  money,
+  ReferenceIcon,
+  ReferenceScreen,
+  ReferenceToolbar,
+  useReferenceUser,
+  type ReferenceIconName,
+} from "@/components/reference/ReferenceUI";
+import { getCreditLevel } from "@/lib/product-features";
+
+const primaryActions: Array<{
+  label: string;
+  detail: string;
+  path: string;
+  icon: ReferenceIconName;
+  lime?: boolean;
+}> = [
+  { label: "Market", detail: "Buy & sell", path: "/marketplace", icon: "market" },
+  { label: "Loans", detail: "Get funds", path: "/loans", icon: "wallet", lime: true },
+  { label: "KYC", detail: "Verify identity", path: "/kyc", icon: "shield" },
 ];
-const shortcuts: Array<{ label: string; detail: string; path: string; icon: Me2uIconName }> = [
-  { label: "Savings", detail: "Grow your money", path: "/savings", icon: "savings" }, { label: "Circles", detail: "Save together", path: "/circles", icon: "group" }, { label: "Deals", detail: "Exclusive offers", path: "/deals", icon: "deal" }, { label: "Refer", detail: "Invite & earn", path: "/referrals", icon: "referral" }, { label: "Learn", detail: "Build knowledge", path: "/learn", icon: "book" }, { label: "Secure", detail: "Stay protected", path: "/security", icon: "security" },
+const shortcuts: Array<{
+  label: string;
+  detail: string;
+  path: string;
+  icon: ReferenceIconName;
+  lime?: boolean;
+}> = [
+  {
+    label: "Savings",
+    detail: "Grow your money",
+    path: "/savings",
+    icon: "savings",
+    lime: true,
+  },
+  { label: "Circles", detail: "Save together", path: "/circles", icon: "users" },
+  { label: "Deals", detail: "Exclusive offers", path: "/deals", icon: "tag" },
+  { label: "Refer", detail: "Invite & earn", path: "/referrals", icon: "users", lime: true },
+  { label: "Learn", detail: "Build knowledge", path: "/learn", icon: "book" },
+  { label: "Secure", detail: "Stay protected", path: "/security", icon: "secure" },
 ];
 
 export default function Dashboard() {
-  const user = useStore((s) => s.user); const transactions = useStore((s) => s.transactions); const activeLoans = useStore((s) => s.activeLoans); const authenticated = useStore((s) => s.isAuthenticated); const loading = useStore((s) => s.isLoading); const router = useRouter();
-  const [mounted, setMounted] = useState(false); const [showBalance, setShowBalance] = useState(true);
-  useEffect(() => setMounted(true), []); useEffect(() => { if (mounted && !loading && !authenticated) router.push("/login"); }, [authenticated, loading, mounted, router]);
-  if (!mounted || (!authenticated && !loading)) return null;
-  const firstName = user?.name?.trim().split(/\s+/)[0] || "Friend"; const username = user?.username || firstName.toLowerCase(); const level = getCreditLevel(user?.trustScore || 0); const nextSteps = getTrustScoreBreakdown(user, transactions, activeLoans).slice(0, 2); const balance = user?.balance || 0; const bankReady = Boolean(user?.bankName && user.accountNumber);
-  return <main className="reference-page app-mobile-screen mx-auto w-full max-w-md overflow-x-hidden px-4 pt-[calc(1.25rem+env(safe-area-inset-top))] md:max-w-6xl md:px-8 md:py-12">
-    <header className="mb-5 flex items-start justify-between gap-3"><div className="min-w-0"><BrandLogo src="/me2u_nav_logo.svg" className="reference-logo" /><p className="mt-0.5 text-xs font-medium text-[var(--color-text-secondary)]">People · Opportunities · Growth</p></div><NotificationBell /></header>
-    <section className="mb-5 flex items-center justify-between gap-3"><div className="flex min-w-0 items-center gap-3"><div className="grid h-[4.6rem] w-[4.6rem] shrink-0 place-items-center rounded-full border-8 border-emerald-100 bg-emerald-200 text-2xl font-black text-emerald-900">{firstName.slice(0, 2).toUpperCase()}</div><div className="min-w-0"><p className="text-lg font-medium text-slate-500">Welcome</p><h1 className="truncate text-[1.7rem] font-black text-slate-950">@{username}</h1><p className="text-base text-slate-500">Good to see you again!</p></div></div><div className="hidden rounded-full bg-emerald-100 px-4 py-3 text-sm font-bold text-emerald-900 sm:flex sm:items-center sm:gap-2"><span aria-hidden="true">🌱</span> Smarter Money Together</div></section>
-    <section className="reference-hero mb-5 p-6"><div className="flex items-start justify-between gap-3"><div><p className="text-xl font-bold">Main Balance</p><div className="mt-2 flex items-center gap-3"><p className="text-5xl font-black tracking-tight tabular-nums">{showBalance ? `₦${balance.toLocaleString()}` : "₦••••••"}</p><button type="button" aria-label={showBalance ? "Hide balance" : "Show balance"} onClick={() => setShowBalance(!showBalance)} className="grid h-11 w-11 place-items-center rounded-full bg-white/15 hover:bg-white/25"><Me2uIcon name={showBalance ? "visible" : "invisible"} size={23} /></button></div><p className="mt-1 text-base text-white/80">Your wallet, more possibilities.</p></div>{!bankReady && <button onClick={() => router.push("/profile")} className="rounded-full bg-amber-50 px-3 py-2 text-left text-xs font-bold text-amber-900 hover:bg-white sm:px-4 sm:text-sm">⚠ Verify to add bank <span aria-hidden="true">›</span></button>}</div><div className="mt-5 grid grid-cols-2 gap-3"><button onClick={() => router.push("/wallet")} className="flex min-h-[5.8rem] items-center gap-3 rounded-[1.5rem] bg-white px-4 text-left text-slate-950 transition-transform hover:-translate-y-0.5"><span className="reference-icon"><Me2uIcon name="cash" size={25} /></span><span><b className="block text-xl">Receive</b><small className="text-sm text-slate-500">Get paid to your wallet</small></span></button><button onClick={() => router.push("/withdraw")} className="flex min-h-[5.8rem] items-center gap-3 rounded-[1.5rem] bg-lime-400 px-4 text-left text-emerald-950 transition-transform hover:-translate-y-0.5"><span className="grid h-11 w-11 place-items-center rounded-full bg-white/75"><Me2uIcon name="requestMoney" size={25} /></span><span><b className="block text-xl">Withdraw</b><small className="text-sm">Send to your bank</small></span></button></div></section>
-    <section className="mb-5 grid grid-cols-3 gap-3">{primaryActions.map((item) => <button key={item.label} onClick={() => router.push(item.path)} className="reference-card min-w-0 p-4 text-left transition-transform hover:-translate-y-0.5"><span className={item.tone}><Me2uIcon name={item.icon} size={24} /></span><b className="mt-3 block text-lg text-slate-950">{item.label}</b><small className="block text-sm text-slate-500">{item.detail}</small></button>)}</section>
-    <section className="reference-card mb-5 grid grid-cols-3 overflow-hidden p-2">{shortcuts.map((item, i) => <button key={item.label} onClick={() => router.push(item.path)} className={`min-w-0 px-1 py-4 text-center hover:bg-emerald-50 ${i > 2 ? "border-t border-slate-100" : ""} ${i % 3 ? "border-l border-slate-100" : ""}`}><span className="reference-icon mx-auto h-11 w-11"><Me2uIcon name={item.icon} size={21} /></span><b className="mt-2 block text-sm text-slate-950">{item.label}</b><small className="block truncate text-xs text-slate-500">{item.detail}</small></button>)}</section>
-    <section className="reference-card p-5"><div className="flex items-start justify-between gap-3"><div><h2 className="text-2xl font-black text-slate-950">Me2U Trust Score</h2><p className="mt-1 font-semibold text-slate-800">{level.name} level · {level.next}</p><p className="mt-1 text-sm text-slate-500">Complete more steps to unlock higher benefits.</p></div><div className="grid h-24 w-24 shrink-0 place-items-center rounded-full border-[10px] border-emerald-400 bg-white text-center"><b className="text-3xl text-emerald-800">{user?.trustScore || 0}</b><small className="-mt-5 text-slate-400">/ 100</small></div></div><div className="mt-5"><div className="mb-2 flex items-center justify-between"><h3 className="font-bold text-slate-950">Next steps</h3><button onClick={() => router.push("/profile")} className="font-bold text-emerald-700">See all ›</button></div>{nextSteps.map((step) => <button key={step.label} onClick={() => router.push("/profile")} className="reference-row w-full text-left"><span className="reference-icon h-11 w-11"><Me2uIcon name="shield" size={20} /></span><span className="min-w-0"><b className="block text-slate-950">{step.label}</b><small className="block truncate text-slate-500">{step.detail}</small></span><span className="reference-chevron">›</span></button>)}</div></section>
-  </main>;
+  const user = useReferenceUser();
+  const [showBalance, setShowBalance] = useState(true);
+  if (!user) return <ReferenceScreen kind="home" ready={false} />;
+  const score = Math.max(0, Math.min(100, user.trustScore));
+  const level = getCreditLevel(score);
+  const bankReady = Boolean(user.bankName && user.accountNumber);
+
+  return (
+    <ReferenceScreen kind="home">
+      <ReferenceToolbar />
+      <section className="design-welcome">
+        <Link href="/profile" className="design-avatar" aria-label="Open profile">
+          <Initials name={user.name} />
+        </Link>
+        <div className="design-welcome-copy">
+          <p>Welcome</p>
+          <h1 title={`@${user.username || user.name}`}>
+            @{user.username || user.name.split(" ")[0]}
+          </h1>
+          <p>Good to see you again!</p>
+        </div>
+        <div className="design-growth">
+          <Sprout aria-hidden="true" />
+          <span>
+            Smarter
+            <br />
+            Money Together
+          </span>
+        </div>
+      </section>
+
+      <section className="design-green-card design-balance" aria-label="Wallet balance">
+        <div className="design-balance-heading">
+          <h2>Main Balance</h2>
+          {!bankReady && (
+            <Link href="/profile" className="design-verify">
+              <CircleAlert size={16} aria-hidden="true" />
+              <span>Verify to add bank</span>
+              <ChevronRight size={15} aria-hidden="true" />
+            </Link>
+          )}
+        </div>
+        <div className="design-balance-amount">
+          <p data-testid="main-balance">{showBalance ? money(user.balance, 2) : "₦••••••"}</p>
+          <button
+            type="button"
+            onClick={() => setShowBalance(!showBalance)}
+            aria-label={showBalance ? "Hide balance" : "Show balance"}
+          >
+            {showBalance ? <Eye size={22} /> : <EyeOff size={22} />}
+          </button>
+        </div>
+        <p className="design-balance-caption">Your wallet, more possibilities.</p>
+        <div className="design-money-actions">
+          <Link href="/wallet" className="design-receive">
+            <span>
+              <ArrowDown aria-hidden="true" />
+            </span>
+            <div>
+              <strong>Receive</strong>
+              <small>Get paid to your wallet</small>
+            </div>
+          </Link>
+          <Link href="/withdraw" className="design-withdraw">
+            <span>
+              <ArrowUp aria-hidden="true" />
+            </span>
+            <div>
+              <strong>Withdraw</strong>
+              <small>Send to your bank</small>
+            </div>
+          </Link>
+        </div>
+      </section>
+
+      <section className="design-primary-actions" aria-label="Main services">
+        {primaryActions.map((item) => (
+          <Link key={item.label} href={item.path} className="design-card design-service">
+            <span className={`design-icon-disc ${item.lime ? "design-lime" : ""}`}>
+              <ReferenceIcon name={item.icon} />
+            </span>
+            <ChevronRight className="design-service-chevron" size={18} aria-hidden="true" />
+            <strong>{item.label}</strong>
+            <small>{item.detail}</small>
+          </Link>
+        ))}
+      </section>
+      <section className="design-card design-shortcuts" aria-label="More services">
+        {shortcuts.map((item) => (
+          <Link key={item.label} href={item.path}>
+            <span className={`design-icon-disc ${item.lime ? "design-lime" : ""}`}>
+              <ReferenceIcon name={item.icon} size={22} />
+            </span>
+            <strong>{item.label}</strong>
+            <small>{item.detail}</small>
+          </Link>
+        ))}
+      </section>
+
+      <section className="design-card design-trust">
+        <div className="design-trust-heading">
+          <div>
+            <h2>Me2U Trust Score</h2>
+            <p>
+              {level.name} level • {level.next}
+            </p>
+            <small>Complete more steps to unlock higher benefits.</small>
+          </div>
+          <div
+            className="design-score"
+            role="img"
+            aria-label={`Trust score ${score} out of 100, ${level.name}`}
+          >
+            <svg viewBox="0 0 100 100" aria-hidden="true">
+              <circle cx="50" cy="50" r="43" className="design-score-track" />
+              <circle
+                cx="50"
+                cy="50"
+                r="43"
+                className="design-score-progress"
+                pathLength="100"
+                strokeDasharray={`${score} 100`}
+              />
+            </svg>
+            <div>
+              <strong>{score}</strong>
+              <small>/ 100</small>
+            </div>
+            <span className="design-level-badge">{level.name}</span>
+          </div>
+        </div>
+        <div className="design-next-heading">
+          <h3>Next steps</h3>
+          <Link href="/profile">
+            See all <ChevronRight size={15} aria-hidden="true" />
+          </Link>
+        </div>
+        <Link href="/kyc" className="design-step-row">
+          <span className="design-icon-square">
+            <ReferenceIcon name="secure" size={22} />
+          </span>
+          <div>
+            <strong>{user.kycVerified ? "KYC complete" : "Complete KYC"}</strong>
+            <small>
+              {user.kycVerified ? "Your identity is verified" : "KYC unlocks stronger trust"}
+            </small>
+          </div>
+          <ChevronRight size={18} aria-hidden="true" />
+        </Link>
+        <Link href="/referrals" className="design-step-row">
+          <span className="design-icon-square">
+            <ReferenceIcon name="users" size={22} />
+          </span>
+          <div>
+            <strong>Refer a friend</strong>
+            <small>Build trust with 5 verified referrals</small>
+          </div>
+          <ChevronRight size={18} aria-hidden="true" />
+        </Link>
+      </section>
+    </ReferenceScreen>
+  );
 }

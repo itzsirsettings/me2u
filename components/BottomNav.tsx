@@ -1,8 +1,13 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { QrCode } from "lucide-react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+
 import Me2uIcon, { type Me2uIconName } from "@/components/Me2uIcon";
+import { ReferenceIcon, type ReferenceIconName } from "@/components/reference/ReferenceUI";
+
 
 const navItems: Array<{ label: string; icon: Me2uIconName; path: string }> = [
   { label: "Home", icon: "home", path: "/dashboard" },
@@ -12,23 +17,75 @@ const navItems: Array<{ label: string; icon: Me2uIconName; path: string }> = [
 ];
 
 // Routes where the bottom nav should stay visible even though they aren't top-level nav items
-const extraNavRoutes = ["/savings", "/circles", "/deals", "/referrals", "/loans", "/kyc", "/learn", "/security", "/withdraw", "/support", "/admin"];
+const extraNavRoutes = [
+  "/savings",
+  "/circles",
+  "/deals",
+  "/referrals",
+  "/loans",
+  "/kyc",
+  "/learn",
+  "/security",
+  "/withdraw",
+  "/support",
+  "/admin",
+];
 
 export default function BottomNav() {
   const pathname = usePathname();
   const router = useRouter();
   const activePath = pathname;
   const showNav =
-    navItems.some((item) => item.path === activePath || (item.path !== "/dashboard" && pathname.startsWith(item.path))) ||
-    extraNavRoutes.some((route) => pathname === route || pathname.startsWith(route + "/"));
+    navItems.some(
+      (item) =>
+        item.path === activePath ||
+        (item.path !== "/dashboard" && pathname.startsWith(item.path)),
+    ) || extraNavRoutes.some((route) => pathname === route || pathname.startsWith(route + "/"));
 
   if (!showNav) return null;
 
+  if (["/dashboard", "/profile", "/referrals"].includes(pathname)) {
+    const icons: ReferenceIconName[] = ["home", "market", "wallet", "user"];
+    return (
+      <nav
+        aria-label="Primary navigation"
+        className={`design-reference-nav ${pathname === "/referrals" ? "design-nav-referrals" : ""}`}
+      >
+        <div>
+          {navItems.map((item, index) => (
+            <Link
+              key={item.path}
+              href={item.path}
+              aria-current={pathname === item.path ? "page" : undefined}
+            >
+              <ReferenceIcon name={icons[index]} size={22} />
+              <span>{item.label}</span>
+            </Link>
+          ))}
+          <Link
+            href="/referrals?panel=qr"
+            scroll={false}
+            aria-label="Open referral QR code"
+            aria-current={pathname === "/referrals" ? "page" : undefined}
+            className="design-qr-button"
+          >
+            <QrCode size={24} aria-hidden="true" />
+          </Link>
+        </div>
+      </nav>
+    );
+  }
+
   return (
-    <nav aria-label="Primary navigation" className="fixed bottom-0 left-0 right-0 z-50 px-2 pb-[calc(0.45rem+env(safe-area-inset-bottom))] md:hidden">
+    <nav
+      aria-label="Primary navigation"
+      className="fixed bottom-0 left-0 right-0 z-50 px-2 pb-[calc(0.45rem+env(safe-area-inset-bottom))] md:hidden"
+    >
       <div className="reference-bottom-nav relative mx-auto grid max-w-md grid-cols-5 items-center gap-0 px-2 py-2">
         {navItems.map((item) => {
-          const isActive = activePath === item.path || (item.path !== "/dashboard" && pathname.startsWith(item.path));
+          const isActive =
+            activePath === item.path ||
+            (item.path !== "/dashboard" && pathname.startsWith(item.path));
           return (
             <motion.button
               whileTap={{ scale: 0.92 }}
@@ -41,7 +98,9 @@ export default function BottomNav() {
                   : "text-[var(--color-text-secondary)] hover:bg-[var(--color-hover-soft)] hover:text-[var(--color-text-primary)]"
               }`}
             >
-              <span className={`grid h-6 w-6 place-items-center transition-transform duration-200 ${isActive ? "scale-110" : ""}`}>
+              <span
+                className={`grid h-6 w-6 place-items-center transition-transform duration-200 ${isActive ? "scale-110" : ""}`}
+              >
                 <Me2uIcon name={item.icon} size={20} />
               </span>
               <span className="w-full truncate text-[10px] font-black tracking-wide font-sans">

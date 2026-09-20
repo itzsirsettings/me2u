@@ -8,6 +8,9 @@ out
 .env.railway.production
 .railway/*.local
 .trae/
+db_url.txt
+\['DATABASE_URL'
+scripts/setup-admin-account.mjs
 /_*.mjs
 supabase/.temp/
 tsconfig.tsbuildinfo

@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Monitor, Moon, Sun } from "lucide-react";
+import { useEffect, useSyncExternalStore } from "react";
+
 import {
   applyThemeMode,
   getStoredThemeMode,
   saveThemeMode,
   themeChangeEvent,
+  themeStorageKey,
   type ThemeMode,
 } from "@/lib/theme";
 
@@ -15,12 +18,23 @@ const themeOptions: Array<{ label: string; value: ThemeMode }> = [
   { label: "System", value: "system" },
 ];
 
-export default function ThemeModeSelector() {
-  const [themeMode, setThemeMode] = useState<ThemeMode>("system");
+function subscribeTheme(onChange: () => void) {
+  const onStorage = (event: StorageEvent) => { if (event.key === themeStorageKey) onChange(); };
+  window.addEventListener(themeChangeEvent, onChange);
+  window.addEventListener("storage", onStorage);
+  return () => { window.removeEventListener(themeChangeEvent, onChange); window.removeEventListener("storage", onStorage); };
+}
+const getServerTheme = (): ThemeMode => "system";
+
+export default function ThemeModeSelector({
+  variant = "default",
+}: {
+  variant?: "default" | "reference";
+}) {
+  const themeMode = useSyncExternalStore(subscribeTheme, getStoredThemeMode, getServerTheme);
 
   useEffect(() => {
     const initialMode = getStoredThemeMode();
-    setThemeMode(initialMode);
     applyThemeMode(initialMode);
 
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
@@ -30,7 +44,7 @@ export default function ThemeModeSelector() {
       }
     };
     const handleSavedThemeChange = () => {
-      setThemeMode(getStoredThemeMode());
+      applyThemeMode(getStoredThemeMode());
     };
 
     window.addEventListener(themeChangeEvent, handleSavedThemeChange);
@@ -51,9 +65,34 @@ export default function ThemeModeSelector() {
   }, []);
 
   const selectThemeMode = (mode: ThemeMode) => {
-    setThemeMode(mode);
     saveThemeMode(mode);
   };
+
+  if (variant === "reference") {
+    const icons = { light: Sun, dark: Moon, system: Monitor };
+    return (
+      <section className="design-card design-theme">
+        <h2>Theme</h2>
+        <p>Choose how me2u should look on this device.</p>
+        <div className="design-theme-options" role="group" aria-label="Theme preference">
+          {themeOptions.map((option) => {
+            const Icon = icons[option.value];
+            return (
+              <button
+                key={option.value}
+                type="button"
+                aria-pressed={themeMode === option.value}
+                onClick={() => selectThemeMode(option.value)}
+              >
+                <Icon size={20} aria-hidden="true" />
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="rounded-[var(--mobile-radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3 md:rounded-[5px] md:p-4">
