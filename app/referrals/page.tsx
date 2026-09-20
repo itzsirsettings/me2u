@@ -26,6 +26,7 @@ interface ReferralDetail {
   referee_trust_score: number;
   referee_kyc_verified: boolean;
   signed_up_at: string;
+  signup_rewarded: boolean;
   first_withdrawal_rewarded: boolean;
   first_repayment_rewarded: boolean;
   pending_rewards: string;
@@ -76,7 +77,9 @@ export default function ReferralsPage() {
   const [copied, setCopied] = useState(false);
   const [referralLink, setReferralLink] = useState("");
   const [showShareModal, setShowShareModal] = useState(false);
-  const [activeTab, setActiveTab] = useState<"overview" | "challenge" | "milestones" | "leaderboard">("overview");
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "challenge" | "milestones" | "leaderboard"
+  >("overview");
 
   useEffect(() => {
     const origin = typeof window !== "undefined" ? window.location.origin : "";
@@ -170,19 +173,19 @@ export default function ReferralsPage() {
     const diff = end.getTime() - now.getTime();
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    
+
     if (days > 0) return `${days}d ${hours}h left`;
     return `${hours}h left`;
   }
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
-    show: { opacity: 1, transition: { staggerChildren: 0.1 } }
+    show: { opacity: 1, transition: { staggerChildren: 0.1 } },
   };
 
   const itemVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } }
+    show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
   };
 
   if (loading) {
@@ -202,7 +205,10 @@ export default function ReferralsPage() {
       initial="hidden"
       animate="show"
     >
-      <motion.h1 variants={itemVariants} className="sr-only md:not-sr-only md:mb-12 md:text-7xl md:font-display md:leading-[0.85] md:tracking-tighter">
+      <motion.h1
+        variants={itemVariants}
+        className="sr-only md:not-sr-only md:mb-12 md:text-7xl md:font-display md:leading-[0.85] md:tracking-tighter"
+      >
         Refer & Earn
       </motion.h1>
 
@@ -216,7 +222,9 @@ export default function ReferralsPage() {
               </div>
               <div>
                 <h2 className="text-lg font-display leading-none">Your Referral Link</h2>
-                <p className="text-xs text-[var(--color-text-secondary)]">Share and earn rewards</p>
+                <p className="text-xs text-[var(--color-text-secondary)]">
+                  Share and earn rewards
+                </p>
               </div>
             </div>
             <button
@@ -243,7 +251,8 @@ export default function ReferralsPage() {
           {user && !user.accountUnlocked && (user.verifiedReferralCount || 0) < 10 && (
             <div className="mt-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
               <p className="text-sm font-semibold text-amber-600 dark:text-amber-400">
-                ⚠️ {10 - (user.verifiedReferralCount || 0)} more verified referrals to unlock withdrawals
+                ⚠️ {10 - (user.verifiedReferralCount || 0)} more verified referrals to unlock
+                withdrawals
               </p>
               <p className="text-xs text-[var(--color-text-secondary)] mt-1">
                 Or pay ₦2,000 one-time fee to unlock instantly
@@ -282,9 +291,22 @@ export default function ReferralsPage() {
             {stats && (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <StatCard label="Invited" value={stats.total_referrals} icon="referral" />
-                <StatCard label="Verified" value={user?.verifiedReferralCount || 0} icon="check" />
-                <StatCard label="Earned" value={`₦${stats.total_earned.toLocaleString()}`} icon="moneyBag" highlight />
-                <StatCard label="Potential" value={`₦${(stats.total_referrals * 500).toLocaleString()}`} icon="trophy" />
+                <StatCard
+                  label="Verified"
+                  value={user?.verifiedReferralCount || 0}
+                  icon="check"
+                />
+                <StatCard
+                  label="Earned"
+                  value={`₦${stats.total_earned.toLocaleString()}`}
+                  icon="moneyBag"
+                  highlight
+                />
+                <StatCard
+                  label="Potential"
+                  value={`₦${(stats.total_referrals * 2500).toLocaleString()}`}
+                  icon="trophy"
+                />
               </div>
             )}
 
@@ -292,14 +314,42 @@ export default function ReferralsPage() {
             <Card className="kinetic-border bg-[var(--color-bg-card)] p-5 shadow-[4px_4px_0px_var(--color-shadow)] md:p-6">
               <h2 className="mb-4 text-lg font-display">How It Works</h2>
               <div className="space-y-4">
-                <RewardStep step={1} title="Friend signs up" description="They get ₦1,500 welcome bonus" reward="+₦1,500" highlight />
-                <RewardStep step={2} title="Friend completes KYC" description="They verify their identity" reward={null} />
-                <RewardStep step={3} title="Friend makes first withdrawal" description="You earn your first reward" reward="+₦250" />
-                <RewardStep step={4} title="Friend completes first loan repayment" description="You earn your second reward" reward="+₦250" />
+                <RewardStep
+                  step={1}
+                  title="Friend signs up"
+                  description="You earn ₦1,500 referral bonus and they earn ₦500."
+                  reward="+₦1,500"
+                  highlight
+                />
+                <RewardStep
+                  step={2}
+                  title="Friend completes KYC"
+                  description="They verify their identity"
+                  reward={null}
+                />
+                <RewardStep
+                  step={3}
+                  title="Friend makes first withdrawal"
+                  description="You earn your second reward"
+                  reward="+₦250"
+                />
+                <RewardStep
+                  step={4}
+                  title="Friend completes first loan repayment"
+                  description="You earn your third reward"
+                  reward="+₦250"
+                />
+                <RewardStep
+                  step={5}
+                  title="Friend refers a friend"
+                  description="You earn your fourth reward"
+                  reward="+₦500"
+                />
               </div>
               <div className="mt-4 p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
                 <p className="text-xs text-[var(--color-text-secondary)]">
-                  <strong>Total per referral:</strong> ₦500 (you) + ₦1,500 (them) = ₦2,000 value! 🎉
+                  <strong>Total per referral:</strong> ₦2,500 for you. Your friend earns ₦500
+                  when they sign up. 🎉
                 </p>
               </div>
             </Card>
@@ -310,14 +360,22 @@ export default function ReferralsPage() {
                 <h2 className="mb-4 text-lg font-display">Your Referrals</h2>
                 <div className="space-y-3">
                   {referrals.map((ref) => (
-                    <div key={ref.referee_id} className="rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
+                    <div
+                      key={ref.referee_id}
+                      className="rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4"
+                    >
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="font-semibold text-[var(--color-text-primary)]">{ref.referee_name}</p>
-                          <p className="text-xs text-[var(--color-text-secondary)]">{ref.pending_rewards}</p>
+                          <p className="font-semibold text-[var(--color-text-primary)]">
+                            {ref.referee_name}
+                          </p>
+                          <p className="text-xs text-[var(--color-text-secondary)]">
+                            {ref.pending_rewards}
+                          </p>
                         </div>
                         <div className="flex flex-wrap gap-1.5">
                           <StepBadge done label="Signed" />
+                          <StepBadge done={ref.signup_rewarded} label="Signup" />
                           <StepBadge done={ref.referee_kyc_verified} label="KYC" />
                           <StepBadge done={ref.first_withdrawal_rewarded} label="Withdrawal" />
                           <StepBadge done={ref.first_repayment_rewarded} label="Repayment" />
@@ -331,9 +389,15 @@ export default function ReferralsPage() {
 
             {referrals.length === 0 && (
               <Card className="kinetic-border bg-[var(--color-bg-card)] p-12 text-center shadow-[4px_4px_0px_var(--color-shadow)]">
-                <Me2uIcon name="referral" size={48} className="mx-auto mb-4 text-[var(--color-text-secondary)]" />
+                <Me2uIcon
+                  name="referral"
+                  size={48}
+                  className="mx-auto mb-4 text-[var(--color-text-secondary)]"
+                />
                 <h3 className="mb-2 text-lg font-display">No referrals yet</h3>
-                <p className="text-sm text-[var(--color-text-secondary)] mb-4">Share your link and start earning today.</p>
+                <p className="text-sm text-[var(--color-text-secondary)] mb-4">
+                  Share your link and start earning today.
+                </p>
                 <button
                   onClick={() => setShowShareModal(true)}
                   className="btn-primary px-6 py-3 rounded-xl font-bold"
@@ -415,7 +479,11 @@ export default function ReferralsPage() {
                       <Me2uIcon
                         name="trophy"
                         size={20}
-                        className={milestone.achieved ? "text-yellow-500" : "text-[var(--color-text-secondary)]"}
+                        className={
+                          milestone.achieved
+                            ? "text-yellow-500"
+                            : "text-[var(--color-text-secondary)]"
+                        }
                       />
                       <h3 className="font-bold">{milestone.referralCount} Referrals</h3>
                       {milestone.achieved && (
@@ -425,7 +493,8 @@ export default function ReferralsPage() {
                       )}
                     </div>
                     <p className="text-sm text-[var(--color-text-secondary)] mb-3">
-                      Reward: ₦{milestone.rewardAmount.toLocaleString()} + {milestone.badgeAwarded} badge
+                      Reward: ₦{milestone.rewardAmount.toLocaleString()} +{" "}
+                      {milestone.badgeAwarded} badge
                     </p>
                     {!milestone.achieved && (
                       <>
@@ -459,7 +528,8 @@ export default function ReferralsPage() {
               <div className="mb-4 p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
                 <p className="text-sm font-semibold">Your Position</p>
                 <p className="text-lg font-bold">
-                  Rank #{userPosition.rank} · {userPosition.verified_referral_count} verified referrals
+                  Rank #{userPosition.rank} · {userPosition.verified_referral_count} verified
+                  referrals
                 </p>
               </div>
             )}
@@ -522,9 +592,21 @@ export default function ReferralsPage() {
   );
 }
 
-function StatCard({ label, value, icon, highlight }: { label: string; value: string | number; icon: string; highlight?: boolean }) {
+function StatCard({
+  label,
+  value,
+  icon,
+  highlight,
+}: {
+  label: string;
+  value: string | number;
+  icon: string;
+  highlight?: boolean;
+}) {
   return (
-    <Card className={`kinetic-border p-4 shadow-[4px_4px_0px_var(--color-shadow)] ${highlight ? "border-[var(--color-accent-primary)]/20 bg-[var(--color-accent-primary)]/5" : "bg-[var(--color-bg-card)]"}`}>
+    <Card
+      className={`kinetic-border p-4 shadow-[4px_4px_0px_var(--color-shadow)] ${highlight ? "border-[var(--color-accent-primary)]/20 bg-[var(--color-accent-primary)]/5" : "bg-[var(--color-bg-card)]"}`}
+    >
       <div className="mb-2 flex items-center gap-2 text-[var(--color-text-secondary)]">
         <Me2uIcon name={icon as any} size={18} />
       </div>
@@ -534,10 +616,26 @@ function StatCard({ label, value, icon, highlight }: { label: string; value: str
   );
 }
 
-function RewardStep({ step, title, description, reward, highlight }: { step: number; title: string; description: string; reward: string | null; highlight?: boolean }) {
+function RewardStep({
+  step,
+  title,
+  description,
+  reward,
+  highlight,
+}: {
+  step: number;
+  title: string;
+  description: string;
+  reward: string | null;
+  highlight?: boolean;
+}) {
   return (
     <div className="flex items-start gap-4">
-      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${highlight ? "bg-[var(--color-positive-bg)] text-[var(--color-positive-text)]" : "bg-[var(--color-bg-secondary)]"}`}>{step}</div>
+      <div
+        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${highlight ? "bg-[var(--color-positive-bg)] text-[var(--color-positive-text)]" : "bg-[var(--color-bg-secondary)]"}`}
+      >
+        {step}
+      </div>
       <div className="flex-1">
         <p className="font-semibold text-[var(--color-text-primary)]">{title}</p>
         <p className="text-xs text-[var(--color-text-secondary)]">{description}</p>
@@ -553,7 +651,9 @@ function RewardStep({ step, title, description, reward, highlight }: { step: num
 
 function StepBadge({ done, label }: { done: boolean; label: string }) {
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold ${done ? "bg-[var(--color-positive-bg)] text-[var(--color-positive-text)]" : "bg-[var(--color-bg-card)] text-[var(--color-text-secondary)]"}`}>
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold ${done ? "bg-[var(--color-positive-bg)] text-[var(--color-positive-text)]" : "bg-[var(--color-bg-card)] text-[var(--color-text-secondary)]"}`}
+    >
       <Me2uIcon name={done ? "check" : "alert"} size={10} />
       {label}
     </span>

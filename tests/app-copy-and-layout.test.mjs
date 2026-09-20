@@ -205,6 +205,26 @@ test("referrals remain available before registration deposit and KYC approval", 
   assert.doesNotMatch(kycGuard[1], /"\/referrals"/);
 });
 
+test("referral rewards follow the four-stage NGN 2,500 lifecycle", () => {
+  const page = read("app/referrals/page.tsx");
+  const route = read("app/api/referrals/route.ts");
+  const migration = read("migrations/migrations/20260920000004_referral_reward_lifecycle.sql");
+  const adminActions = read("app/api/admin/actions/route.ts");
+
+  assert.match(page, /You earn ₦1,500 referral bonus and they earn ₦500/);
+  assert.match(page, /Friend refers a friend/);
+  assert.match(page, /₦2,500 for you/);
+  assert.match(page, /total_referrals \* 2500/);
+  assert.match(route, /referral_reward_events/);
+  assert.match(migration, /'direct_signup', 1500/);
+  assert.match(migration, /'new_member_signup', 500/);
+  assert.match(migration, /'first_withdrawal', 250/);
+  assert.match(migration, /'first_repayment', 250/);
+  assert.match(migration, /'indirect_signup', 500/);
+  assert.match(migration, /UNIQUE \(recipient_id, source_user_id, reward_type\)/);
+  assert.doesNotMatch(adminActions, /Welcome Bonus Unlocked/);
+});
+
 test("auth and identity flows avoid release-blocking shortcuts", () => {
   const otp = read("lib/server/otp.ts");
   const resetPassword = read("app/api/auth/reset-password/route.ts");

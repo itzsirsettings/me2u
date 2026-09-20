@@ -109,7 +109,8 @@ export async function POST(request: Request) {
         );
         const proof = proofRows[0];
         if (!proof) throw new Error("Payment proof not found.");
-        if (proof.status !== "pending") throw new Error("This proof has already been processed.");
+        if (proof.status !== "pending")
+          throw new Error("This proof has already been processed.");
 
         await client.query(
           `UPDATE payment_proofs SET status = 'approved', updated_at = NOW() WHERE id = $1`,
@@ -143,51 +144,15 @@ export async function POST(request: Request) {
              WHERE id = $2`,
             [Number(proof.amount), proof.user_id],
           );
-
-          // Unlock welcome bonus if KYC is already approved
-          const { rows: pRows } = await client.query<{ kyc_verified: boolean; referred_by: string | null }>(
-            `SELECT kyc_verified, referred_by FROM profiles WHERE id = $1`,
-            [proof.user_id],
-          );
-          if (pRows[0]?.kyc_verified) {
-            await client.query(
-              `UPDATE wallets SET balance = balance + 2000, updated_at = NOW() WHERE user_id = $1`,
-              [proof.user_id],
-            );
-            await client.query(
-              `INSERT INTO transactions (user_id, type, amount, description, created_at)
-               VALUES ($1, 'deposit', 2000, 'Welcome bonus', NOW())`,
-              [proof.user_id],
-            );
-            await client.query(
-              `INSERT INTO notifications (user_id, title, message, is_read, created_at)
-               VALUES ($1, 'Welcome Bonus Unlocked', 'Your ₦2,000 welcome bonus has been added to your wallet.', false, NOW())`,
-              [proof.user_id],
-            );
-
-            if (pRows[0].referred_by) {
-              await client.query(
-                `UPDATE wallets SET balance = balance + 500, updated_at = NOW() WHERE user_id = $1`,
-                [pRows[0].referred_by],
-              );
-              await client.query(
-                `INSERT INTO affiliate_rewards (referrer_id, referred_user_id, amount, created_at)
-                 VALUES ($1, $2, 500, NOW())`,
-                [pRows[0].referred_by, proof.user_id],
-              );
-              await client.query(
-                `INSERT INTO transactions (user_id, type, amount, description, created_at)
-                 VALUES ($1, 'affiliate_reward', 500, 'Referral reward', NOW())`,
-                [pRows[0].referred_by],
-              );
-            }
-          }
         }
 
         await client.query(
           `INSERT INTO notifications (user_id, title, message, is_read, created_at)
            VALUES ($1, 'Payment Confirmed', $2, false, NOW())`,
-          [proof.user_id, `Your payment of ₦${Number(proof.amount).toLocaleString()} has been confirmed.`],
+          [
+            proof.user_id,
+            `Your payment of ₦${Number(proof.amount).toLocaleString()} has been confirmed.`,
+          ],
         );
       });
 
@@ -196,10 +161,11 @@ export async function POST(request: Request) {
 
     // ── Payment proof reject ─────────────────────────────────────────────────
     if (action === "reject_payment_proof") {
-      const { rows: proofRows } = await db.query<{ status: string; user_id: string; amount: number }>(
-        `SELECT status, user_id, amount FROM payment_proofs WHERE id = $1`,
-        [id],
-      );
+      const { rows: proofRows } = await db.query<{
+        status: string;
+        user_id: string;
+        amount: number;
+      }>(`SELECT status, user_id, amount FROM payment_proofs WHERE id = $1`, [id]);
       const proof = proofRows[0];
       if (!proof) throw new Error("Payment proof not found.");
       if (proof.status !== "pending") throw new Error("This proof has already been processed.");
@@ -212,7 +178,10 @@ export async function POST(request: Request) {
       await db.query(
         `INSERT INTO notifications (user_id, title, message, is_read, created_at)
          VALUES ($1, 'Payment Not Confirmed', $2, false, NOW())`,
-        [proof.user_id, `Your payment proof of ₦${Number(proof.amount).toLocaleString()} could not be verified. Please resubmit with a clear screenshot.`],
+        [
+          proof.user_id,
+          `Your payment proof of ₦${Number(proof.amount).toLocaleString()} could not be verified. Please resubmit with a clear screenshot.`,
+        ],
       );
 
       return NextResponse.json({ ok: true });
@@ -235,7 +204,10 @@ export async function POST(request: Request) {
         await db.query(
           `INSERT INTO notifications (user_id, title, message, is_read, created_at)
            VALUES ($1, 'Withdrawal Successful', $2, false, NOW())`,
-          [wRows[0].user_id, `Your withdrawal of ₦${Number(wRows[0].amount).toLocaleString()} has been processed.`],
+          [
+            wRows[0].user_id,
+            `Your withdrawal of ₦${Number(wRows[0].amount).toLocaleString()} has been processed.`,
+          ],
         );
       }
 
@@ -257,7 +229,8 @@ export async function POST(request: Request) {
         );
         const wr = wRows[0];
         if (!wr) throw new Error("Withdrawal request not found.");
-        if (wr.status !== "pending") throw new Error("This request has already been processed.");
+        if (wr.status !== "pending")
+          throw new Error("This request has already been processed.");
 
         await client.query(
           `UPDATE withdrawal_requests
@@ -282,7 +255,10 @@ export async function POST(request: Request) {
         await client.query(
           `INSERT INTO notifications (user_id, title, message, is_read, created_at)
            VALUES ($1, 'Withdrawal Reversed', $2, false, NOW())`,
-          [wr.user_id, `Your withdrawal of ₦${Number(wr.amount).toLocaleString()} was not processed and has been returned to your wallet.`],
+          [
+            wr.user_id,
+            `Your withdrawal of ₦${Number(wr.amount).toLocaleString()} was not processed and has been returned to your wallet.`,
+          ],
         );
       });
 

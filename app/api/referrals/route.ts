@@ -23,8 +23,7 @@ export async function GET(request: Request) {
          COUNT(*) FILTER (WHERE NOT r.first_repayment_rewarded)::int                 AS pending_repayment,
          COUNT(*) FILTER (WHERE r.first_withdrawal_rewarded)::int                    AS earned_withdrawal,
          COUNT(*) FILTER (WHERE r.first_repayment_rewarded)::int                     AS earned_repayment,
-         (COUNT(*) FILTER (WHERE r.first_withdrawal_rewarded) * 250
-          + COUNT(*) FILTER (WHERE r.first_repayment_rewarded) * 250)::numeric       AS total_earned
+         COALESCE((SELECT SUM(amount) FROM referral_reward_events WHERE recipient_id = $1), 0)::numeric AS total_earned
        FROM referrals r
        WHERE r.referrer_id = $1`,
       [userId],
@@ -39,13 +38,13 @@ export async function GET(request: Request) {
          p.trust_score                          AS referee_trust_score,
          p.kyc_verified                         AS referee_kyc_verified,
          r.created_at                           AS signed_up_at,
+         r.signup_rewarded,
          r.first_withdrawal_rewarded,
          r.first_repayment_rewarded,
          CASE
-           WHEN NOT p.kyc_verified THEN 'Awaiting KYC'
            WHEN NOT r.first_withdrawal_rewarded THEN 'Awaiting first withdrawal'
            WHEN NOT r.first_repayment_rewarded THEN 'Awaiting first repayment'
-           ELSE 'Rewards complete'
+           ELSE 'Direct referral rewards complete'
          END                                    AS pending_rewards
        FROM referrals r
        JOIN profiles p ON p.id = r.referee_id
