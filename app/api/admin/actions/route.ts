@@ -96,6 +96,7 @@ export async function POST(request: Request) {
 
     // ── Payment proof approve ────────────────────────────────────────────────
     if (action === "approve_payment_proof") {
+      let registrationDepositUserId: string | null = null;
       await withTransaction(async (client) => {
         const { rows: proofRows } = await client.query<{
           id: string;
@@ -144,6 +145,7 @@ export async function POST(request: Request) {
              WHERE id = $2`,
             [Number(proof.amount), proof.user_id],
           );
+          registrationDepositUserId = proof.user_id;
         }
 
         await client.query(
@@ -155,6 +157,38 @@ export async function POST(request: Request) {
           ],
         );
       });
+
+      if (registrationDepositUserId) {
+        const { rows: profileRows } = await db.query<{
+          id: string;
+          first_name: string;
+          last_name: string;
+          email: string;
+          phone: string | null;
+          nin_last4: string | null;
+        }>(
+          `SELECT id, first_name, last_name, email, phone, nin_last4 FROM profiles WHERE id = $1`,
+          [registrationDepositUserId],
+        );
+        const profile = profileRows[0];
+        if (profile) {
+          try {
+            await requestWemaVirtualAccountForKycUser({
+              userId: profile.id,
+              firstName: profile.first_name,
+              lastName: profile.last_name,
+              email: profile.email,
+              phone: profile.phone,
+              ninLast4: profile.nin_last4,
+            });
+          } catch (err) {
+            console.error(
+              "Dedicated wallet account request failed after deposit approval",
+              err,
+            );
+          }
+        }
+      }
 
       return NextResponse.json({ ok: true });
     }

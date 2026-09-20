@@ -194,6 +194,19 @@ test("registration payment details are disclosed only from the authenticated dep
   assert.doesNotMatch(referrals, /registration_deposit_paid/);
 });
 
+test("registration deposit replaces manual wallet funding and provisions the dedicated account", () => {
+  const wallet = read("app/wallet/page.tsx");
+  const fundingRoute = read("app/api/wallet/fund/route.ts");
+  const adminActions = read("app/api/admin/actions/route.ts");
+
+  assert.doesNotMatch(wallet, /Fund Wallet/);
+  assert.doesNotMatch(wallet, /Submit Funding Proof/);
+  assert.doesNotMatch(wallet, /PaystackFundingAccount/);
+  assert.match(fundingRoute, /Manual wallet funding is no longer available/);
+  assert.match(adminActions, /registrationDepositUserId/);
+  assert.match(adminActions, /Dedicated wallet account request failed after deposit approval/);
+});
+
 test("referrals remain available before registration deposit and KYC approval", () => {
   const onboarding = read("components/ProtectedOnboarding.tsx");
   const depositGuard = onboarding.match(/const depositRequiredPrefixes = \[([\s\S]*?)\];/);

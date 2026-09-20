@@ -1,55 +1,14 @@
 import { NextResponse } from "next/server";
-import { getClientIp, isRateLimited } from "@/lib/rate-limit";
-import {
-  errorResponse,
-  readPositiveAmount,
-  requireAuthenticatedUser,
-  tooManyRequestsResponse,
-} from "@/lib/server/auth";
-import { getPlatformAccountDetails } from "@/lib/server/platform-account";
+import { requireAuthenticatedUser } from "@/lib/server/auth";
 
 export async function POST(request: Request) {
-  try {
-    const clientIp = getClientIp(request);
-    if (await isRateLimited(`wallet-fund-ip:${clientIp}`, 100, 15 * 60_000)) {
-      return tooManyRequestsResponse();
-    }
-
-    if (!getPlatformAccountDetails()) {
-      return NextResponse.json(
-        { error: "Payment account details are not configured yet." },
-        { status: 503 },
-      );
-    }
-
-    const auth = await requireAuthenticatedUser(request);
-    if ("response" in auth) return auth.response;
-    if (await isRateLimited(`wallet-fund-user:${auth.user.id}`, 50, 60 * 60_000)) {
-      return tooManyRequestsResponse();
-    }
-
-    const body = await request.json();
-    const amount = readPositiveAmount(body.amount);
-    const reference = String(body.reference || "").trim();
-    const receiptImageUrl = String(body.receiptImageUrl || "").trim();
-
-    if (!receiptImageUrl) {
-      throw new Error("Proof of payment receipt is required.");
-    }
-
-    if (reference.length < 4 || reference.length > 120) {
-      throw new Error("Enter a valid payment reference.");
-    }
-
-    await auth.db.query(
-      `INSERT INTO payment_proofs (
-        user_id, amount, reference, receipt_image_url, type, status, created_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
-      [auth.user.id, amount, reference, receiptImageUrl, "wallet_funding", "pending"],
-    );
-
-    return NextResponse.json({ ok: true });
-  } catch (error) {
-    return errorResponse(error, "Unable to fund wallet.");
-  }
+  const auth = await requireAuthenticatedUser(request);
+  if ("response" in auth) return auth.response;
+  return NextResponse.json(
+    {
+      error:
+        "Manual wallet funding is no longer available. Confirm your registration deposit to receive your dedicated wallet account.",
+    },
+    { status: 410, headers: { "Cache-Control": "no-store" } },
+  );
 }

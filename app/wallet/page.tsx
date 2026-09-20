@@ -9,7 +9,6 @@ import LoadingButton from "@/LoadingButton";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { motion, type Variants } from "framer-motion";
-import PaystackFundingAccount from "@/components/PaystackFundingAccount";
 import { authorizedFetch } from "@/lib/fetch";
 
 type RegistrationDepositAccount = {
@@ -61,16 +60,12 @@ const quickLinks: QuickLink[] = [
 ];
 
 export default function WalletPage() {
-  const [amount, setAmount] = useState("");
-  const [fundingReference, setFundingReference] = useState("");
-  const [fundReceiptFile, setFundReceiptFile] = useState<File | null>(null);
   const [registrationReference, setRegistrationReference] = useState("");
   const [regReceiptFile, setRegReceiptFile] = useState<File | null>(null);
   const [registrationAccount, setRegistrationAccount] =
     useState<RegistrationDepositAccount | null>(null);
   const [isLoadingRegistrationAccount, setIsLoadingRegistrationAccount] = useState(false);
 
-  const fundWallet = useStore((state) => state.fundWallet);
   const confirmRegistrationDeposit = useStore((state) => state.confirmRegistrationDeposit);
   const user = useStore((state) => state.user);
   const activeLoans = useStore((state) => state.activeLoans);
@@ -95,11 +90,6 @@ export default function WalletPage() {
     Boolean(registrationAccount) &&
     registrationReference.trim().length >= 4 &&
     Boolean(regReceiptFile);
-  const fundingProofReady =
-    Boolean(amount) &&
-    Number(amount) > 0 &&
-    fundingReference.trim().length >= 4 &&
-    Boolean(fundReceiptFile);
 
   const handleConfirmRegistrationDeposit = async () => {
     if (!user) {
@@ -116,7 +106,9 @@ export default function WalletPage() {
       toast.error(result.error || "Unable to submit registration deposit");
       throw new Error("Unable to submit");
     }
-    toast.success("Receipt submitted! After approval, complete KYC to unlock full access.");
+    toast.success(
+      "Receipt submitted! After approval, your dedicated wallet account will be created.",
+    );
     setRegistrationReference("");
     setRegReceiptFile(null);
   };
@@ -140,36 +132,6 @@ export default function WalletPage() {
     } finally {
       setIsLoadingRegistrationAccount(false);
     }
-  };
-
-  const handleFund = async () => {
-    if (!user) {
-      toast.error("Please log in first");
-      router.push("/login");
-      return;
-    }
-    const numAmount = Number(amount);
-    if (!Number.isFinite(numAmount) || numAmount <= 0) {
-      toast.error("Please enter a valid amount");
-      return;
-    }
-    if (fundingReference.trim().length < 4) {
-      toast.error("Enter the transfer reference from your bank or Opay receipt");
-      return;
-    }
-    if (!fundReceiptFile) {
-      toast.error("Please upload a proof of payment screenshot");
-      return;
-    }
-    const result = await fundWallet(numAmount, fundingReference, fundReceiptFile);
-    if (!result.ok) {
-      toast.error(result.error || "Unable to submit wallet funding request");
-      throw new Error("Unable to submit request");
-    }
-    toast.success("Receipt submitted! Awaiting approval to credit your wallet.");
-    setAmount("");
-    setFundingReference("");
-    setFundReceiptFile(null);
   };
 
   return (
@@ -376,82 +338,6 @@ export default function WalletPage() {
             </div>
           </Card>
         )}
-
-        {/* Fund wallet */}
-        <Card className="kinetic-border bg-[var(--color-bg-card)] p-5 shadow-[4px_4px_0px_var(--color-shadow)] md:p-10">
-          <h2 className="mb-4 text-xl font-display md:mb-8 md:text-3xl">Fund Wallet</h2>
-
-          <div className="mb-4 md:mb-6">
-            <PaystackFundingAccount />
-          </div>
-
-          <div className="mb-5">
-            <label className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
-              Amount (₦)
-            </label>
-            <input
-              type="number"
-              placeholder="0.00"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 font-mono text-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)] md:text-2xl"
-            />
-          </div>
-
-          <div className="mb-4 md:mb-8">
-            <label className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
-              Transfer Reference
-            </label>
-            <input
-              type="text"
-              placeholder="Bank or Opay receipt reference"
-              value={fundingReference}
-              onChange={(e) => setFundingReference(e.target.value)}
-              className="w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 font-sans text-base focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)]"
-            />
-            <p className="mt-2 text-xs leading-relaxed text-[var(--color-text-secondary)]">
-              Transfer to your dedicated wallet account first, then submit the amount and
-              reference here.
-            </p>
-          </div>
-
-          <div className="mb-4 md:mb-8">
-            <label className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
-              Proof of Payment
-            </label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                if (e.target.files?.[0]) setFundReceiptFile(e.target.files[0]);
-              }}
-              className="hidden"
-              id="fund-receipt-upload"
-            />
-            <label
-              htmlFor="fund-receipt-upload"
-              className="flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] py-4 text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]"
-            >
-              {fundReceiptFile ? (
-                <span className="text-sm font-medium text-[var(--color-positive-text)]">
-                  {fundReceiptFile.name}
-                </span>
-              ) : (
-                <span className="text-sm font-medium">Click to upload screenshot</span>
-              )}
-            </label>
-          </div>
-
-          <div className="w-full [&>button]:w-full">
-            <LoadingButton
-              label="Submit Funding Proof"
-              loadingText="Submitting..."
-              successText="Submitted!"
-              disabled={!fundingProofReady}
-              onClick={handleFund}
-            />
-          </div>
-        </Card>
 
         {/* Quick links to dedicated feature pages */}
         <div className="grid gap-3">
