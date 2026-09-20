@@ -12,7 +12,6 @@ import { getRequiredWithdrawalBalance } from "@/lib/withdrawal";
 import {
   saveToken,
   clearToken,
-  hasToken,
   saveCsrfHeaderValue,
 } from "@/lib/railway/token";
 import {
@@ -320,21 +319,16 @@ export const useStore = create<AppStore>((set, get) => ({
   // ── bootstrap ────────────────────────────────────────────────────────────
 
   initialize: async () => {
-    if (!hasToken()) {
-      set({ isLoading: false });
-      return;
-    }
+    // Authentication is persisted in the HTTP-only `me2u_token` cookie.
+    // Do not gate this on the legacy localStorage token: `saveToken` is a
+    // deliberate no-op, so doing so makes a newly logged-in user look signed
+    // out before the cookie-backed session can be loaded.
     await get().loadCurrentUser();
   },
 
   // ── load session ─────────────────────────────────────────────────────────
 
   loadCurrentUser: async () => {
-    if (!hasToken()) {
-      set(clearSessionState());
-      return { ok: false, error: "Please log in first." };
-    }
-
     if (loadCurrentUserInflight) {
       return loadCurrentUserInflight;
     }

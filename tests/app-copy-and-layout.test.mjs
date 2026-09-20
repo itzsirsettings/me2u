@@ -153,6 +153,19 @@ test("username login and the new loan minimum are wired", () => {
   assert.match(migration, /amount >= 5000\.00/);
 });
 
+test("cookie-backed sessions load after login and registration", () => {
+  const store = read("lib/store.ts");
+  const token = read("lib/railway/token.ts");
+
+  assert.match(store, /initialize: async \(\) => \{[\s\S]*?await get\(\)\.loadCurrentUser\(\);/);
+  assert.doesNotMatch(
+    store,
+    /loadCurrentUser: async \(\) => \{\s*if \(!hasToken\(\)\)/,
+    "cookie-backed sessions must not be rejected because no legacy token is stored",
+  );
+  assert.match(token, /saveToken\(_token: string\) \{\s*return;\s*\}/);
+});
+
 test("auth and identity flows avoid release-blocking shortcuts", () => {
   const otp = read("lib/server/otp.ts");
   const resetPassword = read("app/api/auth/reset-password/route.ts");
