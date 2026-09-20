@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import Me2uIcon from "@/components/Me2uIcon";
-import { backendFetch } from "@/lib/backend-api";
+import { authorizedFetch } from "@/lib/fetch";
 
 type FundingAccount = {
   status?: string;
@@ -21,7 +21,11 @@ export default function PaystackFundingAccount() {
   const loadAccount = async () => {
     setLoading(true);
     try {
-      const data = await backendFetch<FundingAccount>("/api/wallet/virtual-account");
+      const response = await authorizedFetch("/api/wallet/virtual-account");
+      const data = (await response.json()) as FundingAccount & { error?: string };
+      if (!response.ok) {
+        throw new Error(data.error || "Funding account is unavailable.");
+      }
       setAccount(data);
     } catch (error) {
       setAccount({
