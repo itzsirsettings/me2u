@@ -156,6 +156,7 @@ test("username login and the new loan minimum are wired", () => {
 test("cookie-backed sessions load after login and registration", () => {
   const store = read("lib/store.ts");
   const token = read("lib/railway/token.ts");
+  const uploads = read("lib/uploads.ts");
 
   assert.match(store, /initialize: async \(\) => \{[\s\S]*?await get\(\)\.loadCurrentUser\(\);/);
   assert.doesNotMatch(
@@ -164,6 +165,8 @@ test("cookie-backed sessions load after login and registration", () => {
     "cookie-backed sessions must not be rejected because no legacy token is stored",
   );
   assert.match(token, /saveToken\(_token: string\) \{\s*return;\s*\}/);
+  assert.match(uploads, /authorizedFetch\("\/api\/uploads\/private-image"/);
+  assert.doesNotMatch(uploads, /getToken\(\)|Authorization: `Bearer/);
 });
 
 test("auth and identity flows avoid release-blocking shortcuts", () => {

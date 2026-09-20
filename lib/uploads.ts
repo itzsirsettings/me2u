@@ -1,4 +1,4 @@
-import { getToken } from "@/lib/railway/token";
+import { authorizedFetch } from "@/lib/fetch";
 
 export type PrivateImageBucket = "receipts" | "kyc-documents";
 
@@ -13,16 +13,15 @@ export async function uploadPrivateImage(bucket: PrivateImageBucket, userId: str
     throw new Error("Image must be 5MB or smaller.");
   }
 
-  const token = getToken();
-  if (!token) throw new Error("Please log in first.");
-
   const formData = new FormData();
   formData.append("bucket", bucket);
   formData.append("file", file);
 
-  const response = await fetch("/api/uploads/private-image", {
+  // The HTTP-only session cookie is the primary authentication mechanism.
+  // `authorizedFetch` includes credentials and the CSRF header required for
+  // this state-changing, cookie-authenticated request.
+  const response = await authorizedFetch("/api/uploads/private-image", {
     method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
     body: formData,
   });
 
