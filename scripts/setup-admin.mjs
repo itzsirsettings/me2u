@@ -161,7 +161,10 @@ async function setupAdmin() {
   try {
     // Check if admin already exists
     const existing = await pool.query(
-      'SELECT id, email, role FROM auth_users WHERE email = $1',
+      `SELECT a.id, a.email, p.role
+         FROM auth_users a
+         JOIN profiles p ON p.id = a.id
+        WHERE a.email = $1`,
       [ADMIN_EMAIL.toLowerCase()]
     );
     
@@ -208,14 +211,28 @@ async function setupAdmin() {
       await client.query(
         `INSERT INTO profiles (
           id, first_name, last_name, email, phone,
+          username, referral_code, referred_by,
+          country_code, preferred_currency, preferred_language,
           kyc_verified, trust_score, role,
+          registration_deposit_paid, registration_deposit_amount,
+          affiliate_earnings, group_lending_enabled,
+          password_changed_at,
           created_at, updated_at
         ) VALUES (
-          $1, $2, $3, $4, NULL,
+          $1, $2, $3, $4, $5,
+          $6, $7, $8,
+          $9, $10, $11,
           true, 100, 'admin',
+          false, 0,
+          0, false,
+          NOW(),
           NOW(), NOW()
         )`,
-        [userId, ADMIN_FIRST_NAME, ADMIN_LAST_NAME, ADMIN_EMAIL.toLowerCase()]
+        [
+          userId, ADMIN_FIRST_NAME, ADMIN_LAST_NAME, ADMIN_EMAIL.toLowerCase(), null,
+          null, null, null,
+          'NG', 'NGN', 'en'
+        ]
       );
       console.log('   Profile: Created (role=admin)');
       
