@@ -189,6 +189,17 @@ test("registration payment details are disclosed only from the authenticated dep
   assert.doesNotMatch(referrals, /registration_deposit_paid/);
 });
 
+test("referrals remain available before registration deposit and KYC approval", () => {
+  const onboarding = read("components/ProtectedOnboarding.tsx");
+  const depositGuard = onboarding.match(/const depositRequiredPrefixes = \[([\s\S]*?)\];/);
+  const kycGuard = onboarding.match(/const kycRequiredPrefixes = \[([\s\S]*?)\];/);
+
+  assert.ok(depositGuard, "registration-deposit route guard must exist");
+  assert.ok(kycGuard, "KYC route guard must exist");
+  assert.doesNotMatch(depositGuard[1], /"\/referrals"/);
+  assert.doesNotMatch(kycGuard[1], /"\/referrals"/);
+});
+
 test("auth and identity flows avoid release-blocking shortcuts", () => {
   const otp = read("lib/server/otp.ts");
   const resetPassword = read("app/api/auth/reset-password/route.ts");

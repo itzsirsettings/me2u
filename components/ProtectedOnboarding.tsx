@@ -20,20 +20,9 @@ const protectedPrefixes = [
   "/withdraw",
 ];
 
-const depositRequiredPrefixes = [
-  "/kyc",
-  "/loans",
-  "/marketplace",
-  "/referrals",
-  "/withdraw",
-];
+const depositRequiredPrefixes = ["/kyc", "/loans", "/marketplace", "/withdraw"];
 
-const kycRequiredPrefixes = [
-  "/loans",
-  "/marketplace",
-  "/referrals",
-  "/withdraw",
-];
+const kycRequiredPrefixes = ["/loans", "/marketplace", "/withdraw"];
 
 function pathMatches(pathname: string, prefixes: string[]) {
   return prefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
@@ -86,7 +75,11 @@ export default function ProtectedOnboarding() {
       return;
     }
 
-    if (user.registrationDepositPaid && !user.kycVerified && pathMatches(pathname, kycRequiredPrefixes)) {
+    if (
+      user.registrationDepositPaid &&
+      !user.kycVerified &&
+      pathMatches(pathname, kycRequiredPrefixes)
+    ) {
       router.replace("/kyc");
     }
   }, [isAuthenticated, isLoading, pathname, router, user]);
