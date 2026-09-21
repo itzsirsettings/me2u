@@ -1,9 +1,10 @@
 "use client";
 
-import BrandLogo from "@/components/BrandLogo";
 import { usePathname, useRouter } from "next/navigation";
+
+import BrandLogo from "@/components/BrandLogo";
 import Me2uIcon from "@/components/Me2uIcon";
-import NotificationBell from "./NotificationBell";
+import ReferenceNotifications from "@/components/reference/ReferenceNotifications";
 import ThemeToggleIcon from "@/components/ThemeToggleIcon";
 
 const routeTitles: Record<string, string> = {
@@ -35,6 +36,8 @@ const routeTitles: Record<string, string> = {
   "/circles": "Me2U Circles",
   "/deals": "Merchant Deals",
   "/referrals": "Refer & Earn",
+  "/account-unlock": "Unlock your account",
+  "/bills": "Pay bills",
 };
 
 export default function MobileHeader() {
@@ -44,7 +47,7 @@ export default function MobileHeader() {
 
   if (!title) return null;
   // These destination surfaces own their full reference-inspired mastheads.
-  if (["/dashboard", "/profile", "/referrals"].includes(pathname)) return null;
+  if (["/dashboard", "/profile", "/referrals", "/savings"].includes(pathname)) return null;
 
   const handleBack = () => {
     if (pathname === "/dashboard") {
@@ -61,7 +64,7 @@ export default function MobileHeader() {
   };
 
   return (
-    <header className="fixed left-0 right-0 top-0 z-50 bg-[var(--mobile-app-bg)]/95 backdrop-blur md:border-b md:border-[var(--color-glass-border)] md:bg-[var(--color-glass-bg)]">
+    <header className="app-mobile-header fixed left-0 right-0 top-0 z-50 bg-[var(--mobile-app-bg)]/95 backdrop-blur md:border-b md:border-[var(--color-glass-border)] md:bg-[var(--color-glass-bg)]">
       <div className="mx-auto flex min-h-[3.85rem] max-w-7xl items-center justify-between gap-3 px-3.5 pr-3.5 pt-[env(safe-area-inset-top)] md:min-h-[4rem] md:px-3">
         <div className="flex min-w-0 items-center gap-2">
           <button
@@ -74,15 +77,18 @@ export default function MobileHeader() {
             <Me2uIcon name="back" size={20} />
           </button>
           <div className="min-w-0">
-            <BrandLogo src="/me2u_nav_logo.svg" className="hidden h-12 w-36 sm:w-40 md:inline-flex" />
+            <BrandLogo
+              src="/me2u_nav_logo.svg"
+              className="hidden h-12 w-36 sm:w-40 md:inline-flex"
+            />
             <p className="truncate text-[1rem] font-extrabold leading-none tracking-normal text-[var(--color-text-primary)] md:mt-1 md:text-xs md:font-semibold md:uppercase md:tracking-[0.1em] md:text-[var(--color-text-secondary)]">
               {title}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <ThemeToggleIcon className="border-[var(--color-border)] bg-[var(--color-bg-card)] text-[var(--color-text-primary)] hover:border-[var(--color-accent-primary)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-accent-primary)] focus-visible:ring-[var(--color-accent-primary)] focus-visible:ring-offset-[var(--mobile-app-bg)]" />
-          <NotificationBell />
+          <ThemeToggleIcon className="design-icon-button" />
+          <ReferenceNotifications />
         </div>
       </div>
     </header>

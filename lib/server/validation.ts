@@ -22,7 +22,17 @@ export function assertValidEmail(value: unknown, label = "Email"): string {
   return email;
 }
 
-export function readPositiveAmount(value: unknown, label = "Amount", max = MAX_MONEY_AMOUNT): number {
+export function readPositiveAmount(
+  value: unknown,
+  label = "Amount",
+  max = MAX_MONEY_AMOUNT,
+): number {
+  if (typeof value !== "number" && typeof value !== "string") {
+    throw new Error(`${label} must be a valid amount.`);
+  }
+  if (typeof value === "string" && !/^\d+(?:\.\d{1,2})?$/.test(value.trim())) {
+    throw new Error(`${label} must have at most two decimal places.`);
+  }
   const amount = Number(value);
   if (!Number.isFinite(amount) || amount <= 0) {
     throw new Error(`${label} must be greater than zero.`);
@@ -30,7 +40,11 @@ export function readPositiveAmount(value: unknown, label = "Amount", max = MAX_M
   if (amount > max) {
     throw new Error(`${label} must not exceed ₦${max.toLocaleString()}.`);
   }
-  return Math.round(amount * 100) / 100;
+  const cents = Math.round(amount * 100);
+  if (cents < 1 || Math.abs(amount * 100 - cents) > 0.000001) {
+    throw new Error(`${label} must have at most two decimal places.`);
+  }
+  return cents / 100;
 }
 
 export function readOptionalPositiveAmount(value: unknown): number | null {

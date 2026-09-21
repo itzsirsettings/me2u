@@ -9,6 +9,7 @@ export const TOKEN_KEY = "me2u_token";
 export const CSRF_KEY = "me2u_csrf_value";
 
 const legacyTokenFallbackEnabled = () =>
+  process.env.NODE_ENV === "development" &&
   process.env.NEXT_PUBLIC_ENABLE_LEGACY_TOKEN_FALLBACK === "true";
 
 function readLegacyToken(): string | null {

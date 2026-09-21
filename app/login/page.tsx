@@ -9,15 +9,10 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import Me2uIcon from "@/components/Me2uIcon";
 import AuthParticleBackground from "@/components/AuthParticleBackground";
+import { safeNextPath } from "@/lib/navigation";
 
 function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-}
-
-function getSafeNextPath(value: string | null) {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) return null;
-  if (value === "/login" || value === "/register") return null;
-  return value;
 }
 
 export default function Login() {
@@ -55,7 +50,7 @@ export default function Login() {
       throw new Error("Login failed");
     }
 
-    const next = getSafeNextPath(new URLSearchParams(window.location.search).get("next"));
+    const next = safeNextPath(new URLSearchParams(window.location.search).get("next"));
     router.push(next || "/dashboard");
   };
 

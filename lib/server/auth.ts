@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getRailwayDbClient, query } from "@/lib/railway/client";
+import { getRailwayDbClient } from "@/lib/railway/client";
 import { verifyToken, getUserById, isTokenRevoked } from "@/lib/railway/auth";
 import type { JWTPayload } from "@/lib/railway/auth";
 import {
@@ -12,7 +12,7 @@ import {
 import { logApiError, logWarn } from "@/lib/server/logger";
 import type { User } from "@/lib/store";
 
-const maxMoneyAmount = 10_000_000;
+export { readPositiveAmount } from "@/lib/server/validation";
 
 type AuthContext =
   | {
@@ -41,7 +41,7 @@ function csrfFailureResponse(): NextResponse {
     { error: "CSRF validation failed. Refresh the page and try again." },
     { status: 403, headers: { "Cache-Control": "no-store" } },
   );
-  return withClearedAuthCookie(res);
+  return res;
 }
 
 function expiredSessionResponse(): NextResponse {
@@ -147,20 +147,6 @@ export async function requireAdminUser(request: Request): Promise<AdminAuthConte
   }
 
   return auth;
-}
-
-export function readPositiveAmount(value: unknown, label = "Amount", max = maxMoneyAmount) {
-  const amount = Number(value);
-
-  if (!Number.isFinite(amount) || amount <= 0) {
-    throw new Error(`${label} must be greater than zero.`);
-  }
-
-  if (amount > max) {
-    throw new Error(`${label} must not exceed ₦${max.toLocaleString()}.`);
-  }
-
-  return Math.round(amount * 100) / 100;
 }
 
 export function errorResponse(

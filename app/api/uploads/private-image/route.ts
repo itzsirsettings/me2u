@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import { requireAuthenticatedUser } from "@/lib/server/auth";
+import { requireAuthenticatedUser, tooManyRequestsResponse } from "@/lib/server/auth";
+import { isRateLimited } from "@/lib/rate-limit";
+import {
+  maxPrivateImageSizeBytes,
+  privateImageContentType,
+  privateImageValidationError,
+} from "@/lib/private-images";
 
 type PrivateImageBucket = "receipts" | "kyc-documents";
 const allowedBuckets = new Set<PrivateImageBucket>(["receipts", "kyc-documents"]);
-const maxImageSizeBytes = 5 * 1024 * 1024; // 5 MB
 
 function toSafeFileName(name: string) {
   return name.replace(/[^a-zA-Z0-9._-]/g, "-").replace(/-+/g, "-") || "upload";
@@ -23,7 +28,19 @@ export async function POST(request: Request) {
     const auth = await requireAuthenticatedUser(request);
     if ("response" in auth) return auth.response;
 
-    const formData = await request.formData();
+    if (await isRateLimited(`private-upload:${auth.user.id}`, 30, 60 * 60_000)) {
+      return tooManyRequestsResponse("Too many image uploads. Please try again later.");
+    }
+
+    // Reject oversized requests before parsing multipart data; allow room for its headers.
+    const requestSize = Number(request.headers.get("content-length"));
+    if (requestSize > maxPrivateImageSizeBytes + 64 * 1024) {
+      return NextResponse.json({ error: "Image must be 5MB or smaller." }, { status: 413 });
+    }
+    const formData = await request.formData().catch(() => null);
+    if (!formData) {
+      return NextResponse.json({ error: "Send the image as a file upload." }, { status: 400 });
+    }
     const bucket = String(formData.get("bucket") || "");
     const file = formData.get("file");
 
@@ -33,15 +50,20 @@ export async function POST(request: Request) {
     if (!(file instanceof File)) {
       return NextResponse.json({ error: "Upload an image file." }, { status: 400 });
     }
-    if (!file.type.startsWith("image/")) {
-      return NextResponse.json({ error: "Upload an image file." }, { status: 400 });
-    }
-    if (file.size > maxImageSizeBytes) {
-      return NextResponse.json({ error: "Image must be 5 MB or smaller." }, { status: 400 });
+    const validationError = privateImageValidationError(file);
+    if (validationError) {
+      return NextResponse.json({ error: validationError }, { status: 400 });
     }
 
     const arrayBuffer = await file.arrayBuffer();
     const fileBuffer = Buffer.from(arrayBuffer);
+    const contentType = privateImageContentType(fileBuffer);
+    if (!contentType || contentType !== file.type) {
+      return NextResponse.json(
+        { error: "Choose a valid JPG, PNG or WebP image." },
+        { status: 400 },
+      );
+    }
     const fileId = createFileId();
     const safeName = toSafeFileName(file.name);
 
@@ -49,15 +71,17 @@ export async function POST(request: Request) {
       `INSERT INTO private_files
          (id, user_id, bucket, file_name, content_type, size_bytes, data, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
-      [fileId, auth.user.id, bucket, safeName, file.type, file.size, fileBuffer],
+      [fileId, auth.user.id, bucket, safeName, contentType, file.size, fileBuffer],
     );
 
     // Return a path in the same format the rest of the app expects:
-    // "<userId>/<fileId>-<safeName>"  — userId prefix lets the KYC route
-    // verify ownership with a simple startsWith check.
+    // "<userId>/<fileId>-<safeName>" — linkage routes also verify DB ownership.
     const path = `${auth.user.id}/${fileId}-${safeName}`;
 
-    return NextResponse.json({ path });
+    return NextResponse.json(
+      { path },
+      { status: 201, headers: { "Cache-Control": "no-store" } },
+    );
   } catch (error) {
     console.error("Private image upload error:", error);
     return NextResponse.json(

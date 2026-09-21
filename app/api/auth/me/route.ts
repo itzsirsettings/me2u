@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser, errorResponse } from "@/lib/server/auth";
-import { getUserById } from "@/lib/railway/auth";
+import { withFreshCsrfCookie } from "@/lib/server/auth-cookie";
 
 /**
  * GET /api/auth/me
@@ -11,12 +11,10 @@ export async function GET(request: Request) {
     const auth = await requireAuthenticatedUser(request);
     if ("response" in auth) return auth.response;
 
-    const user = await getUserById(auth.user.id);
-    if (!user) {
-      return NextResponse.json({ error: "User not found." }, { status: 404 });
-    }
-
-    return NextResponse.json({ user });
+    return withFreshCsrfCookie(
+      request,
+      NextResponse.json({ user: auth.user }, { headers: { "Cache-Control": "no-store" } }),
+    );
   } catch (error) {
     return errorResponse(error, "Unable to load user.");
   }

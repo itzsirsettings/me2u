@@ -28,12 +28,12 @@ test("dashboard activity indicators are sourced from the current account", () =>
 });
 
 test("private KYC and receipt images remain authorized and visible to the intended viewer", () => {
-  const uploads = read("lib/uploads.ts");
+  const uploads = read("lib/private-images.ts");
   const kyc = read("app/kyc/page.tsx");
   const admin = read("app/admin/page.tsx");
 
   assert.match(uploads, /\/api\/uploads\/file\/\$\{fileId\}/);
-  assert.match(uploads, /\^\(\[0-9a-f-\]\{36\}\)/);
+  assert.match(uploads, /uuidPattern\.test\(fileId\)/);
   assert.match(kyc, /privateImageUrl\(user\.passportPhotoUrl\)/);
   assert.match(kyc, /Selected passport photo preview/);
   assert.match(admin, /src=\{proof\.receipt_signed_url\}/);

@@ -1,6 +1,6 @@
 "use client";
 
-import { getToken, getCsrfHeaderValue } from "@/lib/railway/token";
+import { getToken } from "@/lib/railway/token";
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 
@@ -66,7 +66,7 @@ export async function authorizedFetch(
 ): Promise<Response> {
   const headers = authHeaders(init);
   const method = String(init.method || "GET").toUpperCase();
-  if (method !== "GET" && !headers["Content-Type"]) {
+  if (method !== "GET" && !new Headers(headers).has("content-type")) {
     const hasBody = init.body !== undefined && init.body !== null;
     const isFormData =
       hasBody && typeof FormData !== "undefined" && init.body instanceof FormData;
@@ -80,6 +80,13 @@ export async function authorizedFetch(
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
   const existingSignal = init.signal;
+  const forwardAbort = () => {
+    timeoutController?.abort(
+      existingSignal?.reason ?? new DOMException("Aborted", "AbortError"),
+    );
+  };
+  // An already-cancelled operation must never become a fresh financial request.
+  existingSignal?.throwIfAborted();
 
   if (typeof AbortController !== "undefined") {
     try {
@@ -93,18 +100,7 @@ export async function authorizedFetch(
       }, timeoutMs);
 
       if (existingSignal) {
-        existingSignal.addEventListener(
-          "abort",
-          () => {
-            if (timeoutController && !timeoutController.signal.aborted) {
-              const reason =
-                (existingSignal as unknown as { reason?: unknown }).reason ??
-                new DOMException("Aborted", "AbortError");
-              timeoutController.abort(reason);
-            }
-          },
-          { once: true },
-        );
+        existingSignal.addEventListener("abort", forwardAbort, { once: true });
       }
     } catch {
       timeoutController = null;
@@ -133,6 +129,7 @@ export async function authorizedFetch(
     }
     throw error;
   } finally {
+    existingSignal?.removeEventListener("abort", forwardAbort);
     if (timeoutId !== null) {
       clearTimeout(timeoutId);
     }
@@ -174,8 +171,7 @@ export function makeEffectController(): {
     cancel: () => {
       try {
         controller.abort(new DOMException("Component unmounted", "AbortError"));
-      } catch {
-      }
+      } catch {}
     },
   };
 }

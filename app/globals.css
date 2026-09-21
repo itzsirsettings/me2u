@@ -573,6 +573,13 @@ html[data-theme="dark"] .btn-ghost {
   @apply bg-slate border-snow/10 text-snow placeholder:text-snow/35 focus:border-green;
 }
 
+/* The persistent home navigation is present on mobile and desktop alike. */
+.app-mobile-screen {
+  min-height: 100svh;
+  padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+  scroll-margin-top: calc(5rem + env(safe-area-inset-top));
+}
+
 /* Mobile Specifics */
 @media (max-width: 767px) {
   body {
@@ -580,7 +587,7 @@ html[data-theme="dark"] .btn-ghost {
   }
 
   .app-mobile-screen {
-    @apply w-full min-h-screen bg-transparent pb-[calc(5.65rem+env(safe-area-inset-bottom))];
+    @apply w-full min-h-screen bg-transparent;
     color: var(--color-text-primary);
     background: var(--mobile-screen-bg);
   }

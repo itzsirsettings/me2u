@@ -18,9 +18,7 @@ const SEVEN_DAYS_SECONDS = 60 * 60 * 24 * 7;
 const CSRF_TTL_SECONDS = 60 * 60 * 6; // 6 hours
 
 function getCookieDomain() {
-  return process.env.AUTH_COOKIE_DOMAIN
-    ? `; Domain=${process.env.AUTH_COOKIE_DOMAIN}`
-    : "";
+  return process.env.AUTH_COOKIE_DOMAIN ? `; Domain=${process.env.AUTH_COOKIE_DOMAIN}` : "";
 }
 
 function secureSuffix(): string {
@@ -53,7 +51,11 @@ export function readTokenFromRequest(request: Request): string {
   for (const part of cookies) {
     const [name, ...rest] = part.trim().split("=");
     if (name === AUTH_COOKIE_NAME) {
-      return decodeURIComponent(rest.join("=").trim());
+      try {
+        return decodeURIComponent(rest.join("=").trim());
+      } catch {
+        return "";
+      }
     }
   }
   return "";
@@ -80,9 +82,7 @@ function getCsrfSecret(): Buffer {
 
 export function buildSignedCsrfToken(nonce: string, issuedAt: number): string {
   const payload = `${nonce}:${issuedAt}`;
-  const signature = createHmac("sha256", getCsrfSecret())
-    .update(payload)
-    .digest("base64url");
+  const signature = createHmac("sha256", getCsrfSecret()).update(payload).digest("base64url");
   return `${payload}.${signature}`;
 }
 
@@ -143,7 +143,11 @@ export function readCsrfFromRequest(request: Request): {
   for (const part of cookieHeader.split(";")) {
     const [name, ...rest] = part.trim().split("=");
     if (name === CSRF_COOKIE_NAME) {
-      cookieToken = decodeURIComponent(rest.join("=").trim());
+      try {
+        cookieToken = decodeURIComponent(rest.join("=").trim());
+      } catch {
+        return { headerToken, cookieToken: "" };
+      }
       break;
     }
   }
@@ -160,10 +164,7 @@ export function readCsrfFromRequest(request: Request): {
  *  - If authentication came from cookie, both x-csrf-token header and
  *    me2u_csrf cookie must match and carry a valid signature within TTL.
  */
-export function validateCsrfIfCookieAuth(
-  request: Request,
-  tokenFromCookie: boolean,
-): boolean {
+export function validateCsrfIfCookieAuth(request: Request, tokenFromCookie: boolean): boolean {
   if (!tokenFromCookie) return true;
 
   const { headerToken, cookieToken } = readCsrfFromRequest(request);
@@ -176,7 +177,9 @@ export function validateCsrfIfCookieAuth(
   const now = Math.floor(Date.now() / 1000);
   if (
     headerParsed.issuedAt < now - CSRF_TTL_SECONDS ||
-    cookieParsed.issuedAt < now - CSRF_TTL_SECONDS
+    cookieParsed.issuedAt < now - CSRF_TTL_SECONDS ||
+    headerParsed.issuedAt > now + 60 ||
+    cookieParsed.issuedAt > now + 60
   ) {
     return false;
   }
@@ -187,12 +190,24 @@ export function validateCsrfIfCookieAuth(
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
+/** Renew an expired form token when an authenticated session is read. */
+export function withFreshCsrfCookie<T extends Response>(request: Request, response: T): T {
+  const { cookieToken } = readCsrfFromRequest(request);
+  const parsed = verifySignedCsrfToken(cookieToken);
+  const now = Math.floor(Date.now() / 1000);
+  if (parsed && parsed.issuedAt >= now - CSRF_TTL_SECONDS && parsed.issuedAt <= now + 60) {
+    return response;
+  }
+  const csrf = issueCsrfCookie();
+  response.headers.append("Set-Cookie", csrf.cookie);
+  response.headers.set("x-csrf-token", csrf.headerValue);
+  return response;
+}
+
 /** True iff the active token was read from cookie (not Bearer header). */
 export function isTokenFromCookie(request: Request): boolean {
   const header = request.headers.get("authorization") || "";
   if (header.replace(/^Bearer\s+/i, "").trim()) return false;
   const cookieHeader = request.headers.get("cookie") || "";
-  return cookieHeader
-    .split(";")
-    .some((part) => part.trim().startsWith(`${AUTH_COOKIE_NAME}=`));
+  return cookieHeader.split(";").some((part) => part.trim().startsWith(`${AUTH_COOKIE_NAME}=`));
 }

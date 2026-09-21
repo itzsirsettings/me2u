@@ -1,32 +1,17 @@
 import { authorizedFetch } from "@/lib/fetch";
+import { privateImageValidationError } from "@/lib/private-images";
+
+export { privateImageUrl } from "@/lib/private-images";
 
 export type PrivateImageBucket = "receipts" | "kyc-documents";
-
-const maxImageSizeBytes = 5 * 1024 * 1024;
-
-export function privateImageUrl(path: string | null | undefined): string | null {
-  if (!path) return null;
-  if (/^https?:\/\//i.test(path)) return path;
-  const fileId =
-    path
-      .split("/")
-      .at(-1)
-      ?.match(/^([0-9a-f-]{36})(?:-|$)/i)?.[1] || "";
-  return /^[0-9a-f-]{36}$/i.test(fileId) ? `/api/uploads/file/${fileId}` : null;
-}
 
 export async function uploadPrivateImage(
   bucket: PrivateImageBucket,
   userId: string,
   file: File,
 ): Promise<string> {
-  if (!file.type.startsWith("image/")) {
-    throw new Error("Upload an image file.");
-  }
-
-  if (file.size > maxImageSizeBytes) {
-    throw new Error("Image must be 5MB or smaller.");
-  }
+  const validationError = privateImageValidationError(file);
+  if (validationError) throw new Error(validationError);
 
   const formData = new FormData();
   formData.append("bucket", bucket);

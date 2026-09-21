@@ -1,39 +1,11 @@
 import { NextResponse } from "next/server";
 import { requireAdminUser } from "@/lib/server/auth";
-import { platformLoanRetainedDepositRate } from "@/lib/loans";
+import { getAdminSummary } from "@/lib/server/admin-summary";
+import { privateImageUrl } from "@/lib/private-images";
 
-function isHttpUrl(value: string) {
-  return /^https?:\/\//i.test(value);
-}
-function sumBy<T>(rows: T[], fn: (r: T) => number) {
-  return rows.reduce((s, r) => s + fn(r), 0);
-}
-function sameMonth(value: string) {
-  const d = new Date(value);
-  const n = new Date();
-  return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth();
-}
 function moneyValue(v: unknown) {
   const n = Number(v || 0);
   return Number.isFinite(n) ? n : 0;
-}
-
-/**
- * Converts a stored file path ("<userId>/<fileId>-<safeName>") into the
- * first-party API URL that streams bytes from PostgreSQL.
- * Full HTTP URLs (legacy) are passed through unchanged.
- */
-function fileApiUrl(path: string | null): string | null {
-  if (!path) return null;
-  if (isHttpUrl(path)) return path;
-
-  // Path format: "<userId>/<fileId>-<safeName>"
-  const segments = path.split("/");
-  const fileSegment = segments[segments.length - 1] || "";
-  const fileId = fileSegment.split("-")[0];
-
-  if (!fileId || !/^[0-9a-f-]{36}$/.test(fileId)) return null;
-  return `/api/uploads/file/${fileId}`;
 }
 
 function fullName(row: { first_name?: string; last_name?: string; email?: string } | null) {
@@ -61,8 +33,14 @@ export async function GET(request: Request) {
       revenueRes,
       billTxRes,
     ] = await Promise.all([
-      db.query(`SELECT * FROM profiles ORDER BY created_at DESC LIMIT 500`),
-      db.query(`SELECT * FROM wallets LIMIT 500`),
+      db.query(`SELECT id, first_name, last_name, email, phone, username,
+        kyc_verified, trust_score, bank_name, account_number, role,
+        registration_deposit_paid, registration_deposit_amount,
+        registration_deposit_confirmed_at, passport_photo_url, affiliate_earnings,
+        partner_offer_consent_at, created_at, updated_at
+        FROM profiles ORDER BY created_at DESC LIMIT 500`),
+      db.query(`SELECT w.* FROM wallets w JOIN
+        (SELECT id FROM profiles ORDER BY created_at DESC LIMIT 500) p ON p.id = w.user_id`),
       db.query(`SELECT * FROM transactions ORDER BY created_at DESC LIMIT 250`),
       db.query(`SELECT * FROM loans ORDER BY created_at DESC LIMIT 250`),
       db.query(`SELECT * FROM marketplace_items ORDER BY created_at DESC LIMIT 250`),
@@ -91,14 +69,16 @@ export async function GET(request: Request) {
       profiles.map(async (p: any) => {
         const wallet = walletsByUserId.get(p.id) || null;
         const userTx = transactions.filter((t: any) => t.user_id === p.id);
-        const userLoans = loans.filter((l: any) => l.borrower_id === p.id || l.lender_id === p.id);
+        const userLoans = loans.filter(
+          (l: any) => l.borrower_id === p.id || l.lender_id === p.id,
+        );
         return {
           ...p,
           full_name: fullName(p),
           wallet,
           wallet_balance: moneyValue(wallet?.balance),
           wallet_locked: moneyValue(wallet?.locked),
-          passport_signed_url: fileApiUrl(p.passport_photo_url),
+          passport_signed_url: privateImageUrl(p.passport_photo_url),
           transaction_count: userTx.length,
           loan_count: userLoans.length,
           pending_payment_proofs: paymentProofs.filter(
@@ -118,7 +98,7 @@ export async function GET(request: Request) {
           ...proof,
           user_name: fullName(profile as any),
           user_email: (profile as any)?.email || "",
-          receipt_signed_url: fileApiUrl(proof.receipt_image_url),
+          receipt_signed_url: privateImageUrl(proof.receipt_image_url),
         };
       }),
     );
@@ -134,98 +114,7 @@ export async function GET(request: Request) {
       };
     });
 
-    const approvedProofs = paymentProofs.filter((p: any) => p.status === "approved");
-    const pendingProofs = paymentProofs.filter((p: any) => p.status === "pending");
-    const pendingWithdrawals = withdrawalRequests.filter((w: any) => w.status === "pending");
-    const approvedWithdrawals = withdrawalRequests.filter((w: any) => w.status === "success");
-    const activeLoans = loans.filter((l: any) => l.status === "active");
-    const platformLoans = loans.filter((l: any) => l.lender_id === null);
-    const revenueEventTotal = sumBy(revenueEvents, (e: any) => moneyValue(e.amount));
-    const revenueEventsThisMonth = revenueEvents.filter((e: any) => sameMonth(e.created_at));
-
-    const summary = {
-      users: profiles.length,
-      verified_users: profiles.filter((p: any) => p.kyc_verified).length,
-      admins: profiles.filter((p: any) => p.role === "admin").length,
-      wallet_liability: sumBy(wallets, (w: any) => moneyValue(w.balance) + moneyValue(w.locked)),
-      revenue:
-        sumBy(
-          approvedProofs.filter((p: any) => p.type === "registration_deposit"),
-          (p: any) => moneyValue(p.amount),
-        ) + revenueEventTotal,
-      income: sumBy(approvedProofs, (p: any) => moneyValue(p.amount)) + revenueEventTotal,
-      expenses:
-        sumBy(approvedWithdrawals, (w: any) => moneyValue(w.amount)) +
-        sumBy(affiliateRewards, (r: any) => moneyValue(r.amount)),
-      withdrawal_fee_revenue: sumBy(
-        revenueEvents.filter((e: any) => e.type === "withdrawal_fee"),
-        (e: any) => moneyValue(e.amount),
-      ),
-      marketplace_boost_revenue: sumBy(
-        revenueEvents.filter((e: any) => e.type === "marketplace_boost"),
-        (e: any) => moneyValue(e.amount),
-      ),
-      treasury_partner_revenue: sumBy(
-        revenueEvents.filter((e: any) => e.type === "partner_treasury_share"),
-        (e: any) => moneyValue(e.amount),
-      ),
-      partner_leads: profiles.filter((p: any) => Boolean(p.partner_offer_consent_at)).length,
-      affiliate_funding: sumBy(affiliateRewards, (r: any) => moneyValue(r.amount)),
-      pending_funding_amount: sumBy(
-        pendingProofs.filter((p: any) => p.type === "wallet_funding"),
-        (p: any) => moneyValue(p.amount),
-      ),
-      pending_registration_amount: sumBy(
-        pendingProofs.filter((p: any) => p.type === "registration_deposit"),
-        (p: any) => moneyValue(p.amount),
-      ),
-      pending_withdrawal_amount: sumBy(pendingWithdrawals, (w: any) => moneyValue(w.amount)),
-      pending_withdrawal_fees: sumBy(pendingWithdrawals, (w: any) => moneyValue(w.fee_amount)),
-      active_loan_exposure: sumBy(activeLoans, (l: any) => moneyValue(l.amount)),
-      platform_loan_exposure: sumBy(
-        platformLoans.filter((l: any) => l.status === "active"),
-        (l: any) => moneyValue(l.amount),
-      ),
-      marketplace_active: marketplaceItems.filter((i: any) => i.status === "active").length,
-      total_bills_processed: billTransactions.length,
-      successful_bills: billTransactions.filter((t: any) => t.status === "successful").length,
-      failed_bills: billTransactions.filter((t: any) =>
-        ["failed", "reversed", "refunded"].includes(t.status),
-      ).length,
-      pending_bills: billTransactions.filter((t: any) =>
-        ["initiated", "debited", "pending"].includes(t.status),
-      ).length,
-      total_bill_profit: sumBy(
-        billTransactions.filter((t: any) => t.status === "successful"),
-        (t: any) => moneyValue(t.profit),
-      ),
-      retained_float: sumBy(
-        platformLoans.filter((l: any) => l.status === "active"),
-        (l: any) => moneyValue(l.amount) * platformLoanRetainedDepositRate,
-      ),
-      month_revenue:
-        sumBy(
-          approvedProofs.filter(
-            (p: any) => p.type === "registration_deposit" && sameMonth(p.created_at),
-          ),
-          (p: any) => moneyValue(p.amount),
-        ) + sumBy(revenueEventsThisMonth, (e: any) => moneyValue(e.amount)),
-      month_income:
-        sumBy(
-          approvedProofs.filter((p: any) => sameMonth(p.created_at)),
-          (p: any) => moneyValue(p.amount),
-        ) + sumBy(revenueEventsThisMonth, (e: any) => moneyValue(e.amount)),
-      month_expenses:
-        sumBy(
-          approvedWithdrawals.filter((w: any) => sameMonth(w.created_at)),
-          (w: any) => moneyValue(w.amount),
-        ) +
-        sumBy(
-          affiliateRewards.filter((r: any) => sameMonth(r.created_at)),
-          (r: any) => moneyValue(r.amount),
-        ),
-    };
-
+    const summary = await getAdminSummary(db);
     return NextResponse.json({
       generated_at: new Date().toISOString(),
       summary,

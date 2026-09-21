@@ -13,6 +13,7 @@ const account = {
   phone: null,
   bankName: null as string | null,
   accountNumber: null as string | null,
+  passportPhotoUrl: null as string | null,
   balance: 0,
   locked: 0,
   trustScore: 50,
@@ -214,6 +215,15 @@ test.describe("reference account surfaces", () => {
     }
   });
 
+  test("admin accounts can reach the review dashboard from their profile", async ({ page }) => {
+    await mockAccount(page, { user: { role: "admin" } });
+    await page.goto("/profile");
+    await expect(page.getByRole("link", { name: "Open Admin Dashboard" })).toHaveAttribute(
+      "href",
+      "/admin",
+    );
+  });
+
   test("profile state and theme preferences persist", async ({ page }) => {
     await mockAccount(page, {
       user: { kycVerified: true, bankName: "Example Bank", accountNumber: "1234567890" },
@@ -249,6 +259,82 @@ test.describe("reference account surfaces", () => {
     await expect(page).toHaveURL(/\/$/);
   });
 
+  test("balance controls align with each other and the withdrawal action at every width", async ({
+    page,
+  }) => {
+    await mockAccount(page, { user: { balance: 1234567.89 } });
+    await page.goto("/dashboard");
+    for (const width of [320, 390, 470, 1280]) {
+      await page.setViewportSize({ width, height: 900 });
+      const eye = await page.getByRole("button", { name: "Hide balance" }).boundingBox();
+      const bell = await page.getByRole("button", { name: "Open notifications" }).boundingBox();
+      const withdraw = await page.locator(".design-withdraw").boundingBox();
+      expect(eye).not.toBeNull();
+      expect(bell).not.toBeNull();
+      expect(withdraw).not.toBeNull();
+      expect(
+        Math.abs(eye!.y + eye!.height / 2 - bell!.y - bell!.height / 2),
+      ).toBeLessThanOrEqual(1);
+      expect(
+        Math.abs(bell!.x + bell!.width / 2 - withdraw!.x - withdraw!.width / 2),
+      ).toBeLessThanOrEqual(1);
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+      ).toBe(true);
+    }
+  });
+
+  test("pending KYC shows the stored photo and can update bank details without reuploading it", async ({
+    page,
+  }) => {
+    const user = {
+      id: "e2f7e540-6d8a-4ec1-b026-6eece1904c83",
+      bankName: "Example Bank",
+      accountNumber: "1234567890",
+      passportPhotoUrl:
+        "e2f7e540-6d8a-4ec1-b026-6eece1904c83/7b3bff9c-85fc-4d4f-a180-aa8893587804-passport.png",
+    };
+    await mockAccount(page, { user });
+    await page.route("**/api/uploads/file/*", (route) =>
+      route.fulfill({
+        contentType: "image/png",
+        body: Buffer.from(
+          "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aD1sAAAAASUVORK5CYII=",
+          "base64",
+        ),
+      }),
+    );
+    let submitted: Record<string, string> | null = null;
+    let uploads = 0;
+    await page.route("**/api/uploads/private-image", (route) => {
+      uploads += 1;
+      return route.fulfill({ status: 500, json: {} });
+    });
+    await page.route("**/api/onboarding/kyc", async (route) => {
+      submitted = route.request().postDataJSON() as Record<string, string>;
+      user.bankName = submitted.bankName;
+      await route.fulfill({ json: { success: true, status: "pending_review" } });
+    });
+    await page.goto("/kyc");
+    const photo = page.getByRole("img", { name: "Submitted passport photo" });
+    await expect(photo).toBeVisible();
+    await expect
+      .poll(() => photo.evaluate((image) => (image as HTMLImageElement).naturalWidth))
+      .toBeGreaterThan(0);
+    await page.getByRole("button", { name: "Update submission" }).click();
+    await expect(page.getByLabel("Bank Name", { exact: true })).toHaveValue("Example Bank");
+    await page.getByLabel("Bank Name", { exact: true }).fill("Updated Bank");
+    await page.getByRole("button", { name: "Save updated submission" }).click();
+    await expect(page.getByRole("heading", { name: "KYC Under Review" })).toBeVisible();
+    await expect(page.getByText("Updated Bank", { exact: true })).toBeVisible();
+    expect(submitted).toEqual({
+      bankName: "Updated Bank",
+      accountNumber: user.accountNumber,
+      passportPhotoUrl: user.passportPhotoUrl,
+    });
+    expect(uploads).toBe(0);
+  });
+
   test("referral QR, details, leaderboard, and share fallback remain accessible", async ({
     page,
     context,
@@ -257,7 +343,8 @@ test.describe("reference account surfaces", () => {
     await mockAccount(page, { populated: true });
     await page.goto("/referrals");
     await expect(page.locator(".design-stat").nth(2)).toContainText("₦3,000");
-    await expect(page.locator(".design-stat").nth(3)).toContainText("₦5,000");
+    await expect(page.locator(".design-stat").nth(3)).toContainText("Pending milestones");
+    await expect(page.locator(".design-stat").nth(3)).toContainText("0");
     await page.getByRole("button", { name: "Copy referral link", exact: true }).click();
     expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/\/r\/obsfood$/);
     await page.evaluate(() =>
@@ -265,7 +352,7 @@ test.describe("reference account surfaces", () => {
     );
     await page.getByRole("button", { name: "Share", exact: true }).click();
     expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/\/r\/obsfood$/);
-    await page.getByRole("link", { name: "Open referral QR code" }).click();
+    await page.getByRole("link", { name: "Open Refer & Earn" }).click();
     await expect(page).toHaveURL(/panel=qr/);
     await expect(page.getByRole("dialog", { name: "Your referral QR code" })).toBeVisible();
     await expect(page.getByRole("img", { name: "Referral invite QR code" })).toBeVisible();

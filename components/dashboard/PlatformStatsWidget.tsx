@@ -3,30 +3,13 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { TrendingUp, Users, Award, Target } from "lucide-react";
-
-type PlatformStats = {
-  totalBorrowed: number;
-  totalRepaid: number;
-  activeCircles: number;
-  totalUsers: number;
-  successfulLoans: number;
-  activeLoans: number;
-  trustScoreAvg: number;
-};
-
-const defaultStats: PlatformStats = {
-  totalBorrowed: 0,
-  totalRepaid: 0,
-  activeCircles: 0,
-  totalUsers: 0,
-  successfulLoans: 0,
-  activeLoans: 0,
-  trustScoreAvg: 85,
-};
+import type { PlatformStats } from "@/lib/server/platform-stats";
 
 export default function PlatformStatsWidget() {
-  const [stats, setStats] = useState<PlatformStats>(defaultStats);
+  const [stats, setStats] = useState<PlatformStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -37,13 +20,16 @@ export default function PlatformStatsWidget() {
           cache: "no-store",
         });
         const data = await response.json();
-
-        if (!cancelled && data.ok && data.stats) {
-          setStats(data.stats);
-          setLoading(false);
+        if (!response.ok || !data.ok || !data.stats) {
+          throw new Error("Platform statistics unavailable.");
         }
-      } catch (error) {
-        console.error("Failed to load platform stats:", error);
+        if (!cancelled) {
+          setStats(data.stats);
+          setFailed(false);
+        }
+      } catch {
+        if (!cancelled) setFailed(true);
+      } finally {
         if (!cancelled) setLoading(false);
       }
     };
@@ -55,7 +41,30 @@ export default function PlatformStatsWidget() {
       cancelled = true;
       clearInterval(interval);
     };
-  }, []);
+  }, [attempt]);
+
+  if (!stats) {
+    return (
+      <div className="rounded-2xl border border-border bg-card p-4" role="status">
+        <p className="text-sm text-muted-foreground">
+          {loading ? "Loading community activity…" : "Community activity is unavailable."}
+        </p>
+        {failed && (
+          <button
+            type="button"
+            className="mt-3 text-sm font-semibold text-primary"
+            onClick={() => {
+              setLoading(true);
+              setFailed(false);
+              setAttempt((value) => value + 1);
+            }}
+          >
+            Try again
+          </button>
+        )}
+      </div>
+    );
+  }
 
   const statCards = [
     {
@@ -67,14 +76,14 @@ export default function PlatformStatsWidget() {
     },
     {
       icon: Users,
-      label: "Trusted Members",
+      label: "Community Members",
       value: loading ? "—" : stats.totalUsers.toLocaleString(),
       subtitle: `${stats.activeCircles} active circles`,
       color: "text-blue-500",
     },
     {
       icon: Award,
-      label: "Success Rate",
+      label: "Loans Repaid",
       value: loading
         ? "—"
         : `${Math.round((stats.successfulLoans / Math.max(stats.successfulLoans + stats.activeLoans, 1)) * 100)}%`,
@@ -84,14 +93,20 @@ export default function PlatformStatsWidget() {
     {
       icon: Target,
       label: "Trust Score",
-      value: loading ? "—" : `${Math.round(stats.trustScoreAvg)}/100`,
-      subtitle: "Community average",
+      value: stats.trustScoreAvg === null ? "—" : `${Math.round(stats.trustScoreAvg)}/100`,
+      subtitle:
+        stats.trustScoreAvg === null ? "No verified members yet" : "Verified member average",
       color: "text-purple-500",
     },
   ];
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {failed && (
+        <p className="col-span-full text-xs text-muted-foreground" role="status">
+          Showing the last loaded activity. Refresh will retry automatically.
+        </p>
+      )}
       {statCards.map((stat, index) => (
         <motion.div
           key={stat.label}
@@ -105,9 +120,7 @@ export default function PlatformStatsWidget() {
               <stat.icon className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-2xl font-black text-card-foreground mb-1">
-            {stat.value}
-          </p>
+          <p className="text-2xl font-black text-card-foreground mb-1">{stat.value}</p>
           <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-1">
             {stat.label}
           </p>

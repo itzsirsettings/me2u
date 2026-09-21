@@ -62,7 +62,10 @@ export async function GET(request: Request) {
       total_earned: 0,
     };
 
-    return NextResponse.json({ stats, referrals: detailRows });
+    return NextResponse.json(
+      { stats: { ...stats, total_earned: Number(stats.total_earned) }, referrals: detailRows },
+      { headers: { "Cache-Control": "no-store" } },
+    );
   } catch (error) {
     return errorResponse(error, "Failed to fetch referrals.");
   }

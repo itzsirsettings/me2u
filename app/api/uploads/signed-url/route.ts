@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/lib/server/auth";
+import { privateImageFileId } from "@/lib/private-images";
 
 /**
  * POST /api/uploads/signed-url
@@ -21,20 +22,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Only admins can view this file." }, { status: 403 });
     }
 
-    const body = await request.json();
+    const body = await request.json().catch(() => ({}));
     const path = String(body.path || "").trim();
 
     if (!path) {
       return NextResponse.json({ error: "A storage path is required." }, { status: 400 });
     }
 
-    // Path format: "<userId>/<fileId>-<safeName>"
-    // The fileId is the UUID segment between "/" and the first "-".
-    const segments = path.split("/");
-    const fileSegment = segments[segments.length - 1] || "";
-    const fileId = fileSegment.split("-")[0];
-
-    if (!fileId || !/^[0-9a-f-]{36}$/.test(fileId)) {
+    const fileId = privateImageFileId(path);
+    if (!fileId) {
       return NextResponse.json({ error: "Invalid storage path." }, { status: 400 });
     }
 
@@ -42,7 +38,10 @@ export async function POST(request: Request) {
     // the Railway JWT attached, same as any other API call.
     const fileUrl = `/api/uploads/file/${fileId}`;
 
-    return NextResponse.json({ signedUrl: fileUrl });
+    return NextResponse.json(
+      { signedUrl: fileUrl },
+      { headers: { "Cache-Control": "no-store" } },
+    );
   } catch (error) {
     console.error("File URL error:", error);
     return NextResponse.json({ error: "Unable to generate file URL." }, { status: 500 });

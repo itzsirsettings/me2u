@@ -160,6 +160,13 @@ export default function Profile() {
           <ChevronRight size={20} aria-hidden="true" />
         </Link>
       </section>
+      {user.role === "admin" && (
+        <Link href="/admin" className="design-security-button">
+          <ReferenceIcon name="shield" size={24} />
+          Open Admin Dashboard
+          <ChevronRight size={19} aria-hidden="true" />
+        </Link>
+      )}
       <ThemeModeSelector variant="reference" />
       <Link href="/security" className="design-security-button">
         <ShieldCheck size={24} aria-hidden="true" />

@@ -142,13 +142,21 @@ function ReferralsContent() {
   useEffect(() => {
     if (!userId) return;
     const controller = new AbortController();
-    void Promise.all([
-      loadResource<ReferralData>("/api/referrals", controller.signal),
-      loadResource<ChallengeData>("/api/referrals/challenges", controller.signal),
-      loadResource<MilestoneData>("/api/referrals/milestones", controller.signal),
-      loadResource<LeaderData>("/api/referrals/leaderboard?period=current", controller.signal),
-      loadResource<UnlockStatus>("/api/account/unlock", controller.signal),
-    ]).then(([a, b, c, d, e]) => {
+    let inFlight = false;
+    const refresh = async () => {
+      if (inFlight || document.visibilityState === "hidden") return;
+      inFlight = true;
+      const [a, b, c, d, e] = await Promise.all([
+        loadResource<ReferralData>("/api/referrals", controller.signal),
+        loadResource<ChallengeData>("/api/referrals/challenges", controller.signal),
+        loadResource<MilestoneData>("/api/referrals/milestones", controller.signal),
+        loadResource<LeaderData>(
+          "/api/referrals/leaderboard?period=current",
+          controller.signal,
+        ),
+        loadResource<UnlockStatus>("/api/account/unlock", controller.signal),
+      ]);
+      inFlight = false;
       if (controller.signal.aborted) return;
       setReferral(a);
       setChallenge(b);
@@ -156,8 +164,20 @@ function ReferralsContent() {
       setLeaders(d);
       setUnlock(e);
       setLoading(false);
-    });
-    return () => controller.abort();
+    };
+    void refresh();
+    const onFocus = () => {
+      void refresh();
+    };
+    const timer = window.setInterval(onFocus, 60_000);
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+    return () => {
+      controller.abort();
+      window.clearInterval(timer);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
+    };
   }, [userId, attempt]);
 
   function closePanel() {

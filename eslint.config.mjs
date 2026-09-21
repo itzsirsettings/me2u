@@ -4,7 +4,17 @@ import reactHooks from "eslint-plugin-react-hooks";
 import importPlugin from "eslint-plugin-import";
 
 export default tseslint.config(
-  { ignores: ["node_modules/**", ".next/**", "out/**", "coverage/**", "supabase/functions/**", "server/dist/**"] },
+  {
+    ignores: [
+      "node_modules/**",
+      ".next/**",
+      ".kilo/**",
+      "out/**",
+      "coverage/**",
+      "supabase/functions/**",
+      "server/dist/**",
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
   {
@@ -22,7 +32,10 @@ export default tseslint.config(
     rules: {
       ...reactHooks.configs.recommended.rules,
       "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      ],
       "@typescript-eslint/no-floating-promises": "error",
       "@typescript-eslint/await-thenable": "error",
       "import/order": [
@@ -37,11 +50,34 @@ export default tseslint.config(
     },
   },
   {
-    files: ["**/*.mjs", "**/*.js", "scripts/**"],
+    files: ["**/*.mjs", "**/*.js", "**/*.cjs", "scripts/**"],
     ...tseslint.configs.disableTypeChecked,
+    languageOptions: {
+      globals: {
+        process: "readonly",
+        console: "readonly",
+        Buffer: "readonly",
+        Request: "readonly",
+        Response: "readonly",
+        Headers: "readonly",
+        File: "readonly",
+        FormData: "readonly",
+        TextEncoder: "readonly",
+        AbortController: "readonly",
+        URL: "readonly",
+        fetch: "readonly",
+        setTimeout: "readonly",
+        clearTimeout: "readonly",
+      },
+    },
+  },
+  {
+    files: ["**/*.cjs"],
+    languageOptions: { sourceType: "commonjs" },
+    rules: { "@typescript-eslint/no-require-imports": "off" },
   },
   {
     files: ["tests/e2e/**"],
     rules: { "@typescript-eslint/no-explicit-any": "off" },
-  }
+  },
 );

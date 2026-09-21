@@ -1,53 +1,35 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/railway/client";
+import { logApiError } from "@/lib/server/logger";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
+    const { rows } = await query<Record<string, string>>(`SELECT
+      COALESCE(SUM(amount), 0)::text AS "processedAmount",
+      COUNT(*) FILTER (WHERE type = 'loan_repayment')::text AS "successfulRepayments",
+      COUNT(DISTINCT user_id) FILTER (WHERE created_at >= NOW() - INTERVAL '30 days')::text AS "activeUsers",
+      (SELECT COUNT(*)::text FROM profiles) AS "totalUsers",
+      (SELECT COUNT(*)::text FROM profiles WHERE kyc_verified = true) AS "verifiedWallets",
+      (SELECT COUNT(*)::text FROM loans WHERE status = 'completed') AS "completedLoans",
+      COUNT(DISTINCT user_id) FILTER (WHERE type = 'affiliate_reward')::text AS "usersRewarded",
+      COUNT(*) FILTER (WHERE type = 'affiliate_reward')::text AS "referralsPaid"
+    FROM transactions`);
+    if (!rows[0]) throw new Error("Platform metrics query returned no result.");
 
-    const [
-      txResult,
-      repaymentResult,
-      activeUserResult,
-      rewardResult,
-      totalUsersResult,
-      verifiedUsersResult,
-      completedLoansResult,
-    ] = await Promise.all([
-      query<{ amount: number }>(`SELECT amount FROM transactions`),
-      query<{ id: string }>(`SELECT id FROM transactions WHERE type = 'loan_repayment'`),
-      query<{ user_id: string }>(
-        `SELECT DISTINCT user_id FROM transactions WHERE created_at >= $1`,
-        [since],
-      ),
-      query<{ referrer_id: string }>(`SELECT referrer_id FROM affiliate_rewards`),
-      query<{ count: string }>(`SELECT COUNT(*)::text AS count FROM profiles`),
-      query<{ count: string }>(`SELECT COUNT(*)::text AS count FROM profiles WHERE kyc_verified = true`),
-      query<{ count: string }>(`SELECT COUNT(*)::text AS count FROM loans WHERE status = 'completed'`),
-    ]);
-
-    const processedAmount = txResult.rows.reduce((s, r) => s + Number(r.amount || 0), 0);
-    const activeUsers = new Set(activeUserResult.rows.map((r) => r.user_id)).size;
-    const referralsPaid = rewardResult.rows.length;
-    const usersRewarded = new Set(rewardResult.rows.map((r) => r.referrer_id)).size;
-
-    return NextResponse.json({
-      ok: true,
-      metrics: {
-        processedAmount,
-        totalUsers: parseInt(totalUsersResult.rows[0]?.count || "0", 10),
-        activeUsers,
-        verifiedWallets: parseInt(verifiedUsersResult.rows[0]?.count || "0", 10),
-        completedLoans: parseInt(completedLoansResult.rows[0]?.count || "0", 10),
-        usersRewarded,
-        referralsPaid,
-        successfulRepayments: repaymentResult.rows.length,
-      },
-    });
+    const metrics = Object.fromEntries(
+      Object.entries(rows[0]).map(([key, value]) => [key, Number(value)]),
+    );
+    return NextResponse.json(
+      { ok: true, metrics },
+      { headers: { "Cache-Control": "no-store" } },
+    );
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unable to load platform metrics.";
-    return NextResponse.json({ error: message }, { status: 400 });
+    logApiError("platform-metrics", error);
+    return NextResponse.json(
+      { ok: false, error: "Unable to load platform metrics." },
+      { status: 500 },
+    );
   }
 }

@@ -6,6 +6,7 @@ import {
   tooManyRequestsResponse,
 } from "@/lib/server/auth";
 import { getPlatformAccountDetails } from "@/lib/server/platform-account";
+import { privateImageFileId } from "@/lib/private-images";
 
 export async function GET(request: Request) {
   try {
@@ -56,6 +57,24 @@ export async function POST(request: Request) {
     if (!receiptImageUrl) throw new Error("Proof of payment receipt is required.");
     if (reference.length < 4 || reference.length > 120)
       throw new Error("Enter a valid payment reference.");
+
+    const fileId = privateImageFileId(receiptImageUrl);
+    if (!fileId || !receiptImageUrl.startsWith(`${auth.user.id}/`)) {
+      return NextResponse.json(
+        { error: "Upload your payment receipt before submitting." },
+        { status: 400 },
+      );
+    }
+    const { rows: receipts } = await auth.db.query(
+      `SELECT id FROM private_files WHERE id = $1 AND user_id = $2 AND bucket = 'receipts'`,
+      [fileId, auth.user.id],
+    );
+    if (!receipts.length) {
+      return NextResponse.json(
+        { error: "Upload your payment receipt before submitting." },
+        { status: 400 },
+      );
+    }
 
     await auth.db.query(
       `INSERT INTO payment_proofs

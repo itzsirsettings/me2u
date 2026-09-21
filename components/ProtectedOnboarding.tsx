@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
+
+import { safeNextPath } from "@/lib/navigation";
 import { useStore, type User } from "@/lib/store";
 
 const authRoutes = new Set(["/login", "/register"]);
@@ -17,6 +19,10 @@ const protectedPrefixes = [
   "/security",
   "/wallet",
   "/withdraw",
+  "/savings",
+  "/circles",
+  "/deals",
+  "/account-unlock",
 ];
 
 const depositRequiredPrefixes = ["/kyc", "/loans", "/marketplace", "/withdraw"];
@@ -25,12 +31,6 @@ const kycRequiredPrefixes = ["/loans", "/marketplace", "/withdraw"];
 
 function pathMatches(pathname: string, prefixes: string[]) {
   return prefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
-}
-
-function safeNextPath(value: string | null) {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) return null;
-  if (authRoutes.has(value)) return null;
-  return value;
 }
 
 function getOnboardingTarget(user: User | null) {
@@ -48,7 +48,9 @@ export default function ProtectedOnboarding() {
   const isLoading = useStore((state) => state.isLoading);
 
   useEffect(() => {
-    if (isLoading) return;
+    // AuthBootstrap starts hydration in an earlier effect; read its latest state
+    // instead of redirecting from the initial unauthenticated render snapshot.
+    if (isLoading || useStore.getState().isLoading) return;
 
     const fullPath = `${pathname}${window.location.search || ""}`;
     const isProtectedPath = pathMatches(pathname, protectedPrefixes);

@@ -9,6 +9,9 @@ export async function GET(request: Request) {
     const userId = auth.user.id;
     const url = new URL(request.url);
     const period = url.searchParams.get("period") || "current"; // 'current' or 'previous'
+    if (period !== "current" && period !== "previous") {
+      return NextResponse.json({ error: "Invalid leaderboard period." }, { status: 400 });
+    }
 
     // Calculate month boundaries
     const now = new Date();
@@ -16,11 +19,11 @@ export async function GET(request: Request) {
     let monthEnd: Date;
 
     if (period === "previous") {
-      monthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      monthEnd = new Date(now.getFullYear(), now.getMonth(), 1);
+      monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
+      monthEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
     } else {
-      monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+      monthEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
     }
 
     // Get current month's live leaderboard (not finalized)
@@ -40,7 +43,7 @@ export async function GET(request: Request) {
              COUNT(*) as referral_count,
              COUNT(*) FILTER (WHERE r.first_withdrawal_rewarded = true) as verified_referral_count,
              ROW_NUMBER() OVER (
-               ORDER BY COUNT(*) FILTER (WHERE r.first_withdrawal_rewarded = true) DESC
+               ORDER BY COUNT(*) FILTER (WHERE r.first_withdrawal_rewarded = true) DESC, r.referrer_id
              ) as rank
            FROM referrals r
            JOIN profiles p ON p.id = r.referrer_id
@@ -79,12 +82,13 @@ export async function GET(request: Request) {
                COUNT(*) as referral_count,
                COUNT(*) FILTER (WHERE r.first_withdrawal_rewarded = true) as verified_referral_count,
                ROW_NUMBER() OVER (
-                 ORDER BY COUNT(*) FILTER (WHERE r.first_withdrawal_rewarded = true) DESC
+                 ORDER BY COUNT(*) FILTER (WHERE r.first_withdrawal_rewarded = true) DESC, r.referrer_id
                ) as rank
              FROM referrals r
              JOIN profiles p ON p.id = r.referrer_id
              WHERE r.created_at >= $1 AND r.created_at < $2
              GROUP BY r.referrer_id, p.username
+             HAVING COUNT(*) FILTER (WHERE r.first_withdrawal_rewarded = true) > 0
            )
            SELECT 
              referrer_id as user_id,
@@ -97,9 +101,7 @@ export async function GET(request: Request) {
           [monthStart.toISOString(), monthEnd.toISOString(), userId],
         );
 
-        userPosition = userRows[0]
-          ? { ...userRows[0], is_current_user: true }
-          : undefined;
+        userPosition = userRows[0] ? { ...userRows[0], is_current_user: true } : undefined;
       }
 
       // Prize structure for top 10
@@ -148,13 +150,13 @@ export async function GET(request: Request) {
          rl.rank,
          rl.prize_amount,
          rl.prize_paid,
-         (rl.user_id = $3) as is_current_user
+         (rl.user_id = $2) as is_current_user
        FROM referral_leaderboard rl
        JOIN profiles p ON p.id = rl.user_id
        WHERE rl.month_start = $1::date
        ORDER BY rl.rank ASC
        LIMIT 50`,
-      [monthStart.toISOString().split("T")[0], monthEnd.toISOString().split("T")[0], userId],
+      [monthStart.toISOString().split("T")[0], userId],
     );
 
     const userPosition = finalizedRows.find((row) => row.is_current_user);

@@ -7,7 +7,7 @@ let pool: Pool | null = null;
 export function hasRailwayDbConfig() {
   return Boolean(
     process.env.DATABASE_URL ||
-      (process.env.PGHOST && process.env.PGPASSWORD && process.env.PGDATABASE),
+    (process.env.PGHOST && process.env.PGPASSWORD && process.env.PGDATABASE),
   );
 }
 
@@ -66,7 +66,7 @@ export function getRailwayDbClient(): Pool {
       // Set PGSSLMODE=verify-full to enforce strict certificate validation
       const rejectUnauthorized = process.env.PGSSLMODE === "verify-full";
       ssl = { rejectUnauthorized };
-      
+
       if (process.env.PGSSLROOTCERT) {
         ssl = { ...ssl, ca: process.env.PGSSLROOTCERT };
       }
@@ -89,7 +89,9 @@ export function getRailwayDbClient(): Pool {
       max: Number(process.env.PG_MAX_POOL_SIZE ?? 20),
       min: 0,
       allowExitOnIdle: true,
-      ...({ acquireTimeoutMillis: Number(process.env.PG_ACQUIRE_TIMEOUT_MS ?? 15_000) } as Record<string, unknown>),
+      ...({
+        acquireTimeoutMillis: Number(process.env.PG_ACQUIRE_TIMEOUT_MS ?? 15_000),
+      } as Record<string, unknown>),
     });
 
     pool.on("error", (err) => {
@@ -120,7 +122,7 @@ export async function query<T = Record<string, unknown>>(
 }
 
 /**
- * Single-shot user-scoped query (no explicit tx). For multi-statement use withUserTransaction.
+ * Single user-scoped query. For multi-statement use withUserTransaction.
  * Sets `app.current_user_id` as a local session variable so RLS policies
  * using `public.app_user_id()` work correctly.
  */
@@ -129,14 +131,10 @@ export async function queryAsUser<T = Record<string, unknown>>(
   text: string,
   params?: unknown[],
 ): Promise<{ rows: T[] }> {
-  const client = await getRailwayDbClient().connect();
-  try {
-    await client.query("SELECT set_config('app.current_user_id', $1, true)", [userId]);
+  return withUserTransaction(userId, async (client) => {
     const result = await client.query(text, params);
     return { rows: result.rows as T[] };
-  } finally {
-    client.release();
-  }
+  });
 }
 
 /**
@@ -173,9 +171,7 @@ export async function withUserTransaction<T>(
  * Run multiple statements inside a plain transaction (no user scoping).
  * Use for admin operations that bypass RLS.
  */
-export async function withTransaction<T>(
-  fn: (client: PoolClient) => Promise<T>,
-): Promise<T> {
+export async function withTransaction<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
   const client = await getRailwayDbClient().connect();
   try {
     await client.query("BEGIN");

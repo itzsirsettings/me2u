@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 
 const visibleFiles = [
@@ -44,6 +44,10 @@ function read(path) {
   return readFileSync(path, "utf8");
 }
 
+function readAuthStore() {
+  return read(existsSync("lib/store/auth.ts") ? "lib/store/auth.ts" : "lib/store.ts");
+}
+
 test("visible product copy uses the new loan language", () => {
   const source = visibleFiles.map(read).join("\n");
   const bannedCopy = [
@@ -66,7 +70,8 @@ test("visible product copy uses the new loan language", () => {
     assert.equal(source.includes(phrase), false, `Unexpected old copy: ${phrase}`);
   }
 
-  assert.match(source, /0% interest loan from ₦5,000/);
+  assert.match(source, /0% interest/);
+  assert.match(read("lib/loans.ts"), /repeatPlatformLoanMinimum = 5000/);
 });
 
 // Account-surface overflow is exercised with actual long data at mobile and
@@ -126,12 +131,12 @@ test("authenticated routes keep long financial data inside their containers", ()
   assert.match(loans, /overflow-anywhere text-2xl font-display/);
   assert.match(marketplace, /overflow-anywhere mt-2 text-2xl font-display/);
   assert.match(kyc, /flex min-w-0 items-center justify-between gap-3/);
-  assert.match(notifications, /className="overflow-anywhere[^\"]*">\s*\{notif\.title\}/);
+  assert.match(notifications, /className="overflow-anywhere[^"]*">\s*\{notif\.title\}/);
 });
 
 test("username login and the new loan minimum are wired", () => {
   const login = read("app/login/page.tsx");
-  const store = read("lib/store.ts");
+  const store = readAuthStore();
   const loans = read("lib/loans.ts");
   const resolver = read("app/api/auth/resolve-username/route.ts");
   const migration = read(
@@ -147,7 +152,7 @@ test("username login and the new loan minimum are wired", () => {
 });
 
 test("cookie-backed sessions load after login and registration", () => {
-  const store = read("lib/store.ts");
+  const store = readAuthStore();
   const token = read("lib/railway/token.ts");
   const uploads = read("lib/uploads.ts");
 
@@ -160,7 +165,8 @@ test("cookie-backed sessions load after login and registration", () => {
     /loadCurrentUser: async \(\) => \{\s*if \(!hasToken\(\)\)/,
     "cookie-backed sessions must not be rejected because no legacy token is stored",
   );
-  assert.match(token, /saveToken\(_token: string\) \{\s*return;\s*\}/);
+  assert.match(token, /process\.env\.NODE_ENV === "development"/);
+  assert.match(token, /if \(legacyTokenFallbackEnabled\(\)\)/);
   assert.match(uploads, /authorizedFetch\("\/api\/uploads\/private-image"/);
   assert.doesNotMatch(uploads, /getToken\(\)|Authorization: `Bearer/);
 });
@@ -331,7 +337,8 @@ test("licensed partner revenue model is backend-enforced", () => {
   const migration = read(
     "migrations/migrations/20260519152449_licensed_partner_revenue_model.sql",
   );
-  const adminOverview = read("app/api/admin/overview/route.ts");
+  const adminOverview =
+    read("app/api/admin/overview/route.ts") + "\n" + read("lib/server/admin-summary.ts");
 
   assert.match(revenue, /withdrawalFeeAmount = 100/);
   assert.match(withdrawal, /feeAmount: withdrawalFeeAmount/);

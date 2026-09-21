@@ -6,9 +6,34 @@ import { useStore } from "@/lib/store";
 import LoadingButton from "@/LoadingButton";
 import { authorizedFetch } from "@/lib/fetch";
 import { privateImageUrl, uploadPrivateImage } from "@/lib/uploads";
+import { privateImageAccept, privateImageValidationError } from "@/lib/private-images";
 
 function toErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Something went wrong. Please try again.";
+}
+
+function SubmittedPassport({ src }: { src: string }) {
+  const [failed, setFailed] = useState(false);
+  return (
+    <figure className="mx-auto mt-5 max-w-48">
+      {failed ? (
+        <p
+          role="status"
+          className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3 text-sm text-[var(--color-text-secondary)]"
+        >
+          Your saved photo could not be loaded. You can replace it while review is pending, or
+          contact support.
+        </p>
+      ) : (
+        <img
+          src={src}
+          alt="Submitted passport photo"
+          onError={() => setFailed(true)}
+          className="mx-auto h-40 w-32 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] object-contain"
+        />
+      )}
+    </figure>
+  );
 }
 
 export default function KYCPage() {
@@ -23,7 +48,19 @@ export default function KYCPage() {
   const [passportFile, setPassportFile] = useState<File | null>(null);
   const [passportPreviewUrl, setPassportPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [isEditingSubmission, setIsEditingSubmission] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    if (!passportFile) {
+      setPassportPreviewUrl(null);
+      return;
+    }
+    const previewUrl = URL.createObjectURL(passportFile);
+    setPassportPreviewUrl(previewUrl);
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [passportFile]);
 
   useEffect(() => {
     setMounted(true);
@@ -70,6 +107,9 @@ export default function KYCPage() {
         <p className="max-w-md text-[var(--color-text-secondary)]">
           Your identity has been verified. You now have full Me2U access.
         </p>
+        {submittedPassportUrl && (
+          <SubmittedPassport key={submittedPassportUrl} src={submittedPassportUrl} />
+        )}
         <button
           onClick={() => router.push("/dashboard")}
           className="btn-primary mt-5 h-11 px-5 md:mt-8 md:h-12 md:px-6"
@@ -101,7 +141,9 @@ export default function KYCPage() {
     );
   }
 
-  if (user.passportPhotoUrl && user.bankName && user.accountNumber) {
+  const hasSubmittedKyc = Boolean(user.passportPhotoUrl && user.bankName && user.accountNumber);
+
+  if (hasSubmittedKyc && !isEditingSubmission) {
     return (
       <div className="app-mobile-screen mx-auto flex w-full max-w-lg flex-col items-center justify-center px-3.5 pt-[4.85rem] text-center md:py-24">
         <div className="mb-4 grid h-16 w-16 place-items-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-warning-bg)] text-[var(--color-warning-text)] shadow-[3px_3px_0px_var(--color-shadow)]">
@@ -128,12 +170,30 @@ export default function KYCPage() {
           and lending after review.
         </p>
         {submittedPassportUrl && (
-          <img
-            src={submittedPassportUrl}
-            alt="Submitted passport photo"
-            className="mt-5 h-28 w-28 rounded-full border-2 border-[var(--color-border)] object-cover shadow-[3px_3px_0px_var(--color-shadow)]"
-          />
+          <SubmittedPassport key={submittedPassportUrl} src={submittedPassportUrl} />
         )}
+        <dl className="mt-5 w-full max-w-sm space-y-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 text-sm">
+          <div className="flex items-start justify-between gap-4">
+            <dt className="text-[var(--color-text-secondary)]">Bank</dt>
+            <dd className="text-right font-semibold">{user.bankName}</dd>
+          </div>
+          <div className="flex items-start justify-between gap-4">
+            <dt className="text-[var(--color-text-secondary)]">Account</dt>
+            <dd className="font-mono">••••••{user.accountNumber?.slice(-4)}</dd>
+          </div>
+        </dl>
+        <button
+          type="button"
+          onClick={() => {
+            setBankName(user.bankName || "");
+            setAccountNumber(user.accountNumber || "");
+            setError("");
+            setIsEditingSubmission(true);
+          }}
+          className="btn-secondary mt-5 min-h-11 px-5"
+        >
+          Update submission
+        </button>
         <button
           onClick={() => router.push("/dashboard")}
           className="btn-primary mt-5 h-11 px-5 md:mt-8 md:h-12 md:px-6"
@@ -146,22 +206,34 @@ export default function KYCPage() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
+    const validationError = file ? privateImageValidationError(file) : null;
+    if (validationError) {
+      setError(validationError);
+      e.target.value = "";
+      setPassportFile(null);
+      return;
+    }
+    setError("");
     setPassportFile(file);
-    setPassportPreviewUrl((previous) => {
-      if (previous) URL.revokeObjectURL(previous);
-      return file ? URL.createObjectURL(file) : null;
-    });
   };
 
   const submitKyc = async () => {
     setError("");
-    if (!bankName || !accountNumber || !passportFile) {
-      setError("Please fill in all fields and upload a passport photograph.");
+    if (isSubmitting) return;
+    if (
+      bankName.trim().length < 2 ||
+      !/^\d{10}$/.test(accountNumber) ||
+      (!passportFile && !submittedPassportUrl)
+    ) {
+      setError("Enter your bank name, 10-digit account number and a passport photograph.");
       throw new Error("Validation failed");
     }
 
+    setIsSubmitting(true);
     try {
-      const filePath = await uploadPrivateImage("kyc-documents", user.id, passportFile);
+      const filePath = passportFile
+        ? await uploadPrivateImage("kyc-documents", user.id, passportFile)
+        : user.passportPhotoUrl;
 
       const response = await authorizedFetch("/api/onboarding/kyc", {
         method: "POST",
@@ -185,13 +257,12 @@ export default function KYCPage() {
       }
 
       setPassportFile(null);
-      setPassportPreviewUrl((previous) => {
-        if (previous) URL.revokeObjectURL(previous);
-        return null;
-      });
+      setIsEditingSubmission(false);
     } catch (err) {
       setError(toErrorMessage(err));
       throw err;
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -202,9 +273,30 @@ export default function KYCPage() {
           Verify Identity
         </h1>
         <p className="text-base leading-relaxed font-sans italic opacity-90 text-[var(--color-text-secondary)] md:text-xl">
-          Complete KYC to unlock full access
+          {isEditingSubmission
+            ? "Update your pending KYC submission"
+            : "Complete KYC to unlock full access"}
         </p>
       </div>
+
+      {isEditingSubmission && (
+        <div className="mb-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 text-sm text-[var(--color-text-secondary)]">
+          Your existing submission stays in place until you save. A replacement photo is
+          optional if your current photo is correct.
+          <button
+            type="button"
+            disabled={isSubmitting}
+            onClick={() => {
+              setIsEditingSubmission(false);
+              setPassportFile(null);
+              setError("");
+            }}
+            className="mt-2 block min-h-11 font-semibold text-[var(--color-accent-primary)] underline underline-offset-4"
+          >
+            Cancel changes
+          </button>
+        </div>
+      )}
 
       <div className="mb-4 flex items-start gap-3 rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3.5 text-left md:mb-6">
         <span aria-hidden className="shrink-0 text-sm">
@@ -221,7 +313,10 @@ export default function KYCPage() {
 
       <div className="space-y-5 rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[4px_4px_0px_var(--color-shadow)] md:space-y-8 md:p-8 kinetic-border">
         {error && (
-          <div className="flex min-w-0 items-center gap-3 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-negative-bg)] p-4 text-[var(--color-negative-text)]">
+          <div
+            role="alert"
+            className="flex min-w-0 items-center gap-3 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-negative-bg)] p-4 text-[var(--color-negative-text)]"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -260,7 +355,9 @@ export default function KYCPage() {
             <input
               id="bank-name"
               type="text"
+              maxLength={80}
               value={bankName}
+              disabled={isSubmitting}
               onChange={(e) => setBankName(e.target.value)}
               title="Bank Name"
               className="w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3 text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)] focus:border-[var(--color-accent-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-accent-primary)] transition-all font-sans"
@@ -277,8 +374,11 @@ export default function KYCPage() {
             <input
               id="account-number"
               type="text"
+              inputMode="numeric"
+              pattern="[0-9]{10}"
               value={accountNumber}
-              onChange={(e) => setAccountNumber(e.target.value)}
+              disabled={isSubmitting}
+              onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ""))}
               title="Account Number"
               className="w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3 text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)] focus:border-[var(--color-accent-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-accent-primary)] transition-all font-mono"
               placeholder="10 digit number"
@@ -298,17 +398,21 @@ export default function KYCPage() {
             Upload a clear, recent passport photograph of yourself.
           </p>
           <div className="relative">
+            {!passportFile && submittedPassportUrl && (
+              <SubmittedPassport key={submittedPassportUrl} src={submittedPassportUrl} />
+            )}
             <input
               type="file"
-              accept="image/*"
+              disabled={isSubmitting}
+              accept={privateImageAccept}
               onChange={handleFileChange}
-              className="hidden"
+              className="peer sr-only"
               id="passport-upload"
               title="Upload Passport"
             />
             <label
               htmlFor="passport-upload"
-              className="flex w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-[5px] border-2 border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] py-8 transition-colors hover:border-[var(--color-accent-primary)]/50 hover:bg-[var(--color-bg-card)]"
+              className="flex w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-[5px] border-2 border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] py-8 transition-colors hover:border-[var(--color-accent-primary)]/50 hover:bg-[var(--color-bg-card)] peer-focus-visible:outline-2 peer-focus-visible:outline-offset-4 peer-focus-visible:outline-[var(--color-accent-primary)]"
             >
               {passportFile ? (
                 <>
@@ -316,7 +420,7 @@ export default function KYCPage() {
                     <img
                       src={passportPreviewUrl}
                       alt="Selected passport photo preview"
-                      className="h-24 w-24 rounded-full border-2 border-[var(--color-positive-text)] object-cover"
+                      className="h-40 w-32 rounded-xl border-2 border-[var(--color-positive-text)] object-contain"
                     />
                   )}
                   <svg
@@ -357,7 +461,9 @@ export default function KYCPage() {
                     <line x1="12" y1="3" x2="12" y2="15"></line>
                   </svg>
                   <span className="text-sm font-bold font-sans text-[var(--color-text-primary)]">
-                    Click to upload image
+                    {submittedPassportUrl
+                      ? "Choose a replacement photo"
+                      : "Choose passport photo"}
                   </span>
                   <span className="text-xs font-sans text-[var(--color-text-secondary)]">
                     JPG, PNG or WEBP (Max 5MB)
@@ -410,7 +516,10 @@ export default function KYCPage() {
         </div>
 
         <div className="pt-4 w-full">
-          <LoadingButton onClick={submitKyc} label="Submit KYC Verification" />
+          <LoadingButton
+            onClick={submitKyc}
+            label={isEditingSubmission ? "Save updated submission" : "Submit KYC Verification"}
+          />
         </div>
       </div>
     </div>

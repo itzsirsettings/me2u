@@ -1,4 +1,12 @@
-import type { CSSProperties, ReactNode } from "react";
+"use client";
+
+import type { ReactNode } from "react";
+
+import {
+  FilledIcon,
+  referenceIconShapes,
+  type ReferenceIconName,
+} from "@/components/reference/ReferenceIcon";
 
 export const me2uIcons: Record<string, ReactNode> = {
   app: (
@@ -557,6 +565,19 @@ type Me2uIconProps = {
   decorative?: boolean;
 };
 
+// Keep legacy names usable while every service uses the same home-screen glyph.
+const referenceAliases: Partial<Record<string, ReferenceIconName>> = {
+  profile: "user",
+  referral: "users",
+  group: "users",
+  family: "users",
+  deal: "tag",
+  loans: "wallet",
+  moneyBag: "wallet",
+  security: "secure",
+  checkCircle: "check",
+};
+
 export default function Me2uIcon({
   name,
   size = 24,
@@ -564,24 +585,14 @@ export default function Me2uIcon({
   label,
   decorative = true,
 }: Me2uIconProps) {
+  const referenceName = referenceAliases[name] || name;
+  const shape = referenceIconShapes[referenceName as ReferenceIconName] || me2uIcons[name];
   return (
-    <svg
-      viewBox="0 0 24 24"
-      width={size}
-      height={size}
+    <FilledIcon
+      shape={shape}
+      size={size}
       className={className}
-      fill="currentColor"
-      stroke="currentColor"
-      strokeWidth={1.65}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      focusable="false"
-      aria-hidden={decorative ? "true" : undefined}
-      role={decorative ? undefined : "img"}
-      aria-label={decorative ? undefined : label || `${name} icon`}
-      style={{ flexShrink: 0, vectorEffect: "non-scaling-stroke" } as CSSProperties}
-    >
-      {me2uIcons[name]}
-    </svg>
+      label={decorative ? undefined : label || `${name} icon`}
+    />
   );
 }

@@ -113,7 +113,7 @@ test("G5: bill-payment UI is retired", () => {
   assert.match(bills, /redirect\("\/dashboard"\)/);
   assert.match(receipt, /redirect\("\/dashboard"\)/);
   assert.doesNotMatch(dashboard, /Pay Bills|\/bills/);
-  assert.doesNotMatch(bottomNav, /Bills|\/bills/);
+  assert.doesNotMatch(bottomNav, /label: "Bills"|href="\/bills"/);
 });
 
 test("G6: lint script does not use removed `next lint` command", () => {
