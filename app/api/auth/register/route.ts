@@ -52,6 +52,16 @@ function registrationErrorResponse(error: unknown) {
     );
   }
 
+  if (
+    normalized.includes("auth_users_registration_phone_unique") ||
+    normalized.includes("profiles_registration_phone_unique")
+  ) {
+    return NextResponse.json(
+      { error: "This phone number is already associated with an account. Please sign in." },
+      { status: 409, headers: { "Cache-Control": "no-store" } },
+    );
+  }
+
   return NextResponse.json(
     { error: message },
     { status: 400, headers: { "Cache-Control": "no-store" } },

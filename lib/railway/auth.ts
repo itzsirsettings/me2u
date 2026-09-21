@@ -39,17 +39,17 @@ function getRevokeRedis(): Redis | null {
 function getJwtSecret(): string {
   const secret = process.env.AUTH_TOKEN_SECRET;
   if (!secret) throw new Error("AUTH_TOKEN_SECRET environment variable is required");
-  
+
   // Enforce secret separation in production (AUTH-006)
   if (process.env.NODE_ENV === "production") {
     const otpSecret = process.env.OTP_SIGNING_SECRET;
     if (otpSecret && secret === otpSecret) {
       throw new Error(
-        "SECURITY: AUTH_TOKEN_SECRET and OTP_SIGNING_SECRET must be different in production"
+        "SECURITY: AUTH_TOKEN_SECRET and OTP_SIGNING_SECRET must be different in production",
       );
     }
   }
-  
+
   return secret;
 }
 
@@ -101,18 +101,15 @@ export async function generateToken(
       `INSERT INTO auth_sessions (session_id, user_id, jwt_id, user_agent, ip, created_at, expires_at)
        VALUES (gen_random_uuid(), $1, $2, $3, $4::inet, NOW(), to_timestamp($5)::timestamptz)
        ON CONFLICT (jwt_id) DO NOTHING`,
-      [
-        payload.userId,
-        jti,
-        ua,
-        clientIp,
-        expiresAt,
-      ],
+      [payload.userId, jti, ua, clientIp, expiresAt],
     );
   } catch (err) {
     // Non-fatal: token is still valid; revocation checks use Redis too.
     try {
-      baseLogger.warn({ err: err instanceof Error ? err.message : String(err) }, "[auth_session_insert_failed]");
+      baseLogger.warn(
+        { err: err instanceof Error ? err.message : String(err) },
+        "[auth_session_insert_failed]",
+      );
     } catch {
       // ignore
     }
@@ -189,7 +186,10 @@ export async function isTokenRevoked(payload: JWTPayload): Promise<boolean> {
   } catch (err) {
     // Fail-closed for DB errors during revocation check; surface to caller.
     try {
-      baseLogger.warn({ err: err instanceof Error ? err.message : String(err), jti: payload.jti }, "[revoke_check_db_error]");
+      baseLogger.warn(
+        { err: err instanceof Error ? err.message : String(err), jti: payload.jti },
+        "[revoke_check_db_error]",
+      );
     } catch {
       // ignore
     }
@@ -218,7 +218,10 @@ export async function revokeTokenByJti(jti: string, userId: string): Promise<voi
   }
 }
 
-export async function revokeAllSessionsForUser(userId: string, touchPasswordChanged = true): Promise<void> {
+export async function revokeAllSessionsForUser(
+  userId: string,
+  touchPasswordChanged = true,
+): Promise<void> {
   const redis = getRevokeRedis();
   try {
     const { rows } = await query<{ jwt_id: string | null }>(
@@ -243,10 +246,9 @@ export async function revokeAllSessionsForUser(userId: string, touchPasswordChan
         [userId],
       );
       if (touchPasswordChanged) {
-        await client.query(
-          `UPDATE profiles SET password_changed_at = NOW() WHERE id = $1`,
-          [userId],
-        );
+        await client.query(`UPDATE profiles SET password_changed_at = NOW() WHERE id = $1`, [
+          userId,
+        ]);
       }
     });
   } catch {
@@ -353,8 +355,8 @@ export async function createUser(
   return withTransaction(async (client) => {
     // 1. Insert into auth_users
     const authResult = await client.query<{ id: string }>(
-      `INSERT INTO auth_users (email, password_hash, first_name, last_name, phone)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO auth_users (email, password_hash, first_name, last_name, phone, email_verified)
+       VALUES ($1, $2, $3, $4, $5, true)
        RETURNING id`,
       [
         params.email.toLowerCase(),
