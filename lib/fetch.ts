@@ -43,11 +43,7 @@ export function authHeaders(init?: RequestInit): Record<string, string> {
     headers["Authorization"] = `Bearer ${bearer}`;
   }
 
-  let csrf = csrfFromCookie();
-  if (!csrf) {
-    const saved = getCsrfHeaderValue();
-    if (saved) csrf = saved;
-  }
+  const csrf = csrfFromCookie();
   if (csrf && !headers["x-csrf-token"] && !headers["X-CSRF-Token"]) {
     headers["x-csrf-token"] = csrf;
   }

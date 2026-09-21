@@ -141,6 +141,9 @@ export async function POST(request: Request) {
              SET registration_deposit_paid = true,
                  registration_deposit_confirmed_at = NOW(),
                  registration_deposit_amount = $1,
+                 account_unlocked = true,
+                 unlock_method = 'registration_deposit',
+                 account_unlock_paid_at = NOW(),
                  updated_at = NOW()
              WHERE id = $2`,
             [Number(proof.amount), proof.user_id],

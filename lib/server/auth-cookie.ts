@@ -116,16 +116,21 @@ export function issueCsrfCookie(): { cookie: string; headerValue: string } {
   const signed = buildSignedCsrfToken(nonce, issuedAt);
   const cookie =
     `${CSRF_COOKIE_NAME}=${encodeURIComponent(signed)}` +
-    `; Path=/; SameSite=Lax; Max-Age=${CSRF_TTL_SECONDS}` +
+    `; Path=/; SameSite=Strict; Max-Age=${CSRF_TTL_SECONDS}` +
     `${getCookieDomain()}${secureSuffix()}`;
   return { cookie, headerValue: signed };
 }
 
 export function buildClearedCsrfCookie(): string {
   return (
-    `${CSRF_COOKIE_NAME}=; Path=/; SameSite=Lax; Max-Age=0` +
+    `${CSRF_COOKIE_NAME}=; Path=/; SameSite=Strict; Max-Age=0` +
     `${getCookieDomain()}${secureSuffix()}`
   );
+}
+
+export function withClearedCsrfCookie<T extends Response>(response: T): T {
+  response.headers.append("Set-Cookie", buildClearedCsrfCookie());
+  return response;
 }
 
 export function readCsrfFromRequest(request: Request): {

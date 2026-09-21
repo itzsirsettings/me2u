@@ -460,6 +460,14 @@ export const useStore = create<AppStore>((set, get) => ({
   // ── logout ────────────────────────────────────────────────────────────────
 
   logout: async () => {
+    try {
+      await authorizedFetch("/api/auth/logout", {
+        method: "POST",
+      });
+    } catch {
+      // Best-effort: the server is authoritative for session revocation.
+    }
+
     clearToken();
     set(clearSessionState());
   },
@@ -519,7 +527,11 @@ export const useStore = create<AppStore>((set, get) => ({
       reference: normalizedReference,
       receiptImageUrl,
     });
-    if (result.ok) await get().loadCurrentUser();
+    if (result.ok) {
+      await get().loadCurrentUser();
+      const refreshed = await get().loadCurrentUser();
+      if (!refreshed.ok) return refreshed;
+    }
     return result;
   },
 

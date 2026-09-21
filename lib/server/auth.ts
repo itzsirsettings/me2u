@@ -130,7 +130,7 @@ function buildAuthCookieRaw(token: string): string {
   const domain = process.env.AUTH_COOKIE_DOMAIN
     ? `; Domain=${process.env.AUTH_COOKIE_DOMAIN}`
     : "";
-  return `me2u_token=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${SEVEN_DAYS_SECONDS}${domain}${secure}`;
+  return `me2u_token=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${SEVEN_DAYS_SECONDS}${domain}${secure}`;
 }
 
 export async function requireAdminUser(request: Request): Promise<AdminAuthContext> {
