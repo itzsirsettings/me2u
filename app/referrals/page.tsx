@@ -200,7 +200,7 @@ function ReferralsContent() {
   };
   if (!user) return <ReferenceScreen kind="referrals" ready={false} />;
   const stats = referral.data?.stats;
-  const potential = stats ? stats.total_referrals * 2500 : null;
+  const pendingMilestones = stats ? stats.pending_withdrawal + stats.pending_repayment : null;
   const unlockText = unlock.data ? unlockCopy(unlock.data) : null;
   const hasError = [referral, challenge, milestones, leaders, unlock].some(
     (resource) => resource.error,
@@ -326,8 +326,8 @@ function ReferralsContent() {
         <Stat label="Verified" value={numberLabel(user.verifiedReferralCount)} icon="check" />
         <Stat label="Earned" value={numberLabel(stats?.total_earned, true)} icon="wallet" />
         <Stat
-          label="Potential"
-          value={numberLabel(potential ?? undefined, true)}
+          label="Pending milestones"
+          value={numberLabel(pendingMilestones ?? undefined)}
           icon="market"
         />
       </section>

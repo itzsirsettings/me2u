@@ -1,21 +1,20 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { QrCode } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 
-import Me2uIcon, { type Me2uIconName } from "@/components/Me2uIcon";
 import { ReferenceIcon, type ReferenceIconName } from "@/components/reference/ReferenceUI";
 
-const navItems: Array<{ label: string; icon: Me2uIconName; path: string }> = [
-  { label: "Home", icon: "home", path: "/dashboard" },
-  { label: "Market", icon: "market", path: "/marketplace" },
-  { label: "Wallet", icon: "wallet", path: "/wallet" },
-  { label: "Profile", icon: "profile", path: "/profile" },
-];
+const navItems = [
+  { label: "Home", path: "/dashboard" },
+  { label: "Market", path: "/marketplace" },
+  { label: "Wallet", path: "/wallet" },
+  { label: "Profile", path: "/profile" },
+] as const;
 
-// Routes where the bottom nav should stay visible even though they aren't top-level nav items
+// Secondary application screens retain the same persistent shell so navigation
+// never changes shape as people move through their account journey.
 const extraNavRoutes = [
   "/savings",
   "/circles",
@@ -26,98 +25,51 @@ const extraNavRoutes = [
   "/learn",
   "/security",
   "/withdraw",
+  "/bills",
+  "/account-unlock",
   "/support",
   "/admin",
 ];
 
+const icons: ReferenceIconName[] = ["home", "market", "wallet", "user"];
+
 export default function BottomNav() {
   const pathname = usePathname();
-  const router = useRouter();
-  const activePath = pathname;
   const showNav =
     navItems.some(
       (item) =>
-        item.path === activePath ||
+        item.path === pathname ||
         (item.path !== "/dashboard" && pathname.startsWith(item.path)),
-    ) || extraNavRoutes.some((route) => pathname === route || pathname.startsWith(route + "/"));
+    ) || extraNavRoutes.some((route) => pathname === route || pathname.startsWith(`${route}/`));
 
   if (!showNav) return null;
-
-  if (["/dashboard", "/profile", "/referrals"].includes(pathname)) {
-    const icons: ReferenceIconName[] = ["home", "market", "wallet", "user"];
-    return (
-      <nav
-        aria-label="Primary navigation"
-        className={`design-reference-nav ${pathname === "/referrals" ? "design-nav-referrals" : ""}`}
-      >
-        <div>
-          {navItems.map((item, index) => (
-            <Link
-              key={item.path}
-              href={item.path}
-              aria-current={pathname === item.path ? "page" : undefined}
-            >
-              <ReferenceIcon name={icons[index]} size={22} />
-              <span>{item.label}</span>
-            </Link>
-          ))}
-          <Link
-            href="/referrals?panel=qr"
-            scroll={false}
-            aria-label="Open referral QR code"
-            aria-current={pathname === "/referrals" ? "page" : undefined}
-            className="design-qr-button"
-          >
-            <QrCode size={24} aria-hidden="true" />
-          </Link>
-        </div>
-      </nav>
-    );
-  }
 
   return (
     <nav
       aria-label="Primary navigation"
-      className="fixed bottom-0 left-0 right-0 z-50 px-2 pb-[calc(0.45rem+env(safe-area-inset-bottom))] md:hidden"
+      className={`design-reference-nav ${pathname === "/referrals" ? "design-nav-referrals" : ""}`}
     >
-      <div className="reference-bottom-nav relative mx-auto grid max-w-md grid-cols-5 items-center gap-0 px-2 py-2">
-        {navItems.map((item) => {
-          const isActive =
-            activePath === item.path ||
+      <div>
+        {navItems.map((item, index) => {
+          const active =
+            pathname === item.path ||
             (item.path !== "/dashboard" && pathname.startsWith(item.path));
           return (
-            <motion.button
-              whileTap={{ scale: 0.92 }}
-              key={item.path}
-              onClick={() => router.push(item.path)}
-              aria-current={isActive ? "page" : undefined}
-              className={`relative flex min-h-[3.5rem] min-w-0 flex-col items-center justify-center gap-1 rounded-[18px] px-2 text-center transition-[background-color,color,transform] duration-200 ${
-                isActive
-                  ? "bg-[var(--color-accent-primary)]/10 text-[var(--color-accent-primary)] font-black"
-                  : "text-[var(--color-text-secondary)] hover:bg-[var(--color-hover-soft)] hover:text-[var(--color-text-primary)]"
-              }`}
-            >
-              <span
-                className={`grid h-6 w-6 place-items-center transition-transform duration-200 ${isActive ? "scale-110" : ""}`}
-              >
-                <Me2uIcon name={item.icon} size={20} />
-              </span>
-              <span className="w-full truncate text-[10px] font-black tracking-wide font-sans">
-                {item.label}
-              </span>
-            </motion.button>
+            <Link key={item.path} href={item.path} aria-current={active ? "page" : undefined}>
+              <ReferenceIcon name={icons[index]} size={22} />
+              <span>{item.label}</span>
+            </Link>
           );
         })}
-        <motion.button
-          type="button"
-          whileTap={{ scale: 0.92 }}
-          onClick={() => router.push("/referrals")}
+        <Link
+          href="/referrals?panel=qr"
+          scroll={false}
           aria-label="Open Refer & Earn"
           aria-current={pathname.startsWith("/referrals") ? "page" : undefined}
-          className={`reference-nav-orb grid h-[4.25rem] w-[4.25rem] place-items-center justify-self-center rounded-full ${pathname.startsWith("/referrals") ? "reference-nav-orb-active" : ""}`}
+          className="design-qr-button"
         >
-          <Me2uIcon name="referral" size={27} />
-        </motion.button>
+          <QrCode size={24} aria-hidden="true" />
+        </Link>
       </div>
     </nav>
   );

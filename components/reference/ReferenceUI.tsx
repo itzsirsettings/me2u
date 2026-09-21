@@ -176,11 +176,19 @@ export function ReferenceScreen({
   );
 }
 
-export function ReferenceToolbar({ theme = false, name }: { theme?: boolean; name?: string }) {
+export function ReferenceToolbar({
+  theme = false,
+  notifications = true,
+  name,
+}: {
+  theme?: boolean;
+  notifications?: boolean;
+  name?: string;
+}) {
   return (
     <header className="design-toolbar" aria-label="Account controls">
       {theme && <ThemeToggleIcon className="design-icon-button" />}
-      <ReferenceNotifications />
+      {notifications && <ReferenceNotifications />}
       {name && (
         <Link href="/profile" className="design-account-link" aria-label="Open profile">
           <span className="design-avatar-small">

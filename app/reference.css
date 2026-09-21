@@ -277,6 +277,13 @@ html[data-theme="dark"] .reference-page.design-screen {
   gap: 12px;
   margin-top: 0;
 }
+.design-balance-controls {
+  display: flex;
+  align-items: center;
+  align-self: center;
+  flex-shrink: 0;
+  gap: 6px;
+}
 .design-balance-amount > p {
   min-width: 0;
   max-width: 100%;
@@ -300,6 +307,20 @@ html[data-theme="dark"] .reference-page.design-screen {
   color: white;
 }
 .design-balance-amount button:hover {
+  background: #ffffff35;
+}
+.design-balance-controls .design-balance-notifications {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 7px;
+  border: 0;
+  background: #ffffff18;
+  color: white;
+  box-shadow: none;
+}
+.design-balance-controls .design-balance-notifications:hover {
   background: #ffffff35;
 }
 .design-balance-caption {

@@ -21,6 +21,7 @@ import {
   useReferenceUser,
   type ReferenceIconName,
 } from "@/components/reference/ReferenceUI";
+import ReferenceNotifications from "@/components/reference/ReferenceNotifications";
 import { getCreditLevel } from "@/lib/product-features";
 
 const primaryActions: Array<{
@@ -65,7 +66,7 @@ export default function Dashboard() {
 
   return (
     <ReferenceScreen kind="home">
-      <ReferenceToolbar />
+      <ReferenceToolbar theme notifications={false} />
       <section className="design-welcome">
         <Link href="/profile" className="design-avatar" aria-label="Open profile">
           <Initials name={user.name} />
@@ -100,13 +101,16 @@ export default function Dashboard() {
         </div>
         <div className="design-balance-amount">
           <p data-testid="main-balance">{showBalance ? money(user.balance, 2) : "₦••••••"}</p>
-          <button
-            type="button"
-            onClick={() => setShowBalance(!showBalance)}
-            aria-label={showBalance ? "Hide balance" : "Show balance"}
-          >
-            {showBalance ? <Eye size={22} /> : <EyeOff size={22} />}
-          </button>
+          <div className="design-balance-controls">
+            <button
+              type="button"
+              onClick={() => setShowBalance(!showBalance)}
+              aria-label={showBalance ? "Hide balance" : "Show balance"}
+            >
+              {showBalance ? <Eye size={22} /> : <EyeOff size={22} />}
+            </button>
+            <ReferenceNotifications className="design-balance-notifications" />
+          </div>
         </div>
         <p className="design-balance-caption">Your wallet, more possibilities.</p>
         <div className="design-money-actions">
@@ -211,7 +215,11 @@ export default function Dashboard() {
           </span>
           <div>
             <strong>Refer a friend</strong>
-            <small>Build trust with 5 verified referrals</small>
+            <small>
+              {user.verifiedReferralCount === 0
+                ? "Your verified referrals will appear here"
+                : `${user.verifiedReferralCount} verified referral${user.verifiedReferralCount === 1 ? "" : "s"} contributing to your trust`}
+            </small>
           </div>
           <ChevronRight size={18} aria-hidden="true" />
         </Link>

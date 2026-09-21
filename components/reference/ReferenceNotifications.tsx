@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import ReferenceDialog from "@/components/reference/ReferenceDialog";
 import { useStore } from "@/lib/store";
 
-export default function ReferenceNotifications() {
+export default function ReferenceNotifications({ className = "" }: { className?: string }) {
   const notifications = useStore((state) => state.notifications);
   const deleteNotification = useStore((state) => state.deleteNotification);
   const clearAllNotifications = useStore((state) => state.clearAllNotifications);
@@ -32,7 +32,7 @@ export default function ReferenceNotifications() {
     <>
       <button
         type="button"
-        className="design-icon-button relative"
+        className={`design-icon-button relative ${className}`}
         aria-label="Open notifications"
         aria-expanded={open}
         aria-controls={open ? "reference-notifications" : undefined}

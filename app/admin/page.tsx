@@ -147,8 +147,26 @@ function initials(name: string) {
     .join("");
 }
 
-function statusClass(status: "pending" | "approved" | "rejected" | "active" | "completed" | "funded" | "cancelled" | "processing" | "success" | "failed" | "reversed") {
-  if (status === "approved" || status === "completed" || status === "funded" || status === "success") {
+function statusClass(
+  status:
+    | "pending"
+    | "approved"
+    | "rejected"
+    | "active"
+    | "completed"
+    | "funded"
+    | "cancelled"
+    | "processing"
+    | "success"
+    | "failed"
+    | "reversed",
+) {
+  if (
+    status === "approved" ||
+    status === "completed" ||
+    status === "funded" ||
+    status === "success"
+  ) {
     return "bg-[var(--color-positive-bg)] text-[var(--color-positive-text)]";
   }
 
@@ -164,10 +182,23 @@ function StatusBadge({
   status,
 }: {
   children: ReactNode;
-  status: "pending" | "approved" | "rejected" | "active" | "completed" | "funded" | "cancelled" | "processing" | "success" | "failed" | "reversed";
+  status:
+    | "pending"
+    | "approved"
+    | "rejected"
+    | "active"
+    | "completed"
+    | "funded"
+    | "cancelled"
+    | "processing"
+    | "success"
+    | "failed"
+    | "reversed";
 }) {
   return (
-    <span className={`inline-flex max-w-full shrink-0 items-center justify-center rounded-[5px] px-2.5 py-1 text-center text-[11px] font-bold uppercase leading-tight tracking-normal sm:tracking-[0.08em] ${statusClass(status)}`}>
+    <span
+      className={`inline-flex max-w-full shrink-0 items-center justify-center rounded-[5px] px-2.5 py-1 text-center text-[11px] font-bold uppercase leading-tight tracking-normal sm:tracking-[0.08em] ${statusClass(status)}`}
+    >
       {children}
     </span>
   );
@@ -182,7 +213,18 @@ function MetricCard({
   label: string;
   value: string;
   detail: string;
-  icon: "wallet" | "moneyBag" | "cash" | "requestMoney" | "market" | "profile" | "referral" | "loans" | "bill" | "receipt" | "alert";
+  icon:
+    | "wallet"
+    | "moneyBag"
+    | "cash"
+    | "requestMoney"
+    | "market"
+    | "profile"
+    | "referral"
+    | "loans"
+    | "bill"
+    | "receipt"
+    | "alert";
 }) {
   return (
     <div className="min-w-0 overflow-hidden rounded-[6px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[3px_3px_0px_var(--color-shadow)]">
@@ -197,7 +239,9 @@ function MetricCard({
       <p className="overflow-anywhere font-display text-[1.45rem] font-bold leading-none text-[var(--color-text-primary)] md:text-3xl">
         {value}
       </p>
-      <p className="overflow-anywhere mt-3 text-sm leading-relaxed text-[var(--color-text-secondary)]">{detail}</p>
+      <p className="overflow-anywhere mt-3 text-sm leading-relaxed text-[var(--color-text-secondary)]">
+        {detail}
+      </p>
     </div>
   );
 }
@@ -253,7 +297,9 @@ export default function AdminDashboard() {
 
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error(typeof data.error === "string" ? data.error : "Unable to load admin overview.");
+        throw new Error(
+          typeof data.error === "string" ? data.error : "Unable to load admin overview.",
+        );
       }
 
       setOverview(data as AdminOverview);
@@ -299,7 +345,9 @@ export default function AdminDashboard() {
 
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error(typeof data.error === "string" ? data.error : "Unable to complete admin action.");
+        throw new Error(
+          typeof data.error === "string" ? data.error : "Unable to complete admin action.",
+        );
       }
 
       toast.success("Admin action completed.");
@@ -332,7 +380,9 @@ export default function AdminDashboard() {
   const checkProviderBalance = async () => {
     setBusyAction("provider-balance");
     try {
-      const balance = await backendFetch<Record<string, unknown>>("/api/admin/bills/provider-balance");
+      const balance = await backendFetch<Record<string, unknown>>(
+        "/api/admin/bills/provider-balance",
+      );
       toast.success(`Provider balance checked: ${JSON.stringify(balance).slice(0, 120)}`);
     } catch (error) {
       toast.error(toErrorMessage(error));
@@ -363,7 +413,9 @@ export default function AdminDashboard() {
 
   const selectedUser = useMemo(() => {
     if (!overview) return null;
-    return overview.users.find((item) => item.id === selectedUserId) || filteredUsers[0] || null;
+    return (
+      overview.users.find((item) => item.id === selectedUserId) || filteredUsers[0] || null
+    );
   }, [filteredUsers, overview, selectedUserId]);
 
   const selectedUserActivity = useMemo(() => {
@@ -378,18 +430,25 @@ export default function AdminDashboard() {
     }
 
     return {
-      transactions: overview.transactions.filter((transaction) => transaction.user_id === selectedUser.id).slice(0, 8),
-      loans: overview.loans
-        .filter((loan) => loan.borrower_id === selectedUser.id || loan.lender_id === selectedUser.id)
+      transactions: overview.transactions
+        .filter((transaction) => transaction.user_id === selectedUser.id)
         .slice(0, 8),
-      proofs: overview.payment_proofs.filter((proof) => proof.user_id === selectedUser.id).slice(0, 8),
+      loans: overview.loans
+        .filter(
+          (loan) => loan.borrower_id === selectedUser.id || loan.lender_id === selectedUser.id,
+        )
+        .slice(0, 8),
+      proofs: overview.payment_proofs
+        .filter((proof) => proof.user_id === selectedUser.id)
+        .slice(0, 8),
       withdrawals: overview.withdrawal_requests
         .filter((withdrawal) => withdrawal.user_id === selectedUser.id)
         .slice(0, 8),
       affiliateRewards: overview.affiliate_rewards
         .filter(
           (reward) =>
-            reward.referrer_id === selectedUser.id || reward.referred_user_id === selectedUser.id,
+            reward.referrer_id === selectedUser.id ||
+            reward.referred_user_id === selectedUser.id,
         )
         .slice(0, 8),
     };
@@ -404,7 +463,9 @@ export default function AdminDashboard() {
   const pendingWithdrawals = (overview?.withdrawal_requests || []).filter(
     (withdrawal) => withdrawal.status === "pending",
   );
-  const activeLoans = (overview?.loans || []).filter((loan) => loan.status === "active").slice(0, 8);
+  const activeLoans = (overview?.loans || [])
+    .filter((loan) => loan.status === "active")
+    .slice(0, 8);
   const activeMarketplace = (overview?.marketplace_items || [])
     .filter((item) => item.status === "active")
     .slice(0, 8);
@@ -444,7 +505,8 @@ export default function AdminDashboard() {
             Admin Command Center
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-[var(--color-text-secondary)] md:text-base">
-            Monitor users, wallets, revenue, approvals, loans, marketplace activity, and risk signals from one control surface.
+            Monitor users, wallets, revenue, approvals, loans, marketplace activity, and risk
+            signals from one control surface.
           </p>
         </div>
         <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -499,7 +561,8 @@ export default function AdminDashboard() {
           <div className="min-w-0">
             <h2 className="font-display text-2xl font-bold">Bills Monitor</h2>
             <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-              Track provider fulfilment, queue requery, refund failed bills, and check provider balance.
+              Track provider fulfilment, queue requery, refund failed bills, and check provider
+              balance.
             </p>
           </div>
           <button
@@ -513,7 +576,10 @@ export default function AdminDashboard() {
         </div>
         <div className="grid gap-2">
           {(overview.bill_transactions || []).slice(0, 6).map((transaction) => (
-            <div key={transaction.id} className="grid min-w-0 gap-2 rounded-[5px] bg-[var(--color-bg-secondary)] p-3 text-sm md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+            <div
+              key={transaction.id}
+              className="grid min-w-0 gap-2 rounded-[5px] bg-[var(--color-bg-secondary)] p-3 text-sm md:grid-cols-[minmax(0,1fr)_auto] md:items-center"
+            >
               <div className="min-w-0">
                 <div className="flex min-w-0 flex-wrap items-center gap-2">
                   <b className="break-all font-mono text-xs">{transaction.reference}</b>
@@ -522,7 +588,8 @@ export default function AdminDashboard() {
                   </span>
                 </div>
                 <p className="mt-1 truncate text-xs text-[var(--color-text-secondary)]">
-                  {transaction.category} • {transaction.network || "provider"} • {transaction.customer_identifier} • {money(Number(transaction.selling_price))}
+                  {transaction.category} • {transaction.network || "provider"} •{" "}
+                  {transaction.customer_identifier} • {money(Number(transaction.selling_price))}
                 </p>
               </div>
               <div className="flex min-w-0 flex-wrap gap-2">
@@ -648,7 +715,9 @@ export default function AdminDashboard() {
                     Confirm wallet funding and registration deposits after checking receipts.
                   </p>
                 </div>
-                <StatusBadge status="pending">{pendingFundingProofs.length + pendingRegistrationProofs.length} pending</StatusBadge>
+                <StatusBadge status="pending">
+                  {pendingFundingProofs.length + pendingRegistrationProofs.length} pending
+                </StatusBadge>
               </div>
 
               {[...pendingRegistrationProofs, ...pendingFundingProofs].length === 0 ? (
@@ -664,21 +733,33 @@ export default function AdminDashboard() {
                     >
                       <div className="min-w-0">
                         <div className="flex min-w-0 flex-wrap items-center gap-2">
-                          <p className="min-w-0 font-bold text-[var(--color-text-primary)]">{proof.user_name}</p>
-                          <StatusBadge status={proof.status}>{proofTypeLabel(proof.type)}</StatusBadge>
+                          <p className="min-w-0 font-bold text-[var(--color-text-primary)]">
+                            {proof.user_name}
+                          </p>
+                          <StatusBadge status={proof.status}>
+                            {proofTypeLabel(proof.type)}
+                          </StatusBadge>
                         </div>
-                        <p className="overflow-anywhere mt-1 text-sm text-[var(--color-text-secondary)]">{proof.user_email}</p>
+                        <p className="overflow-anywhere mt-1 text-sm text-[var(--color-text-secondary)]">
+                          {proof.user_email}
+                        </p>
                         <div className="mt-3 grid min-w-0 gap-2 text-sm sm:grid-cols-3">
                           <span className="min-w-0">
-                            <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Amount</b>
+                            <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">
+                              Amount
+                            </b>
                             {money(Number(proof.amount))}
                           </span>
                           <span className="min-w-0">
-                            <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Reference</b>
+                            <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">
+                              Reference
+                            </b>
                             <span className="break-all font-mono">{proof.reference}</span>
                           </span>
                           <span className="min-w-0">
-                            <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Submitted</b>
+                            <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">
+                              Submitted
+                            </b>
                             {formatDate(proof.created_at)}
                           </span>
                         </div>
@@ -689,9 +770,14 @@ export default function AdminDashboard() {
                             href={proof.receipt_signed_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="min-h-10 max-w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 py-2 text-xs font-bold uppercase leading-tight tracking-normal sm:tracking-[0.08em]"
+                            className="group flex min-h-10 items-center gap-2 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-1.5 text-xs font-bold uppercase leading-tight tracking-normal sm:tracking-[0.08em]"
                           >
-                            View receipt
+                            <img
+                              src={proof.receipt_signed_url}
+                              alt={`Payment receipt submitted by ${proof.user_name}`}
+                              className="h-12 w-12 rounded-[3px] border border-[var(--color-border)] object-cover"
+                            />
+                            <span>View receipt</span>
                           </a>
                         ) : null}
                         <QueueActionButton
@@ -717,7 +803,8 @@ export default function AdminDashboard() {
                 <div className="min-w-0">
                   <h2 className="font-display text-2xl font-bold">Withdrawal Control</h2>
                   <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-                    Approvals debit wallets only after the admin decision passes balance and loan-retention checks.
+                    Approvals debit wallets only after the admin decision passes balance and
+                    loan-retention checks.
                   </p>
                 </div>
                 <StatusBadge status="pending">{pendingWithdrawals.length} pending</StatusBadge>
@@ -736,32 +823,47 @@ export default function AdminDashboard() {
                     >
                       <div className="min-w-0">
                         <div className="flex min-w-0 flex-wrap items-center gap-2">
-                          <p className="min-w-0 font-bold text-[var(--color-text-primary)]">{withdrawal.user_name}</p>
+                          <p className="min-w-0 font-bold text-[var(--color-text-primary)]">
+                            {withdrawal.user_name}
+                          </p>
                           <StatusBadge status={withdrawal.status}>Withdrawal</StatusBadge>
                         </div>
                         <p className="overflow-anywhere mt-1 text-sm text-[var(--color-text-secondary)]">
-                          {withdrawal.user_email} {withdrawal.user_phone ? `• ${withdrawal.user_phone}` : ""}
+                          {withdrawal.user_email}{" "}
+                          {withdrawal.user_phone ? `• ${withdrawal.user_phone}` : ""}
                         </p>
                         <div className="mt-3 grid min-w-0 gap-2 text-sm sm:grid-cols-2 lg:grid-cols-5">
                           <span className="min-w-0">
-                            <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Amount</b>
+                            <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">
+                              Amount
+                            </b>
                             {money(Number(withdrawal.amount))}
                           </span>
                           <span className="min-w-0">
-                            <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Fee</b>
+                            <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">
+                              Fee
+                            </b>
                             {money(Number(withdrawal.fee_amount))}
                           </span>
                           <span className="min-w-0">
-                            <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Wallet</b>
+                            <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">
+                              Wallet
+                            </b>
                             {money(withdrawal.wallet_balance)}
                           </span>
                           <span className="min-w-0">
-                            <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Bank</b>
+                            <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">
+                              Bank
+                            </b>
                             {withdrawal.bank_name || "Not set"}
                           </span>
                           <span className="min-w-0">
-                            <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Account</b>
-                            <span className="overflow-anywhere font-mono">{withdrawal.account_number || "Not set"}</span>
+                            <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">
+                              Account
+                            </b>
+                            <span className="overflow-anywhere font-mono">
+                              {withdrawal.account_number || "Not set"}
+                            </span>
                           </span>
                         </div>
                       </div>
@@ -790,20 +892,30 @@ export default function AdminDashboard() {
               <h2 className="font-display text-2xl font-bold">Live Health</h2>
               <div className="mt-4 grid gap-3">
                 <div className="flex min-w-0 items-center justify-between gap-3 rounded-[5px] bg-[var(--color-bg-secondary)] p-3">
-                  <span className="min-w-0 text-sm text-[var(--color-text-secondary)]">Verified users</span>
-                  <b className="shrink-0">{overview.summary.verified_users}/{overview.summary.users}</b>
+                  <span className="min-w-0 text-sm text-[var(--color-text-secondary)]">
+                    Verified users
+                  </span>
+                  <b className="shrink-0">
+                    {overview.summary.verified_users}/{overview.summary.users}
+                  </b>
                 </div>
                 <div className="flex min-w-0 items-center justify-between gap-3 rounded-[5px] bg-[var(--color-bg-secondary)] p-3">
-                  <span className="min-w-0 text-sm text-[var(--color-text-secondary)]">Active marketplace</span>
+                  <span className="min-w-0 text-sm text-[var(--color-text-secondary)]">
+                    Active marketplace
+                  </span>
                   <b className="shrink-0">{overview.summary.marketplace_active}</b>
                 </div>
                 <div className="flex min-w-0 items-center justify-between gap-3 rounded-[5px] bg-[var(--color-bg-secondary)] p-3">
-                  <span className="min-w-0 text-sm text-[var(--color-text-secondary)]">Admins</span>
+                  <span className="min-w-0 text-sm text-[var(--color-text-secondary)]">
+                    Admins
+                  </span>
                   <b className="shrink-0">{overview.summary.admins}</b>
                 </div>
                 <div className="rounded-[5px] bg-[var(--color-bg-secondary)] p-3">
                   <span className="text-sm text-[var(--color-text-secondary)]">Snapshot</span>
-                  <p className="overflow-anywhere mt-1 font-mono text-xs">{formatDate(overview.generated_at)}</p>
+                  <p className="overflow-anywhere mt-1 font-mono text-xs">
+                    {formatDate(overview.generated_at)}
+                  </p>
                 </div>
               </div>
             </div>
@@ -815,13 +927,19 @@ export default function AdminDashboard() {
                   <p className="text-sm text-[var(--color-text-secondary)]">No active loans.</p>
                 ) : (
                   activeLoans.map((loan) => (
-                    <div key={loan.id} className="rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3">
+                    <div
+                      key={loan.id}
+                      className="rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3"
+                    >
                       <div className="flex min-w-0 items-center justify-between gap-3">
                         <b className="min-w-0 truncate">{money(Number(loan.amount))}</b>
-                        <StatusBadge status={loan.status}>{loan.lender_id ? "Peer" : "Direct"}</StatusBadge>
+                        <StatusBadge status={loan.status}>
+                          {loan.lender_id ? "Peer" : "Direct"}
+                        </StatusBadge>
                       </div>
                       <p className="overflow-anywhere mt-2 text-xs text-[var(--color-text-secondary)]">
-                        Due {formatDate(loan.due_date)} • {loan.days} days • {Number(loan.rate)}%
+                        Due {formatDate(loan.due_date)} • {loan.days} days • {Number(loan.rate)}
+                        %
                       </p>
                     </div>
                   ))
@@ -874,17 +992,23 @@ export default function AdminDashboard() {
                   )}
                   <span className="min-w-0">
                     <b className="block truncate">{profile.full_name}</b>
-                    <span className="block truncate text-xs text-[var(--color-text-secondary)]">{profile.email}</span>
+                    <span className="block truncate text-xs text-[var(--color-text-secondary)]">
+                      {profile.email}
+                    </span>
                     <span className="mt-1 flex flex-wrap gap-1">
                       <StatusBadge status={profile.kyc_verified ? "approved" : "pending"}>
                         {profile.kyc_verified ? "KYC" : "KYC pending"}
                       </StatusBadge>
-                      {profile.role === "admin" ? <StatusBadge status="approved">Admin</StatusBadge> : null}
+                      {profile.role === "admin" ? (
+                        <StatusBadge status="approved">Admin</StatusBadge>
+                      ) : null}
                     </span>
                   </span>
                   <span className="col-span-2 min-w-0 text-left sm:col-span-1 sm:text-right">
                     <b className="block truncate text-sm">{money(profile.wallet_balance)}</b>
-                    <span className="text-[11px] text-[var(--color-text-secondary)]">wallet</span>
+                    <span className="text-[11px] text-[var(--color-text-secondary)]">
+                      wallet
+                    </span>
                   </span>
                 </button>
               ))}
@@ -908,7 +1032,9 @@ export default function AdminDashboard() {
                   )}
                   <div className="min-w-0">
                     <div className="flex min-w-0 flex-wrap items-center gap-2">
-                      <h2 className="min-w-0 font-display text-2xl font-bold md:text-3xl">{selectedUser.full_name}</h2>
+                      <h2 className="min-w-0 font-display text-2xl font-bold md:text-3xl">
+                        {selectedUser.full_name}
+                      </h2>
                       <StatusBadge status={selectedUser.kyc_verified ? "approved" : "pending"}>
                         {selectedUser.kyc_verified ? "Verified" : "Needs KYC"}
                       </StatusBadge>
@@ -918,9 +1044,14 @@ export default function AdminDashboard() {
                         <StatusBadge status="pending">Deposit pending</StatusBadge>
                       )}
                     </div>
-                    <p className="mt-2 break-all text-sm text-[var(--color-text-secondary)]">{selectedUser.email}</p>
+                    <p className="mt-2 break-all text-sm text-[var(--color-text-secondary)]">
+                      {selectedUser.email}
+                    </p>
                     <div className="mt-3 flex min-w-0 flex-wrap items-center gap-2">
-                      {!selectedUser.kyc_verified && selectedUser.passport_photo_url && selectedUser.bank_name && selectedUser.account_number ? (
+                      {!selectedUser.kyc_verified &&
+                      selectedUser.passport_photo_url &&
+                      selectedUser.bank_name &&
+                      selectedUser.account_number ? (
                         <QueueActionButton
                           label="Approve KYC"
                           busy={busyAction === `approve_kyc:${selectedUser.id}`}
@@ -938,15 +1069,21 @@ export default function AdminDashboard() {
                     </div>
                     <div className="mt-4 grid min-w-0 gap-2 text-sm sm:grid-cols-3">
                       <span className="min-w-0">
-                        <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Wallet</b>
+                        <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">
+                          Wallet
+                        </b>
                         {money(selectedUser.wallet_balance)}
                       </span>
                       <span className="min-w-0">
-                        <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Locked</b>
+                        <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">
+                          Locked
+                        </b>
                         {money(selectedUser.wallet_locked)}
                       </span>
                       <span className="min-w-0">
-                        <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Trust</b>
+                        <b className="block text-xs uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">
+                          Trust
+                        </b>
                         {selectedUser.trust_score}/100
                       </span>
                     </div>
@@ -958,20 +1095,32 @@ export default function AdminDashboard() {
                     <h3 className="font-bold">Identity</h3>
                     <dl className="mt-3 grid gap-2 text-sm">
                       <div className="flex min-w-0 justify-between gap-3">
-                        <dt className="shrink-0 text-[var(--color-text-secondary)]">Username</dt>
-                        <dd className="overflow-anywhere min-w-0 text-right font-mono">{selectedUser.username || "Not set"}</dd>
+                        <dt className="shrink-0 text-[var(--color-text-secondary)]">
+                          Username
+                        </dt>
+                        <dd className="overflow-anywhere min-w-0 text-right font-mono">
+                          {selectedUser.username || "Not set"}
+                        </dd>
                       </div>
                       <div className="flex min-w-0 justify-between gap-3">
                         <dt className="shrink-0 text-[var(--color-text-secondary)]">Phone</dt>
-                        <dd className="overflow-anywhere min-w-0 text-right">{selectedUser.phone || "Not set"}</dd>
+                        <dd className="overflow-anywhere min-w-0 text-right">
+                          {selectedUser.phone || "Not set"}
+                        </dd>
                       </div>
                       <div className="flex min-w-0 justify-between gap-3">
-                        <dt className="shrink-0 text-[var(--color-text-secondary)]">NIN last 4</dt>
-                        <dd className="overflow-anywhere min-w-0 text-right font-mono">{selectedUser.nin_last4 || "Not set"}</dd>
+                        <dt className="shrink-0 text-[var(--color-text-secondary)]">
+                          NIN last 4
+                        </dt>
+                        <dd className="overflow-anywhere min-w-0 text-right font-mono">
+                          {selectedUser.nin_last4 || "Not set"}
+                        </dd>
                       </div>
                       <div className="flex min-w-0 justify-between gap-3">
                         <dt className="shrink-0 text-[var(--color-text-secondary)]">Joined</dt>
-                        <dd className="overflow-anywhere min-w-0 text-right">{formatDate(selectedUser.created_at)}</dd>
+                        <dd className="overflow-anywhere min-w-0 text-right">
+                          {formatDate(selectedUser.created_at)}
+                        </dd>
                       </div>
                     </dl>
                   </div>
@@ -980,19 +1129,31 @@ export default function AdminDashboard() {
                     <dl className="mt-3 grid gap-2 text-sm">
                       <div className="flex min-w-0 justify-between gap-3">
                         <dt className="shrink-0 text-[var(--color-text-secondary)]">Bank</dt>
-                        <dd className="overflow-anywhere min-w-0 text-right">{selectedUser.bank_name || "Not set"}</dd>
+                        <dd className="overflow-anywhere min-w-0 text-right">
+                          {selectedUser.bank_name || "Not set"}
+                        </dd>
                       </div>
                       <div className="flex min-w-0 justify-between gap-3">
                         <dt className="shrink-0 text-[var(--color-text-secondary)]">Account</dt>
-                        <dd className="overflow-anywhere min-w-0 text-right font-mono">{selectedUser.account_number || "Not set"}</dd>
+                        <dd className="overflow-anywhere min-w-0 text-right font-mono">
+                          {selectedUser.account_number || "Not set"}
+                        </dd>
                       </div>
                       <div className="flex min-w-0 justify-between gap-3">
-                        <dt className="shrink-0 text-[var(--color-text-secondary)]">Affiliate earnings</dt>
-                        <dd className="overflow-anywhere min-w-0 text-right">{money(Number(selectedUser.affiliate_earnings))}</dd>
+                        <dt className="shrink-0 text-[var(--color-text-secondary)]">
+                          Affiliate earnings
+                        </dt>
+                        <dd className="overflow-anywhere min-w-0 text-right">
+                          {money(Number(selectedUser.affiliate_earnings))}
+                        </dd>
                       </div>
                       <div className="flex min-w-0 justify-between gap-3">
-                        <dt className="shrink-0 text-[var(--color-text-secondary)]">Referral code</dt>
-                        <dd className="overflow-anywhere min-w-0 text-right font-mono">{selectedUser.referral_code || selectedUser.username || "Not set"}</dd>
+                        <dt className="shrink-0 text-[var(--color-text-secondary)]">
+                          Referral code
+                        </dt>
+                        <dd className="overflow-anywhere min-w-0 text-right font-mono">
+                          {selectedUser.referral_code || selectedUser.username || "Not set"}
+                        </dd>
                       </div>
                     </dl>
                   </div>
@@ -1003,17 +1164,26 @@ export default function AdminDashboard() {
                     <h3 className="font-bold">Recent Transactions</h3>
                     <div className="mt-3 grid gap-2">
                       {selectedUserActivity.transactions.length === 0 ? (
-                        <p className="text-sm text-[var(--color-text-secondary)]">No transactions.</p>
+                        <p className="text-sm text-[var(--color-text-secondary)]">
+                          No transactions.
+                        </p>
                       ) : (
                         selectedUserActivity.transactions.map((transaction) => (
-                          <div key={transaction.id} className="flex min-w-0 items-center justify-between gap-2 overflow-hidden rounded-[5px] bg-[var(--color-bg-card)] p-2 text-sm">
+                          <div
+                            key={transaction.id}
+                            className="flex min-w-0 items-center justify-between gap-2 overflow-hidden rounded-[5px] bg-[var(--color-bg-card)] p-2 text-sm"
+                          >
                             <span className="min-w-0 flex-1 overflow-hidden">
-                              <b className="block truncate capitalize">{transactionLabel(transaction.type)}</b>
+                              <b className="block truncate capitalize">
+                                {transactionLabel(transaction.type)}
+                              </b>
                               <span className="block truncate text-xs text-[var(--color-text-secondary)]">
                                 {transaction.description}
                               </span>
                             </span>
-                            <b className="max-w-[42%] shrink-0 truncate text-right">{money(Number(transaction.amount))}</b>
+                            <b className="max-w-[42%] shrink-0 truncate text-right">
+                              {money(Number(transaction.amount))}
+                            </b>
                           </div>
                         ))
                       )}
@@ -1023,26 +1193,43 @@ export default function AdminDashboard() {
                   <div className="min-w-0 overflow-hidden rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3">
                     <h3 className="font-bold">Proofs & Withdrawals</h3>
                     <div className="mt-3 grid gap-2">
-                      {[...selectedUserActivity.proofs, ...selectedUserActivity.withdrawals].length === 0 ? (
-                        <p className="text-sm text-[var(--color-text-secondary)]">No proofs or withdrawal requests.</p>
+                      {[...selectedUserActivity.proofs, ...selectedUserActivity.withdrawals]
+                        .length === 0 ? (
+                        <p className="text-sm text-[var(--color-text-secondary)]">
+                          No proofs or withdrawal requests.
+                        </p>
                       ) : (
                         <>
                           {selectedUserActivity.proofs.map((proof) => (
-                            <div key={proof.id} className="flex min-w-0 items-center justify-between gap-2 overflow-hidden rounded-[5px] bg-[var(--color-bg-card)] p-2 text-sm">
+                            <div
+                              key={proof.id}
+                              className="flex min-w-0 items-center justify-between gap-2 overflow-hidden rounded-[5px] bg-[var(--color-bg-card)] p-2 text-sm"
+                            >
                               <span className="min-w-0 flex-1 overflow-hidden">
                                 <b className="block">{proofTypeLabel(proof.type)}</b>
-                                <span className="block truncate text-xs text-[var(--color-text-secondary)]">{formatDate(proof.created_at)}</span>
+                                <span className="block truncate text-xs text-[var(--color-text-secondary)]">
+                                  {formatDate(proof.created_at)}
+                                </span>
                               </span>
-                              <StatusBadge status={proof.status}>{money(Number(proof.amount))}</StatusBadge>
+                              <StatusBadge status={proof.status}>
+                                {money(Number(proof.amount))}
+                              </StatusBadge>
                             </div>
                           ))}
                           {selectedUserActivity.withdrawals.map((withdrawal) => (
-                            <div key={withdrawal.id} className="flex min-w-0 items-center justify-between gap-2 overflow-hidden rounded-[5px] bg-[var(--color-bg-card)] p-2 text-sm">
+                            <div
+                              key={withdrawal.id}
+                              className="flex min-w-0 items-center justify-between gap-2 overflow-hidden rounded-[5px] bg-[var(--color-bg-card)] p-2 text-sm"
+                            >
                               <span className="min-w-0 flex-1 overflow-hidden">
                                 <b className="block">Withdrawal</b>
-                                <span className="block truncate text-xs text-[var(--color-text-secondary)]">{formatDate(withdrawal.created_at)}</span>
+                                <span className="block truncate text-xs text-[var(--color-text-secondary)]">
+                                  {formatDate(withdrawal.created_at)}
+                                </span>
                               </span>
-                              <StatusBadge status={withdrawal.status}>{money(Number(withdrawal.amount))}</StatusBadge>
+                              <StatusBadge status={withdrawal.status}>
+                                {money(Number(withdrawal.amount))}
+                              </StatusBadge>
                             </div>
                           ))}
                         </>
@@ -1075,16 +1262,29 @@ export default function AdminDashboard() {
                 </thead>
                 <tbody>
                   {overview.transactions.slice(0, 60).map((transaction) => {
-                    const owner = overview.users.find((item) => item.id === transaction.user_id);
+                    const owner = overview.users.find(
+                      (item) => item.id === transaction.user_id,
+                    );
                     return (
-                      <tr key={transaction.id} className="border-b border-[var(--color-glass-border)]">
-                        <td className="px-3 py-3 capitalize">{transactionLabel(transaction.type)}</td>
-                        <td className="max-w-[150px] truncate px-3 py-3">{owner?.full_name || "Unknown"}</td>
-                        <td className="px-3 py-3 font-mono font-bold">{money(Number(transaction.amount))}</td>
+                      <tr
+                        key={transaction.id}
+                        className="border-b border-[var(--color-glass-border)]"
+                      >
+                        <td className="px-3 py-3 capitalize">
+                          {transactionLabel(transaction.type)}
+                        </td>
+                        <td className="max-w-[150px] truncate px-3 py-3">
+                          {owner?.full_name || "Unknown"}
+                        </td>
+                        <td className="px-3 py-3 font-mono font-bold">
+                          {money(Number(transaction.amount))}
+                        </td>
                         <td className="max-w-[280px] truncate px-3 py-3 text-[var(--color-text-secondary)]">
                           {transaction.description}
                         </td>
-                        <td className="px-3 py-3 text-xs">{formatDate(transaction.created_at)}</td>
+                        <td className="px-3 py-3 text-xs">
+                          {formatDate(transaction.created_at)}
+                        </td>
                       </tr>
                     );
                   })}
@@ -1098,13 +1298,22 @@ export default function AdminDashboard() {
               <h2 className="font-display text-2xl font-bold">Marketplace Monitor</h2>
               <div className="mt-4 grid gap-2">
                 {activeMarketplace.length === 0 ? (
-                  <p className="text-sm text-[var(--color-text-secondary)]">No active marketplace listings.</p>
+                  <p className="text-sm text-[var(--color-text-secondary)]">
+                    No active marketplace listings.
+                  </p>
                 ) : (
                   activeMarketplace.map((item) => (
-                    <div key={item.id} className="rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3">
+                    <div
+                      key={item.id}
+                      className="rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3"
+                    >
                       <div className="flex min-w-0 items-center justify-between gap-3">
-                        <b className="min-w-0 truncate capitalize">{item.type.replaceAll("_", " ")}</b>
-                        <StatusBadge status={item.status}>{money(Number(item.amount))}</StatusBadge>
+                        <b className="min-w-0 truncate capitalize">
+                          {item.type.replaceAll("_", " ")}
+                        </b>
+                        <StatusBadge status={item.status}>
+                          {money(Number(item.amount))}
+                        </StatusBadge>
                       </div>
                       <p className="overflow-anywhere mt-2 text-xs text-[var(--color-text-secondary)]">
                         {item.author_name} • {item.days} days • trust {item.trust_score}/100
@@ -1122,7 +1331,10 @@ export default function AdminDashboard() {
                   .filter((item) => item.status !== "pending")
                   .slice(0, 10)
                   .map((item) => (
-                    <div key={item.id} className="flex min-w-0 items-center justify-between gap-2 overflow-hidden rounded-[5px] bg-[var(--color-bg-secondary)] p-3 text-sm">
+                    <div
+                      key={item.id}
+                      className="flex min-w-0 items-center justify-between gap-2 overflow-hidden rounded-[5px] bg-[var(--color-bg-secondary)] p-3 text-sm"
+                    >
                       <span className="min-w-0 flex-1 overflow-hidden">
                         <b className="block truncate">
                           {"type" in item ? proofTypeLabel(item.type) : "Withdrawal"}

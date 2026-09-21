@@ -216,7 +216,8 @@ test("referral rewards follow the four-stage NGN 2,500 lifecycle", () => {
   assert.match(page, /You earn ₦1,500 referral bonus and they earn ₦500/);
   assert.match(page, /Friend refers a friend/);
   assert.match(page, /₦2,500 for you/);
-  assert.match(page, /total_referrals \* 2500/);
+  assert.match(page, /pendingMilestones = stats/);
+  assert.doesNotMatch(page, /total_referrals \* 2500/);
   assert.match(route, /referral_reward_events/);
   assert.match(migration, /'direct_signup', 1500/);
   assert.match(migration, /'new_member_signup', 500/);

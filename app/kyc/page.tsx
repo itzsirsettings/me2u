@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import LoadingButton from "@/LoadingButton";
 import { authorizedFetch } from "@/lib/fetch";
-import { uploadPrivateImage } from "@/lib/uploads";
+import { privateImageUrl, uploadPrivateImage } from "@/lib/uploads";
 
 function toErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Something went wrong. Please try again.";
@@ -21,6 +21,7 @@ export default function KYCPage() {
   const [bankName, setBankName] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [passportFile, setPassportFile] = useState<File | null>(null);
+  const [passportPreviewUrl, setPassportPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [mounted, setMounted] = useState(false);
 
@@ -41,6 +42,8 @@ export default function KYCPage() {
       </div>
     );
   }
+
+  const submittedPassportUrl = privateImageUrl(user.passportPhotoUrl);
 
   if (user.kycVerified) {
     return (
@@ -124,6 +127,13 @@ export default function KYCPage() {
           Your bank details and passport photo have been submitted. Me2U will unlock withdrawals
           and lending after review.
         </p>
+        {submittedPassportUrl && (
+          <img
+            src={submittedPassportUrl}
+            alt="Submitted passport photo"
+            className="mt-5 h-28 w-28 rounded-full border-2 border-[var(--color-border)] object-cover shadow-[3px_3px_0px_var(--color-shadow)]"
+          />
+        )}
         <button
           onClick={() => router.push("/dashboard")}
           className="btn-primary mt-5 h-11 px-5 md:mt-8 md:h-12 md:px-6"
@@ -135,9 +145,12 @@ export default function KYCPage() {
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setPassportFile(e.target.files[0]);
-    }
+    const file = e.target.files?.[0] || null;
+    setPassportFile(file);
+    setPassportPreviewUrl((previous) => {
+      if (previous) URL.revokeObjectURL(previous);
+      return file ? URL.createObjectURL(file) : null;
+    });
   };
 
   const submitKyc = async () => {
@@ -172,6 +185,10 @@ export default function KYCPage() {
       }
 
       setPassportFile(null);
+      setPassportPreviewUrl((previous) => {
+        if (previous) URL.revokeObjectURL(previous);
+        return null;
+      });
     } catch (err) {
       setError(toErrorMessage(err));
       throw err;
@@ -295,6 +312,13 @@ export default function KYCPage() {
             >
               {passportFile ? (
                 <>
+                  {passportPreviewUrl && (
+                    <img
+                      src={passportPreviewUrl}
+                      alt="Selected passport photo preview"
+                      className="h-24 w-24 rounded-full border-2 border-[var(--color-positive-text)] object-cover"
+                    />
+                  )}
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="32"
