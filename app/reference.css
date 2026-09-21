@@ -278,12 +278,15 @@ html[data-theme="dark"] .reference-page.design-screen {
   margin-top: 0;
 }
 .design-balance-amount > p {
+  min-width: 0;
+  max-width: 100%;
   font-size: clamp(28px, 8vw, 41px);
   font-weight: 700;
   line-height: 1.15;
   letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
+  word-break: break-all;
   min-width: 0;
 }
 .design-balance-amount button {
@@ -1364,10 +1367,16 @@ body:has(.design-screen) button[aria-controls="me2u-guide-panel"] > span:last-ch
   border-radius: 50%;
   background: radial-gradient(circle, #6bdb22 45%, #65f134 46%);
 }
-body:has(.design-screen) button[aria-controls="me2u-guide-panel"] > span:last-child > span:first-child {
+body:has(.design-screen)
+  button[aria-controls="me2u-guide-panel"]
+  > span:last-child
+  > span:first-child {
   border-radius: 50%;
 }
-body:has(.design-screen) button[aria-controls="me2u-guide-panel"] > span:last-child > span:last-child {
+body:has(.design-screen)
+  button[aria-controls="me2u-guide-panel"]
+  > span:last-child
+  > span:last-child {
   font-size: 23px;
   color: #063b32;
 }

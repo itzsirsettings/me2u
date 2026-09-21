@@ -8,7 +8,6 @@ import { usePathname, useRouter } from "next/navigation";
 import Me2uIcon, { type Me2uIconName } from "@/components/Me2uIcon";
 import { ReferenceIcon, type ReferenceIconName } from "@/components/reference/ReferenceUI";
 
-
 const navItems: Array<{ label: string; icon: Me2uIconName; path: string }> = [
   { label: "Home", icon: "home", path: "/dashboard" },
   { label: "Market", icon: "market", path: "/marketplace" },

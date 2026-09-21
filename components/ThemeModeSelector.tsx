@@ -19,10 +19,15 @@ const themeOptions: Array<{ label: string; value: ThemeMode }> = [
 ];
 
 function subscribeTheme(onChange: () => void) {
-  const onStorage = (event: StorageEvent) => { if (event.key === themeStorageKey) onChange(); };
+  const onStorage = (event: StorageEvent) => {
+    if (event.key === themeStorageKey) onChange();
+  };
   window.addEventListener(themeChangeEvent, onChange);
   window.addEventListener("storage", onStorage);
-  return () => { window.removeEventListener(themeChangeEvent, onChange); window.removeEventListener("storage", onStorage); };
+  return () => {
+    window.removeEventListener(themeChangeEvent, onChange);
+    window.removeEventListener("storage", onStorage);
+  };
 }
 const getServerTheme = (): ThemeMode => "system";
 

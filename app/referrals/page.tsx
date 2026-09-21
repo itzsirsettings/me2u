@@ -194,7 +194,10 @@ function ReferralsContent() {
         toast.error("Sharing failed. Try copying your referral link.");
     }
   }
-  const retry = () => { setLoading(true); setAttempt((value) => value + 1); };
+  const retry = () => {
+    setLoading(true);
+    setAttempt((value) => value + 1);
+  };
   if (!user) return <ReferenceScreen kind="referrals" ready={false} />;
   const stats = referral.data?.stats;
   const potential = stats ? stats.total_referrals * 2500 : null;

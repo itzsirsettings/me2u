@@ -9,7 +9,11 @@ type ReferralQrCodeProps = {
 };
 
 export default function ReferralQrCode({ value, className = "" }: ReferralQrCodeProps) {
-  const [result, setResult] = useState<{ value: string; dataUrl: string; hasError: boolean } | null>(null);
+  const [result, setResult] = useState<{
+    value: string;
+    dataUrl: string;
+    hasError: boolean;
+  } | null>(null);
   const dataUrl = result?.value === value ? result.dataUrl : "";
   const hasError = result?.value === value && result.hasError;
 

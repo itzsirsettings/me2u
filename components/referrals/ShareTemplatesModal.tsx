@@ -252,8 +252,8 @@ Sign up with my link: ${referralLink}`,
                   💡 Pro Tip
                 </p>
                 <p className="text-xs text-[var(--color-text-secondary)] mt-1">
-                  Personalize the message before sending! Add their name or mention why you think
-                  they'd benefit. Personal touches increase conversion by 3x.
+                  Personalize the message before sending! Add their name or mention why you
+                  think they'd benefit. Personal touches increase conversion by 3x.
                 </p>
               </div>
             </div>

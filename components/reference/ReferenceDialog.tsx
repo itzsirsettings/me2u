@@ -33,10 +33,14 @@ export default function ReferenceDialog({
       aria-labelledby="reference-dialog-title"
       onCancel={(event) => {
         event.preventDefault();
+        ref.current?.close();
         onClose();
       }}
       onClick={(event) => {
-        if (event.target === event.currentTarget) onClose();
+        if (event.target === event.currentTarget) {
+          ref.current?.close();
+          onClose();
+        }
       }}
     >
       <div className="design-dialog-content">
@@ -44,7 +48,10 @@ export default function ReferenceDialog({
           <h2 id="reference-dialog-title">{title}</h2>
           <button
             type="button"
-            onClick={onClose}
+            onClick={() => {
+              ref.current?.close();
+              onClose();
+            }}
             aria-label={`Close ${title}`}
             className="design-icon-button"
           >
