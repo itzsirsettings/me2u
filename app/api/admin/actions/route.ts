@@ -136,7 +136,7 @@ export async function POST(request: Request) {
         );
 
         if (proof.type === "registration_deposit") {
-          await client.query(
+          const { rows: updatedProfiles } = await client.query<{ id: string }>(
             `UPDATE profiles
              SET registration_deposit_paid = true,
                  registration_deposit_confirmed_at = NOW(),
@@ -145,9 +145,15 @@ export async function POST(request: Request) {
                  unlock_method = 'registration_deposit',
                  account_unlock_paid_at = NOW(),
                  updated_at = NOW()
-             WHERE id = $2`,
+             WHERE id = $2
+             RETURNING id`,
             [Number(proof.amount), proof.user_id],
           );
+          if (!updatedProfiles[0]) {
+            throw new Error(
+              "Registration payment cannot be approved because the user profile is missing.",
+            );
+          }
           registrationDepositUserId = proof.user_id;
         }
 
