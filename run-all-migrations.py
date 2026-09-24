@@ -16,8 +16,8 @@ except ImportError:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "psycopg2-binary", "--quiet"])
     import psycopg2
 
-# Railway-adapted migration files in chronological order
-# These have ALL Supabase references removed (no auth.uid, anon/authenticated roles, storage schema, supabase_realtime)
+# Railway-native migration files in chronological order
+# These use native PostgreSQL tables (no auth.uid, no anon/authenticated roles, no external storage schema, no realtime publications)
 MIGRATIONS = [
     '001_add_auth_tables.sql',
     '002_complete_schema.sql',
@@ -127,7 +127,7 @@ def main():
             print(f'📊 Found {len(applied)} previously applied migrations')
             print()
         
-        # Run migrations - Railway-adapted set (no Supabase references)
+        # Run migrations - Railway-native set (native PostgreSQL only)
         migrations_dir = Path('railway/migrations')
         total = len(MIGRATIONS)
         skipped = 0

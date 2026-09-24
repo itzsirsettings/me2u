@@ -10,7 +10,7 @@ export class BillRequeryProcessor extends WorkerHost {
 
   async process(job: Job<{ reference?: string }>) {
     if (job.name === "scan") return this.bills.requeryPendingBatch();
-    if (job.data.reference) return this.bills.requeryNow(job.data.reference);
+    if (job.data.reference) return this.bills.requery(job.data.reference);
     return null;
   }
 }

@@ -1,16 +1,8 @@
--- ============================================================
--- G4/G5: Fee transparency + cron health (idempotent, safe to re-run)
---
--- 1. revenue_event_type 'withdrawal_processor_cost':
---    Books the Paystack 1.5% processor cost charged to the user on each
---    withdrawal as a separate platform revenue/cost event. Cost-visibility
---    only — no wallet movement is derived from this event.
--- 2. cron_runs heartbeat table:
---    Last-run/last-error tracking for /api/cron/* routes so operators can
---    detect silent cron failures (e.g. "did the unlock cron run last hour?").
--- ============================================================
+-- G4/G5 fee transparency and cron health
+begin;
 
-do $$ begin
+do $$
+begin
   alter type public.revenue_event_type add value if not exists 'withdrawal_processor_cost';
 exception
   when duplicate_object then null;
@@ -27,3 +19,5 @@ create table if not exists public.cron_runs (
   total_failures bigint not null default 0,
   updated_at timestamptz not null default now()
 );
+
+commit;

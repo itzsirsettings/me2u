@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { BullModule } from "@nestjs/bullmq";
+import { RailwayDbService } from "./common/railway-db.service";
 import { AuthModule } from "./modules/auth/auth.module";
 import { BillsModule } from "./modules/bills/bills.module";
 import { WalletModule } from "./modules/wallet/wallet.module";
@@ -10,7 +11,7 @@ import { AdminModule } from "./modules/admin/admin.module";
 import { WebhooksModule } from "./modules/webhooks/webhooks.module";
 import { JobsModule } from "./modules/jobs/jobs.module";
 import { TransfersModule } from "./modules/transfers/transfers.module";
-import { SupabaseService } from "./common/supabase.service";
+import { HealthController } from "./common/health.controller";
 
 function redisConnection() {
   const redisUrl = process.env.REDIS_URL;
@@ -36,7 +37,8 @@ function redisConnection() {
     WebhooksModule,
     JobsModule,
   ],
-  providers: [SupabaseService],
-  exports: [SupabaseService],
+  controllers: [HealthController],
+  providers: [RailwayDbService],
+  exports: [RailwayDbService],
 })
 export class AppModule {}

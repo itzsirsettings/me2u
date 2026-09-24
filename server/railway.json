@@ -5,7 +5,7 @@
   },
   "deploy": {
     "startCommand": "npm start",
-    "healthcheckPath": "/health/live",
+    "healthcheckPath": "/api/health/live",
     "healthcheckTimeout": 100
   }
 }

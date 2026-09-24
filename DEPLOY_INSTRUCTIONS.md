@@ -102,10 +102,10 @@ Once migrations are successful:
 In Railway dashboard → Your app service → **Variables** tab, ensure these are set:
 
 - `AUTH_TOKEN_SECRET` = `<generate-a-random-32-char-secret>`
-- `DATABASE_URL` (auto-set by Railway - don't modify)
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY`
+- `DATABASE_URL` (auto-set by Railway - don't modify; injected from the Postgres service)
+- `PAYSTACK_SECRET_KEY`
+- `RESEND_API_KEY`
+- `REDIS_URL` (auto-set when a Redis service is attached)
 
 ### Step 8: Test In-App OTP System
 

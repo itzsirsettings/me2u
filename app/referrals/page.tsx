@@ -20,7 +20,6 @@ import {
   money,
   ReferenceIcon,
   ReferenceScreen,
-  ReferenceToolbar,
   useReferenceUser,
   type ReferenceIconName,
 } from "@/components/reference/ReferenceUI";
@@ -101,8 +100,8 @@ function unlockCopy(status: UnlockStatus) {
       detail: "Your unlock payment has been received.",
     };
   return {
-    title: `${status.referralsNeeded} more verified referrals to unlock withdrawals`,
-    detail: `Or pay ${money(status.unlockFee)} with a 15-day waiting period`,
+    title: `${status.referralsNeeded} more verified referrals`,
+    detail: "to unlock early withdrawals",
   };
 }
 
@@ -234,10 +233,8 @@ function ReferralsContent() {
 
   return (
     <ReferenceScreen kind="referrals">
-      <ReferenceToolbar name={user.name} />
       <section className="design-referral-hero">
         <div className="design-referral-intro">
-          <p className="design-eyebrow">Refer & Earn</p>
           <h1>
             Invite friends.
             <br />
@@ -309,7 +306,6 @@ function ReferralsContent() {
               <ReferenceIcon name={unlock.data?.isUnlocked ? "check" : "crown"} size={27} />
               <div>
                 <strong>{unlockText.title}</strong>
-                <small>{unlockText.detail}</small>
               </div>
               <ChevronRight size={20} aria-hidden="true" />
             </Link>
@@ -425,7 +421,7 @@ function ReferralsContent() {
             sizes="200px"
           />
           <span className="design-phone-amount">
-            ₦1,500<small>Per referral signup</small>
+            ₦1,500
           </span>
           <span className="design-phone-bubble">Earn More</span>
         </div>
@@ -495,7 +491,6 @@ function ReferralsContent() {
                       <span>#{entry.rank}</span>
                       <div>
                         <strong>{entry.is_current_user ? "You" : entry.username}</strong>
-                        <small>{entry.verified_referral_count} verified referrals</small>
                       </div>
                       {entry.prizeAmount != null && <b>{money(entry.prizeAmount)}</b>}
                     </li>

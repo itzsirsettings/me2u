@@ -1,8 +1,7 @@
 -- ============================================================
 -- Gamification & Social Proof System
--- Railway-adapted: app_user_id() instead of auth.uid(), no
--- Supabase roles (anon/authenticated/service_role), no
--- supabase_realtime publications, no storage.* references.
+-- Railway-native: app_user_id() instead of auth.uid(); no external
+-- roles, no realtime publications, no storage.* references.
 -- ============================================================
 
 -- ─── 1. BADGES & ACHIEVEMENTS ───
@@ -186,7 +185,7 @@ create trigger education_content_set_updated_at
   before update on public.education_content
   for each row execute function public.set_updated_at();
 
--- ─── 8. RLS POLICIES (uses app_user_id(), no Supabase roles) ───
+-- ─── 8. RLS POLICIES (uses app_user_id(); no external roles) ───
 
 alter table public.badges enable row level security;
 alter table public.user_badges enable row level security;

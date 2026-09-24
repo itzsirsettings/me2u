@@ -7,11 +7,15 @@ import { execSync } from 'node:child_process';
 import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
 
-// Admin credentials
-const ADMIN_EMAIL = 'stechnoology309@gmail.com';
-const ADMIN_PASSWORD = 'qwerT1*y34';
-const ADMIN_FIRST_NAME = 'System';
-const ADMIN_LAST_NAME = 'Administrator';
+// Admin credentials are supplied via environment to avoid checked-in secrets.
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@me2u.local';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const ADMIN_FIRST_NAME = process.env.ADMIN_FIRST_NAME || 'System';
+const ADMIN_LAST_NAME = process.env.ADMIN_LAST_NAME || 'Administrator';
+
+if (!ADMIN_PASSWORD) {
+  throw new Error('ADMIN_PASSWORD environment variable is required to create the admin account.');
+}
 
 // Get DATABASE_URL from Railway CLI
 // The output format is a boxed table where values can span multiple lines
@@ -129,6 +133,7 @@ function getPublicPostgresHost(railwayOutput) {
 async function setupAdmin() {
   console.log('🔐 Setting up admin account...');
   console.log('   Email:', ADMIN_EMAIL);
+  console.log('   Password source: ADMIN_PASSWORD env var');
 
   // DATABASE_URL should be set by 'railway run' or available in env
   // Priority: env var > file > Railway CLI
@@ -249,7 +254,7 @@ async function setupAdmin() {
       console.log('\n✅ Admin account created successfully!');
       console.log('\n📋 Admin Credentials:');
       console.log('   Email:', ADMIN_EMAIL);
-      console.log('   Password:', ADMIN_PASSWORD);
+      console.log('   Password: set via ADMIN_PASSWORD env var');
       console.log('   User ID:', userId);
       console.log('   Role: admin');
       console.log('\n🔗 Login URL: https://me2ulend.online/api/auth/login');

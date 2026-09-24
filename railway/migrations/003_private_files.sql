@@ -1,5 +1,5 @@
 -- Private file storage in PostgreSQL.
--- Replaces all external object storage (Supabase Storage, AWS S3, Cloudflare R2).
+-- Self-contained database object storage; no external storage service.
 -- Files are stored as bytea; max enforced at application layer (5 MB).
 
 create table if not exists private_files (

@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef, useCallback } from "react";
 
 import BrandLogo from "@/components/BrandLogo";
-import ThemeToggleIcon from "@/components/ThemeToggleIcon";
 import { GlowCard } from "@/components/ui/spotlight-card";
 
 export default function LandingHeader() {
@@ -257,7 +256,6 @@ export default function LandingHeader() {
           </nav>
 
           <div className="hidden lg:flex items-center gap-4">
-            <ThemeToggleIcon />
             <Link
               href="/login"
               className="font-medium text-sm text-snow/70 hover:text-snow transition-colors min-h-[44px] inline-flex items-center px-2"
@@ -270,7 +268,6 @@ export default function LandingHeader() {
           </div>
 
           <div className="flex items-center gap-2 lg:hidden">
-            <ThemeToggleIcon />
             <button
               type="button"
               className="p-2.5 text-snow min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg"

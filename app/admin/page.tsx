@@ -1,12 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
+
 import Me2uIcon from "@/components/Me2uIcon";
-import { authorizedFetch } from "@/lib/fetch";
 import { backendFetch } from "@/lib/backend-api";
-import { useStore } from "@/lib/store";
 import type {
   AffiliateRewardRow,
   BillTransactionRow,
@@ -19,6 +18,8 @@ import type {
   WalletRow,
   WithdrawalRequestRow,
 } from "@/lib/database/types";
+import { authorizedFetch } from "@/lib/fetch";
+import { useStore } from "@/lib/store";
 
 type OverviewUser = ProfileRow & {
   full_name: string;
@@ -472,7 +473,7 @@ export default function AdminDashboard() {
 
   if (!mounted || isLoading || loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-3.5 pt-[4.85rem] md:px-4 md:pt-20">
+      <div className="flex min-h-screen items-center justify-center px-3.5 pt-[3.85rem] md:px-4 md:pt-20">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-accent-primary)] border-t-transparent" />
       </div>
     );
@@ -480,11 +481,12 @@ export default function AdminDashboard() {
 
   if (!overview) {
     return (
-      <main className="mx-auto max-w-3xl px-3.5 pb-nav pt-[4.85rem] md:px-4 md:pt-24">
+      <main className="mx-auto max-w-3xl px-3.5 pb-nav pt-[3.85rem] md:px-4 md:pt-24">
         <div className="rounded-[6px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-6 shadow-[4px_4px_0px_var(--color-shadow)]">
           <h1 className="font-display text-3xl font-bold">Admin dashboard unavailable</h1>
           <p className="mt-3 text-[var(--color-text-secondary)]">
-            The admin overview could not be loaded. Check Supabase credentials and try again.
+            The admin overview could not be loaded. Check the Railway database connection and
+            try again.
           </p>
           <button className="btn-primary mt-6" onClick={fetchOverview}>
             Retry
@@ -495,7 +497,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-[100vw] overflow-x-hidden px-3.5 pb-nav pt-[4.85rem] md:max-w-7xl md:px-6 md:pt-24">
+    <main className="mx-auto min-h-screen w-full max-w-[100vw] overflow-x-hidden px-3.5 pb-nav pt-[3.85rem] md:max-w-7xl md:px-6 md:pt-24">
       <div className="mb-6 flex min-w-0 flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div className="min-w-0">
           <p className="text-xs font-bold uppercase tracking-normal text-[var(--color-text-secondary)] sm:tracking-[0.14em]">

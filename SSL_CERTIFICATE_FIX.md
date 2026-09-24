@@ -56,7 +56,7 @@ DATABASE_URL=postgresql://user:pass@host:5432/db
 ```
 - SSL connection established
 - Self-signed certificates **accepted**
-- Works with Railway, Supabase, local PostgreSQL with SSL
+- Works with Railway and local PostgreSQL with SSL
 
 ### Strict Validation (Production with Valid Certificates):
 ```env
@@ -85,7 +85,7 @@ DATABASE_URL=postgresql://user:pass@host:5432/db
 4. **Can be made strict** - Set `PGSSLMODE=verify-full` when needed
 
 ### Production Recommendations:
-- **Railway/Supabase**: Default config is fine (they use valid certs, but this handles edge cases)
+- **Railway**: Default config is fine (it uses valid certs, but this handles edge cases)
 - **Own infrastructure**: Set `PGSSLMODE=verify-full` if you have valid CA-signed certificates
 - **Local development**: Keep default (accepts self-signed certs)
 

@@ -10,7 +10,7 @@ npm install
 npm run dev
 ```
 
-The API loads `server/.env` first, then the repository root `.env.local` as the final local override for shared secrets such as Supabase, Paystack, and VTpass.
+The API loads the repository root `.env`, then `server/.env`, then the repository root `.env.local` as the final local override for shared secrets such as the Railway database URL, Paystack, and VTpass.
 
 The Next.js PWA should point to this service with:
 
@@ -20,7 +20,7 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:4000
 
 ## Required Services
 
-- Supabase/PostgreSQL for profiles, wallets, ledger, and bills records.
+- Railway PostgreSQL for profiles, wallets, ledger, and bills records.
 - Redis for BullMQ queues.
 - Paystack Dedicated Virtual Accounts for wallet funding.
 - VTpass for airtime/data fulfilment.

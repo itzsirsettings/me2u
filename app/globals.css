@@ -199,7 +199,7 @@ body {
    touch-friendly rhythm for finance workflows. */
 :root {
   --app-gutter: clamp(1rem, 2.4vw, 1.5rem);
-  --app-section-gap: clamp(1rem, 2vw, 1.5rem);
+  --app-section-gap: clamp(0.5rem, 1vw, 0.75rem);
   --app-card-padding: clamp(1rem, 2.2vw, 1.5rem);
 }
 
@@ -246,8 +246,10 @@ textarea:focus-visible {
 
 .app-mobile-screen {
   width: 100%;
+  max-width: 100%;
   min-height: 100dvh;
   padding-inline: var(--app-gutter);
+  overflow-x: clip;
 }
 
 .mobile-soft-card,
@@ -257,7 +259,7 @@ textarea:focus-visible {
 }
 
 .mobile-soft-card {
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--color-shadow) 65%, transparent);
+  box-shadow: none;
 }
 
 .btn-primary,
@@ -276,11 +278,76 @@ textarea:focus-visible {
     padding-inline: 1rem;
   }
 
+  .app-mobile-screen .mb-4 {
+    margin-bottom: 0.5rem;
+  }
+
+  .app-mobile-screen .mt-4 {
+    margin-top: 0.5rem;
+  }
+
+  .app-mobile-screen .mb-5 {
+    margin-bottom: 0.625rem;
+  }
+
+  .app-mobile-screen .mt-5 {
+    margin-top: 0.625rem;
+  }
+
+  .app-mobile-screen .mb-6 {
+    margin-bottom: 0.75rem;
+  }
+
+  .app-mobile-screen .mt-6 {
+    margin-top: 0.75rem;
+  }
+
+  .app-mobile-screen .gap-4 {
+    gap: 0.5rem;
+  }
+
+  .app-mobile-screen .gap-6 {
+    gap: 0.75rem;
+  }
+
+  .app-mobile-screen .space-y-4 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 0.5rem;
+  }
+
+  .app-mobile-screen .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 0.75rem;
+  }
+
   .mobile-soft-card,
   .mobile-card {
     border-radius: 16px;
   }
 }
+
+  /* Keep mobile finance surfaces flat and let spacing define their hierarchy. */
+  main :is(section, article, [role="dialog"], .mobile-soft-card, .mobile-card, .design-card),
+  [role="dialog"] {
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  main :is(div, section, article, aside)[class*="rounded-"][class*="border"],
+  [role="dialog"] :is(div, section, article, aside)[class*="rounded-"][class*="border"],
+  .kinetic-border {
+    border: 0 !important;
+  }
+
+  [class*="shadow-"],
+  [style*="box-shadow"] {
+    box-shadow: none !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-shadow: none !important;
+  }
+
 
 /* Keep form controls aligned with the body typeface across browsers. */
 button,
@@ -294,6 +361,20 @@ html,
 body {
   max-width: 100%;
   overflow-x: clip;
+}
+
+/* Keep every scroll surface usable while removing scrollbar chrome. */
+*,
+*::before,
+*::after {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 @supports not (overflow: clip) {

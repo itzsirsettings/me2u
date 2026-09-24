@@ -1,7 +1,7 @@
-import { BadRequestException, Injectable, ServiceUnavailableException } from "@nestjs/common";
+﻿import { BadRequestException, Injectable, ServiceUnavailableException } from "@nestjs/common";
 import { InjectQueue } from "@nestjs/bullmq";
 import type { Queue } from "bullmq";
-import { SupabaseService, type AuthenticatedRequestUser } from "../../common/supabase.service";
+import { query, withTransaction, withUserTransaction, type AuthenticatedRequestUser } from "../../common/railway-db.service";
 import { verifyTransactionPin } from "../auth/pin.service";
 import { ProvidersService } from "../providers/providers.service";
 import type { BillProviderName } from "../providers/provider.interface";
@@ -24,73 +24,91 @@ function readAmount(value: unknown) {
 }
 
 function transactionReference() {
-  return `M2UB${Date.now()}${Math.floor(Math.random() * 100_000)
-    .toString()
-    .padStart(5, "0")}`;
+  return `M2UB${Date.now()}${Math.floor(Math.random() * 100_000).toString().padStart(5, "0")}`;
+}
+
+async function recordConvenienceFee(bill: any) {
+  const selling = Number(bill?.selling_price || 0);
+  const cost = Number(bill?.cost_price ?? 0);
+  const margin = cost > 0 && cost <= selling ? Math.round((selling - cost) * 100) / 100 : 0;
+
+  if (margin > 0) {
+    await query(
+      `INSERT INTO revenue_events (type, amount, user_id, description)
+       VALUES ($1, $2, $3, $4)`,
+      [
+        "bills_convenience_fee",
+        margin,
+        bill?.user_id ?? null,
+        `Bills convenience fee for ${bill?.reference} (sold ₦${selling.toFixed(2)})`,
+      ],
+    );
+  }
 }
 
 @Injectable()
 export class BillsService {
   constructor(
-    private readonly supabase: SupabaseService,
     private readonly providers: ProvidersService,
     @InjectQueue("bill-purchase") private readonly purchaseQueue: Queue,
     @InjectQueue("bill-requery") private readonly requeryQueue: Queue,
   ) {}
 
   async categories() {
-    const { data, error } = await this.supabase.admin
-      .from("bill_categories")
-      .select("*")
-      .eq("status", "active")
-      .order("created_at", { ascending: true });
-
-    if (error) throw new BadRequestException(error.message);
-    return data || [];
+    const { rows } = await query(
+      `SELECT * FROM bill_categories WHERE status = 'active' ORDER BY created_at ASC`,
+    );
+    return rows || [];
   }
 
-  async products(query: { category?: string; network?: string }) {
-    let request = this.supabase.admin
-      .from("bill_products")
-      .select("*, category:bill_categories(slug, name)")
-      .eq("is_active", true)
-      .order("network", { ascending: true })
-      .order("selling_price", { ascending: true });
+  async products(queryParam: { category?: string; network?: string }) {
+    const { rows } = await query(
+      `SELECT bp.*, bc.slug as "categorySlug", bc.name as "categoryName"
+       FROM bill_products bp
+       LEFT JOIN bill_categories bc ON bc.id = bp.category_id
+       WHERE bp.is_active = true
+       ORDER BY bp.network ASC, bp.selling_price ASC`,
+    );
 
-    if (query.network) request = request.ilike("network", query.network);
+    let filtered = rows;
+    if (queryParam.network) {
+      filtered = filtered.filter((p: any) =>
+        p.network?.toLowerCase().includes(queryParam.network!.toLowerCase())
+      );
+    }
+    if (queryParam.category) {
+      filtered = filtered.filter((p: any) => p.categorySlug === queryParam.category);
+    }
 
-    const { data, error } = await request;
-    if (error) throw new BadRequestException(error.message);
-
-    return (data || []).filter((product: any) => {
-      if (!query.category) return true;
-      return product.category?.slug === query.category;
-    });
+    return filtered.map((p: any) => ({
+      ...p,
+      category: p.categorySlug ? { slug: p.categorySlug, name: p.categoryName } : null,
+    }));
   }
 
   async transactions(user: AuthenticatedRequestUser) {
-    const { data, error } = await this.supabase.admin
-      .from("bill_transactions")
-      .select("*, product:bill_products(name, network)")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(100);
-
-    if (error) throw new BadRequestException(error.message);
-    return data || [];
+    const { rows } = await query(
+      `SELECT bt.*, bp.name as "productName", bp.network
+       FROM bill_transactions bt
+       JOIN bill_products bp ON bp.id = bt.product_id
+       WHERE bt.user_id = $1
+       ORDER BY bt.created_at DESC
+       LIMIT 100`,
+      [user.id],
+    );
+    return rows || [];
   }
 
   async transaction(user: AuthenticatedRequestUser, reference: string) {
-    const { data, error } = await this.supabase.admin
-      .from("bill_transactions")
-      .select("*, product:bill_products(name, network)")
-      .eq("user_id", user.id)
-      .eq("reference", reference)
-      .maybeSingle();
-
-    if (error) throw new BadRequestException(error.message);
-    if (!data) throw new BadRequestException("Bill transaction not found.");
-    return data;
+    const { rows } = await query(
+      `SELECT bt.*, bp.name as "productName", bp.network
+       FROM bill_transactions bt
+       JOIN bill_products bp ON bp.id = bt.product_id
+       WHERE bt.user_id = $1 AND bt.reference = $2`,
+      [user.id, reference],
+    );
+    if (rows.length === 0) throw new BadRequestException("Bill transaction not found.");
+    return rows[0];
   }
 
   async validateCustomer(body: { productId?: string; customerIdentifier?: string }) {
@@ -137,51 +155,49 @@ export class BillsService {
       throw new BadRequestException("Enter a valid Nigerian phone number.");
     }
 
-    const { data: profile, error: profileError } = await this.supabase.admin
-      .from("profiles")
-      .select("kyc_verified, transaction_pin")
-      .eq("id", user.id)
-      .maybeSingle();
+    const { rows: profileRows } = await query<{ kyc_verified: boolean; transaction_pin: string | null }>(
+      `SELECT kyc_verified, transaction_pin FROM profiles WHERE id = $1`,
+      [user.id],
+    );
+    const profile = profileRows[0] ?? null;
 
-    if (profileError) throw new BadRequestException(profileError.message);
-    if (!profile?.kyc_verified)
+    if (!profile) throw new BadRequestException("User profile not found.");
+    if (!profile.kyc_verified)
       throw new BadRequestException("Complete KYC before paying bills.");
     if (!profile.transaction_pin)
       throw new BadRequestException("Please set a transaction PIN first.");
     if (!verifyTransactionPin(profile.transaction_pin, user.id, pin))
       throw new BadRequestException("Incorrect transaction PIN.");
 
-    const { data: security, error: securityError } = await this.supabase.admin
-      .from("user_security_settings")
-      .select("wallet_frozen")
-      .eq("user_id", user.id)
-      .maybeSingle();
+    const { rows: securityRows } = await query<{ wallet_frozen: boolean }>(
+      `SELECT wallet_frozen FROM user_security_settings WHERE user_id = $1`,
+      [user.id],
+    );
+    const security = securityRows[0] ?? { wallet_frozen: false };
 
-    if (securityError) throw new BadRequestException(securityError.message);
-    if (security?.wallet_frozen) throw new BadRequestException("Your wallet is frozen.");
+    if (security.wallet_frozen) throw new BadRequestException("Your wallet is frozen.");
 
     const reference = transactionReference();
     const idempotencyKey =
       String(body.idempotencyKey || idempotencyHeader || "").trim() || reference;
 
-    const { data, error } = await this.supabase.admin.rpc("me2u_create_bill_debit", {
-      p_user_id: user.id,
-      p_product_id: product.id,
-      p_reference: reference,
-      p_idempotency_key: idempotencyKey,
-      p_amount: amount,
-      p_customer_identifier: customerIdentifier,
+    const result = await withTransaction(async (client) => {
+      const { rows } = await client.query(
+        `SELECT * FROM me2u_create_bill_debit($1, $2, $3, $4, $5, $6)`,
+        [user.id, product.id, reference, idempotencyKey, amount, customerIdentifier],
+      );
+      return rows[0];
     });
 
-    if (error) throw new BadRequestException(error.message);
+    if (!result) throw new BadRequestException("Failed to create bill debit.");
 
     await this.purchaseQueue.add(
       "fulfill",
-      { reference: data.reference },
-      { jobId: data.reference, attempts: 3, backoff: { type: "exponential", delay: 10_000 } },
+      { reference: result.reference },
+      { jobId: result.reference, attempts: 3, backoff: { type: "exponential", delay: 10_000 } },
     );
 
-    return data;
+    return result;
   }
 
   async fulfill(reference: string) {
@@ -207,46 +223,44 @@ export class BillsService {
     );
 
     const status = result.status === "reversed" ? "failed" : result.status;
-    const { error } = await this.supabase.admin
-      .from("bill_transactions")
-      .update({
-        status,
-        provider_reference: result.providerReference,
-        provider_response: result.raw as any,
-        failure_reason:
-          status === "failed" ? result.message || "Provider failed transaction." : null,
-        completed_at: status === "successful" ? new Date().toISOString() : null,
-        next_requery_at:
-          status === "pending" ? new Date(Date.now() + 5 * 60_000).toISOString() : null,
-      })
-      .eq("reference", reference);
 
-    if (error) throw new BadRequestException(error.message);
+    await query(
+      `UPDATE bill_transactions SET
+         status = $1,
+         provider_reference = $2,
+         provider_response = $3,
+         failure_reason = CASE WHEN $1 = 'failed' THEN $4 ELSE NULL END,
+         completed_at = CASE WHEN $1 = 'successful' THEN NOW() ELSE NULL END,
+         next_requery_at = CASE WHEN $1 = 'pending' THEN NOW() + INTERVAL '5 minutes' ELSE NULL END
+       WHERE reference = $5`,
+      [status, result.providerReference, result.raw, result.message || "Provider failed transaction.", reference],
+    );
 
-    // G4 fee transparency: book the platform margin on a successful bill as
-    // a `bills_convenience_fee` revenue event. The wallet debit already
-    // captured the full `selling_price` (which contains the Me2U margin);
-    // this row is cost/margin visibility only — no extra wallet movement.
-    if (status === "successful" && String(bill.status) !== "successful") {
-      await this.recordConvenienceFee(bill);
+    // Convenience fee — best-effort
+    if (status === "successful") {
+      try {
+        await recordConvenienceFee(bill);
+      } catch { /* non-critical */ }
     }
 
-    if (status === "failed")
-      await this.refund(reference, result.message || "Provider failed transaction.");
+    // Schedule another requery if still pending
+    if (status === "pending") {
+      await this.requeryQueue.add(
+        "requery",
+        { reference },
+        { delay: 5 * 60_000, jobId: `${reference}-requery-2` },
+      );
+    }
+
     return this.loadBill(reference);
   }
 
   async requery(reference: string) {
-    await this.requeryQueue.add(
-      "requery",
-      { reference },
-      { jobId: `requery:${reference}:${Date.now()}` },
-    );
-    return { ok: true };
-  }
-
-  async requeryNow(reference: string) {
     const bill = await this.loadBill(reference);
+    if (["successful", "refunded", "failed"].includes(String(bill.status))) {
+      return bill;
+    }
+
     const provider = this.providers.get(bill.provider as BillProviderName);
     const result = await provider.requery(bill.provider_reference || bill.reference);
 
@@ -259,104 +273,81 @@ export class BillsService {
     );
 
     const status = result.status === "reversed" ? "failed" : result.status;
-    const { error } = await this.supabase.admin
-      .from("bill_transactions")
-      .update({
-        status,
-        provider_response: result.raw as any,
-        failure_reason:
-          status === "failed" ? result.message || "Provider failed transaction." : null,
-        requery_count: Number(bill.requery_count || 0) + 1,
-        completed_at: status === "successful" ? new Date().toISOString() : bill.completed_at,
-        next_requery_at:
-          status === "pending" ? new Date(Date.now() + 5 * 60_000).toISOString() : null,
-      })
-      .eq("reference", reference);
 
-    if (error) throw new BadRequestException(error.message);
+    await query(
+      `UPDATE bill_transactions SET
+         status = $1,
+         provider_response = $2,
+         failure_reason = CASE WHEN $1 = 'failed' THEN $3 ELSE NULL END,
+         completed_at = CASE WHEN $1 = 'successful' THEN NOW() ELSE NULL END,
+         next_requery_at = CASE WHEN $1 = 'pending' THEN NOW() + INTERVAL '5 minutes' ELSE NULL END
+       WHERE reference = $4`,
+      [status, result.raw, result.message || "Provider failed transaction.", reference],
+    );
 
-    // Pending → successful via requery: book margin once, guarded so the
-    // requery loop cannot double-book the convenience fee.
     if (status === "successful" && String(bill.status) !== "successful") {
-      await this.recordConvenienceFee(bill);
+      try {
+        await recordConvenienceFee(bill);
+      } catch { /* non-critical */ }
     }
+
     if (status === "failed")
       await this.refund(reference, result.message || "Provider failed transaction.");
+
     return this.loadBill(reference);
   }
 
   async refund(reference: string, reason = "Bill payment failed.") {
-    const { data, error } = await this.supabase.admin.rpc("me2u_refund_bill_transaction", {
-      p_reference: reference,
-      p_reason: reason,
+    const result = await withTransaction(async (client) => {
+      const { rows } = await client.query(
+        `SELECT * FROM me2u_refund_bill_transaction($1, $2)`,
+        [reference, reason],
+      );
+      return rows[0];
     });
-    if (error) throw new BadRequestException(error.message);
-    return data;
+
+    if (!result) throw new BadRequestException("Refund failed or transaction not found.");
+    return result;
   }
 
   async requeryPendingBatch() {
-    const { data, error } = await this.supabase.admin
-      .from("bill_transactions")
-      .select("reference")
-      .eq("status", "pending")
-      .lte("next_requery_at", new Date().toISOString())
-      .limit(50);
+    const { rows } = await query(
+      `SELECT reference FROM bill_transactions
+       WHERE status = 'pending' AND next_requery_at <= NOW()
+       LIMIT 50`,
+    );
 
-    if (error) throw new ServiceUnavailableException(error.message);
     await Promise.all(
-      (data || []).map((bill: any) =>
+      rows.map((bill: any) =>
         this.requeryQueue.add("requery", { reference: bill.reference }),
       ),
     );
-    return { queued: data?.length || 0 };
-  }
-
-  /**
-   * G4 fee transparency: book the platform margin on a successful bill as a
-   * `bills_convenience_fee` revenue event. The wallet debit already captured
-   * the full `selling_price` (which contains the Me2U margin); this row is
-   * cost/margin visibility only — no extra wallet movement. Best-effort:
-   * a failed insert must never fail bill fulfilment.
-   */
-  private async recordConvenienceFee(bill: any) {
-    try {
-      const selling = Number(bill.selling_price || 0);
-      const cost = Number(bill.cost_price ?? 0);
-      const margin = cost > 0 && cost <= selling ? Math.round((selling - cost) * 100) / 100 : 0;
-      await this.supabase.admin.from("revenue_events").insert({
-        type: "bills_convenience_fee",
-        amount: margin,
-        user_id: bill.user_id ?? null,
-        description: `Bills convenience fee for ${bill.reference} (sold ₦${selling.toFixed(2)})`,
-      });
-    } catch {
-      // revenue tracking is non-critical; ignore insert failures
-    }
+    return { queued: rows.length || 0 };
   }
 
   private async loadProduct(productId: string) {
-    const { data, error } = await this.supabase.admin
-      .from("bill_products")
-      .select("*, category:bill_categories(slug, name)")
-      .eq("id", productId)
-      .eq("is_active", true)
-      .maybeSingle();
-
-    if (error) throw new BadRequestException(error.message);
-    if (!data) throw new BadRequestException("Bill product is unavailable.");
-    return data as any;
+    const { rows } = await query(
+      `SELECT bp.*, bc.slug as "categorySlug", bc.name as "categoryName"
+       FROM bill_products bp
+       LEFT JOIN bill_categories bc ON bc.id = bp.category_id
+       WHERE bp.id = $1 AND bp.is_active = true`,
+      [productId],
+    );
+    if (rows.length === 0) throw new BadRequestException("Bill product is unavailable.");
+    const p = rows[0];
+    return {
+      ...p,
+      category: p.categorySlug ? { slug: p.categorySlug, name: p.categoryName } : null,
+    } as any;
   }
 
   private async loadBill(reference: string) {
-    const { data, error } = await this.supabase.admin
-      .from("bill_transactions")
-      .select("*")
-      .eq("reference", reference)
-      .maybeSingle();
-
-    if (error) throw new BadRequestException(error.message);
-    if (!data) throw new BadRequestException("Bill transaction not found.");
-    return data as any;
+    const { rows } = await query(
+      `SELECT * FROM bill_transactions WHERE reference = $1`,
+      [reference],
+    );
+    if (rows.length === 0) throw new BadRequestException("Bill transaction not found.");
+    return rows[0] as any;
   }
 
   private async logProvider(
@@ -366,13 +357,10 @@ export class BillsService {
     responsePayload: unknown,
     providerReference?: string,
   ) {
-    await this.supabase.admin.from("provider_logs").insert({
-      provider,
-      endpoint,
-      reference,
-      request_payload: { providerReference },
-      response_payload: responsePayload as any,
-      status_code: 200,
-    });
+    await query(
+      `INSERT INTO provider_logs (provider, endpoint, reference, request_payload, response_payload, status_code)
+       VALUES ($1, $2, $3, $4, $5, 200)`,
+      [provider, endpoint, reference, { providerReference }, responsePayload],
+    );
   }
 }

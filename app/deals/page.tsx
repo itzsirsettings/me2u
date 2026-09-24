@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { useStore } from "@/lib/store";
-import { toast } from "sonner";
 import { motion, type Variants } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
+
 import Me2uIcon from "@/components/Me2uIcon";
 import { Card } from "@/components/ui/card";
-import LoadingButton from "@/LoadingButton";
 import { authorizedFetch as _authorizedFetch } from "@/lib/fetch";
+import { useStore } from "@/lib/store";
+import LoadingButton from "@/LoadingButton";
 
 type MerchantDeal = {
   id: string;
@@ -48,7 +49,10 @@ const categoryColors: Record<string, string> = {
 };
 
 function categoryStyle(cat: string) {
-  return categoryColors[cat.toLowerCase()] ?? "bg-[var(--mobile-surface-muted)] text-[var(--color-text-secondary)]";
+  return (
+    categoryColors[cat.toLowerCase()] ??
+    "bg-[var(--mobile-surface-muted)] text-[var(--color-text-secondary)]"
+  );
 }
 
 export default function DealsPage() {
@@ -62,7 +66,9 @@ export default function DealsPage() {
   const [fetching, setFetching] = useState(true);
   const [filter, setFilter] = useState<string>("all");
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (mounted && !isLoading && !isAuthenticated) router.push("/login");
@@ -96,8 +102,12 @@ export default function DealsPage() {
   if (!mounted || (!isAuthenticated && !isLoading)) return null;
 
   const claimedIds = new Set(claims.map((c) => c.deal_id));
-  const categories = ["all", ...Array.from(new Set(deals.map((d) => d.category.toLowerCase())))];
-  const visibleDeals = filter === "all" ? deals : deals.filter((d) => d.category.toLowerCase() === filter);
+  const categories = [
+    "all",
+    ...Array.from(new Set(deals.map((d) => d.category.toLowerCase()))),
+  ];
+  const visibleDeals =
+    filter === "all" ? deals : deals.filter((d) => d.category.toLowerCase() === filter);
 
   const handleClaim = async (deal: MerchantDeal) => {
     const res = await authorizedFetch("/api/merchant-deals", {
@@ -119,7 +129,7 @@ export default function DealsPage() {
 
   return (
     <motion.div
-      className="app-mobile-screen mx-auto w-full max-w-md px-3.5 pt-[4.85rem] md:max-w-3xl md:px-6 md:py-24"
+      className="app-mobile-screen mx-auto w-full max-w-md px-3.5 pt-[3.85rem] md:max-w-3xl md:px-6 md:py-24"
       variants={containerVariants}
       initial="hidden"
       animate="show"
@@ -129,30 +139,45 @@ export default function DealsPage() {
         <h1 className="sr-only md:not-sr-only md:text-7xl md:font-display md:leading-[0.85] md:tracking-tighter">
           Deals
         </h1>
-        <p className="text-[0.78rem] font-black uppercase tracking-widest text-[var(--color-text-secondary)] md:hidden">
-          Merchant Deals
-        </p>
       </motion.div>
 
       {/* Stats strip */}
-      <motion.div variants={itemVariants} className="mobile-soft-card mb-4 grid grid-cols-3 divide-x divide-[var(--color-border)] overflow-hidden rounded-[20px]">
+      <motion.div
+        variants={itemVariants}
+        className="mobile-soft-card mb-4 grid grid-cols-3 divide-x divide-[var(--color-border)] overflow-hidden rounded-[20px]"
+      >
         <div className="flex flex-col items-center justify-center gap-0.5 px-2 py-3">
-          <p className="text-[1.1rem] font-black text-[var(--color-text-primary)]">{deals.length}</p>
-          <p className="text-[0.65rem] font-bold uppercase tracking-widest text-[var(--color-text-secondary)]">Deals</p>
+          <p className="text-[1.1rem] font-black text-[var(--color-text-primary)]">
+            {deals.length}
+          </p>
+          <p className="text-[0.65rem] font-bold uppercase tracking-widest text-[var(--color-text-secondary)]">
+            Deals
+          </p>
         </div>
         <div className="flex flex-col items-center justify-center gap-0.5 px-2 py-3">
-          <p className="text-[1.1rem] font-black text-[var(--color-positive-text)]">{claimedCount}</p>
-          <p className="text-[0.65rem] font-bold uppercase tracking-widest text-[var(--color-text-secondary)]">Claimed</p>
+          <p className="text-[1.1rem] font-black text-[var(--color-positive-text)]">
+            {claimedCount}
+          </p>
+          <p className="text-[0.65rem] font-bold uppercase tracking-widest text-[var(--color-text-secondary)]">
+            Claimed
+          </p>
         </div>
         <div className="flex flex-col items-center justify-center gap-0.5 px-2 py-3">
-          <p className="text-[1.1rem] font-black text-[var(--color-text-primary)]">{unclaimedCount}</p>
-          <p className="text-[0.65rem] font-bold uppercase tracking-widest text-[var(--color-text-secondary)]">Available</p>
+          <p className="text-[1.1rem] font-black text-[var(--color-text-primary)]">
+            {unclaimedCount}
+          </p>
+          <p className="text-[0.65rem] font-bold uppercase tracking-widest text-[var(--color-text-secondary)]">
+            Available
+          </p>
         </div>
       </motion.div>
 
       {/* Category filter */}
       {categories.length > 1 && (
-        <motion.div variants={itemVariants} className="mb-4 flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        <motion.div
+          variants={itemVariants}
+          className="mb-4 flex gap-2 overflow-x-auto pb-1 scrollbar-hide"
+        >
           {categories.map((cat) => (
             <button
               key={cat}
@@ -208,7 +233,9 @@ export default function DealsPage() {
                   <div className="mb-3 flex min-w-0 items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <div className="mb-1 flex flex-wrap items-center gap-2">
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wider ${categoryStyle(deal.category)}`}>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wider ${categoryStyle(deal.category)}`}
+                        >
                           {deal.category}
                         </span>
                         {claimed && (

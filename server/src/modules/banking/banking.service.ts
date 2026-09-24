@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
-import { SupabaseService, type AuthenticatedRequestUser } from "../../common/supabase.service";
+import { query, type AuthenticatedRequestUser } from "../../common/railway-db.service";
 import { WemaProvider } from "./wema.provider";
 
 function fullName(profile: any) {
@@ -13,38 +13,35 @@ function isMissingWemaSchema(error: { message?: string } | null | undefined) {
 @Injectable()
 export class BankingService {
   constructor(
-    private readonly supabase: SupabaseService,
     private readonly wema: WemaProvider,
   ) {}
 
   async getVirtualAccount(user: AuthenticatedRequestUser) {
-    const { data: existing, error } = await this.supabase.admin
-      .from("virtual_accounts")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("provider", "wema")
-      .maybeSingle();
+    const { rows } = await query(
+      `SELECT * FROM virtual_accounts WHERE user_id = $1 AND provider = 'wema'`,
+      [user.id],
+    );
 
-    if (isMissingWemaSchema(error)) {
-      return {
-        status: "migration_pending",
-        message: "Apply the Wema banking rails migration before virtual accounts can be created.",
-      };
+    if (rows.length === 0) {
+      return this.createVirtualAccountForUser(user.id);
     }
-    if (error) throw new BadRequestException(error.message);
-    if (existing) return existing;
-
-    return this.createVirtualAccountForUser(user.id);
+    return rows[0];
   }
 
   async createVirtualAccountForUser(userId: string) {
-    const { data: profile, error: profileError } = await this.supabase.admin
-      .from("profiles")
-      .select("id, first_name, last_name, email, phone, kyc_verified")
-      .eq("id", userId)
-      .maybeSingle();
+    const { rows } = await query<{
+      id: string;
+      first_name: string | null;
+      last_name: string | null;
+      email: string | null;
+      phone: string | null;
+      kyc_verified: boolean | null;
+    }>(
+      `SELECT id, first_name, last_name, email, phone, kyc_verified FROM profiles WHERE id = $1`,
+      [userId],
+    );
+    const profile = rows[0];
 
-    if (profileError) throw new BadRequestException(profileError.message);
     if (!profile) throw new BadRequestException("Profile not found.");
     if (!profile.kyc_verified) {
       return this.saveVirtualAccount(userId, {
@@ -57,9 +54,9 @@ export class BankingService {
     const result = await this.wema.createVirtualAccount({
       userId,
       fullName: fullName(profile),
-      firstName: profile.first_name,
-      lastName: profile.last_name,
-      email: profile.email,
+      firstName: profile.first_name || "",
+      lastName: profile.last_name || "",
+      email: profile.email || "",
       phone: profile.phone || "",
       nin: null,
     });
@@ -80,21 +77,23 @@ export class BankingService {
       response_payload: result.raw || {},
     };
 
-    const { data, error } = await this.supabase.admin
-      .from("virtual_accounts")
-      .upsert(row, { onConflict: "provider,user_id" })
-      .select("*")
-      .single();
+    const { rows } = await query(
+      `INSERT INTO virtual_accounts (user_id, provider, provider_reference, account_name, account_number, bank_name, bank_code, status, response_payload)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       ON CONFLICT (provider, user_id) DO UPDATE SET
+         provider_reference = EXCLUDED.provider_reference,
+         account_name = EXCLUDED.account_name,
+         account_number = EXCLUDED.account_number,
+         bank_name = EXCLUDED.bank_name,
+         bank_code = EXCLUDED.bank_code,
+         status = EXCLUDED.status,
+         response_payload = EXCLUDED.response_payload
+       RETURNING *`,
+      [row.user_id, row.provider, row.provider_reference, row.account_name, row.account_number, row.bank_name, row.bank_code, row.status, row.response_payload],
+    );
 
-    if (isMissingWemaSchema(error)) {
-      return {
-        ...row,
-        message: "Apply the Wema banking rails migration before virtual accounts can be persisted.",
-      };
-    }
-    if (error) throw new BadRequestException(error.message);
     return {
-      ...data,
+      ...rows[0],
       message: result.message,
     };
   }
@@ -102,88 +101,73 @@ export class BankingService {
   async processWemaInflow(rawBody: Buffer, headers: Record<string, string | undefined>) {
     const notification = this.wema.parseInflowWebhook(rawBody, headers);
 
-    await this.supabase.admin.from("provider_webhooks").insert({
-      provider: "wema",
-      event_type: "wallet_inflow",
-      reference: notification.providerReference,
-      payload: notification.raw as any,
-      processed: false,
-    });
-
-    const { data: virtualAccount, error: accountError } = await this.supabase.admin
-      .from("virtual_accounts")
-      .select("*")
-      .eq("provider", "wema")
-      .eq("account_number", notification.accountNumber)
-      .maybeSingle();
-
-    if (accountError) throw new BadRequestException(accountError.message);
-    if (!virtualAccount) throw new BadRequestException("Virtual account was not found.");
-
-    const { data: wallet, error: walletError } = await this.supabase.admin
-      .from("wallets")
-      .select("id")
-      .eq("user_id", virtualAccount.user_id)
-      .maybeSingle();
-
-    if (walletError) throw new BadRequestException(walletError.message);
-    if (!wallet) throw new BadRequestException("Wallet was not found.");
-
-    const { data: existingInflow, error: existingError } = await this.supabase.admin
-      .from("wallet_inflows")
-      .select("*")
-      .eq("provider", "wema")
-      .eq("provider_reference", notification.providerReference)
-      .maybeSingle();
-
-    if (existingError) throw new BadRequestException(existingError.message);
-    if (existingInflow?.status === "credited") return { ok: true, duplicate: true };
-
-    const { error: inflowError } = await this.supabase.admin.from("wallet_inflows").upsert(
-      {
-        user_id: virtualAccount.user_id,
-        wallet_id: wallet.id,
-        virtual_account_id: virtualAccount.id,
-        provider: "wema",
-        provider_reference: notification.providerReference,
-        amount: notification.amount,
-        currency: notification.currency,
-        status: "verified",
-        sender_name: notification.senderName,
-        sender_account_number: notification.senderAccountNumber,
-        narration: notification.narration,
-        raw_payload: notification.raw as any,
-      },
-      { onConflict: "provider,provider_reference" },
+    await query(
+      `INSERT INTO provider_webhooks (provider, event_type, reference, payload, processed)
+       VALUES ($1, $2, $3, $4, false)`,
+      ["wema", "wallet_inflow", notification.providerReference, notification.raw],
     );
 
-    if (inflowError) throw new BadRequestException(inflowError.message);
+    const { rows: vaRows } = await query(
+      `SELECT * FROM virtual_accounts WHERE provider = 'wema' AND account_number = $1`,
+      [notification.accountNumber],
+    );
+    const virtualAccount = vaRows[0];
+
+    if (!virtualAccount) throw new BadRequestException("Virtual account was not found.");
+
+    const { rows: walletRows } = await query(
+      `SELECT id FROM wallets WHERE user_id = $1`,
+      [virtualAccount.user_id],
+    );
+    const wallet = walletRows[0];
+
+    if (!wallet) throw new BadRequestException("Wallet was not found.");
+
+    const { rows: inflowRows } = await query(
+      `SELECT * FROM wallet_inflows WHERE provider = 'wema' AND provider_reference = $1`,
+      [notification.providerReference],
+    );
+    const existingInflow = inflowRows[0];
+
+    if (existingInflow?.status === "credited") return { ok: true, duplicate: true };
+
+    await query(
+      `INSERT INTO wallet_inflows (user_id, wallet_id, virtual_account_id, provider, provider_reference, amount, currency, status, sender_name, sender_account_number, narration, raw_payload)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+       ON CONFLICT (provider, provider_reference) DO UPDATE SET
+         amount = EXCLUDED.amount,
+         currency = EXCLUDED.currency,
+         status = EXCLUDED.status,
+         sender_name = EXCLUDED.sender_name,
+         sender_account_number = EXCLUDED.sender_account_number,
+         narration = EXCLUDED.narration,
+         raw_payload = EXCLUDED.raw_payload`,
+      [
+        virtualAccount.user_id, wallet.id, virtualAccount.id,
+        "wema", notification.providerReference,
+        notification.amount, notification.currency, "verified",
+        notification.senderName, notification.senderAccountNumber,
+        notification.narration, notification.raw,
+      ],
+    );
 
     const ledgerReference = `wema:${notification.providerReference}`;
-    const { error: creditError } = await this.supabase.admin.rpc("me2u_credit_wallet_inflow", {
-      p_user_id: virtualAccount.user_id,
-      p_amount: notification.amount,
-      p_reference: ledgerReference,
-      p_description: "Wema virtual account wallet funding",
-      p_metadata: {
-        virtual_account_id: virtualAccount.id,
-        provider_reference: notification.providerReference,
-      },
-    });
+    await query(
+      `SELECT * FROM me2u_credit_wallet_inflow($1, $2, $3, $4::jsonb)`,
+      [virtualAccount.user_id, notification.amount, ledgerReference, JSON.stringify({ virtual_account_id: virtualAccount.id, provider_reference: notification.providerReference })],
+    );
 
-    if (creditError) throw new BadRequestException(creditError.message);
+    await query(
+      `UPDATE wallet_inflows SET status = 'credited', credited_at = NOW()
+       WHERE provider = 'wema' AND provider_reference = $1`,
+      [notification.providerReference],
+    );
 
-    await this.supabase.admin
-      .from("wallet_inflows")
-      .update({ status: "credited", credited_at: new Date().toISOString() })
-      .eq("provider", "wema")
-      .eq("provider_reference", notification.providerReference);
-
-    await this.supabase.admin
-      .from("provider_webhooks")
-      .update({ processed: true })
-      .eq("provider", "wema")
-      .eq("reference", notification.providerReference);
+    await query(
+      `UPDATE provider_webhooks SET processed = true
+       WHERE provider = 'wema' AND reference = $1`,
+      [notification.providerReference],
+    );
 
     return { ok: true };
   }

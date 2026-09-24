@@ -1,4 +1,5 @@
 import Link from "next/link";
+
 import BrandLogo from "@/components/BrandLogo";
 import {
   companyInfo,
@@ -22,12 +23,27 @@ function SectionBlock({ section, depth = 0 }: { section: PolicySection; depth?: 
   const Heading = depth > 0 ? "h3" : "h2";
 
   return (
-    <section className={depth > 0 ? "mt-5 rounded-[12px] bg-[var(--mobile-surface-muted)] p-4 md:rounded-[5px]" : "mobile-soft-card p-4 md:p-6"}>
-      <Heading className={depth > 0 ? "text-base font-black leading-tight tracking-normal" : "text-xl font-black leading-tight tracking-normal md:text-2xl"}>
+    <section
+      className={
+        depth > 0
+          ? "mt-5 rounded-[12px] bg-[var(--mobile-surface-muted)] p-4 md:rounded-[5px]"
+          : "mobile-soft-card p-4 md:p-6"
+      }
+    >
+      <Heading
+        className={
+          depth > 0
+            ? "text-base font-black leading-tight tracking-normal"
+            : "text-xl font-black leading-tight tracking-normal md:text-2xl"
+        }
+      >
         {section.title}
       </Heading>
       {section.paragraphs?.map((paragraph) => (
-        <p key={paragraph} className="mt-3 text-sm leading-7 text-[var(--color-text-secondary)] md:text-base">
+        <p
+          key={paragraph}
+          className="mt-3 text-sm leading-7 text-[var(--color-text-secondary)] md:text-base"
+        >
           {paragraph}
         </p>
       ))}
@@ -59,19 +75,31 @@ function PublicFooter() {
           <p className="mt-4 text-sm leading-6 text-snow/72">
             Me2U is legally owned by {companyInfo.legalName}.
           </p>
-          <p className="mt-3 text-sm font-black leading-6 text-snow">{companyInfo.tradingName} support</p>
+          <p className="mt-3 text-sm font-black leading-6 text-snow">
+            {companyInfo.tradingName} support
+          </p>
         </div>
         {legalFooterGroups.map((group) => (
           <div key={group.title}>
-            <h2 className="text-xs font-black uppercase tracking-[0.12em] text-snow">{group.title}</h2>
+            <h2 className="text-xs font-black uppercase tracking-[0.12em] text-snow">
+              {group.title}
+            </h2>
             <div className="mt-4 grid gap-2">
               {group.links.map((link) =>
                 isExternal(link.href) ? (
-                  <a key={link.href} href={link.href} className="text-sm font-semibold leading-6 text-snow/72 transition hover:text-snow">
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    className="text-sm font-semibold leading-6 text-snow/72 transition hover:text-snow"
+                  >
                     {link.label}
                   </a>
                 ) : (
-                  <Link key={link.href} href={link.href} className="text-sm font-semibold leading-6 text-snow/72 transition hover:text-snow">
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="text-sm font-semibold leading-6 text-snow/72 transition hover:text-snow"
+                  >
                     {link.label}
                   </Link>
                 ),
@@ -82,7 +110,9 @@ function PublicFooter() {
       </div>
       <div className="mt-8 border-t border-snow/14 pt-5">
         <p className="text-xs font-semibold leading-6 text-snow/64">{footerDisclaimer}</p>
-        <p className="mt-3 text-xs font-semibold text-snow/52">©2026 Me2U by {companyInfo.legalName}</p>
+        <p className="mt-3 text-xs font-semibold text-snow/52">
+          ©2026 Me2U by {companyInfo.legalName}
+        </p>
       </div>
     </footer>
   );
@@ -98,7 +128,7 @@ export default function LegalPolicyPage({
   basePath: "/legal" | "/support";
 }) {
   return (
-    <main className="app-mobile-screen mx-auto w-full max-w-md px-3.5 pt-[4.85rem] md:max-w-6xl md:px-6 md:py-24">
+    <main className="app-mobile-screen mx-auto w-full max-w-md px-3.5 pt-[3.85rem] md:max-w-6xl md:px-6 md:py-24">
       <header className="mobile-soft-card overflow-hidden p-5 md:p-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <Link href="/" aria-label="Me2U home" className="inline-flex">

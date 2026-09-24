@@ -9,7 +9,6 @@ import { toast } from "sonner";
 import {
   ReferenceIcon,
   ReferenceScreen,
-  ReferenceToolbar,
   useReferenceUser,
 } from "@/components/reference/ReferenceUI";
 import ThemeModeSelector from "@/components/ThemeModeSelector";
@@ -44,7 +43,6 @@ export default function Profile() {
 
   return (
     <ReferenceScreen kind="profile">
-      <ReferenceToolbar theme />
       <section className="design-page-title">
         <h1>Profile</h1>
         <p>Manage your account and preferences</p>
@@ -132,11 +130,6 @@ export default function Profile() {
                 {user.kycVerified ? "Approved" : "Pending"}
               </span>
             </div>
-            <small>
-              {user.kycVerified
-                ? "Your identity has been verified."
-                : "Complete your KYC to unlock full features."}
-            </small>
           </div>
           <ChevronRight size={20} aria-hidden="true" />
         </Link>
@@ -151,11 +144,6 @@ export default function Profile() {
                 ? `${user.bankName} • ${user.accountNumber || "No account number"}`
                 : "Not added • No account number"}
             </p>
-            <small>
-              {bankReady
-                ? "Your bank account is connected."
-                : "Add your bank account to receive payments."}
-            </small>
           </div>
           <ChevronRight size={20} aria-hidden="true" />
         </Link>

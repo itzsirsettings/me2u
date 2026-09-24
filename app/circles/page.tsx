@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { useStore } from "@/lib/store";
-import { toast } from "sonner";
 import { motion, type Variants, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
+
 import Me2uIcon from "@/components/Me2uIcon";
 import { Card } from "@/components/ui/card";
-import LoadingButton from "@/LoadingButton";
 import { authorizedFetch as _authorizedFetch } from "@/lib/fetch";
+import { useStore } from "@/lib/store";
+import LoadingButton from "@/LoadingButton";
 
 type Circle = {
   id: string;
@@ -49,7 +50,9 @@ export default function CirclesPage() {
   const [borrowPins, setBorrowPins] = useState<Record<string, string>>({});
   const [expandedCircle, setExpandedCircle] = useState<string | null>(null);
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (mounted && !isLoading && !isAuthenticated) router.push("/login");
@@ -159,7 +162,7 @@ export default function CirclesPage() {
   // Feature gate: group lending not enabled
   if (!groupLendingEnabled) {
     return (
-      <div className="app-mobile-screen mx-auto flex w-full max-w-md flex-col items-center justify-center px-3.5 pt-[4.85rem] md:max-w-3xl md:px-6 md:py-24">
+      <div className="app-mobile-screen mx-auto flex w-full max-w-md flex-col items-center justify-center px-3.5 pt-[3.85rem] md:max-w-3xl md:px-6 md:py-24">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -172,22 +175,45 @@ export default function CirclesPage() {
             <div>
               <h2 className="text-xl font-display">Me2U Circles</h2>
               <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">
-                Group lending circles let you pool funds with trusted people and borrow from the collective pool — 0% interest.
+                Group lending circles let you pool funds with trusted people and borrow from the
+                collective pool — 0% interest.
               </p>
             </div>
             <div className="w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--mobile-surface-muted)] p-4 text-left text-sm">
-              <p className="font-bold text-[var(--color-text-primary)]">Requirements to join:</p>
+              <p className="font-bold text-[var(--color-text-primary)]">
+                Requirements to join:
+              </p>
               <ul className="mt-2 space-y-1.5 text-[var(--color-text-secondary)]">
                 <li className="flex items-center gap-2">
-                  <Me2uIcon name={user?.kycVerified ? "check" : "alert"} size={14} className={user?.kycVerified ? "text-[var(--color-positive-text)]" : "text-[var(--color-warning-text)]"} />
+                  <Me2uIcon
+                    name={user?.kycVerified ? "check" : "alert"}
+                    size={14}
+                    className={
+                      user?.kycVerified
+                        ? "text-[var(--color-positive-text)]"
+                        : "text-[var(--color-warning-text)]"
+                    }
+                  />
                   KYC verified {!user?.kycVerified && "— complete KYC first"}
                 </li>
                 <li className="flex items-center gap-2">
-                  <Me2uIcon name={user?.transactionPin ? "check" : "alert"} size={14} className={user?.transactionPin ? "text-[var(--color-positive-text)]" : "text-[var(--color-warning-text)]"} />
+                  <Me2uIcon
+                    name={user?.transactionPin ? "check" : "alert"}
+                    size={14}
+                    className={
+                      user?.transactionPin
+                        ? "text-[var(--color-positive-text)]"
+                        : "text-[var(--color-warning-text)]"
+                    }
+                  />
                   Transaction PIN set {!user?.transactionPin && "— set PIN in Security"}
                 </li>
                 <li className="flex items-center gap-2">
-                  <Me2uIcon name="alert" size={14} className="text-[var(--color-warning-text)]" />
+                  <Me2uIcon
+                    name="alert"
+                    size={14}
+                    className="text-[var(--color-warning-text)]"
+                  />
                   Group lending enabled in Security Center
                 </li>
               </ul>
@@ -207,13 +233,16 @@ export default function CirclesPage() {
 
   return (
     <motion.div
-      className="app-mobile-screen mx-auto w-full max-w-md px-3.5 pt-[4.85rem] md:max-w-3xl md:px-6 md:py-24"
+      className="app-mobile-screen mx-auto w-full max-w-md px-3.5 pt-[3.85rem] md:max-w-3xl md:px-6 md:py-24"
       variants={containerVariants}
       initial="hidden"
       animate="show"
     >
       {/* Header */}
-      <motion.div variants={itemVariants} className="mb-4 flex min-w-0 items-end justify-between gap-3 md:mb-10">
+      <motion.div
+        variants={itemVariants}
+        className="mb-4 flex min-w-0 items-end justify-between gap-3 md:mb-10"
+      >
         <div className="min-w-0">
           <h1 className="sr-only md:not-sr-only md:text-7xl md:font-display md:leading-[0.85] md:tracking-tighter">
             Circles
@@ -329,10 +358,16 @@ export default function CirclesPage() {
                   >
                     <div className="flex min-w-0 items-center gap-3">
                       <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--color-positive-bg)]">
-                        <Me2uIcon name="group" size={20} className="text-[var(--color-positive-text)]" />
+                        <Me2uIcon
+                          name="group"
+                          size={20}
+                          className="text-[var(--color-positive-text)]"
+                        />
                       </div>
                       <div className="min-w-0">
-                        <p className="truncate font-display text-base leading-none">{circle.name}</p>
+                        <p className="truncate font-display text-base leading-none">
+                          {circle.name}
+                        </p>
                         {isOwner && (
                           <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
                             You created this
@@ -344,7 +379,9 @@ export default function CirclesPage() {
                       <p className="font-mono text-lg font-black text-[var(--color-text-primary)]">
                         ₦{Number(circle.pool_balance).toLocaleString()}
                       </p>
-                      <p className="text-[10px] text-[var(--color-text-secondary)]">Pool balance</p>
+                      <p className="text-[10px] text-[var(--color-text-secondary)]">
+                        Pool balance
+                      </p>
                     </div>
                   </button>
 
@@ -371,7 +408,10 @@ export default function CirclesPage() {
                                 min="1"
                                 value={contributeAmounts[circle.id] || ""}
                                 onChange={(e) =>
-                                  setContributeAmounts((prev) => ({ ...prev, [circle.id]: e.target.value }))
+                                  setContributeAmounts((prev) => ({
+                                    ...prev,
+                                    [circle.id]: e.target.value,
+                                  }))
                                 }
                                 className="h-10 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)]"
                               />
@@ -382,7 +422,10 @@ export default function CirclesPage() {
                                 placeholder="PIN"
                                 value={contributePins[circle.id] || ""}
                                 onChange={(e) =>
-                                  setContributePins((prev) => ({ ...prev, [circle.id]: e.target.value }))
+                                  setContributePins((prev) => ({
+                                    ...prev,
+                                    [circle.id]: e.target.value,
+                                  }))
                                 }
                                 className="h-10 w-20 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 font-mono text-sm text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)]"
                               />
@@ -404,7 +447,8 @@ export default function CirclesPage() {
                                 Borrow from Pool
                               </p>
                               <p className="mb-2 text-xs text-[var(--color-text-secondary)]">
-                                0% interest · 30-day repayment · Max ₦{Number(circle.pool_balance).toLocaleString()} available
+                                0% interest · 30-day repayment · Max ₦
+                                {Number(circle.pool_balance).toLocaleString()} available
                               </p>
                               <div className="grid grid-cols-[1fr_auto] gap-2">
                                 <input
@@ -414,7 +458,10 @@ export default function CirclesPage() {
                                   max={circle.pool_balance}
                                   value={borrowAmounts[circle.id] || ""}
                                   onChange={(e) =>
-                                    setBorrowAmounts((prev) => ({ ...prev, [circle.id]: e.target.value }))
+                                    setBorrowAmounts((prev) => ({
+                                      ...prev,
+                                      [circle.id]: e.target.value,
+                                    }))
                                   }
                                   className="h-10 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)]"
                                 />
@@ -425,7 +472,10 @@ export default function CirclesPage() {
                                   placeholder="PIN"
                                   value={borrowPins[circle.id] || ""}
                                   onChange={(e) =>
-                                    setBorrowPins((prev) => ({ ...prev, [circle.id]: e.target.value }))
+                                    setBorrowPins((prev) => ({
+                                      ...prev,
+                                      [circle.id]: e.target.value,
+                                    }))
                                   }
                                   className="h-10 w-20 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 font-mono text-sm text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)]"
                                 />

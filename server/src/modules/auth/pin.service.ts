@@ -3,8 +3,8 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 const pinVerifierPrefix = "v1:";
 
 function getPinSecret() {
-  const secret = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NIN_HASH_SECRET;
-  if (!secret) throw new Error("Missing server PIN verifier secret.");
+  const secret = process.env.NIN_HASH_SECRET;
+  if (!secret) throw new Error("Missing NIN_HASH_SECRET environment variable.");
   return secret;
 }
 

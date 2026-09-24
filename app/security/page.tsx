@@ -1,14 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+
 import Me2uIcon from "@/components/Me2uIcon";
 import PwaInstallButton from "@/components/PwaInstallButton";
+import { PinInput } from "@/components/ui/PinInput";
+import { authorizedFetch } from "@/lib/fetch";
 import { visibleSecurityFeatures } from "@/lib/product-features";
 import { useStore } from "@/lib/store";
-import { authorizedFetch } from "@/lib/fetch";
-import { toast } from "sonner";
-import { PinInput } from "@/components/ui/PinInput";
+
 
 type SecurityEvent = {
   id: string;
@@ -76,7 +78,9 @@ export default function SecurityPage() {
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok || !data.ok) {
-      throw new Error(typeof data.error === "string" ? data.error : "Unable to complete security action.");
+      throw new Error(
+        typeof data.error === "string" ? data.error : "Unable to complete security action.",
+      );
     }
     await loadSecuritySettings();
   }
@@ -89,7 +93,9 @@ export default function SecurityPage() {
       // For now, record the intent and show a placeholder message.
       setMfaQr("");
       setMfaSecret("coming-soon");
-      toast.success("Two-factor authentication is coming soon. Your interest has been recorded.");
+      toast.success(
+        "Two-factor authentication is coming soon. Your interest has been recorded.",
+      );
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Unable to start two-factor setup.");
     } finally {
@@ -111,7 +117,9 @@ export default function SecurityPage() {
       return;
     }
     if (title === "Withdrawal PIN" || title === "Transaction PIN") {
-      document.getElementById("transaction-pin-card")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      document
+        .getElementById("transaction-pin-card")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
     if (title === "Freeze wallet") {
@@ -121,14 +129,21 @@ export default function SecurityPage() {
       return;
     }
     if (title === "Fraud report") {
-      recordSecurityAction("report_fraud", "User flagged suspicious account or wallet activity.")
+      recordSecurityAction(
+        "report_fraud",
+        "User flagged suspicious account or wallet activity.",
+      )
         .then(() => toast.success("Fraud report recorded for support review."))
         .catch((error) => toast.error(error.message));
       return;
     }
     if (title === "Account recovery") {
       recordSecurityAction("request_recovery", "User requested account recovery guidance.")
-        .then(() => toast.success("Recovery request recorded. Support will verify identity before changes."))
+        .then(() =>
+          toast.success(
+            "Recovery request recorded. Support will verify identity before changes.",
+          ),
+        )
         .catch((error) => toast.error(error.message));
       return;
     }
@@ -138,7 +153,11 @@ export default function SecurityPage() {
         .catch((error) => toast.error(error.message));
       return;
     }
-    if (title === "Session history" || title === "Device login alerts" || title === "Suspicious login warning") {
+    if (
+      title === "Session history" ||
+      title === "Device login alerts" ||
+      title === "Suspicious login warning"
+    ) {
       recordSecurityAction("review_session", `User reviewed ${title.toLowerCase()}.`)
         .then(() => toast.success("Session review recorded."))
         .catch((error) => toast.error(error.message));
@@ -150,7 +169,7 @@ export default function SecurityPage() {
   if (!mounted || (!isAuthenticated && !isLoading)) return null;
 
   return (
-    <main className="app-mobile-screen mx-auto w-full max-w-md px-3.5 pt-[4.85rem] md:max-w-6xl md:px-6 md:py-24">
+    <main className="app-mobile-screen mx-auto w-full max-w-md px-3.5 pt-[3.85rem] md:max-w-6xl md:px-6 md:py-24">
       <div className="mb-4 md:mb-8">
         <p className="text-xs font-black uppercase tracking-[0.12em] text-[var(--color-text-secondary)]">
           Security Center
@@ -165,25 +184,39 @@ export default function SecurityPage() {
           <article className="mobile-soft-card min-w-0 p-4">
             <div className="mb-4 flex min-w-0 items-start justify-between gap-3">
               <div className="min-w-0">
-                <h2 className="text-lg font-black leading-tight tracking-normal">Wallet protection</h2>
+                <h2 className="text-lg font-black leading-tight tracking-normal">
+                  Wallet protection
+                </h2>
                 <p className="mt-1 text-sm leading-relaxed text-[var(--color-text-secondary)]">
                   {walletFrozen
                     ? "Outgoing wallet actions are paused locally until you unfreeze."
                     : "Freeze quickly if you suspect login, PIN, or wallet activity problems."}
                 </p>
               </div>
-              <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-full ${
-                walletFrozen ? "bg-[var(--color-warning-bg)] text-[var(--color-warning-text)]" : "bg-[var(--color-positive-bg)] text-[var(--color-positive-text)]"
-              }`}>
+              <span
+                className={`grid h-12 w-12 shrink-0 place-items-center rounded-full ${
+                  walletFrozen
+                    ? "bg-[var(--color-warning-bg)] text-[var(--color-warning-text)]"
+                    : "bg-[var(--color-positive-bg)] text-[var(--color-positive-text)]"
+                }`}
+              >
                 <Me2uIcon name={walletFrozen ? "freeze" : "security"} size={25} />
               </span>
             </div>
             <button
               type="button"
-              className={walletFrozen ? "btn-ghost min-h-11 w-full" : "btn-primary min-h-11 w-full"}
+              className={
+                walletFrozen ? "btn-ghost min-h-11 w-full" : "btn-primary min-h-11 w-full"
+              }
               onClick={() => {
                 recordSecurityAction(walletFrozen ? "unfreeze_wallet" : "freeze_wallet")
-                  .then(() => toast.success(walletFrozen ? "Wallet freeze removed." : "Wallet frozen. Outgoing wallet actions are paused."))
+                  .then(() =>
+                    toast.success(
+                      walletFrozen
+                        ? "Wallet freeze removed."
+                        : "Wallet frozen. Outgoing wallet actions are paused.",
+                    ),
+                  )
                   .catch((error) => toast.error(error.message));
               }}
             >
@@ -191,24 +224,36 @@ export default function SecurityPage() {
             </button>
           </article>
 
-          <article id="transaction-pin-card" className="mobile-soft-card min-w-0 p-4 scroll-mt-24">
+          <article
+            id="transaction-pin-card"
+            className="mobile-soft-card min-w-0 p-4 scroll-mt-24"
+          >
             <div className="mb-4 flex min-w-0 items-start justify-between gap-3">
               <div className="min-w-0">
-                <h2 className="text-lg font-black leading-tight tracking-normal">Transaction PIN</h2>
+                <h2 className="text-lg font-black leading-tight tracking-normal">
+                  Transaction PIN
+                </h2>
                 <p className="mt-1 text-sm leading-relaxed text-[var(--color-text-secondary)]">
-                  Protect withdrawals, bill payments, and transfers with a 4-digit security code.
+                  Protect withdrawals, bill payments, and transfers with a 4-digit security
+                  code.
                 </p>
               </div>
-              <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-full ${
-                user?.transactionPin ? "bg-[var(--color-positive-bg)] text-[var(--color-positive-text)]" : "bg-[var(--color-warning-bg)] text-[var(--color-warning-text)]"
-              }`}>
+              <span
+                className={`grid h-12 w-12 shrink-0 place-items-center rounded-full ${
+                  user?.transactionPin
+                    ? "bg-[var(--color-positive-bg)] text-[var(--color-positive-text)]"
+                    : "bg-[var(--color-warning-bg)] text-[var(--color-warning-text)]"
+                }`}
+              >
                 <Me2uIcon name={user?.transactionPin ? "lock" : "shield"} size={24} />
               </span>
             </div>
 
             <div className="mb-3 rounded-[8px] bg-[var(--mobile-surface-muted)] p-3">
               <div className="flex items-center gap-2">
-                <span className={`inline-block h-2 w-2 rounded-full ${user?.transactionPin ? "bg-[var(--color-positive-text)]" : "bg-[var(--color-warning-text)]"}`} />
+                <span
+                  className={`inline-block h-2 w-2 rounded-full ${user?.transactionPin ? "bg-[var(--color-positive-text)]" : "bg-[var(--color-warning-text)]"}`}
+                />
                 <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
                   {user?.transactionPin ? "4-Digit PIN is Active" : "No PIN Set"}
                 </span>
@@ -278,12 +323,18 @@ export default function SecurityPage() {
           <article className="mobile-soft-card min-w-0 p-4">
             <div className="mb-3 flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <h2 className="text-lg font-black leading-tight tracking-normal">Current session</h2>
+                <h2 className="text-lg font-black leading-tight tracking-normal">
+                  Current session
+                </h2>
                 <p className="mt-1 text-xs font-medium text-[var(--color-text-secondary)]">
                   {user?.email || "Signed-in account"}
                 </p>
               </div>
-              <Me2uIcon name="mobile" size={24} className="shrink-0 text-[var(--color-accent-primary)]" />
+              <Me2uIcon
+                name="mobile"
+                size={24}
+                className="shrink-0 text-[var(--color-accent-primary)]"
+              />
             </div>
             <div className="rounded-[8px] bg-[var(--mobile-surface-muted)] p-3">
               <p className="text-sm font-black">This device</p>
@@ -295,11 +346,18 @@ export default function SecurityPage() {
 
           <article className="mobile-soft-card min-w-0 p-4">
             <div className="mb-3 flex items-center gap-2">
-              <Me2uIcon name="mobile" size={22} className="text-[var(--color-accent-primary)]" />
-              <h2 className="text-lg font-black leading-tight tracking-normal">Install protection</h2>
+              <Me2uIcon
+                name="mobile"
+                size={22}
+                className="text-[var(--color-accent-primary)]"
+              />
+              <h2 className="text-lg font-black leading-tight tracking-normal">
+                Install protection
+              </h2>
             </div>
             <p className="mb-3 text-sm leading-relaxed text-[var(--color-text-secondary)]">
-              Keep Me2U close for login alerts, repayment reminders, and security prompts as app notifications roll out.
+              Keep Me2U close for login alerts, repayment reminders, and security prompts as app
+              notifications roll out.
             </p>
             <PwaInstallButton />
           </article>
@@ -309,12 +367,18 @@ export default function SecurityPage() {
           <article className="mobile-soft-card min-w-0 p-4">
             <div className="mb-4 flex min-w-0 items-start justify-between gap-3">
               <div className="min-w-0">
-                <h2 className="text-lg font-black leading-tight tracking-normal">Security checklist</h2>
+                <h2 className="text-lg font-black leading-tight tracking-normal">
+                  Security checklist
+                </h2>
                 <p className="mt-1 text-sm leading-relaxed text-[var(--color-text-secondary)]">
                   Controls users can recognize before money moves.
                 </p>
               </div>
-              <Me2uIcon name="shield" size={25} className="shrink-0 text-[var(--color-accent-primary)]" />
+              <Me2uIcon
+                name="shield"
+                size={25}
+                className="shrink-0 text-[var(--color-accent-primary)]"
+              />
             </div>
             <div className="grid gap-2 sm:grid-cols-2">
               {visibleSecurityFeatures.map((feature) => (
@@ -346,9 +410,15 @@ export default function SecurityPage() {
             >
               <span className="min-w-0">
                 <span className="block text-sm font-black">Account recovery</span>
-                <span className="mt-1 block text-xs text-[var(--color-text-secondary)]">Recover access with verified identity.</span>
+                <span className="mt-1 block text-xs text-[var(--color-text-secondary)]">
+                  Recover access with verified identity.
+                </span>
               </span>
-              <Me2uIcon name="key" size={22} className="shrink-0 text-[var(--color-accent-primary)]" />
+              <Me2uIcon
+                name="key"
+                size={22}
+                className="shrink-0 text-[var(--color-accent-primary)]"
+              />
             </button>
             <button
               type="button"
@@ -357,20 +427,33 @@ export default function SecurityPage() {
             >
               <span className="min-w-0">
                 <span className="block text-sm font-black">Fraud report</span>
-                <span className="mt-1 block text-xs text-[var(--color-text-secondary)]">Flag suspicious login or wallet activity.</span>
+                <span className="mt-1 block text-xs text-[var(--color-text-secondary)]">
+                  Flag suspicious login or wallet activity.
+                </span>
               </span>
-              <Me2uIcon name="alert" size={22} className="shrink-0 text-[var(--color-negative-text)]" />
+              <Me2uIcon
+                name="alert"
+                size={22}
+                className="shrink-0 text-[var(--color-negative-text)]"
+              />
             </button>
           </article>
 
           {mfaSecret === "coming-soon" && (
             <article className="mobile-soft-card min-w-0 p-4">
               <div className="flex items-center gap-3">
-                <Me2uIcon name="key" size={23} className="shrink-0 text-[var(--color-accent-primary)]" />
+                <Me2uIcon
+                  name="key"
+                  size={23}
+                  className="shrink-0 text-[var(--color-accent-primary)]"
+                />
                 <div className="min-w-0">
-                  <h2 className="text-lg font-black leading-tight tracking-normal">Two-factor authentication</h2>
+                  <h2 className="text-lg font-black leading-tight tracking-normal">
+                    Two-factor authentication
+                  </h2>
                   <p className="mt-1 text-xs leading-relaxed text-[var(--color-text-secondary)]">
-                    TOTP two-factor authentication is coming soon. Your interest has been recorded.
+                    TOTP two-factor authentication is coming soon. Your interest has been
+                    recorded.
                   </p>
                 </div>
               </div>
@@ -386,8 +469,12 @@ export default function SecurityPage() {
 
           <article className="mobile-soft-card min-w-0 p-4">
             <div className="mb-3 flex items-center justify-between gap-3">
-              <h2 className="text-lg font-black leading-tight tracking-normal">Security history</h2>
-              <span className="text-xs font-bold text-[var(--color-text-secondary)]">{securityLoading ? "Syncing" : `${securityEvents.length} events`}</span>
+              <h2 className="text-lg font-black leading-tight tracking-normal">
+                Security history
+              </h2>
+              <span className="text-xs font-bold text-[var(--color-text-secondary)]">
+                {securityLoading ? "Syncing" : `${securityEvents.length} events`}
+              </span>
             </div>
             <div className="grid gap-2">
               {securityEvents.length === 0 ? (
@@ -396,12 +483,21 @@ export default function SecurityPage() {
                 </p>
               ) : (
                 securityEvents.map((event) => (
-                  <div key={event.id} className="rounded-[8px] bg-[var(--mobile-surface-muted)] p-3">
-                    <p className="text-sm font-black capitalize">{event.type.replaceAll("_", " ")}</p>
+                  <div
+                    key={event.id}
+                    className="rounded-[8px] bg-[var(--mobile-surface-muted)] p-3"
+                  >
+                    <p className="text-sm font-black capitalize">
+                      {event.type.replaceAll("_", " ")}
+                    </p>
                     <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
                       {new Date(event.created_at).toLocaleString()}
                     </p>
-                    {event.detail && <p className="mt-1 text-xs leading-relaxed text-[var(--color-text-secondary)]">{event.detail}</p>}
+                    {event.detail && (
+                      <p className="mt-1 text-xs leading-relaxed text-[var(--color-text-secondary)]">
+                        {event.detail}
+                      </p>
+                    )}
                   </div>
                 ))
               )}

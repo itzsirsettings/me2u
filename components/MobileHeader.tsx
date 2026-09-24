@@ -4,8 +4,6 @@ import { usePathname, useRouter } from "next/navigation";
 
 import BrandLogo from "@/components/BrandLogo";
 import Me2uIcon from "@/components/Me2uIcon";
-import ReferenceNotifications from "@/components/reference/ReferenceNotifications";
-import ThemeToggleIcon from "@/components/ThemeToggleIcon";
 
 const routeTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -47,7 +45,7 @@ export default function MobileHeader() {
 
   if (!title) return null;
   // These destination surfaces own their full reference-inspired mastheads.
-  if (["/dashboard", "/profile", "/referrals", "/savings"].includes(pathname)) return null;
+  if (["/dashboard", "/wallet", "/profile", "/referrals", "/savings"].includes(pathname)) return null;
 
   const handleBack = () => {
     if (pathname === "/dashboard") {
@@ -85,10 +83,6 @@ export default function MobileHeader() {
               {title}
             </p>
           </div>
-        </div>
-        <div className="flex items-center gap-1">
-          <ThemeToggleIcon className="design-icon-button" />
-          <ReferenceNotifications />
         </div>
       </div>
     </header>

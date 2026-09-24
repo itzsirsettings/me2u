@@ -1,7 +1,7 @@
 -- ============================================================
 -- Enhanced Viral Referral System
--- Railway-adapted: app_user_id() instead of auth.uid(), no
--- Supabase roles, no grant to service_role. Badge seed uses
+-- Railway-native: app_user_id() instead of auth.uid(); no external
+-- roles and no service_role grant. Badge seed uses
 -- correct column names matching 005 badges schema.
 -- ============================================================
 

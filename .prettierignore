@@ -5,7 +5,6 @@ build
 coverage
 *.tsbuildinfo
 .next/types
-supabase/functions
 server/dist
 # Kilo worktrees are separate checkouts — never format them from the root.
 .kilo

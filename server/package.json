@@ -14,17 +14,22 @@
     "@nestjs/common": "^11.1.24",
     "@nestjs/core": "^11.1.24",
     "@nestjs/platform-express": "^11.1.24",
-    "@supabase/supabase-js": "^2.105.4",
     "bullmq": "^5.65.0",
     "dotenv": "^16.6.1",
     "ioredis": "^5.8.2",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.13.1",
+    "pg-connection-string": "^2.14.0",
+    "pino": "^9.4.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.21",
     "@types/express": "^5.0.5",
+    "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22.0.0",
+    "@types/pg": "^8.11.0",
     "typescript": "^5.8.0"
   }
 }

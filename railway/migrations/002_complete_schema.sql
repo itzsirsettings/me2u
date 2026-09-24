@@ -1,17 +1,16 @@
 -- ============================================================
 -- Me2U Complete Railway PostgreSQL Schema
--- Migration 002: Full application schema without any Supabase constructs.
+-- Migration 002: Full application schema on native PostgreSQL.
 --
 -- Prerequisites: 001_add_auth_tables.sql must have run first.
--- That migration creates public.auth_users and re-targets the
--- profiles FK away from auth.users.
+-- That migration creates public.auth_users; profiles references it.
 --
--- Key differences from Supabase migrations:
---  - No auth.uid() — RLS uses app_user_id() session variable
---  - No auth.users FK — profiles references public.auth_users
---  - No Supabase roles (anon, authenticated, service_role)
---  - No storage.* tables — R2 handles file storage
---  - No supabase_realtime publications / replica identity
+-- Schema conventions:
+--  - RLS policies read the app_user_id() session variable
+--  - profiles references public.auth_users (native table)
+--  - No shared platform roles — per-user app_user_id() checks only
+--  - File storage lives in the private_files table (no external object-storage tables)
+--  - No realtime publications / replica identity (polling instead)
 --  - Business-logic stored procedures removed (moved to TypeScript)
 --  - Structural helpers (set_updated_at, trust score triggers) kept
 -- ============================================================

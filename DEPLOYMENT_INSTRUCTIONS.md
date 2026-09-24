@@ -2,7 +2,7 @@
 
 ## ✅ Changes Committed
 
-All Supabase references have been removed and your viral referral system is complete!
+All legacy managed-platform references have been removed and your viral referral system is complete!
 
 **Commit Hash**: `6395abe`  
 **Files Changed**: 352 files, 56,765 insertions
@@ -97,13 +97,6 @@ NODE_ENV=production
 NEXT_PUBLIC_APP_URL=https://yourdomain.com
 RESEND_API_KEY=re_xxxxx                  # For emails
 ```
-
-### Removed (No longer needed)
-- ~~SUPABASE_URL~~
-- ~~SUPABASE_ANON_KEY~~
-- ~~SUPABASE_SERVICE_ROLE_KEY~~
-- ~~NEXT_PUBLIC_SUPABASE_URL~~
-- ~~NEXT_PUBLIC_SUPABASE_ANON_KEY~~
 
 ---
 

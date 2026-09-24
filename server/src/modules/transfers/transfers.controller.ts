@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from "@nestjs/common";
 import { AuthGuard } from "../auth/auth.guard";
 import { RequestUser } from "../auth/request-user.decorator";
-import type { AuthenticatedRequestUser } from "../../common/supabase.service";
+import type { AuthenticatedRequestUser } from "../../common/railway-db.service";
 import { TransfersService } from "./transfers.service";
 
 @UseGuards(AuthGuard)

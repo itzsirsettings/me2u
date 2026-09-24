@@ -29,19 +29,17 @@ Copy all variables from your `.env` file to Railway, plus:
 
 ---
 
-## Phase 2: Supabase Production Hardening
+## Phase 2: Railway PostgreSQL Production Hardening
 
-- [ ] Enable **Point-in-Time Recovery (PITR)**
-- [ ] Enforce **SSL** for all connections
-- [ ] Enable **Network Restrictions** (allow only Vercel/Railway IPs)
-- [ ] Enable **Leaked Password Protection**
-- [ ] Enable **CAPTCHA** for auth
-- [ ] Set up **custom SMTP** (not Supabase default)
-- [ ] Enable **2FA** for your Supabase account
-- [ ] Run **Security Advisor** and fix all issues
-- [ ] Run **Performance Advisor** and optimize
-- [ ] Perform a **PITR restore drill** and record the date as `SUPABASE_RESTORE_DRILL_AT`
-- [ ] Set `SUPABASE_PITR_ENABLED_ACK=true`
+- [ ] Enable **Point-in-Time Recovery (PITR)** on the Postgres service
+- [ ] Enforce **SSL** for all connections (`PGSSLMODE=require`)
+- [ ] Restrict network access — do **not** expose a public TCP proxy in production; use private networking (`postgres.railway.internal`)
+- [ ] Take a **manual backup** and confirm restore steps before launch
+- [ ] Confirm the database password and `AUTH_TOKEN_SECRET` are strong and unique
+- [ ] Enable **2FA** on your Railway account
+- [ ] Review the Railway **observability/metrics** dashboard for slow queries
+- [ ] Perform a **restore drill** and record the date as `DB_RESTORE_DRILL_AT`
+- [ ] Set `DB_PITR_ENABLED_ACK=true`
 
 ---
 
@@ -106,7 +104,7 @@ Choose one:
 - [ ] Run financial E2E tests → set `FINANCIAL_E2E_PASSED_AT=2026-06-09T...`
 - [ ] Complete provider sandbox certification → set `PROVIDER_SANDBOX_CERTIFIED_AT=2026-06-09T...`
 - [ ] Verify reconciliation has zero duplicates → set `RECONCILIATION_ZERO_DUPLICATES_AT=2026-06-09T...`
-- [ ] Run load tests (`k6 run load-tests/serious-launch.js`) → set `LOAD_TEST_CERTIFIED_AT=2026-06-09T...`
+- [ ] Run the repository load probe (`npm run load:probe -- --endpoint https://<app-host>/api/health/live --requests 10000 --concurrency 200`) → set `LOAD_TEST_CERTIFIED_AT=2026-06-09T...`
 
 ---
 
@@ -117,6 +115,17 @@ Choose one:
 - [ ] Set `SECRET_ROTATION_SCHEDULE_ACK=true`
 - [ ] Set `ECS_API_SERVICE_ARN=` (or Railway service ID if adapted)
 - [ ] Set `ECS_WORKER_SERVICE_ARN=` (or Railway worker service ID)
+
+## Phase 8.1: Capacity and Horizontal Scaling
+
+- [ ] Run the load probe against the deployed liveness endpoint:
+  - `npm run load:probe -- --endpoint https://<app-host>/api/health/live --requests 10000 --concurrency 200`
+- [ ] Set the API service to at least 2 replicas during normal operation so a deploy or instance failure does not remove all API capacity.
+- [ ] Configure Railway autoscaling or an equivalent external load balancer using CPU, memory, latency, and error-rate thresholds; verify the setting in the Railway service dashboard because replica policy is service-level configuration.
+- [ ] Size the Postgres connection budget before adding replicas: `DB_POOL_MAX` multiplied by API replicas must remain below the database connection limit, with capacity reserved for migrations and admin access.
+- [ ] Use a shared production Redis service for rate limits and queues; never use localhost Redis on a horizontally scaled deployment.
+- [ ] Treat 100,000 registered users as a capacity target, not a concurrency guarantee. Record the tested requests per second, p95/p99 latency, error rate, database utilization, Redis utilization, and queue lag in the release record.
+- [ ] Repeat the test for peak daily traffic and webhook bursts, including one rolling deployment while traffic is active.
 
 ---
 

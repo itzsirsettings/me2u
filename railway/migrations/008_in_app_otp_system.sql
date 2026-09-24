@@ -1,6 +1,6 @@
 -- ============================================================
 -- In-App OTP Verification System
--- Railway-adapted: self-contained, no Supabase references.
+-- Railway-native: self-contained.
 -- Uses set_updated_at() from 001.
 -- ============================================================
 

@@ -1,9 +1,11 @@
 "use client";
 
-import { FormEvent, KeyboardEvent, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowUpRight, LifeBuoy, Loader2, Send, ShieldCheck, X } from "lucide-react";
+import { ArrowUpRight, LifeBuoy, Loader2, Send, X } from "lucide-react";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { FormEvent, KeyboardEvent, useMemo, useRef, useState } from "react";
+
 import { getToken } from "@/lib/railway/token";
 
 type AssistantMessage = {
@@ -56,8 +58,14 @@ function parseSseFrames(buffer: string) {
 }
 
 function parseFrame(frame: string) {
-  const event = frame.split("\n").find((line) => line.startsWith("event: "))?.slice(7);
-  const data = frame.split("\n").find((line) => line.startsWith("data: "))?.slice(6);
+  const event = frame
+    .split("\n")
+    .find((line) => line.startsWith("event: "))
+    ?.slice(7);
+  const data = frame
+    .split("\n")
+    .find((line) => line.startsWith("data: "))
+    ?.slice(6);
   if (!event || !data) return null;
   try {
     return { event, data: JSON.parse(data) };
@@ -76,12 +84,16 @@ function sourceLabel(citation: AssistantCitation) {
 
 function mailtoSupport(request?: SupportRequest) {
   const subject = encodeURIComponent(request?.topic || "Me2U Guide support request");
-  const body = encodeURIComponent([
-    request?.summary || "I need help with my Me2U account.",
-    request?.route ? `Route: ${request.route}` : "",
-    request?.conversationExcerpt ? `Conversation: ${request.conversationExcerpt}` : "",
-    request?.createdAt ? `Created: ${request.createdAt}` : "",
-  ].filter(Boolean).join("\n\n"));
+  const body = encodeURIComponent(
+    [
+      request?.summary || "I need help with my Me2U account.",
+      request?.route ? `Route: ${request.route}` : "",
+      request?.conversationExcerpt ? `Conversation: ${request.conversationExcerpt}` : "",
+      request?.createdAt ? `Created: ${request.createdAt}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n\n"),
+  );
 
   return `mailto:admin@me2ulend.online?subject=${subject}&body=${body}`;
 }
@@ -96,14 +108,24 @@ export default function Me2UAssistantWidget() {
     {
       id: "welcome",
       role: "assistant",
-      content: "I am Me2U Guide. Type any question in your own words, or pick a suggestion to start.",
-      citations: [{ id: "rule:read-only-assistant", title: "Me2U Guide safety boundary", sourceType: "rule", routeHref: "/support" }],
+      content:
+        "I am Me2U Guide. Type any question in your own words, or pick a suggestion to start.",
+      citations: [
+        {
+          id: "rule:read-only-assistant",
+          title: "Me2U Guide safety boundary",
+          sourceType: "rule",
+          routeHref: "/support",
+        },
+      ],
       suggestedActions: quickPrompts.slice(0, 3),
     },
   ]);
   const panelRef = useRef<HTMLDivElement | null>(null);
 
-  const hasBottomNav = navBackedRoutes.some((route) => pathname === route || (route !== "/dashboard" && pathname.startsWith(route)));
+  const hasBottomNav = navBackedRoutes.some(
+    (route) => pathname === route || (route !== "/dashboard" && pathname.startsWith(route)),
+  );
   const launcherBottom = hasBottomNav
     ? "bottom-[calc(6.35rem+env(safe-area-inset-bottom))] md:bottom-6"
     : "bottom-[calc(1rem+env(safe-area-inset-bottom))] md:bottom-6";
@@ -146,7 +168,9 @@ export default function Me2UAssistantWidget() {
 
       if (!response.ok || !response.body) {
         const data = await response.json().catch(() => ({}));
-        throw new Error(typeof data.error === "string" ? data.error : "Me2U Guide is unavailable.");
+        throw new Error(
+          typeof data.error === "string" ? data.error : "Me2U Guide is unavailable.",
+        );
       }
 
       const reader = response.body.getReader();
@@ -200,12 +224,17 @@ export default function Me2UAssistantWidget() {
         }
       }
     } catch (sendError) {
-      const message = sendError instanceof Error ? sendError.message : "Me2U Guide is unavailable.";
+      const message =
+        sendError instanceof Error ? sendError.message : "Me2U Guide is unavailable.";
       setError(message);
       setMessages((current) =>
         current.map((item) =>
           item.id === assistantId
-            ? { ...item, content: "I could not complete that request. Please try again or contact support." }
+            ? {
+                ...item,
+                content:
+                  "I could not complete that request. Please try again or contact support.",
+              }
             : item,
         ),
       );
@@ -236,15 +265,20 @@ export default function Me2UAssistantWidget() {
         aria-expanded={isOpen}
         aria-controls="me2u-guide-panel"
         onClick={() => setIsOpen(!isOpen)}
-        className={`fixed right-4 z-[70] grid h-[4.15rem] w-[4.15rem] place-items-center rounded-[28px] border border-[var(--color-border)] bg-[var(--color-bg-card)] text-[var(--color-text-primary)] shadow-[0_18px_45px_rgba(8,19,32,0.24)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_52px_rgba(34,197,94,0.22)] md:right-6 ${launcherBottom}`}
+        className={`fixed right-4 z-[70] grid h-[4.15rem] w-[4.15rem] place-items-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg-card)] p-1 text-[var(--color-text-primary)] shadow-[0_18px_45px_rgba(8,19,32,0.24)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_52px_rgba(34,197,94,0.22)] md:right-6 ${launcherBottom}`}
       >
-        <span className="absolute -right-1 -top-1 grid h-6 w-6 place-items-center rounded-full bg-green text-[10px] font-black text-navy ring-4 ring-[var(--color-bg-card)]">
+        <span className="absolute -right-1 -top-1 z-10 grid h-6 w-6 place-items-center rounded-full bg-green text-[10px] font-black text-navy ring-4 ring-[var(--color-bg-card)]">
           AI
         </span>
-        <span className="relative grid h-12 w-12 place-items-center rounded-[20px] bg-[linear-gradient(135deg,var(--green),var(--lime))] text-navy">
-          <span className="absolute inset-[5px] rounded-[16px] border border-navy/25" />
-          <ShieldCheck className="absolute h-8 w-8 opacity-35" aria-hidden="true" />
-          <span className="relative text-lg font-black leading-none">M</span>
+        <span className="relative z-0 grid h-14 w-14 max-h-full max-w-full aspect-square overflow-hidden rounded-full">
+          <Image
+            src="/me2u_logo_v2.svg"
+            alt=""
+            fill
+            sizes="56px"
+            className="object-contain"
+            aria-hidden="true"
+          />
         </span>
       </button>
 
@@ -270,12 +304,23 @@ export default function Me2UAssistantWidget() {
             >
               <header className="flex items-center justify-between gap-3 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-4 py-3">
                 <div className="flex min-w-0 items-center gap-3">
-                  <div className="grid h-10 w-10 place-items-center rounded-[16px] bg-green text-navy">
-                    <ShieldCheck size={21} aria-hidden="true" />
-                  </div>
+                  <span className="relative grid h-10 w-10 shrink-0 aspect-square overflow-hidden rounded-full bg-[var(--color-bg-card)] p-1">
+                    <Image
+                      src="/me2u_logo_v2.svg"
+                      alt=""
+                      fill
+                      sizes="40px"
+                      className="object-contain"
+                      aria-hidden="true"
+                    />
+                  </span>
                   <div className="min-w-0">
-                    <h2 className="truncate text-sm font-black text-[var(--color-text-primary)]">Me2U Guide</h2>
-                    <p className="truncate text-xs font-semibold text-[var(--color-text-secondary)]">Ask in your own words</p>
+                    <h2 className="truncate text-sm font-black text-[var(--color-text-primary)]">
+                      Me2U Guide
+                    </h2>
+                    <p className="truncate text-xs font-semibold text-[var(--color-text-secondary)]">
+                      Ask in your own words
+                    </p>
                   </div>
                 </div>
                 <button
@@ -290,7 +335,12 @@ export default function Me2UAssistantWidget() {
 
               <div ref={panelRef} className="flex-1 space-y-3 overflow-y-auto px-3 py-4">
                 {visibleMessages.map((message) => (
-                  <div key={message.id} className={message.role === "user" ? "ml-auto max-w-[86%]" : "mr-auto max-w-[92%]"}>
+                  <div
+                    key={message.id}
+                    className={
+                      message.role === "user" ? "ml-auto max-w-[86%]" : "mr-auto max-w-[92%]"
+                    }
+                  >
                     <div
                       className={`rounded-[20px] px-4 py-3 text-sm leading-6 ${
                         message.role === "user"
@@ -358,7 +408,10 @@ export default function Me2UAssistantWidget() {
                 </p>
               )}
 
-              <form onSubmit={handleSubmit} className="border-t border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+              <form
+                onSubmit={handleSubmit}
+                className="border-t border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
+              >
                 <p className="mb-2 px-1 text-xs font-bold text-[var(--color-text-secondary)]">
                   Ask anything or pick a suggestion
                 </p>
@@ -378,7 +431,11 @@ export default function Me2UAssistantWidget() {
                     className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-green text-navy transition hover:bg-lime disabled:cursor-not-allowed disabled:opacity-50"
                     aria-label="Send message"
                   >
-                    {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send size={17} />}
+                    {isSending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send size={17} />
+                    )}
                   </button>
                 </div>
               </form>

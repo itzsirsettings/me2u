@@ -1,6 +1,6 @@
 -- ============================================================
 -- 15-Day Unlock + Subscriptions Foundation
--- Railway-adapted: No Supabase references. Uses app_user_id
+-- Railway-native: uses the app_user_id
 -- pattern defined in 001. revenue_event_type uses ADD VALUE IF
 -- NOT EXISTS (Postgres 9.6+).
 -- ============================================================

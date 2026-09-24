@@ -1,7 +1,15 @@
-import { createClient } from "@supabase/supabase-js";
+#!/usr/bin/env node
+/**
+ * Backfills Wema/ALAT virtual accounts for eligible profiles.
+ * Usage:
+ *   node --env-file=.env scripts/backfill-wema-virtual-accounts.mjs
+ *   node --env-file=.env scripts/backfill-wema-virtual-accounts.mjs --dry-run
+ */
+import pg from "pg";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
+const { Client } = pg;
 const dryRun = process.argv.includes("--dry-run");
 
 function loadEnvFile(path, override = true) {
@@ -15,6 +23,8 @@ function loadEnvFile(path, override = true) {
   }
 }
 
+// Fallback so the script also works when run without `node --env-file=.env`.
+loadEnvFile(resolve(".env"), false);
 loadEnvFile(resolve("server/.env"), false);
 loadEnvFile(resolve(".env.local"), true);
 
@@ -28,30 +38,41 @@ const wemaReady =
   process.env.WEMA_ENABLED === "true" &&
   Boolean(process.env.WEMA_BASE_URL?.trim() && process.env.WEMA_API_KEY?.trim());
 
-const supabase = createClient(required("NEXT_PUBLIC_SUPABASE_URL"), required("SUPABASE_SERVICE_ROLE_KEY"), {
-  auth: { autoRefreshToken: false, persistSession: false },
+if (
+  !process.env.DATABASE_URL &&
+  !(process.env.PGHOST && process.env.PGPASSWORD && process.env.PGDATABASE)
+) {
+  throw new Error("DATABASE_URL or PostgreSQL connection variables are required.");
+}
+
+const client = new Client({
+  connectionString: process.env.DATABASE_URL,
+  host: process.env.PGHOST,
+  port: process.env.PGPORT ? Number(process.env.PGPORT) : undefined,
+  user: process.env.PGUSER,
+  password: process.env.PGPASSWORD,
+  database: process.env.PGDATABASE,
+  ssl: { rejectUnauthorized: false },
 });
 
-async function fetchAll(table, columns) {
-  const pageSize = 1000;
-  const rows = [];
-  for (let from = 0; ; from += pageSize) {
-    const { data, error } = await supabase
-      .from(table)
-      .select(columns)
-      .range(from, from + pageSize - 1);
-    if (error) throw new Error(error.message);
-    rows.push(...(data || []));
-    if (!data || data.length < pageSize) return rows;
-  }
+async function fetchProfiles() {
+  const { rows } = await client.query(
+    "SELECT id, email, first_name, last_name, phone, kyc_verified, nin_last4 FROM profiles",
+  );
+  return rows;
 }
 
 async function fetchExistingVirtualAccounts() {
   try {
-    return await fetchAll("virtual_accounts", "user_id,provider,account_number,status");
+    const { rows } = await client.query(
+      "SELECT user_id, provider, account_number, status FROM virtual_accounts",
+    );
+    return rows;
   } catch (error) {
-    if (String(error.message || "").includes("virtual_accounts")) {
-      console.log("virtual_accounts table is not available yet. Apply the Wema migration before running a live backfill.");
+    if (/virtual_accounts/.test(String(error.message || ""))) {
+      console.log(
+        "virtual_accounts table is not available yet. Apply the Wema migration before running a live backfill.",
+      );
       return [];
     }
     throw error;
@@ -60,16 +81,40 @@ async function fetchExistingVirtualAccounts() {
 
 async function saveStatus(userId, status, payload) {
   if (dryRun) return;
-  const { error } = await supabase.from("virtual_accounts").upsert(
-    {
-      user_id: userId,
-      provider: "wema",
-      status,
-      response_payload: payload,
-    },
-    { onConflict: "provider,user_id" },
+  await client.query(
+    `INSERT INTO virtual_accounts (user_id, provider, status, response_payload)
+     VALUES ($1, 'wema', $2, $3)
+     ON CONFLICT (provider, user_id) DO UPDATE SET
+       status = EXCLUDED.status,
+       response_payload = EXCLUDED.response_payload`,
+    [userId, status, JSON.stringify(payload ?? {})],
   );
-  if (error) throw new Error(error.message);
+}
+
+async function saveAccount(userId, account, payload, accountNumber) {
+  if (dryRun) return;
+  await client.query(
+    `INSERT INTO virtual_accounts (user_id, provider, provider_reference, account_name, account_number, bank_name, bank_code, status, response_payload)
+     VALUES ($1, 'wema', $2, $3, $4, $5, $6, $7, $8)
+     ON CONFLICT (provider, user_id) DO UPDATE SET
+       provider_reference = EXCLUDED.provider_reference,
+       account_name = EXCLUDED.account_name,
+       account_number = EXCLUDED.account_number,
+       bank_name = EXCLUDED.bank_name,
+       bank_code = EXCLUDED.bank_code,
+       status = EXCLUDED.status,
+       response_payload = EXCLUDED.response_payload`,
+    [
+      userId,
+      account?.reference || account?.accountReference || account?.id || null,
+      account?.accountName || account?.account_name || null,
+      accountNumber,
+      account?.bankName || account?.bank_name || "Wema Bank",
+      account?.bankCode || account?.bank_code || null,
+      accountNumber ? "active" : "pending",
+      JSON.stringify(payload ?? {}),
+    ],
+  );
 }
 
 async function requestWemaVirtualAccount(profile) {
@@ -88,7 +133,7 @@ async function requestWemaVirtualAccount(profile) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Ocp-Apim-Subscription-Key": process.env.WEMA_API_KEY,
+      "Ocp-Apim-Subscription-Key": required("WEMA_API_KEY"),
       Authorization: process.env.WEMA_AUTHORIZATION || `Bearer ${process.env.WEMA_API_KEY}`,
       ...(process.env.WEMA_CLIENT_ID ? { "x-client-id": process.env.WEMA_CLIENT_ID } : {}),
     },
@@ -96,76 +141,79 @@ async function requestWemaVirtualAccount(profile) {
   });
 
   const payload = await response.json().catch(() => ({}));
-  if (!response.ok || payload?.status === false) throw new Error(payload?.message || "Wema request failed.");
+  if (!response.ok || payload?.status === false)
+    throw new Error(payload?.message || "Wema request failed.");
 
   const account = payload?.data || payload;
-  const accountNumber = account?.accountNumber || account?.account_number || account?.nuban || null;
-  const { error } = await supabase.from("virtual_accounts").upsert(
-    {
-      user_id: profile.id,
-      provider: "wema",
-      provider_reference: account?.reference || account?.accountReference || account?.id || null,
-      account_name: account?.accountName || account?.account_name || null,
-      account_number: accountNumber,
-      bank_name: account?.bankName || account?.bank_name || "Wema Bank",
-      bank_code: account?.bankCode || account?.bank_code || null,
-      status: accountNumber ? "active" : "pending",
-      response_payload: payload,
-    },
-    { onConflict: "provider,user_id" },
-  );
-  if (error) throw new Error(error.message);
+  const accountNumber =
+    account?.accountNumber || account?.account_number || account?.nuban || null;
+  await saveAccount(profile.id, account, payload, accountNumber);
   return accountNumber ? "active" : "pending";
 }
 
-const profiles = await fetchAll("profiles", "id,email,first_name,last_name,phone,kyc_verified,nin_last4");
-const accounts = await fetchExistingVirtualAccounts();
-const wemaAccountsByUser = new Map(accounts.filter((row) => row.provider === "wema").map((row) => [row.user_id, row]));
+async function main() {
+  await client.connect();
 
-const summary = {
-  totalProfiles: profiles.length,
-  activeAlready: 0,
-  skipped: 0,
-  requested: 0,
-  pending: 0,
-  notConfigured: 0,
-  failed: 0,
-};
+  const profiles = await fetchProfiles();
+  const accounts = await fetchExistingVirtualAccounts();
+  const wemaAccountsByUser = new Map(
+    accounts.filter((row) => row.provider === "wema").map((row) => [row.user_id, row]),
+  );
 
-for (const profile of profiles) {
-  const existing = wemaAccountsByUser.get(profile.id);
-  if (existing?.account_number) {
-    summary.activeAlready += 1;
-    continue;
-  }
+  const summary = {
+    totalProfiles: profiles.length,
+    activeAlready: 0,
+    skipped: 0,
+    requested: 0,
+    pending: 0,
+    notConfigured: 0,
+    failed: 0,
+  };
 
-  if (!profile.kyc_verified || !profile.nin_last4) {
-    summary.skipped += 1;
-    console.log(`skipped ${profile.email}: KYC/NIN is incomplete`);
-    continue;
-  }
-
-  if (!wemaReady) {
-    summary.notConfigured += 1;
-    await saveStatus(profile.id, "not_configured", { message: "Wema/ALAT credentials are not configured." });
-    console.log(`${dryRun ? "would mark" : "marked"} ${profile.email}: Wema not configured`);
-    continue;
-  }
-
-  try {
-    if (dryRun) {
-      summary.requested += 1;
-      console.log(`would request Wema virtual account for ${profile.email}`);
+  for (const profile of profiles) {
+    const existing = wemaAccountsByUser.get(profile.id);
+    if (existing?.account_number) {
+      summary.activeAlready += 1;
       continue;
     }
-    const status = await requestWemaVirtualAccount(profile);
-    summary[status === "active" ? "requested" : "pending"] += 1;
-    console.log(`${status} ${profile.email}: Wema virtual account request completed`);
-  } catch (error) {
-    summary.failed += 1;
-    await saveStatus(profile.id, "unavailable", { message: error.message });
-    console.log(`failed ${profile.email}: ${error.message}`);
+
+    if (!profile.kyc_verified || !profile.nin_last4) {
+      summary.skipped += 1;
+      console.log(`skipped ${profile.email}: KYC/NIN is incomplete`);
+      continue;
+    }
+
+    if (!wemaReady) {
+      summary.notConfigured += 1;
+      await saveStatus(profile.id, "not_configured", {
+        message: "Wema/ALAT credentials are not configured.",
+      });
+      console.log(`${dryRun ? "would mark" : "marked"} ${profile.email}: Wema not configured`);
+      continue;
+    }
+
+    try {
+      if (dryRun) {
+        summary.requested += 1;
+        console.log(`would request Wema virtual account for ${profile.email}`);
+        continue;
+      }
+      const status = await requestWemaVirtualAccount(profile);
+      summary[status === "active" ? "requested" : "pending"] += 1;
+      console.log(`${status} ${profile.email}: Wema virtual account request completed`);
+    } catch (error) {
+      summary.failed += 1;
+      const message = error instanceof Error ? error.message : "Wema request failed.";
+      await saveStatus(profile.id, "unavailable", { message });
+      console.log(`failed ${profile.email}: ${message}`);
+    }
   }
+
+  console.log(JSON.stringify({ dryRun, wemaReady, summary }, null, 2));
 }
 
-console.log(JSON.stringify({ dryRun, wemaReady, summary }, null, 2));
+try {
+  await main();
+} finally {
+  await client.end();
+}

@@ -3,8 +3,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import ReferenceNotifications from "@/components/reference/ReferenceNotifications";
-import ThemeToggleIcon from "@/components/ThemeToggleIcon";
 import { useStore } from "@/lib/store";
 
 export { ReferenceIcon, type ReferenceIconName } from "./ReferenceIcon";
@@ -58,18 +56,12 @@ export function ReferenceScreen({
 }
 
 export function ReferenceToolbar({
-  theme = false,
-  notifications = true,
   name,
 }: {
-  theme?: boolean;
-  notifications?: boolean;
   name?: string;
 }) {
   return (
     <header className="design-toolbar" aria-label="Account controls">
-      {theme && <ThemeToggleIcon className="design-icon-button" />}
-      {notifications && <ReferenceNotifications />}
       {name && (
         <Link href="/profile" className="design-account-link" aria-label="Open profile">
           <span className="design-avatar-small">

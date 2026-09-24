@@ -1,18 +1,20 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Card } from "@/components/ui/card";
-import LoadingButton from "@/LoadingButton";
-import { toast } from "sonner";
-import { useStore } from "@/lib/store";
-import { getActivePlatformLoanRetainedDeposit } from "@/lib/loans";
-import { getRequiredWithdrawalBalance } from "@/lib/withdrawal";
-import { getWithdrawalProcessorFee, withdrawalFeeAmount } from "@/lib/revenue";
-import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
+
+
 import Me2uIcon from "@/components/Me2uIcon";
-import { authorizedFetch } from "@/lib/fetch";
+import { Card } from "@/components/ui/card";
 import { PinInput } from "@/components/ui/PinInput";
+import { authorizedFetch } from "@/lib/fetch";
+import { getActivePlatformLoanRetainedDeposit } from "@/lib/loans";
+import { getWithdrawalProcessorFee, withdrawalFeeAmount } from "@/lib/revenue";
+import { useStore } from "@/lib/store";
+import { getRequiredWithdrawalBalance } from "@/lib/withdrawal";
+import LoadingButton from "@/LoadingButton";
 
 const MIN_WITHDRAWAL = 1000;
 
@@ -198,7 +200,7 @@ export default function WithdrawPage() {
 
   return (
     <motion.div
-      className="app-mobile-screen mx-auto flex w-full max-w-md flex-col items-center px-3.5 pt-[4.85rem] md:max-w-xl md:px-6 md:py-24"
+      className="app-mobile-screen mx-auto flex w-full max-w-md flex-col items-center px-3.5 pt-[3.85rem] md:max-w-xl md:px-6 md:py-24"
       variants={containerVariants}
       initial="hidden"
       animate="show"

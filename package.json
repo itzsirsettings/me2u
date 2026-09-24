@@ -8,6 +8,7 @@
     "start": "next start",
     "test": "node --test tests/*.test.mjs tests/**/*.test.mjs",
     "test:e2e": "playwright test",
+    "load:probe": "node scripts/load-probe.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",

@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
 import { BullModule } from "@nestjs/bullmq";
-import { SupabaseService } from "../../common/supabase.service";
+import { RailwayDbService } from "../../common/railway-db.service";
 import { AuthModule } from "../auth/auth.module";
 import { BillsModule } from "../bills/bills.module";
 import { ProvidersModule } from "../providers/providers.module";
@@ -15,6 +15,6 @@ import { AdminService } from "./admin.service";
     BullModule.registerQueue({ name: "bill-purchase" }, { name: "bill-requery" }),
   ],
   controllers: [AdminController],
-  providers: [AdminService, SupabaseService],
+  providers: [AdminService, RailwayDbService],
 })
 export class AdminModule {}

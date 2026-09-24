@@ -1,11 +1,12 @@
 import { Module } from "@nestjs/common";
-import { SupabaseService } from "../../common/supabase.service";
 import { BankingModule } from "../banking/banking.module";
 import { PaystackService } from "./paystack.service";
+import { RailwayDbService } from "../../common/railway-db.service";
 
 @Module({
   imports: [BankingModule],
-  providers: [PaystackService, SupabaseService],
+  controllers: [],
+  providers: [PaystackService, RailwayDbService],
   exports: [PaystackService],
 })
 export class PaymentsModule {}

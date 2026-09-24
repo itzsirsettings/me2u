@@ -1,10 +1,9 @@
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable, UnauthorizedException } from "@nestjs/common";
-import { SupabaseService } from "../../common/supabase.service";
-import type { AuthenticatedRequestUser } from "../../common/supabase.service";
+import { RailwayDbService, getUserFromBearer, assertAdmin, type AuthenticatedRequestUser } from "../../common/railway-db.service";
 
 @Injectable()
 export class AdminGuard implements CanActivate {
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(private readonly db: RailwayDbService) {}
 
   async canActivate(context: ExecutionContext) {
     const request = context
@@ -12,8 +11,8 @@ export class AdminGuard implements CanActivate {
       .getRequest<{ headers: Record<string, string>; me2uUser?: AuthenticatedRequestUser }>();
 
     try {
-      const user = await this.supabase.getUserFromBearer(request.headers.authorization || "");
-      await this.supabase.assertAdmin(user.id);
+      const user = await getUserFromBearer(request.headers.authorization || "");
+      await assertAdmin(user.id);
       request.me2uUser = user;
       return true;
     } catch (error) {

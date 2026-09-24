@@ -1,6 +1,6 @@
 -- ============================================================
 -- Update registration deposit validation messages to NGN 2,000
--- Railway-adapted: Supabase role grants removed.
+-- Railway-native: no external role grants; app_user_id() owns row access.
 -- ============================================================
 
 do $outer_004$

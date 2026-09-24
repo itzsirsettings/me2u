@@ -178,4 +178,4 @@ WHERE referred_by IS NULL
 For questions or issues, contact the development team or check the codebase:
 - Registration logic: `app/api/auth/register/route.ts`
 - Referral recording: `lib/railway/auth.ts` (`recordReferral` function)
-- Reward triggers: `COMPLETE_MIGRATION.sql` (search for `referral_withdrawal_trigger`)
+- Reward triggers: `railway/migrations/` (search for `referral_withdrawal_trigger`)

@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useStore } from "@/lib/store";
-import LoadingButton from "@/LoadingButton";
+import { useEffect, useState } from "react";
+
 import { authorizedFetch } from "@/lib/fetch";
-import { privateImageUrl, uploadPrivateImage } from "@/lib/uploads";
 import { privateImageAccept, privateImageValidationError } from "@/lib/private-images";
+import { useStore } from "@/lib/store";
+import { privateImageUrl, uploadPrivateImage } from "@/lib/uploads";
+import LoadingButton from "@/LoadingButton";
 
 function toErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Something went wrong. Please try again.";
@@ -84,7 +85,7 @@ export default function KYCPage() {
 
   if (user.kycVerified) {
     return (
-      <div className="app-mobile-screen mx-auto flex w-full max-w-lg flex-col items-center justify-center px-3.5 pt-[4.85rem] text-center md:py-24">
+      <div className="app-mobile-screen mx-auto flex w-full max-w-lg flex-col items-center justify-center px-3.5 pt-[3.85rem] text-center md:py-24">
         <div className="mb-4 grid h-16 w-16 place-items-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-positive-bg)] text-[var(--color-positive-text)] shadow-[3px_3px_0px_var(--color-shadow)]">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -122,7 +123,7 @@ export default function KYCPage() {
 
   if (!user.registrationDepositPaid) {
     return (
-      <div className="app-mobile-screen mx-auto w-full max-w-lg px-3.5 pt-[4.85rem] text-center md:pt-24">
+      <div className="app-mobile-screen mx-auto w-full max-w-lg px-3.5 pt-[3.85rem] text-center md:pt-24">
         <div className="rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-[4px_4px_0px_var(--color-shadow)] md:p-8">
           <h1 className="text-[2.75rem] font-display leading-[0.85] tracking-tight md:text-6xl">
             KYC Locked
@@ -145,7 +146,7 @@ export default function KYCPage() {
 
   if (hasSubmittedKyc && !isEditingSubmission) {
     return (
-      <div className="app-mobile-screen mx-auto flex w-full max-w-lg flex-col items-center justify-center px-3.5 pt-[4.85rem] text-center md:py-24">
+      <div className="app-mobile-screen mx-auto flex w-full max-w-lg flex-col items-center justify-center px-3.5 pt-[3.85rem] text-center md:py-24">
         <div className="mb-4 grid h-16 w-16 place-items-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-warning-bg)] text-[var(--color-warning-text)] shadow-[3px_3px_0px_var(--color-shadow)]">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -267,7 +268,7 @@ export default function KYCPage() {
   };
 
   return (
-    <div className="app-mobile-screen mx-auto w-full max-w-lg px-3.5 pt-[4.85rem] md:pt-24">
+    <div className="app-mobile-screen mx-auto w-full max-w-lg px-3.5 pt-[3.85rem] md:pt-24">
       <div className="mb-4 text-center md:mb-12">
         <h1 className="sr-only md:not-sr-only md:mb-4 md:text-7xl md:font-display md:leading-[0.85] md:tracking-tighter">
           Verify Identity

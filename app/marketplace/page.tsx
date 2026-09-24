@@ -1,29 +1,52 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Card } from "@/components/ui/card";
-import LoadingButton from "@/LoadingButton";
-import Me2uIcon, { type Me2uIconName } from "@/components/Me2uIcon";
-import { useStore } from "@/lib/store";
-import { toast } from "sonner";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
+
+import Me2uIcon, { type Me2uIconName } from "@/components/Me2uIcon";
+import { Card } from "@/components/ui/card";
+import { authorizedFetch as authorizedFetchLib } from "@/lib/fetch";
 import { loanDurationMaxDays, loanDurationMinDays } from "@/lib/loans";
 import {
   isMarketplaceBoostActive,
   marketplaceBoostDurationHours,
   marketplaceBoostFeeAmount,
 } from "@/lib/revenue";
-import { authorizedFetch as authorizedFetchLib } from "@/lib/fetch";
+import { useStore } from "@/lib/store";
+import LoadingButton from "@/LoadingButton";
+
+
 
 type ListingType = "borrow_request" | "lending_offer";
 
 const protectionSteps: Array<{ title: string; detail: string; icon: Me2uIconName }> = [
-  { title: "Agreement summary", detail: "Review amount, 0% interest, duration, and role before acceptance.", icon: "receipt" },
-  { title: "Locked funding record", detail: "Funding, repayment, and wallet movements stay traceable in the app.", icon: "shield" },
-  { title: "Repayment countdown", detail: "Due dates and reminders keep both sides aligned.", icon: "loans" },
-  { title: "Dispute evidence", detail: "Receipts and proof uploads support admin review if a loan goes wrong.", icon: "certificate" },
-  { title: "Downloadable summary", detail: "Save a clear copy of the loan terms before confirmation.", icon: "download" },
+  {
+    title: "Agreement summary",
+    detail: "Review amount, 0% interest, duration, and role before acceptance.",
+    icon: "receipt",
+  },
+  {
+    title: "Locked funding record",
+    detail: "Funding, repayment, and wallet movements stay traceable in the app.",
+    icon: "shield",
+  },
+  {
+    title: "Repayment countdown",
+    detail: "Due dates and reminders keep both sides aligned.",
+    icon: "loans",
+  },
+  {
+    title: "Dispute evidence",
+    detail: "Receipts and proof uploads support admin review if a loan goes wrong.",
+    icon: "certificate",
+  },
+  {
+    title: "Downloadable summary",
+    detail: "Save a clear copy of the loan terms before confirmation.",
+    icon: "download",
+  },
 ];
 
 const circleTypes = [
@@ -68,9 +91,12 @@ export default function Marketplace() {
   const [submittingAction, setSubmittingAction] = useState(false);
   const [togglingGroupLending, setTogglingGroupLending] = useState(false);
 
-  const authorizedFetch = useCallback(async (input: RequestInfo | URL, init: RequestInit = {}) => {
-    return authorizedFetchLib(input, init);
-  }, []);
+  const authorizedFetch = useCallback(
+    async (input: RequestInfo | URL, init: RequestInit = {}) => {
+      return authorizedFetchLib(input, init);
+    },
+    [],
+  );
 
   const fetchCircles = useCallback(async () => {
     try {
@@ -95,7 +121,7 @@ export default function Marketplace() {
     }
   }, [fetchCircles, user?.groupLendingEnabled]);
 
-  // Poll circles every 15 seconds instead of Supabase Realtime
+  // Poll circles every 15 seconds (no realtime backend)
   useEffect(() => {
     if (!user?.groupLendingEnabled) return;
 
@@ -114,7 +140,7 @@ export default function Marketplace() {
         toast.success(
           user?.groupLendingEnabled
             ? "Group lending disabled."
-            : "Group lending enabled successfully! Welcome to Circles."
+            : "Group lending enabled successfully! Welcome to Circles.",
         );
       } else {
         toast.error(res.error || "Failed to toggle group lending.");
@@ -186,14 +212,17 @@ export default function Marketplace() {
         toast.success(
           circleAction === "contribute"
             ? `Successfully contributed ₦${actionAmount.toLocaleString()} to ${selectedCircle.name}`
-            : `Successfully borrowed ₦${actionAmount.toLocaleString()} from ${selectedCircle.name}`
+            : `Successfully borrowed ₦${actionAmount.toLocaleString()} from ${selectedCircle.name}`,
         );
         setSelectedCircle(null);
         setCircleAction(null);
         setCirclePin("");
         fetchCircles().catch(() => {});
         // Load user again to refresh balance
-        useStore.getState().loadCurrentUser().catch(() => {});
+        useStore
+          .getState()
+          .loadCurrentUser()
+          .catch(() => {});
       } else {
         toast.error(data.error || `Failed to ${circleAction}.`);
       }
@@ -256,12 +285,16 @@ export default function Marketplace() {
       formData.days < loanDurationMinDays ||
       formData.days > loanDurationMaxDays
     ) {
-      toast.error(`Enter an amount from ₦1,000 and duration from ${loanDurationMinDays} to ${loanDurationMaxDays} days.`);
+      toast.error(
+        `Enter an amount from ₦1,000 and duration from ${loanDurationMinDays} to ${loanDurationMaxDays} days.`,
+      );
       return;
     }
 
     if (formData.boost && user.balance < marketplaceBoostFeeAmount) {
-      toast.error(`Fund your wallet first. The listing boost costs ₦${marketplaceBoostFeeAmount.toLocaleString()}.`);
+      toast.error(
+        `Fund your wallet first. The listing boost costs ₦${marketplaceBoostFeeAmount.toLocaleString()}.`,
+      );
       return;
     }
 
@@ -344,25 +377,33 @@ export default function Marketplace() {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
-      transition: { staggerChildren: 0.1 }
-    }
+      transition: { staggerChildren: 0.1 },
+    },
   };
 
   const itemVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } }
+    show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
   };
 
   return (
-    <motion.div 
-      className="app-mobile-screen mx-auto w-full max-w-md px-3.5 pt-[4.85rem] md:max-w-5xl md:px-6 md:py-24"
+    <motion.div
+      className="app-mobile-screen mx-auto w-full max-w-md px-3.5 pt-[3.85rem] md:max-w-5xl md:px-6 md:py-24"
       variants={containerVariants}
       initial="hidden"
       animate="show"
     >
-      <motion.div variants={itemVariants} className="mb-4 flex min-w-0 flex-col gap-3 md:mb-12 md:flex-row md:items-center md:justify-between md:gap-6">
-        <h1 className="sr-only md:not-sr-only md:text-7xl md:font-display md:leading-[0.85] md:tracking-tighter">Marketplace</h1>
-        <button className={`${showForm ? "btn-ghost" : "btn-primary"} h-11 w-full md:h-12 md:w-auto`} onClick={() => setShowForm(!showForm)}>
+      <motion.div
+        variants={itemVariants}
+        className="mb-4 flex min-w-0 flex-col gap-3 md:mb-12 md:flex-row md:items-center md:justify-between md:gap-6"
+      >
+        <h1 className="sr-only md:not-sr-only md:text-7xl md:font-display md:leading-[0.85] md:tracking-tighter">
+          Marketplace
+        </h1>
+        <button
+          className={`${showForm ? "btn-ghost" : "btn-primary"} h-11 w-full md:h-12 md:w-auto`}
+          onClick={() => setShowForm(!showForm)}
+        >
           {showForm ? "Cancel" : "Create Listing"}
         </button>
       </motion.div>
@@ -371,15 +412,25 @@ export default function Marketplace() {
         {showForm && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
+            animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden"
           >
             <Card className="mb-5 glass kinetic-border p-4 bg-[var(--color-bg-secondary)] md:mb-12 md:p-8">
-              <h2 className="mb-4 text-xl font-display md:mb-6 md:text-3xl">Create New Listing</h2>
-              <form onSubmit={(e) => { e.preventDefault(); handleCreate().catch(()=>{}); }} className="grid gap-3.5 md:grid-cols-2 md:gap-6">
+              <h2 className="mb-4 text-xl font-display md:mb-6 md:text-3xl">
+                Create New Listing
+              </h2>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleCreate().catch(() => {});
+                }}
+                className="grid gap-3.5 md:grid-cols-2 md:gap-6"
+              >
                 <div>
-                  <label className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">Type</label>
+                  <label className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
+                    Type
+                  </label>
                   <select
                     className="h-11 w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3 font-sans focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none md:h-12"
                     value={formData.type}
@@ -387,7 +438,11 @@ export default function Marketplace() {
                     onChange={(e) => {
                       const nextType = e.target.value;
                       if (nextType === "borrow_request" || nextType === "lending_offer") {
-                        setFormData({ ...formData, type: nextType, boost: nextType === "borrow_request" ? formData.boost : false });
+                        setFormData({
+                          ...formData,
+                          type: nextType,
+                          boost: nextType === "borrow_request" ? formData.boost : false,
+                        });
                       }
                     }}
                   >
@@ -396,7 +451,9 @@ export default function Marketplace() {
                   </select>
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">Amount (₦)</label>
+                  <label className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
+                    Amount (₦)
+                  </label>
                   <input
                     type="number"
                     min="1000"
@@ -410,12 +467,18 @@ export default function Marketplace() {
                   />
                 </div>
                 <div className="rounded-[5px] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-card)] p-3">
-                  <p className="mb-1 text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">Interest</p>
+                  <p className="mb-1 text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
+                    Interest
+                  </p>
                   <p className="font-mono text-xl text-[var(--color-positive-text)]">0%</p>
-                  <p className="mt-1 text-xs text-[var(--color-text-secondary)]">All me2u loans are interest-free.</p>
+                  <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
+                    All me2u loans are interest-free.
+                  </p>
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">Duration (Days)</label>
+                  <label className="mb-2 block text-sm font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
+                    Duration (Days)
+                  </label>
                   <input
                     type="number"
                     min={loanDurationMinDays}
@@ -424,9 +487,7 @@ export default function Marketplace() {
                     value={formData.days}
                     title="Duration in Days"
                     placeholder="Days"
-                    onChange={(e) =>
-                      setFormData({ ...formData, days: Number(e.target.value) })
-                    }
+                    onChange={(e) => setFormData({ ...formData, days: Number(e.target.value) })}
                   />
                 </div>
                 {formData.type === "borrow_request" && (
@@ -438,8 +499,11 @@ export default function Marketplace() {
                       className="mt-1 h-4 w-4 shrink-0 accent-[var(--color-accent-primary)]"
                     />
                     <span className="min-w-0 text-sm leading-relaxed text-[var(--color-text-secondary)]">
-                      <b className="block text-[var(--color-text-primary)]">Promote for ₦{marketplaceBoostFeeAmount.toLocaleString()}</b>
-                      Keep this borrow request near the top for {marketplaceBoostDurationHours} hours. Promotion improves visibility but does not guarantee funding.
+                      <b className="block text-[var(--color-text-primary)]">
+                        Promote for ₦{marketplaceBoostFeeAmount.toLocaleString()}
+                      </b>
+                      Keep this borrow request near the top for {marketplaceBoostDurationHours}{" "}
+                      hours. Promotion improves visibility but does not guarantee funding.
                     </span>
                   </label>
                 )}
@@ -457,26 +521,41 @@ export default function Marketplace() {
         )}
       </AnimatePresence>
 
-      <motion.div variants={itemVariants} className="mb-4 grid gap-4 md:mb-8 md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+      <motion.div
+        variants={itemVariants}
+        className="mb-4 grid gap-4 md:mb-8 md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]"
+      >
         <Card className="kinetic-border bg-[var(--color-bg-card)] p-5 shadow-[4px_4px_0px_var(--color-shadow)] md:p-6">
           <div className="mb-4 flex min-w-0 items-start justify-between gap-3">
             <div className="min-w-0">
-              <h2 className="text-xl font-display leading-none md:text-3xl">Protected Peer Lending</h2>
+              <h2 className="text-xl font-display leading-none md:text-3xl">
+                Protected Peer Lending
+              </h2>
               <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">
-                Review the terms, keep records, and handle repayment or disputes inside one flow.
+                Review the terms, keep records, and handle repayment or disputes inside one
+                flow.
               </p>
             </div>
-            <Me2uIcon name="shield" size={28} className="shrink-0 text-[var(--color-accent-primary)]" />
+            <Me2uIcon
+              name="shield"
+              size={28}
+              className="shrink-0 text-[var(--color-accent-primary)]"
+            />
           </div>
           <div className="grid gap-2">
             {protectionSteps.map((step) => (
-              <div key={step.title} className="flex min-w-0 items-start gap-3 rounded-[5px] bg-[var(--color-bg-secondary)] p-3">
+              <div
+                key={step.title}
+                className="flex min-w-0 items-start gap-3 rounded-[5px] bg-[var(--color-bg-secondary)] p-3"
+              >
                 <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[5px] bg-[var(--color-bg-card)] text-[var(--color-accent-primary)]">
                   <Me2uIcon name={step.icon} size={19} />
                 </span>
                 <span className="min-w-0">
                   <b className="block truncate text-sm">{step.title}</b>
-                  <span className="block text-xs leading-relaxed text-[var(--color-text-secondary)]">{step.detail}</span>
+                  <span className="block text-xs leading-relaxed text-[var(--color-text-secondary)]">
+                    {step.detail}
+                  </span>
                 </span>
               </div>
             ))}
@@ -489,16 +568,22 @@ export default function Marketplace() {
               <div className="min-w-0">
                 <h2 className="text-xl font-display leading-none md:text-3xl">Me2U Circles</h2>
                 <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">
-                  Pool funds with trusted groups, contribute to pools, or borrow instantly at 0% interest.
+                  Pool funds with trusted groups, contribute to pools, or borrow instantly at 0%
+                  interest.
                 </p>
               </div>
-              <Me2uIcon name="group" size={28} className="shrink-0 text-[var(--color-accent-primary)]" />
+              <Me2uIcon
+                name="group"
+                size={28}
+                className="shrink-0 text-[var(--color-accent-primary)]"
+              />
             </div>
 
             {!user?.groupLendingEnabled ? (
               <div className="rounded-[8px] bg-[var(--color-bg-secondary)] p-4 text-center my-4">
                 <p className="text-sm leading-relaxed text-[var(--color-text-secondary)] mb-4">
-                  Group lending is currently disabled. Enable it to join and manage peer circles.
+                  Group lending is currently disabled. Enable it to join and manage peer
+                  circles.
                 </p>
                 <button
                   type="button"
@@ -541,7 +626,9 @@ export default function Marketplace() {
                       >
                         <div className="flex justify-between items-start gap-2">
                           <div>
-                            <b className="block text-sm text-[var(--color-text-primary)]">{circle.name}</b>
+                            <b className="block text-sm text-[var(--color-text-primary)]">
+                              {circle.name}
+                            </b>
                             <span className="text-[10px] text-[var(--color-text-secondary)]">
                               {circle.creator_id === user.id ? "Created by you" : "Member"}
                             </span>
@@ -608,7 +695,9 @@ export default function Marketplace() {
                 <div className="mb-4 flex min-w-0 items-start justify-between gap-3 border-b border-[var(--color-border)] pb-3 md:mb-6 md:pb-4">
                   <div className="min-w-0">
                     <div className="flex min-w-0 flex-wrap items-center gap-2">
-                      <p className={`font-sans font-bold uppercase tracking-wide text-sm ${item.type === "borrow_request" ? "text-[var(--color-warning-text)]" : "text-[var(--color-accent-primary)]"}`}>
+                      <p
+                        className={`font-sans font-bold uppercase tracking-wide text-sm ${item.type === "borrow_request" ? "text-[var(--color-warning-text)]" : "text-[var(--color-accent-primary)]"}`}
+                      >
                         {item.type === "borrow_request" ? "Borrow Request" : "Lending Offer"}
                       </p>
                       {isMarketplaceBoostActive(item) && (
@@ -617,22 +706,32 @@ export default function Marketplace() {
                         </span>
                       )}
                     </div>
-                    <p className="overflow-anywhere mt-1 font-sans text-sm italic text-[var(--color-text-secondary)]">by {item.authorName}</p>
+                    <p className="overflow-anywhere mt-1 font-sans text-sm italic text-[var(--color-text-secondary)]">
+                      by {item.authorName}
+                    </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-1 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-positive-bg)] px-2 py-1 text-[11px] font-bold font-mono text-[var(--color-positive-text)] shadow-[2px_2px_0px_var(--color-shadow)] md:px-3 md:text-xs">
                     <Me2uIcon name="shield" size={16} />
                     Trust: {item.trustScore}
                   </div>
                 </div>
-                <p className="overflow-anywhere mt-2 text-2xl font-display leading-none md:text-5xl">₦{item.amount.toLocaleString()}</p>
+                <p className="overflow-anywhere mt-2 text-2xl font-display leading-none md:text-5xl">
+                  ₦{item.amount.toLocaleString()}
+                </p>
                 <div className="mt-5 grid grid-cols-2 gap-3 text-sm font-sans text-[var(--color-text-secondary)] md:mt-6 md:gap-4">
                   <div className="p-3 bg-[var(--color-bg-primary)] rounded-[5px] kinetic-border border-dashed">
-                    <p className="text-[10px] uppercase font-bold tracking-[0.1em] mb-1 md:tracking-[0.2em]">Interest</p>
+                    <p className="text-[10px] uppercase font-bold tracking-[0.1em] mb-1 md:tracking-[0.2em]">
+                      Interest
+                    </p>
                     <p className="text-xl font-mono text-[var(--color-positive-text)]">0%</p>
                   </div>
                   <div className="p-3 bg-[var(--color-bg-primary)] rounded-[5px] kinetic-border border-dashed">
-                    <p className="text-[10px] uppercase font-bold tracking-[0.1em] mb-1 md:tracking-[0.2em]">Duration</p>
-                    <p className="text-xl font-mono text-[var(--color-text-primary)]">{item.days}d</p>
+                    <p className="text-[10px] uppercase font-bold tracking-[0.1em] mb-1 md:tracking-[0.2em]">
+                      Duration
+                    </p>
+                    <p className="text-xl font-mono text-[var(--color-text-primary)]">
+                      {item.days}d
+                    </p>
                   </div>
                 </div>
               </div>
@@ -653,7 +752,9 @@ export default function Marketplace() {
         ))}
         {marketplace.length === 0 && (
           <div className="py-12 text-center md:col-span-2 md:py-16">
-            <p className="text-base leading-relaxed font-sans italic opacity-90 text-[var(--color-text-secondary)] md:text-xl">No items in the marketplace. Create one!</p>
+            <p className="text-base leading-relaxed font-sans italic opacity-90 text-[var(--color-text-secondary)] md:text-xl">
+              No items in the marketplace. Create one!
+            </p>
           </div>
         )}
       </motion.div>
@@ -695,38 +796,54 @@ export default function Marketplace() {
               <dl className="grid gap-2 rounded-[5px] bg-[var(--color-bg-secondary)] p-3 text-sm">
                 <div className="flex min-w-0 justify-between gap-3">
                   <dt className="shrink-0 text-[var(--color-text-secondary)]">Listing</dt>
-                  <dd className="min-w-0 text-right font-bold capitalize">{pendingAgreement.type.replaceAll("_", " ")}</dd>
+                  <dd className="min-w-0 text-right font-bold capitalize">
+                    {pendingAgreement.type.replaceAll("_", " ")}
+                  </dd>
                 </div>
                 <div className="flex min-w-0 justify-between gap-3">
                   <dt className="shrink-0 text-[var(--color-text-secondary)]">Amount</dt>
-                  <dd className="min-w-0 text-right font-mono font-bold">₦{pendingAgreement.amount.toLocaleString()}</dd>
+                  <dd className="min-w-0 text-right font-mono font-bold">
+                    ₦{pendingAgreement.amount.toLocaleString()}
+                  </dd>
                 </div>
                 <div className="flex min-w-0 justify-between gap-3">
                   <dt className="shrink-0 text-[var(--color-text-secondary)]">Interest</dt>
-                  <dd className="min-w-0 text-right font-mono font-bold text-[var(--color-positive-text)]">0%</dd>
+                  <dd className="min-w-0 text-right font-mono font-bold text-[var(--color-positive-text)]">
+                    0%
+                  </dd>
                 </div>
                 <div className="flex min-w-0 justify-between gap-3">
                   <dt className="shrink-0 text-[var(--color-text-secondary)]">Duration</dt>
-                  <dd className="min-w-0 text-right font-mono font-bold">{pendingAgreement.days} days</dd>
+                  <dd className="min-w-0 text-right font-mono font-bold">
+                    {pendingAgreement.days} days
+                  </dd>
                 </div>
                 <div className="flex min-w-0 justify-between gap-3">
-                  <dt className="shrink-0 text-[var(--color-text-secondary)]">Repayment date</dt>
+                  <dt className="shrink-0 text-[var(--color-text-secondary)]">
+                    Repayment date
+                  </dt>
                   <dd className="min-w-0 text-right font-bold">{repaymentDate}</dd>
                 </div>
                 <div className="flex min-w-0 justify-between gap-3">
                   <dt className="shrink-0 text-[var(--color-text-secondary)]">Lender</dt>
-                  <dd className="min-w-0 text-right font-bold">{lenderName} • {lenderTrustScore}/100</dd>
+                  <dd className="min-w-0 text-right font-bold">
+                    {lenderName} • {lenderTrustScore}/100
+                  </dd>
                 </div>
                 <div className="flex min-w-0 justify-between gap-3">
                   <dt className="shrink-0 text-[var(--color-text-secondary)]">Borrower</dt>
-                  <dd className="min-w-0 text-right font-bold">{borrowerName} • {borrowerTrustScore}/100</dd>
+                  <dd className="min-w-0 text-right font-bold">
+                    {borrowerName} • {borrowerTrustScore}/100
+                  </dd>
                 </div>
                 <div className="flex min-w-0 justify-between gap-3">
                   <dt className="shrink-0 text-[var(--color-text-secondary)]">Wallet rule</dt>
                   <dd className="min-w-0 text-right font-bold">Retained balance applies</dd>
                 </div>
                 <div className="flex min-w-0 justify-between gap-3">
-                  <dt className="shrink-0 text-[var(--color-text-secondary)]">Late repayment</dt>
+                  <dt className="shrink-0 text-[var(--color-text-secondary)]">
+                    Late repayment
+                  </dt>
                   <dd className="min-w-0 text-right font-bold">Score and access review</dd>
                 </div>
               </dl>
@@ -739,7 +856,8 @@ export default function Marketplace() {
                   className="mt-1 h-4 w-4 shrink-0 accent-[var(--color-accent-primary)]"
                 />
                 <span className="min-w-0 text-[var(--color-text-secondary)]">
-                  I understand this creates an active 0% loan with wallet records, repayment tracking, receipts, and dispute review if needed.
+                  I understand this creates an active 0% loan with wallet records, repayment
+                  tracking, receipts, and dispute review if needed.
                 </span>
               </label>
 
@@ -897,7 +1015,9 @@ export default function Marketplace() {
                       maxLength={4}
                       placeholder="0000"
                       value={circlePin}
-                      onChange={(event) => setCirclePin(event.target.value.replace(/\D/g, "").slice(0, 4))}
+                      onChange={(event) =>
+                        setCirclePin(event.target.value.replace(/\D/g, "").slice(0, 4))
+                      }
                       className="h-11 w-full rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 text-center font-mono text-lg tracking-[0.35em] focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none"
                     />
                   </div>
@@ -916,15 +1036,20 @@ export default function Marketplace() {
                   </button>
                   <button
                     type="button"
-                    disabled={submittingAction || actionAmount <= 0 || !user?.transactionPin || circlePin.length !== 4}
+                    disabled={
+                      submittingAction ||
+                      actionAmount <= 0 ||
+                      !user?.transactionPin ||
+                      circlePin.length !== 4
+                    }
                     className="btn-primary flex-1 min-h-11"
                     onClick={handleCircleAction}
                   >
                     {submittingAction
                       ? "Processing..."
                       : circleAction === "contribute"
-                      ? "Contribute"
-                      : "Borrow"}
+                        ? "Contribute"
+                        : "Borrow"}
                   </button>
                 </div>
               </div>

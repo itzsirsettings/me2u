@@ -1,5 +1,6 @@
 import { Pool, PoolClient } from "pg";
 import { parse as parsePgConnectionString } from "pg-connection-string";
+
 import baseLogger from "../server/logger";
 
 let pool: Pool | null = null;
@@ -34,16 +35,16 @@ export function getRailwayDbClient(): Pool {
         password = parsed.password || undefined;
         database = parsed.database || undefined;
       } catch {
-        const match = process.env.DATABASE_URL.match(
-          /^postgresql?:\/\/([^:@\s]+):([^@\s]+)@([^:/\s]+)(?::(\d+))?(?:\/([^\s?]+))?/,
-        );
-        if (match) {
-          const [, mUser, mPassword, mHost, mPort, mDatabase] = match;
-          user = mUser || undefined;
-          password = mPassword || undefined;
-          host = mHost || undefined;
-          port = mPort ? Number(mPort) : undefined;
-          database = mDatabase || undefined;
+        // Fallback for connection strings that pg-connection-string cannot parse.
+        try {
+          const url = new URL(process.env.DATABASE_URL);
+          user = decodeURIComponent(url.username) || undefined;
+          password = decodeURIComponent(url.password) || undefined;
+          host = url.hostname || undefined;
+          port = url.port ? Number(url.port) : undefined;
+          database = url.pathname.length > 1 ? url.pathname.slice(1) : undefined;
+        } catch {
+          // Leave values undefined; the pool below will surface the failure.
         }
       }
     }

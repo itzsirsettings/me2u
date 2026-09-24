@@ -12,48 +12,44 @@ import {
 import Link from "next/link";
 import { useState } from "react";
 
+import ReferenceNotifications from "@/components/reference/ReferenceNotifications";
 import {
   Initials,
   money,
   ReferenceIcon,
   ReferenceScreen,
-  ReferenceToolbar,
   useReferenceUser,
   type ReferenceIconName,
 } from "@/components/reference/ReferenceUI";
-import ReferenceNotifications from "@/components/reference/ReferenceNotifications";
 import { getCreditLevel } from "@/lib/product-features";
 
 const primaryActions: Array<{
   label: string;
-  detail: string;
   path: string;
   icon: ReferenceIconName;
   lime?: boolean;
 }> = [
-  { label: "Market", detail: "Buy & sell", path: "/marketplace", icon: "market" },
-  { label: "Loans", detail: "Get funds", path: "/loans", icon: "wallet", lime: true },
-  { label: "KYC", detail: "Verify identity", path: "/kyc", icon: "shield" },
+  { label: "Market", path: "/marketplace", icon: "market" },
+  { label: "Loans", path: "/loans", icon: "wallet", lime: true },
+  { label: "KYC", path: "/kyc", icon: "shield" },
 ];
 const shortcuts: Array<{
   label: string;
-  detail: string;
   path: string;
   icon: ReferenceIconName;
   lime?: boolean;
 }> = [
   {
     label: "Savings",
-    detail: "Grow your money",
     path: "/savings",
     icon: "savings",
     lime: true,
   },
-  { label: "Circles", detail: "Save together", path: "/circles", icon: "users" },
-  { label: "Deals", detail: "Exclusive offers", path: "/deals", icon: "tag" },
-  { label: "Refer", detail: "Invite & earn", path: "/referrals", icon: "users", lime: true },
-  { label: "Learn", detail: "Build knowledge", path: "/learn", icon: "book" },
-  { label: "Secure", detail: "Stay protected", path: "/security", icon: "secure" },
+  { label: "Circles", path: "/circles", icon: "users" },
+  { label: "Deals", path: "/deals", icon: "tag" },
+  { label: "Refer", path: "/referrals", icon: "users", lime: true },
+  { label: "Learn", path: "/learn", icon: "book" },
+  { label: "Secure", path: "/security", icon: "secure" },
 ];
 
 export default function Dashboard() {
@@ -66,13 +62,11 @@ export default function Dashboard() {
 
   return (
     <ReferenceScreen kind="home">
-      <ReferenceToolbar theme notifications={false} />
       <section className="design-welcome">
         <Link href="/profile" className="design-avatar" aria-label="Open profile">
           <Initials name={user.name} />
         </Link>
         <div className="design-welcome-copy">
-          <p>Welcome</p>
           <h1 title={`@${user.username || user.name}`}>
             @{user.username || user.name.split(" ")[0]}
           </h1>
@@ -94,7 +88,7 @@ export default function Dashboard() {
           {!bankReady && (
             <Link href="/profile" className="design-verify">
               <CircleAlert size={16} aria-hidden="true" />
-              <span>Verify to add bank</span>
+              <span>add bank</span>
               <ChevronRight size={15} aria-hidden="true" />
             </Link>
           )}
@@ -120,7 +114,6 @@ export default function Dashboard() {
             </span>
             <div>
               <strong>Receive</strong>
-              <small>Get paid to your wallet</small>
             </div>
           </Link>
           <Link href="/withdraw" className="design-withdraw">
@@ -129,7 +122,6 @@ export default function Dashboard() {
             </span>
             <div>
               <strong>Withdraw</strong>
-              <small>Send to your bank</small>
             </div>
           </Link>
         </div>
@@ -143,7 +135,6 @@ export default function Dashboard() {
             </span>
             <ChevronRight className="design-service-chevron" size={18} aria-hidden="true" />
             <strong>{item.label}</strong>
-            <small>{item.detail}</small>
           </Link>
         ))}
       </section>
@@ -154,7 +145,6 @@ export default function Dashboard() {
               <ReferenceIcon name={item.icon} size={22} />
             </span>
             <strong>{item.label}</strong>
-            <small>{item.detail}</small>
           </Link>
         ))}
       </section>
@@ -166,7 +156,6 @@ export default function Dashboard() {
             <p>
               {level.name} level • {level.next}
             </p>
-            <small>Complete more steps to unlock higher benefits.</small>
           </div>
           <div
             className="design-score"
@@ -186,7 +175,6 @@ export default function Dashboard() {
             </svg>
             <div>
               <strong>{score}</strong>
-              <small>/ 100</small>
             </div>
             <span className="design-level-badge">{level.name}</span>
           </div>
@@ -203,9 +191,6 @@ export default function Dashboard() {
           </span>
           <div>
             <strong>{user.kycVerified ? "KYC complete" : "Complete KYC"}</strong>
-            <small>
-              {user.kycVerified ? "Your identity is verified" : "KYC unlocks stronger trust"}
-            </small>
           </div>
           <ChevronRight size={18} aria-hidden="true" />
         </Link>
@@ -214,12 +199,16 @@ export default function Dashboard() {
             <ReferenceIcon name="users" size={22} />
           </span>
           <div>
+            <strong>{user.verifiedReferralCount ?? 0} verified referrals</strong>
+          </div>
+          <ChevronRight size={18} aria-hidden="true" />
+        </Link>
+        <Link href="/referrals" className="design-step-row">
+          <span className="design-icon-square">
+            <ReferenceIcon name="wallet" size={22} />
+          </span>
+          <div>
             <strong>Refer a friend</strong>
-            <small>
-              {user.verifiedReferralCount === 0
-                ? "Your verified referrals will appear here"
-                : `${user.verifiedReferralCount} verified referral${user.verifiedReferralCount === 1 ? "" : "s"} contributing to your trust`}
-            </small>
           </div>
           <ChevronRight size={18} aria-hidden="true" />
         </Link>

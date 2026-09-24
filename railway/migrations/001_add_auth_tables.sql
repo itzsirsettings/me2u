@@ -1,6 +1,6 @@
 -- ============================================================
 -- Railway PostgreSQL Auth Setup (001)
--- Replaces Supabase-specific auth with native PostgreSQL tables.
+-- Native PostgreSQL auth tables.
 -- Helper functions defined here so all subsequent migrations can use them.
 -- ============================================================
 
@@ -32,7 +32,7 @@ begin
 end;
 $$;
 
--- ─── 2. auth_users table (replaces supabase.auth.users) ───
+-- ─── 2. auth_users table (native PostgreSQL authentication) ───
 
 create table if not exists public.auth_users (
   id              uuid primary key default gen_random_uuid(),
@@ -54,7 +54,7 @@ create trigger auth_users_set_updated_at
   before update on public.auth_users
   for each row execute function public.set_updated_at();
 
--- ─── 3. RLS on auth_users (uses app_user_id(), no Supabase roles) ───
+-- ─── 3. RLS on auth_users (uses app_user_id()) ───
 
 alter table public.auth_users enable row level security;
 

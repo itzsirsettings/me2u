@@ -11,7 +11,6 @@ export default tseslint.config(
       ".kilo/**",
       "out/**",
       "coverage/**",
-      "supabase/functions/**",
       "server/dist/**",
     ],
   },

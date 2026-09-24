@@ -1,5 +1,5 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
-import { SupabaseService, type AuthenticatedRequestUser } from "../../common/supabase.service";
+﻿import { BadRequestException, Injectable } from "@nestjs/common";
+import { query, type AuthenticatedRequestUser } from "../../common/railway-db.service";
 import { WemaProvider } from "../banking/wema.provider";
 
 function transferReference() {
@@ -9,20 +9,15 @@ function transferReference() {
 @Injectable()
 export class TransfersService {
   constructor(
-    private readonly supabase: SupabaseService,
     private readonly wema: WemaProvider,
   ) {}
 
   async list(user: AuthenticatedRequestUser) {
-    const { data, error } = await this.supabase.admin
-      .from("bank_transfers")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(100);
-
-    if (error) throw new BadRequestException(error.message);
-    return data || [];
+    const { rows } = await query(
+      `SELECT * FROM bank_transfers WHERE user_id = $1 ORDER BY created_at DESC LIMIT 100`,
+      [user.id],
+    );
+    return rows || [];
   }
 
   async resolveAccount() {
@@ -58,28 +53,33 @@ export class TransfersService {
       narration,
     });
 
-    const { data: wallet } = await this.supabase.admin.from("wallets").select("id").eq("user_id", user.id).maybeSingle();
-    const { data, error } = await this.supabase.admin
-      .from("bank_transfers")
-      .insert({
-        user_id: user.id,
-        wallet_id: wallet?.id || null,
-        provider: "wema",
-        reference,
-        provider_reference: result.providerReference,
-        amount,
-        bank_code: bankCode,
-        account_number: accountNumber,
-        narration,
-        status: result.status,
-        provider_response: result.raw as any,
-        completed_at: result.status === "successful" ? new Date().toISOString() : null,
-      })
-      .select("*")
-      .single();
+    const { rows: walletRows } = await query(
+      `SELECT id FROM wallets WHERE user_id = $1`,
+      [user.id],
+    );
+    const wallet = walletRows[0];
 
-    if (error) throw new BadRequestException(error.message);
-    return data;
+    const { rows } = await query(
+      `INSERT INTO bank_transfers (user_id, wallet_id, provider, reference, provider_reference, amount, bank_code, account_number, narration, status, provider_response, completed_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+       RETURNING *`,
+      [
+        user.id,
+        wallet?.id || null,
+        "wema",
+        reference,
+        result.providerReference,
+        amount,
+        bankCode,
+        accountNumber,
+        narration,
+        result.status,
+        result.raw,
+        result.status === "successful" ? new Date().toISOString() : null,
+      ],
+    );
+
+    return rows[0];
   }
 
   async requery(reference: string) {
@@ -92,18 +92,17 @@ export class TransfersService {
     }
 
     const result = await this.wema.requery(reference);
-    const { data, error } = await this.supabase.admin
-      .from("bank_transfers")
-      .update({
-        status: result.status,
-        provider_response: result.raw as any,
-        completed_at: result.status === "successful" ? new Date().toISOString() : null,
-      })
-      .eq("reference", reference)
-      .select("*")
-      .maybeSingle();
 
-    if (error) throw new BadRequestException(error.message);
-    return data || result;
+    const { rows } = await query(
+      `UPDATE bank_transfers SET
+         status = $1,
+         provider_response = $2,
+         completed_at = CASE WHEN $1 = 'successful' THEN NOW() ELSE NULL END
+       WHERE reference = $3
+       RETURNING *`,
+      [result.status, result.raw, reference],
+    );
+
+    return rows[0] || result;
   }
 }

@@ -259,28 +259,62 @@ test.describe("reference account surfaces", () => {
     await expect(page).toHaveURL(/\/$/);
   });
 
-  test("balance controls align with each other and the withdrawal action at every width", async ({
+  test("eye stays beside the amount while bell stays right aligned", async ({
     page,
   }) => {
     await mockAccount(page, { user: { balance: 1234567.89 } });
     await page.goto("/dashboard");
     for (const width of [320, 390, 470, 1280]) {
       await page.setViewportSize({ width, height: 900 });
+      const amount = await page.getByTestId("main-balance").boundingBox();
       const eye = await page.getByRole("button", { name: "Hide balance" }).boundingBox();
       const bell = await page.getByRole("button", { name: "Open notifications" }).boundingBox();
-      const withdraw = await page.locator(".design-withdraw").boundingBox();
+      const balance = await page.locator(".design-balance").boundingBox();
+      expect(amount).not.toBeNull();
       expect(eye).not.toBeNull();
       expect(bell).not.toBeNull();
-      expect(withdraw).not.toBeNull();
+      expect(balance).not.toBeNull();
       expect(
-        Math.abs(eye!.y + eye!.height / 2 - bell!.y - bell!.height / 2),
+        Math.abs(amount!.y + amount!.height / 2 - eye!.y - eye!.height / 2),
       ).toBeLessThanOrEqual(1);
       expect(
-        Math.abs(bell!.x + bell!.width / 2 - withdraw!.x - withdraw!.width / 2),
-      ).toBeLessThanOrEqual(1);
+        eye!.x - amount!.x - amount!.width,
+      ).toBeGreaterThanOrEqual(0);
+      expect(Math.abs(balance!.x + balance!.width - bell!.x - bell!.width - 18)).toBeLessThanOrEqual(2);
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
       ).toBe(true);
+    }
+  });
+
+  test("large balances remain contained beside the controls", async ({ page }) => {
+    await mockAccount(page, { user: { balance: 1_000_000_000 } });
+    await page.goto("/dashboard");
+    for (const width of [320, 360, 390]) {
+      await page.setViewportSize({ width, height: 800 });
+      await expect(page.getByTestId("main-balance")).toHaveText("₦1,000,000,000.00");
+      const layout = await page.evaluate(() => {
+        const amount = document.querySelector<HTMLElement>('[data-testid="main-balance"]');
+        const eye = document.querySelector<HTMLElement>('button[aria-label="Hide balance"]');
+        const bell = document.querySelector<HTMLElement>(".design-balance-notifications");
+        const card = document.querySelector<HTMLElement>(".design-balance");
+        if (!amount || !eye || !bell || !card) return null;
+        const amountBox = amount.getBoundingClientRect();
+        const eyeBox = eye.getBoundingClientRect();
+        const bellBox = bell.getBoundingClientRect();
+        const cardBox = card.getBoundingClientRect();
+        return {
+          amountRight: amountBox.right,
+          eyeLeft: eyeBox.left,
+          bellLeft: bellBox.left,
+          cardRight: cardBox.right,
+          scrollWidth: document.documentElement.scrollWidth,
+        };
+      });
+      expect(layout).not.toBeNull();
+      expect(layout!.amountRight).toBeLessThanOrEqual(layout!.eyeLeft);
+      expect(layout!.bellLeft + 44).toBeLessThanOrEqual(layout!.cardRight);
+      expect(layout!.scrollWidth).toBeLessThanOrEqual(width);
     }
   });
 

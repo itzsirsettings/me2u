@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+
 import Me2uIcon from "@/components/Me2uIcon";
+import { authorizedFetch } from "@/lib/fetch";
 import { financialEducationLessons } from "@/lib/product-features";
 import { useStore } from "@/lib/store";
-import { authorizedFetch } from "@/lib/fetch";
-import { toast } from "sonner";
-import { motion, AnimatePresence } from "framer-motion";
 
 export default function LearnPage() {
   const isAuthenticated = useStore((state) => state.isAuthenticated);
@@ -39,7 +40,9 @@ export default function LearnPage() {
       .then((response) => response.json())
       .then((data) => {
         if (data.ok) {
-          setCompletedLessons((data.progress || []).map((item: { lesson_key: string }) => item.lesson_key));
+          setCompletedLessons(
+            (data.progress || []).map((item: { lesson_key: string }) => item.lesson_key),
+          );
         }
       })
       .catch(() => {})
@@ -54,7 +57,9 @@ export default function LearnPage() {
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok || !data.ok) {
-      throw new Error(typeof data.error === "string" ? data.error : "Unable to save lesson progress.");
+      throw new Error(
+        typeof data.error === "string" ? data.error : "Unable to save lesson progress.",
+      );
     }
   }
 
@@ -66,7 +71,7 @@ export default function LearnPage() {
   if (!mounted || (!isAuthenticated && !isLoading)) return null;
 
   return (
-    <main className="app-mobile-screen mx-auto w-full max-w-md px-3.5 pt-[4.85rem] md:max-w-xl md:px-6 md:py-24">
+    <main className="app-mobile-screen mx-auto w-full max-w-md px-3.5 pt-[3.85rem] md:max-w-xl md:px-6 md:py-24">
       <div className="mb-4 md:mb-8">
         <p className="text-xs font-black uppercase tracking-[0.12em] text-[var(--color-text-secondary)]">
           Me2U Learn
@@ -83,7 +88,8 @@ export default function LearnPage() {
             <div className="min-w-0">
               <p className="text-sm font-black">Your learning progress</p>
               <p className="mt-1 text-xs font-medium text-[var(--color-text-secondary)]">
-                {user?.name || "Your profile"} • {completedLessons.length}/{financialEducationLessons.length} lessons
+                {user?.name || "Your profile"} • {completedLessons.length}/
+                {financialEducationLessons.length} lessons
                 {progressLoading ? " • syncing" : ""}
               </p>
             </div>
@@ -92,7 +98,10 @@ export default function LearnPage() {
             </span>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-[var(--mobile-surface-muted)]">
-            <div className="h-full rounded-full bg-[var(--color-accent-primary)]" style={{ width: `${completionPercent}%` }} />
+            <div
+              className="h-full rounded-full bg-[var(--color-accent-primary)]"
+              style={{ width: `${completionPercent}%` }}
+            />
           </div>
           <p className="mt-2 text-xs font-bold text-[var(--color-text-secondary)]">
             {completionPercent}% complete
@@ -123,7 +132,9 @@ export default function LearnPage() {
                   onClick={() => setExpandedIndex(isExpanded ? null : index)}
                 >
                   <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-black text-[var(--color-text-primary)]">{lesson.title}</span>
+                    <span className="block text-sm font-black text-[var(--color-text-primary)]">
+                      {lesson.title}
+                    </span>
                     <span className="mt-1 block text-xs font-semibold text-[var(--color-text-secondary)]">
                       {lesson.duration}
                     </span>
@@ -153,7 +164,9 @@ export default function LearnPage() {
                     >
                       <div className="mt-4 pt-4 border-t border-[var(--color-border)] space-y-4">
                         <div className="rounded-[8px] bg-[var(--mobile-surface-muted)] p-3.5">
-                          <p className="text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)]">What this helps you do</p>
+                          <p className="text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)]">
+                            What this helps you do
+                          </p>
                           <p className="mt-1.5 text-sm leading-relaxed text-[var(--color-text-primary)]">
                             {lesson.outcome}
                           </p>
@@ -161,7 +174,9 @@ export default function LearnPage() {
 
                         {/* General tips */}
                         <div className="grid gap-2">
-                          <p className="text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)]">Key Reminders</p>
+                          <p className="text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)]">
+                            Key Reminders
+                          </p>
                           <div className="grid gap-2 sm:grid-cols-2">
                             {[
                               "Keep lending inside Me2U records.",
@@ -169,9 +184,18 @@ export default function LearnPage() {
                               "Protect your PINs and login details.",
                               "Report pressure or suspicious requests.",
                             ].map((tip) => (
-                              <div key={tip} className="flex min-w-0 items-start gap-2 rounded-[8px] border border-[var(--color-border)] p-2.5">
-                                <Me2uIcon name="shield" size={14} className="mt-0.5 shrink-0 text-[var(--color-accent-primary)]" />
-                                <p className="text-[11px] font-semibold leading-relaxed text-[var(--color-text-secondary)]">{tip}</p>
+                              <div
+                                key={tip}
+                                className="flex min-w-0 items-start gap-2 rounded-[8px] border border-[var(--color-border)] p-2.5"
+                              >
+                                <Me2uIcon
+                                  name="shield"
+                                  size={14}
+                                  className="mt-0.5 shrink-0 text-[var(--color-accent-primary)]"
+                                />
+                                <p className="text-[11px] font-semibold leading-relaxed text-[var(--color-text-secondary)]">
+                                  {tip}
+                                </p>
                               </div>
                             ))}
                           </div>
@@ -186,7 +210,9 @@ export default function LearnPage() {
                               onClick={() => {
                                 saveLessonProgress(lesson.title, true)
                                   .then(() => {
-                                    setCompletedLessons((current) => [...new Set([...current, lesson.title])]);
+                                    setCompletedLessons((current) => [
+                                      ...new Set([...current, lesson.title]),
+                                    ]);
                                     toast.success(`Completed: ${lesson.title}`);
                                     if (index < financialEducationLessons.length - 1) {
                                       setExpandedIndex(index + 1);
@@ -206,7 +232,9 @@ export default function LearnPage() {
                               onClick={() => {
                                 saveLessonProgress(lesson.title, false)
                                   .then(() => {
-                                    setCompletedLessons((current) => current.filter((t) => t !== lesson.title));
+                                    setCompletedLessons((current) =>
+                                      current.filter((t) => t !== lesson.title),
+                                    );
                                     toast.success("Marked as uncompleted.");
                                   })
                                   .catch((error) => toast.error(error.message));

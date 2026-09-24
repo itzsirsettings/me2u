@@ -1,6 +1,6 @@
-import { BadRequestException, HttpException, Injectable, UnauthorizedException } from "@nestjs/common";
+﻿import { BadRequestException, HttpException, Injectable, UnauthorizedException } from "@nestjs/common";
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { SupabaseService } from "../../common/supabase.service";
+import { query, withTransaction, type AuthenticatedRequestUser } from "../../common/railway-db.service";
 
 function paystackSecret() {
   const secret = process.env.PAYSTACK_SECRET_KEY;
@@ -57,7 +57,82 @@ function dedicatedAccountRow(userId: string, account: any, payload: any) {
 
 @Injectable()
 export class PaystackService {
-  constructor(private readonly supabase: SupabaseService) {}
+  async getOrCreateDedicatedAccount(user: AuthenticatedRequestUser) {
+    const { rows: existingRows } = await query<{ id: string; status: string; account_number: string | null }>(
+      `SELECT id, status, account_number FROM paystack_dedicated_accounts WHERE user_id = $1`,
+      [user.id],
+    );
+    const existing = existingRows[0];
+
+    if (existing && existing.status !== "unavailable" && existing.account_number) {
+      return {
+        status: existing.status,
+        account_number: existing.account_number,
+        bank_name: "Titan Paystack",
+      };
+    }
+
+    // Create a new dedicated account
+    try {
+      const response = await fetch("https://api.paystack.co/dedicated_account", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${paystackSecret()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          customer: {
+            email: user.email || `${user.id}@me2u.local`,
+          },
+          preferred_bank: preferredBank(),
+        }),
+      });
+
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || payload?.status === false) {
+        throw new BadRequestException(payload?.message || "Paystack dedicated account creation failed.");
+      }
+
+      const account = payload.data;
+      const row = dedicatedAccountRow(user.id, account, { createdAt: new Date().toISOString() });
+
+      await query(
+        `INSERT INTO paystack_dedicated_accounts (user_id, customer_code, dedicated_account_id, account_name, account_number, bank_name, bank_slug, assignment_payload, status)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+         ON CONFLICT (user_id) DO UPDATE SET
+           status = EXCLUDED.status,
+           account_number = EXCLUDED.account_number,
+           bank_name = EXCLUDED.bank_name,
+           assignment_payload = EXCLUDED.assignment_payload`,
+        [user.id, row.customer_code, row.dedicated_account_id, row.account_name, row.account_number, row.bank_name, row.bank_slug, row.assignment_payload, row.status],
+      );
+
+      if (isDedicatedAccountUnavailable(payload)) {
+        await query(
+          `UPDATE paystack_dedicated_accounts SET status = 'unavailable' WHERE user_id = $1`,
+          [user.id],
+        );
+        return { status: "unavailable", message: "Dedicated account creation is not available for your account yet." };
+      }
+
+      return {
+        status: row.status,
+        account_number: row.account_number,
+        bank_name: row.bank_name,
+      };
+    } catch (error) {
+      if (isDedicatedAccountUnavailable(error)) {
+        return { status: "unavailable", message: "Dedicated account creation is not available for your account yet." };
+      }
+      throw error;
+    }
+  }
+
+  verifyWebhookSignature(rawBody: Buffer, signature?: string) {
+    if (!signature) throw new UnauthorizedException("Missing Paystack signature.");
+    const expected = createHmac("sha512", paystackSecret()).update(rawBody).digest("hex");
+    if (!safeEqualHex(expected, signature)) throw new UnauthorizedException("Invalid Paystack signature.");
+  }
 
   private async request(path: string, init: RequestInit = {}) {
     const response = await fetch(`https://api.paystack.co${path}`, {
@@ -75,153 +150,49 @@ export class PaystackService {
     return payload;
   }
 
-  private unavailableFundingAccount(message = "Dedicated wallet accounts are not available yet. Use the platform payment account and submit proof for review.") {
-    return {
-      status: "unavailable",
-      message,
-    };
-  }
-
-  verifyWebhookSignature(rawBody: Buffer, signature?: string) {
-    if (!signature) throw new UnauthorizedException("Missing Paystack signature.");
-    const expected = createHmac("sha512", paystackSecret()).update(rawBody).digest("hex");
-    if (!safeEqualHex(expected, signature)) throw new UnauthorizedException("Invalid Paystack signature.");
-  }
-
-  async verifyTransaction(reference: string) {
-    return this.request(`/transaction/verify/${encodeURIComponent(reference)}`);
-  }
-
-  private async findManagedAccountByEmail(email: string) {
-    const query = new URLSearchParams({
-      active: "true",
-      currency: "NGN",
-      provider_slug: preferredBank(),
+  saveDedicatedAccount(userId: string, account: any, event: any) {
+    return withTransaction(async (client) => {
+      await client.query(
+        `INSERT INTO paystack_dedicated_accounts (user_id, customer_code, dedicated_account_id, account_name, account_number, bank_name, bank_slug, assignment_payload, status)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+         ON CONFLICT (user_id) DO UPDATE SET
+           assignment_payload = EXCLUDED.assignment_payload`,
+        [
+          userId,
+          account?.customer?.customer_code || null,
+          account?.id ? String(account.id) : null,
+          account?.account_name || null,
+          account?.account_number || null,
+          account?.bank?.name || account?.bank?.bank_name || null,
+          account?.bank?.slug || null,
+          event,
+          account?.active === false ? "inactive" : account?.account_number ? "active" : "pending",
+        ],
+      );
     });
-    const payload = await this.request(`/dedicated_account?${query.toString()}`);
-    const normalizedEmail = email.trim().toLowerCase();
-    return Array.isArray(payload?.data)
-      ? payload.data.find((account: any) => String(account?.customer?.email || "").trim().toLowerCase() === normalizedEmail)
-      : null;
-  }
-
-  private async saveDedicatedAccount(userId: string, account: any, payload: any) {
-    const { data, error } = await this.supabase.admin
-      .from("paystack_dedicated_accounts")
-      .upsert(dedicatedAccountRow(userId, account, payload), { onConflict: "user_id" })
-      .select("*")
-      .single();
-
-    if (error) throw new BadRequestException(error.message);
-    return data;
-  }
-
-  async getOrCreateDedicatedAccount(userId: string) {
-    const { data: existing, error: existingError } = await this.supabase.admin
-      .from("paystack_dedicated_accounts")
-      .select("*")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    if (existingError) throw new BadRequestException(existingError.message);
-    if (existing?.account_number) return existing;
-
-    const { data: profile, error: profileError } = await this.supabase.admin
-      .from("profiles")
-      .select("first_name, last_name, email, phone, kyc_verified")
-      .eq("id", userId)
-      .maybeSingle();
-
-    if (profileError) throw new BadRequestException(profileError.message);
-    if (!profile) throw new BadRequestException("Profile not found.");
-    if (!profile.kyc_verified) throw new BadRequestException("Complete KYC before requesting a funding account.");
-
-    if (!process.env.PAYSTACK_SECRET_KEY) {
-      return {
-        status: "not_configured",
-        message: "Paystack is not configured yet.",
-      };
-    }
-
-    if (existing?.status === "pending") {
-      const managedAccount = await this.findManagedAccountByEmail(profile.email);
-      if (managedAccount?.account_number) {
-        return this.saveDedicatedAccount(userId, managedAccount, managedAccount);
-      }
-      return {
-        ...existing,
-        message: "Dedicated account assignment is still in progress. Use the platform payment account while Paystack completes it.",
-      };
-    }
-
-    let assigned: any;
-    try {
-      assigned = await this.request("/dedicated_account/assign", {
-        method: "POST",
-        body: JSON.stringify({
-          email: profile.email,
-          first_name: profile.first_name,
-          last_name: profile.last_name,
-          phone: profile.phone || undefined,
-          preferred_bank: preferredBank(),
-          country: "NG",
-        }),
-      });
-    } catch (error) {
-      if (isDedicatedAccountUnavailable(error)) {
-        return this.unavailableFundingAccount("Automatic wallet account assignment is temporarily unavailable. Use the platform payment account and submit proof for review.");
-      }
-      throw error;
-    }
-
-    if (assigned?.data?.account_number) {
-      return this.saveDedicatedAccount(userId, assigned.data, assigned);
-    }
-
-    const { data, error } = await this.supabase.admin
-      .from("paystack_dedicated_accounts")
-      .upsert(
-        {
-          user_id: userId,
-          assignment_payload: assigned,
-          status: "pending",
-        },
-        { onConflict: "user_id" },
-      )
-      .select("*")
-      .single();
-
-    if (error) throw new BadRequestException(error.message);
-    return {
-      ...data,
-      message: assigned?.message || "Dedicated account assignment is in progress.",
-    };
   }
 
   async handleWebhook(rawBody: Buffer, signature?: string) {
     this.verifyWebhookSignature(rawBody, signature);
-    const event = JSON.parse(rawBody.toString("utf8"));
+    const event = JSON.parse(rawBody.toString());
     const reference = event?.data?.reference ? String(event.data.reference) : null;
 
-    await this.supabase.admin.from("provider_webhooks").insert({
-      provider: "paystack",
-      event_type: event?.event || null,
-      reference,
-      payload: event,
-      processed: false,
-    });
+    await query(
+      `INSERT INTO provider_webhooks (provider, event_type, reference, payload, processed)
+       VALUES ($1, $2, $3, $4, false)`,
+      ["paystack", event?.event || null, reference, event],
+    );
 
     if (event?.event === "dedicatedaccount.assign.success") {
       const account = event.data;
       const email = String(account?.customer?.email || "").trim().toLowerCase();
       if (email) {
-        const { data: profile } = await this.supabase.admin
-          .from("profiles")
-          .select("id")
-          .eq("email", email)
-          .maybeSingle();
-        if (profile?.id) {
-          await this.saveDedicatedAccount(profile.id, account, event);
+        const { rows: profileRows } = await query<{ id: string }>(
+          `SELECT id FROM profiles WHERE lower(email) = $1`,
+          [email],
+        );
+        if (profileRows.length > 0) {
+          await this.saveDedicatedAccount(profileRows[0].id, account, event);
         }
       }
       return { ok: true };
@@ -230,22 +201,17 @@ export class PaystackService {
     if (event?.event === "dedicatedaccount.assign.failed") {
       const email = String(event?.data?.customer?.email || event?.data?.email || "").trim().toLowerCase();
       if (email) {
-        const { data: profile } = await this.supabase.admin
-          .from("profiles")
-          .select("id")
-          .eq("email", email)
-          .maybeSingle();
-        if (profile?.id) {
-          await this.supabase.admin
-            .from("paystack_dedicated_accounts")
-            .upsert(
-              {
-                user_id: profile.id,
-                assignment_payload: event,
-                status: "unavailable",
-              },
-              { onConflict: "user_id" },
-            );
+        const { rows: profileRows } = await query<{ id: string }>(
+          `SELECT id FROM profiles WHERE lower(email) = $1`,
+          [email],
+        );
+        if (profileRows.length > 0) {
+          await query(
+            `INSERT INTO paystack_dedicated_accounts (user_id, assignment_payload, status)
+             VALUES ($1, $2, 'unavailable')
+             ON CONFLICT (user_id) DO UPDATE SET status = 'unavailable'`,
+            [profileRows[0].id, event],
+          );
         }
       }
       return { ok: true };
@@ -269,35 +235,38 @@ export class PaystackService {
       null;
     const customerCode = data?.customer?.customer_code || null;
 
-    let accountQuery = this.supabase.admin.from("paystack_dedicated_accounts").select("*");
+    let accountQuery = `SELECT * FROM paystack_dedicated_accounts`;
+    const conditions = [];
     if (accountNumber) {
-      accountQuery = accountQuery.eq("account_number", accountNumber);
+      conditions.push(`account_number = '${accountNumber}'`);
     } else if (customerCode) {
-      accountQuery = accountQuery.eq("customer_code", customerCode);
+      conditions.push(`customer_code = '${customerCode}'`);
     } else {
       throw new BadRequestException("Unable to map Paystack charge to a Me2U dedicated account.");
     }
+    const dedicatedAccount = (await query<any>(`${accountQuery} WHERE ${conditions.join(" AND ")} LIMIT 1`)).rows[0];
 
-    const { data: dedicatedAccount, error } = await accountQuery.maybeSingle();
-    if (error) throw new BadRequestException(error.message);
     if (!dedicatedAccount) throw new BadRequestException("Dedicated account was not found.");
 
     const amount = Number(data.amount || 0) / 100;
-    const { error: creditError } = await this.supabase.admin.rpc("me2u_credit_wallet_funding", {
-      p_user_id: dedicatedAccount.user_id,
-      p_amount: amount,
-      p_reference: `paystack:${reference}`,
-      p_description: "Paystack dedicated account wallet funding",
+
+    await withTransaction(async (client) => {
+      const result = await client.query(
+        `SELECT * FROM me2u_credit_wallet_funding($1, $2, $3, $4)`,
+        [dedicatedAccount.user_id, amount, `paystack:${reference}`, "Paystack dedicated account wallet funding"],
+      );
+      if (!result.rows[0]) throw new BadRequestException("Wallet credit failed.");
     });
 
-    if (creditError) throw new BadRequestException(creditError.message);
-
-    await this.supabase.admin
-      .from("provider_webhooks")
-      .update({ processed: true })
-      .eq("provider", "paystack")
-      .eq("reference", reference);
+    await query(
+      `UPDATE provider_webhooks SET processed = true WHERE provider = 'paystack' AND reference = $1`,
+      [reference],
+    );
 
     return { ok: true };
+  }
+
+  async verifyTransaction(reference: string) {
+    return this.request(`/transaction/verify/${encodeURIComponent(reference)}`);
   }
 }

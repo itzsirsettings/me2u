@@ -4,12 +4,26 @@
  * OTP codes stored in database and displayed in-app
  */
 
-import { query, withTransaction } from "@/lib/railway/client";
 import { randomInt, createHash } from "crypto";
+
+import { query, withTransaction } from "@/lib/railway/client";
 import { logInfo } from "@/lib/server/logger";
 
 const OTP_EXPIRY_MINUTES = 10;
-const pepper = process.env.OTP_SIGNING_SECRET || "unused-local-pepper";
+
+function getOtpPepper(): string {
+  const secret = process.env.OTP_SIGNING_SECRET;
+
+  if (!secret) {
+    throw new Error("Missing OTP_SIGNING_SECRET.");
+  }
+
+  if (process.env.NODE_ENV === "production" && secret.length < 32) {
+    throw new Error("OTP_SIGNING_SECRET must be at least 32 characters in production.");
+  }
+
+  return secret;
+}
 
 export interface OTPRecord {
   id: string;
@@ -22,15 +36,13 @@ export interface OTPRecord {
 }
 
 function safeIdentifierHash(identifier: string): string {
-  return createHash("sha256")
-    .update(`${identifier}:${pepper}`)
-    .digest("hex");
+  return createHash("sha256").update(`${identifier}:${getOtpPepper()}`).digest("hex");
 }
 
 async function requireAdmin(userId: string): Promise<void> {
   const { rows } = await query(
     `SELECT 1 FROM profiles WHERE id = $1 AND role = 'admin' LIMIT 1`,
-    [userId]
+    [userId],
   );
   if (rows.length === 0) {
     throw new Error("Forbidden: admin only");
@@ -49,7 +61,7 @@ export function generateOtpCode(): string {
  */
 export async function createOtp(
   identifier: string,
-  purpose: "register" | "login" | "password_reset"
+  purpose: "register" | "login" | "password_reset",
 ): Promise<{ code: string; expiresAt: Date }> {
   const code = generateOtpCode();
   const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
@@ -60,18 +72,23 @@ export async function createOtp(
         `UPDATE otp_codes 
          SET verified = true, updated_at = NOW() 
          WHERE identifier = $1 AND purpose = $2 AND verified = false`,
-        [identifier, purpose]
+        [identifier, purpose],
       );
 
       await client.query(
         `INSERT INTO otp_codes 
            (identifier, code, purpose, expires_at, verified, created_at, updated_at)
          VALUES ($1, $2, $3, $4, false, NOW(), NOW())`,
-        [identifier, code, purpose, expiresAt.toISOString()]
+        [identifier, code, purpose, expiresAt.toISOString()],
       );
     });
   } catch (err: unknown) {
-    if (err && typeof err === "object" && "code" in err && (err as { code: string }).code === "23505") {
+    if (
+      err &&
+      typeof err === "object" &&
+      "code" in err &&
+      (err as { code: string }).code === "23505"
+    ) {
       return { code, expiresAt };
     }
     throw err;
@@ -92,7 +109,7 @@ export async function createOtp(
 export async function verifyOtp(
   identifier: string,
   code: string,
-  purpose: "register" | "login" | "password_reset"
+  purpose: "register" | "login" | "password_reset",
 ): Promise<{ valid: boolean; error?: string }> {
   if (!/^\d{6}$/.test(code)) {
     return {
@@ -110,7 +127,7 @@ export async function verifyOtp(
        AND verified = false 
        AND expires_at > NOW() 
      RETURNING id`,
-    [identifier, purpose, code]
+    [identifier, purpose, code],
   );
 
   if (result.rows.length === 1) {
@@ -134,7 +151,7 @@ export async function verifyOtp(
 export async function getCurrentOtp(
   userId: string,
   identifier: string,
-  purpose: "register" | "login" | "password_reset"
+  purpose: "register" | "login" | "password_reset",
 ): Promise<OTPRecord | null> {
   await requireAdmin(userId);
 
@@ -146,7 +163,7 @@ export async function getCurrentOtp(
        AND expires_at > NOW()
      ORDER BY created_at DESC
      LIMIT 1`,
-    [identifier, purpose]
+    [identifier, purpose],
   );
 
   return rows[0] || null;
@@ -162,7 +179,7 @@ export async function cleanupExpiredOtps(): Promise<number> {
        WHERE expires_at < NOW() - INTERVAL '24 hours'
        RETURNING 1
      )
-     SELECT COUNT(*)::int AS deleted FROM deleted`
+     SELECT COUNT(*)::int AS deleted FROM deleted`,
   );
 
   const rowCount = rows[0]?.deleted ?? 0;
@@ -192,7 +209,7 @@ export async function getOtpStats(): Promise<{
        COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '24 hours') as total_sent_today,
        COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '24 hours' AND verified = true) as total_verified_today,
        COUNT(*) FILTER (WHERE verified = false AND expires_at > NOW()) as active_otps
-     FROM otp_codes`
+     FROM otp_codes`,
   );
 
   const stats = rows[0];
