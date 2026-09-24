@@ -82,14 +82,6 @@ export default function HowItWorksSection() {
           animate={isInView ? "visible" : "hidden"}
           variants={containerVars}
         >
-          <motion.div variants={variants} className="mb-4">
-            <span className="landing-eyebrow">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="2" />
-              </svg>
-              Simple Process
-            </span>
-          </motion.div>
           <motion.h2 id="how-it-works-heading" className="landing-h2 mb-4" variants={variants}>
             How Me2U Works
           </motion.h2>

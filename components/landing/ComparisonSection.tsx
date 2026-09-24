@@ -92,15 +92,6 @@ export default function ComparisonSection() {
           animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
           transition={{ duration: 0.6 }}
         >
-          <div className="mb-4">
-            <span className="landing-eyebrow">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="2" y="2" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="1.5" />
-                <path d="M2 5h8M5 2v8" stroke="currentColor" strokeWidth="1.5" />
-              </svg>
-              The Difference
-            </span>
-          </div>
           <h2 id="comparison-heading" className="landing-h2 mb-4">
             Why Choose Me2U?
           </h2>

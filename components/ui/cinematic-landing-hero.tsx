@@ -181,7 +181,6 @@ export interface CinematicHeroProps extends React.HTMLAttributes<HTMLDivElement>
 
 export function CinematicHero({
   brandName = "Me2U",
-  eyebrow = "CBN licensed - NDIC insured",
   tagline1 = "Zero-interest lending,",
   tagline2 = "powered by trust.",
   cardHeading = "Trust-based finance, redefined.",
@@ -248,7 +247,6 @@ export function CinematicHero({
     const isMobile = window.innerWidth < 768;
 
     const ctx = gsap.context(() => {
-      gsap.set(".hero-eyebrow", { autoAlpha: 0, y: 24, filter: "blur(12px)" });
       gsap.set(".text-track", {
         autoAlpha: 0,
         y: 60,
@@ -271,15 +269,7 @@ export function CinematicHero({
       gsap.set(".cta-wrapper", { autoAlpha: 0, scale: 0.8, filter: "blur(30px)" });
 
       const introTl = gsap.timeline({ delay: 0.3 });
-      introTl
-        .to(".hero-eyebrow", {
-          duration: 1.1,
-          autoAlpha: 1,
-          y: 0,
-          filter: "blur(0px)",
-          ease: "expo.out",
-        })
-        .to(
+      introTl.to(
           ".text-track",
           {
             duration: 1.8,
@@ -443,9 +433,6 @@ export function CinematicHero({
       <div className="bg-grid-theme pointer-events-none absolute inset-0 z-0 opacity-50" aria-hidden="true" />
 
       <div className="hero-text-wrapper transform-style-3d absolute z-10 flex w-screen flex-col items-center justify-center px-4 text-center will-change-transform">
-        <p className="hero-eyebrow gsap-reveal mb-5 rounded-full border border-green/20 bg-green/10 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.2em] text-green shadow-[0_12px_30px_rgba(34,197,94,0.12)]">
-          {eyebrow}
-        </p>
         <h1 className="text-track gsap-reveal text-3d-matte mb-2 text-5xl font-bold tracking-tight md:text-7xl lg:text-[6rem]">
           {tagline1}
         </h1>

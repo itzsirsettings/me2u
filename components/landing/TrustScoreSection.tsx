@@ -141,14 +141,6 @@ export default function TrustScoreSection() {
           animate={isInView ? "visible" : "hidden"}
           variants={containerVars}
         >
-          <motion.div variants={variants} className="mb-4">
-            <span className="landing-eyebrow">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M6 1l4 2v3c0 3-2 5-4 6-2-1-4-3-4-6V3l4-2z" stroke="currentColor" strokeWidth="1.5" />
-              </svg>
-              Trust System
-            </span>
-          </motion.div>
           <motion.h2 id="trust-score-heading" className="landing-h2 mb-4" variants={variants}>
             Your Trust Score Grows With Every{" "}
             <span className="landing-accent-word">Positive Action</span>

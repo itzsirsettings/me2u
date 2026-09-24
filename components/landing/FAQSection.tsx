@@ -135,15 +135,6 @@ export default function FAQSection() {
           animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
           transition={{ duration: 0.6 }}
         >
-          <div className="mb-4">
-            <span className="landing-eyebrow">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.5" />
-                <path d="M6 4v3M6 9v0.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
-              Common Questions
-            </span>
-          </div>
           <h2 id="faq-heading" className="landing-h2 mb-4">
             Frequently Asked Questions
           </h2>
