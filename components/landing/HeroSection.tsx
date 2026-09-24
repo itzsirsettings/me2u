@@ -79,11 +79,12 @@ export default function HeroSection() {
         >
           {/* Headline */}
           <motion.h1 id="landing-hero-heading" className="hero-headline" variants={fadeUp}>
-            0% Interest Loans.
+            Borrow with clarity.
             <br />
-            Built on{" "}
+            Build trust that opens doors.
+            <br />
             <span className="hero-trust-word">
-              Trust.
+              Me2U.
               <svg
                 className="hero-trust-underline"
                 viewBox="0 0 200 12"
@@ -106,21 +107,21 @@ export default function HeroSection() {
 
           {/* Sub-copy */}
           <motion.p id="landing-hero-description" className="hero-subtext" variants={fadeUp}>
-            For Every Nigerian.
-            <br className="hidden sm:inline" /> Send, borrow, and repay with people you trust—no
-            interest, no hidden fees.
-            <br className="hidden sm:inline" /> Fair peer-to-peer finance built for Nigeria and
-            the Diaspora.
+            A Nigerian finance platform for verified people.
+            <br className="hidden sm:inline" /> Use your wallet, repayments, circles, and referrals to
+            build a stronger Trust Score.
+            <br className="hidden sm:inline" /> Then borrow, lend, save, and manage everyday money with
+            clearer terms.
           </motion.p>
 
           {/* CTA Buttons */}
           <motion.div className="hero-cta-row" variants={fadeUp}>
             <Link href="/register" className="hero-btn-primary" id="hero-open-account">
-              <span>Create Free Account</span>
+              <span>Start Building Trust</span>
               <span className="hero-btn-shine" aria-hidden="true" />
             </Link>
             <a href="/#how-it-works" className="hero-btn-secondary" id="hero-learn-more">
-              See How It Works
+              See the Me2U journey
             </a>
           </motion.div>
 

@@ -36,8 +36,8 @@ const signals = [
     ),
   },
   {
-    title: "Verified Referrals",
-    description: "Referring trusted friends who complete verification strengthens your network.",
+    title: "Referral activity",
+    description: "Verified referral stages can unlock rewards and show continued participation in the network.",
     icon: (
       <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="12" cy="10" r="4" stroke="currentColor" strokeWidth="2" opacity="0.2" />
@@ -48,8 +48,8 @@ const signals = [
     ),
   },
   {
-    title: "Trust Circles",
-    description: "Active participation in family, church, or community circles boosts credibility.",
+    title: "Account age and activity",
+    description: "A consistent account history and responsible platform activity help establish your profile over time.",
     icon: (
       <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="16" cy="16" r="12" stroke="currentColor" strokeWidth="2" opacity="0.2" />
@@ -146,7 +146,7 @@ export default function TrustScoreSection() {
             <span className="landing-accent-word">Positive Action</span>
           </motion.h2>
           <motion.p className="landing-body max-w-2xl mx-auto" variants={variants}>
-            Me2U measures trust through six transparent signals. No hidden formulas—just clear actions that build your reputation and unlock better opportunities.
+            Your Trust Score reflects verified identity, repayment behavior, wallet activity, referral progress, account history, and dispute outcomes. It helps inform access and progression; it is not a guarantee of approval.
           </motion.p>
         </motion.div>
 
@@ -180,7 +180,7 @@ export default function TrustScoreSection() {
           ))}
         </motion.div>
 
-        {/* Credit Levels */}
+        {/* Loan progression */}
         <motion.div
           className="text-center"
           initial="hidden"
@@ -188,7 +188,7 @@ export default function TrustScoreSection() {
           variants={containerVars}
         >
           <motion.h3 className="landing-h3 mb-8" variants={variants}>
-            Credit Levels
+            Loan progression
           </motion.h3>
           <motion.div
             className="flex flex-wrap justify-center gap-4 sm:gap-6"

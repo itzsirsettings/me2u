@@ -35,7 +35,7 @@ export default function SuccessStoryCarousel() {
   useEffect(() => {
     const loadStories = async () => {
       try {
-        const response = await fetch("/api/platform/success-stories?featured=true&limit=10", {
+        const response = await fetch("/api/platform/success-stories?featured=true&limit=7", {
           cache: "no-store",
         });
         const result = (await response.json()) as SuccessStoriesResponse;

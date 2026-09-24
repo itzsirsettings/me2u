@@ -51,25 +51,25 @@ function buildProofCards(metrics: PlatformMetrics): ProofCard[] {
       label: "Total Borrowed",
       raw: metrics.totalBorrowed,
       value: formatMetric(metrics.totalBorrowed, "money"),
-      detail: "Borrowed by the Me2U community through fair, 0% interest loans.",
+      detail: "Recorded loan value reported by the platform statistics service.",
     },
     {
       label: "Successfully Repaid",
       raw: metrics.totalRepaid,
       value: formatMetric(metrics.totalRepaid, "money"),
-      detail: "Repayments completed by trusted members across every circle.",
+      detail: "Recorded repayments reported by the platform statistics service.",
     },
     {
       label: "Trusted Members",
       raw: metrics.totalUsers,
       value: formatMetric(metrics.totalUsers),
-      detail: "Verified people building financial trust on Me2U.",
+      detail: "Accounts included in the current platform statistics response.",
     },
     {
       label: "Active Circles",
       raw: metrics.activeCircles,
       value: formatMetric(metrics.activeCircles),
-      detail: "Community groups lending and saving together.",
+      detail: "Circles currently included in the platform statistics response.",
     },
   ];
 
@@ -122,23 +122,6 @@ export default function PublicProofSection() {
       </div>
 
       <div className="container mx-auto px-4 md:px-6 relative z-10">
-        <div className="max-w-4xl mb-16 md:mb-20">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-4xl md:text-6xl font-black mb-8 tracking-tight leading-[1.05]">
-              Real numbers. <br />
-              <span className="text-[var(--landing-accent-strong)]">Never inflated.</span>
-            </h2>
-            <p className="text-xl md:text-2xl text-muted-foreground font-medium leading-relaxed tracking-tight max-w-2xl">
-              Me2U shares the community&apos;s actual activity — real loans, real repayments,
-              real people. No inflated metrics, no estimates.
-            </p>
-          </motion.div>
-        </div>
-
         {proofCards.length > 0 ? (
           <div
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16 md:mb-24"
@@ -182,20 +165,6 @@ export default function PublicProofSection() {
         ) : null}
 
         <div className="mb-16 md:mb-24">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mb-8"
-          >
-            <h2 className="text-3xl md:text-4xl font-black mb-4 leading-tight">
-              Real stories from <br />
-              <span className="text-[var(--landing-accent-strong)]">real users.</span>
-            </h2>
-            <p className="text-lg text-muted-foreground font-medium leading-relaxed max-w-2xl">
-              Hear from verified Me2U members who have borrowed and repaid interest-free loans.
-            </p>
-          </motion.div>
           <SuccessStoryCarousel />
         </div>
 
@@ -215,10 +184,6 @@ export default function PublicProofSection() {
                 Trust built on <br />
                 <span className="text-[var(--landing-accent-strong)]">transparency.</span>
               </h2>
-              <p className="text-lg text-muted-foreground font-medium leading-relaxed mb-0">
-                Every figure on this page reflects what the Me2U community has actually achieved
-                — no inflated metrics, no vanity numbers, no estimates.
-              </p>
             </GlowCard>
           </motion.div>
 
