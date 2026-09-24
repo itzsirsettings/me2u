@@ -31,7 +31,7 @@ export default function ReferralQrCode({ value, className = "" }: ReferralQrCode
       margin: 1,
       width: 192,
       color: {
-        dark: "#595959",
+        dark: "#4d4d4d",
         light: "#F8FAFC",
       },
     })

@@ -56,17 +56,17 @@ const INJECTED_STYLES = `
       background-clip: text;
       transform: translateZ(0);
       filter:
-          drop-shadow(0px 12px 24px rgba(89,89,89,0.8))
-          drop-shadow(0px 4px 8px rgba(89,89,89,0.6));
+          drop-shadow(0px 12px 24px rgba(77,77,77,0.8))
+          drop-shadow(0px 4px 8px rgba(77,77,77,0.6));
   }
 
   .premium-depth-card {
       background: linear-gradient(145deg, var(--color-slate) 0%, var(--color-dark) 100%);
       box-shadow:
-          0 40px 100px -20px rgba(89, 89, 89, 0.9),
-          0 20px 40px -20px rgba(89, 89, 89, 0.8),
+          0 40px 100px -20px rgba(77, 77, 77, 0.9),
+          0 20px 40px -20px rgba(77, 77, 77, 0.8),
           inset 0 1px 2px rgba(255, 255, 255, 0.2),
-          inset 0 -2px 4px rgba(89, 89, 89, 0.8);
+          inset 0 -2px 4px rgba(77, 77, 77, 0.8);
       border: 1px solid rgba(255, 255, 255, 0.04);
       position: relative;
   }
@@ -82,17 +82,17 @@ const INJECTED_STYLES = `
       box-shadow:
           inset 0 0 0 2px color-mix(in srgb, var(--color-slate) 70%, var(--color-light)),
           inset 0 0 0 7px var(--color-dark),
-          0 40px 80px -15px rgba(89,89,89,0.9),
-          0 15px 25px -5px rgba(89,89,89,0.7);
+          0 40px 80px -15px rgba(77,77,77,0.9),
+          0 15px 25px -5px rgba(77,77,77,0.7);
       transform-style: preserve-3d;
   }
 
   .hardware-btn {
       background: linear-gradient(90deg, var(--color-slate) 0%, var(--color-dark) 100%);
       box-shadow:
-          -2px 0 5px rgba(89,89,89,0.8),
+          -2px 0 5px rgba(77,77,77,0.8),
           inset -1px 0 1px rgba(255,255,255,0.15),
-          inset 1px 0 2px rgba(89,89,89,0.8);
+          inset 1px 0 2px rgba(77,77,77,0.8);
       border-left: 1px solid rgba(255,255,255,0.05);
   }
 
@@ -103,9 +103,9 @@ const INJECTED_STYLES = `
   .widget-depth {
       background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
       box-shadow:
-          0 10px 20px rgba(89,89,89,0.3),
+          0 10px 20px rgba(77,77,77,0.3),
           inset 0 1px 1px rgba(255,255,255,0.05),
-          inset 0 -1px 1px rgba(89,89,89,0.5);
+          inset 0 -1px 1px rgba(77,77,77,0.5);
       border: 1px solid rgba(255,255,255,0.03);
   }
 
@@ -115,9 +115,9 @@ const INJECTED_STYLES = `
       -webkit-backdrop-filter: blur(24px);
       box-shadow:
           0 0 0 1px rgba(255, 255, 255, 0.1),
-          0 25px 50px -12px rgba(89, 89, 89, 0.8),
+          0 25px 50px -12px rgba(77, 77, 77, 0.8),
           inset 0 1px 1px rgba(255,255,255,0.2),
-          inset 0 -1px 1px rgba(89,89,89,0.5);
+          inset 0 -1px 1px rgba(77,77,77,0.5);
   }
 
   .btn-modern-light, .btn-modern-dark {
@@ -126,31 +126,31 @@ const INJECTED_STYLES = `
   .btn-modern-light {
       background: linear-gradient(180deg, var(--color-light) 0%, color-mix(in srgb, var(--color-light) 88%, var(--color-lime)) 100%);
       color: var(--color-dark);
-      box-shadow: 0 0 0 1px rgba(89,89,89,0.05), 0 2px 4px rgba(89,89,89,0.1), 0 12px 24px -4px rgba(89,89,89,0.3), inset 0 1px 1px rgba(255,255,255,1), inset 0 -3px 6px rgba(89,89,89,0.06);
+      box-shadow: 0 0 0 1px rgba(77,77,77,0.05), 0 2px 4px rgba(77,77,77,0.1), 0 12px 24px -4px rgba(77,77,77,0.3), inset 0 1px 1px rgba(255,255,255,1), inset 0 -3px 6px rgba(77,77,77,0.06);
   }
   .btn-modern-light:hover {
       transform: translateY(-3px);
-      box-shadow: 0 0 0 1px rgba(89,89,89,0.05), 0 6px 12px -2px rgba(89,89,89,0.15), 0 20px 32px -6px rgba(89,89,89,0.4), inset 0 1px 1px rgba(255,255,255,1), inset 0 -3px 6px rgba(89,89,89,0.06);
+      box-shadow: 0 0 0 1px rgba(77,77,77,0.05), 0 6px 12px -2px rgba(77,77,77,0.15), 0 20px 32px -6px rgba(77,77,77,0.4), inset 0 1px 1px rgba(255,255,255,1), inset 0 -3px 6px rgba(77,77,77,0.06);
   }
   .btn-modern-light:active {
       transform: translateY(1px);
       background: linear-gradient(180deg, color-mix(in srgb, var(--color-light) 88%, var(--color-lime)) 0%, color-mix(in srgb, var(--color-light) 78%, var(--color-slate)) 100%);
-      box-shadow: 0 0 0 1px rgba(89,89,89,0.1), 0 1px 2px rgba(89,89,89,0.1), inset 0 3px 6px rgba(89,89,89,0.1), inset 0 0 0 1px rgba(89,89,89,0.02);
+      box-shadow: 0 0 0 1px rgba(77,77,77,0.1), 0 1px 2px rgba(77,77,77,0.1), inset 0 3px 6px rgba(77,77,77,0.1), inset 0 0 0 1px rgba(77,77,77,0.02);
   }
   .btn-modern-dark {
       background: linear-gradient(180deg, var(--color-slate) 0%, var(--color-dark) 100%);
       color: var(--color-light);
-      box-shadow: 0 0 0 1px rgba(255,255,255,0.1), 0 2px 4px rgba(89,89,89,0.6), 0 12px 24px -4px rgba(89,89,89,0.9), inset 0 1px 1px rgba(255,255,255,0.15), inset 0 -3px 6px rgba(89,89,89,0.8);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.1), 0 2px 4px rgba(77,77,77,0.6), 0 12px 24px -4px rgba(77,77,77,0.9), inset 0 1px 1px rgba(255,255,255,0.15), inset 0 -3px 6px rgba(77,77,77,0.8);
   }
   .btn-modern-dark:hover {
       transform: translateY(-3px);
       background: linear-gradient(180deg, color-mix(in srgb, var(--color-slate) 86%, var(--color-light)) 0%, var(--color-slate) 100%);
-      box-shadow: 0 0 0 1px rgba(255,255,255,0.15), 0 6px 12px -2px rgba(89,89,89,0.7), 0 20px 32px -6px rgba(89,89,89,1), inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -3px 6px rgba(89,89,89,0.8);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.15), 0 6px 12px -2px rgba(77,77,77,0.7), 0 20px 32px -6px rgba(77,77,77,1), inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -3px 6px rgba(77,77,77,0.8);
   }
   .btn-modern-dark:active {
       transform: translateY(1px);
       background: var(--color-dark);
-      box-shadow: 0 0 0 1px rgba(255,255,255,0.05), inset 0 3px 8px rgba(89,89,89,0.9), inset 0 0 0 1px rgba(89,89,89,0.5);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.05), inset 0 3px 8px rgba(77,77,77,0.9), inset 0 0 0 1px rgba(77,77,77,0.5);
   }
 
   .progress-ring {
@@ -524,7 +524,7 @@ export function CinematicHero({
                         </div>
                       </div>
 
-                      <div className="phone-widget relative mx-auto mb-8 flex size-44 items-center justify-center drop-shadow-[0_15px_25px_rgba(89,89,89,0.8)]">
+                      <div className="phone-widget relative mx-auto mb-8 flex size-44 items-center justify-center drop-shadow-[0_15px_25px_rgba(77,77,77,0.8)]">
                         <svg className="absolute inset-0 size-full" aria-hidden="true">
                           <circle cx="88" cy="88" r="64" fill="none" stroke="rgba(248,250,252,0.03)" strokeWidth="12" />
                           <circle className="progress-ring" cx="88" cy="88" r="64" fill="none" stroke="var(--color-green)" strokeWidth="12" />

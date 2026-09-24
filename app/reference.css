@@ -182,7 +182,7 @@
   height: 57px;
   border: 5px solid #d5f7e6;
   background: linear-gradient(135deg, #a4e3be, #7bd3a7);
-  color: #595959;
+  color: #062523;
   border-radius: 50%;
   font-size: 23px;
   font-weight: 600;
@@ -391,7 +391,7 @@
 }
 .design-receive {
   background: linear-gradient(145deg, #fff, #f2f8f8);
-  color: #595959;
+  color: #091724;
 }
 .design-receive > span {
   background: #bff3db;
@@ -948,7 +948,7 @@
   font-size: 8px;
   font-weight: 650;
   line-height: 1.1;
-  color: #595959;
+  color: #11231d;
   transform: rotate(8deg);
 }
 .design-gift-art > span > svg {

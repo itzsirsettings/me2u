@@ -79,7 +79,7 @@ export default function BadgeCelebrationModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={handleClose}
-            className="fixed inset-0 bg-[rgba(89,89,89,0.7)] backdrop-blur-sm z-[9998] flex items-center justify-center p-4"
+            className="fixed inset-0 bg-[rgba(77,77,77,0.7)] backdrop-blur-sm z-[9998] flex items-center justify-center p-4"
           >
             {/* Modal */}
             <motion.div
