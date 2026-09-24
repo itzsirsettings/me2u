@@ -80,7 +80,7 @@ export default function CommunityCirclesSection() {
             <span className="landing-accent-word">Trusted Community</span>
           </motion.h2>
           <motion.p className="landing-body max-w-2xl mx-auto" variants={variants}>
-            Create private lending circles with people you know and trust. Family, faith groups, traders, or business networks—transparent, interest-free finance for your community.
+            Create private circles with people you know and trust. Coordinate contributions, borrowing, and repayment within family, faith, trader, school, or business networks.
           </motion.p>
         </motion.div>
 

@@ -14,7 +14,7 @@ const tools = [
     id: "wallet",
     title: "Your wallet, verified and protected.",
     description:
-      "Send, receive, and withdraw money with secure identity verification. Every transaction is recorded, giving you a clear financial history that builds trust.",
+      "Fund, send, receive, and withdraw from a verified wallet. Every transaction is recorded, giving you a clearer financial history as you use the platform.",
     imageSrc: protectedWalletImage.src,
     imageDarkSrc: protectedWalletDarkImage.src,
     imageAlt: "Secure digital wallet with verified transaction records",
@@ -25,7 +25,7 @@ const tools = [
     id: "marketplace",
     title: "Lend or borrow with people you can see.",
     description:
-      "Browse verified borrowers and lenders in a transparent marketplace. Match with trusted members based on their Trust Score, repayment history, and community connections.",
+      "Review borrow requests, lending offers, agreements, repayment progress, and dispute evidence in one peer marketplace.",
     imageSrc: peerMarketplaceImage.src,
     imageDarkSrc: peerMarketplaceDarkImage.src,
     imageAlt: "Peer-to-peer marketplace connecting borrowers and lenders",
@@ -36,7 +36,7 @@ const tools = [
     id: "loans",
     title: "Access direct, interest-free loans with clear durations.",
     description:
-      "Borrow from Me2U or from verified peers at 0% interest. Every loan comes with a clear repayment schedule, and on-time payments boost your Trust Score.",
+      "Explore interest-free borrowing options with clear durations and repayment schedules. Eligibility, retained balances, and available limits depend on your account tier.",
     imageSrc: directLoansImage.src,
     imageDarkSrc: directLoansDarkImage.src,
     imageAlt: "Zero-interest loan interface showing repayment schedule",
@@ -66,7 +66,7 @@ export default function AdvancedToolsSection() {
             transition={{ delay: 0.1 }}
             className="landing-body max-w-2xl"
           >
-            From secure wallets to peer lending, every feature puts control in your hands. No hidden fees, no confusing terms—just straightforward tools that help you save, borrow, and lend with confidence.
+            From verified wallets to peer lending, every feature is designed to make your money decisions easier to understand. Review applicable charges, eligibility, and repayment terms before you confirm an action.
           </motion.p>
         </div>
 

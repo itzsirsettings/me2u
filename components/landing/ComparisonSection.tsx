@@ -25,10 +25,10 @@ const comparisonData = [
     me2u: { value: "0%", hasIt: true, color: "#22C55E" },
   },
   {
-    feature: "Hidden Fees",
-    banks: { value: "Yes", hasIt: false, color: "#EF4444" },
-    loanApps: { value: "Yes", hasIt: false, color: "#EF4444" },
-    me2u: { value: "None", hasIt: true, color: "#22C55E" },
+    feature: "Fee visibility",
+    banks: { value: "Varies", hasIt: true, color: "#F59E0B" },
+    loanApps: { value: "Varies", hasIt: true, color: "#F59E0B" },
+    me2u: { value: "Shown before action", hasIt: true, color: "#22C55E" },
   },
   {
     feature: "Identity Verification",
@@ -96,7 +96,7 @@ export default function ComparisonSection() {
             Why Choose Me2U?
           </h2>
           <p className="landing-body max-w-2xl mx-auto">
-            Compare Me2U to traditional banks and loan apps. See how we deliver fair, transparent, and community-focused finance.
+            Me2U is built around visible trust signals, interest-free loan pricing, peer participation, and tools for saving and referrals. Always review the terms shown for your specific action.
           </p>
         </motion.div>
 

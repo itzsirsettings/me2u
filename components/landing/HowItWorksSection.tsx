@@ -7,8 +7,8 @@ import Link from "next/link";
 const steps = [
   {
     number: "01",
-    title: "Join & Verify",
-    description: "Sign up in minutes with a secure verified identity check. Your Trust Score journey begins here.",
+    title: "Verify your identity",
+    description: "Create your account, complete the required identity steps, and make the registration deposit before using the platform.",
     icon: (
       <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="2" opacity="0.2" />
@@ -19,8 +19,8 @@ const steps = [
   },
   {
     number: "02",
-    title: "Build Trust & Save",
-    description: "Use your wallet daily, complete on-time repayments, join circles, and refer trusted friends to grow your score.",
+    title: "Build your Trust Score",
+    description: "Use your wallet, repay on time, keep your account in good standing, and refer people you trust to strengthen your profile.",
     icon: (
       <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M12 28l6 6 12-12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -31,8 +31,8 @@ const steps = [
   },
   {
     number: "03",
-    title: "Borrow 0% / Lend & Earn",
-    description: "Access interest-free loans based on your Trust Score, or lend to others and earn referral rewards.",
+    title: "Choose your money path",
+    description: "Apply for interest-free borrowing when eligible, participate in peer or community lending, save toward goals, and unlock referral rewards.",
     icon: (
       <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="2" opacity="0.2" />

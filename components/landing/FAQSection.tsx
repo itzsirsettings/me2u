@@ -6,15 +6,15 @@ import { motion, useInView, useReducedMotion, AnimatePresence } from "framer-mot
 const faqs = [
   {
     question: "Is Me2U really 0% interest?",
-    answer: "Yes. Me2U offers genuine 0% interest loans. We believe fair finance shouldn't cost you extra. Our platform runs on trust and community, not profit from interest charges.",
+    answer: "Eligible Me2U loan products use 0% interest. Other actions can still have applicable processor, withdrawal, marketplace, or service charges, so review the confirmation screen before continuing.",
   },
   {
     question: "What do I need to join?",
-    answer: "You need a valid phone number, basic identity verification, and a small one-time refundable deposit to get started. The entire signup process takes just a few minutes.",
+    answer: "You need the required account details, email verification, identity information, and a registration deposit. KYC, bank details, a passport photo, and review may be required before some features become available.",
   },
   {
     question: "How does the Trust Score work?",
-    answer: "Your Trust Score grows through six transparent signals: verified identity, on-time repayments, active wallet use, verified referrals, participation in circles, and a dispute-free history. Higher scores unlock better loan opportunities.",
+    answer: "Your Trust Score reflects verified identity, repayment behavior, wallet activity, referral progress, account history, and dispute outcomes. It supports progression, but available loans and approval decisions still depend on the rules and checks shown in your account.",
   },
   {
     question: "Can I use Me2U with my family or church group?",
@@ -22,19 +22,19 @@ const faqs = [
   },
   {
     question: "How do withdrawals work?",
-    answer: "Withdraw funds from your verified wallet to your linked bank account anytime. Transfers are processed securely, and you'll see clear transaction records for every withdrawal in your history.",
+    answer: "Withdrawals go from your verified wallet to a linked bank account when the withdrawal conditions are met. Applicable processor or withdrawal charges and any retained balance are shown as part of the flow.",
   },
   {
     question: "What if I live outside Nigeria?",
-    answer: "Me2U is built for Nigerians worldwide. Diaspora members can create accounts, send money to family, and support trusted friends back home. All you need is a Nigerian phone number for verification.",
+    answer: "Me2U is currently focused on Nigeria. Some diaspora-related readiness may be planned, but account eligibility and available features depend on the supported onboarding and banking rails shown in the product.",
   },
   {
     question: "Is my data and wallet secure?",
-    answer: "Yes. Me2U uses bank-level security with encryption, secure identity verification, transaction PINs, wallet freeze options, and fraud monitoring. Your data is protected at every step.",
+    answer: "Me2U provides identity verification, transaction PINs, wallet freeze and recovery actions, fraud reporting, and session controls. Use the Security area to review the controls currently available on your account.",
   },
   {
     question: "How do referrals work?",
-    answer: "Share your unique referral link with trusted friends. When they sign up and complete verification, you both earn rewards. Referrals help grow your Trust Score and unlock Bronze, Silver, Gold, and Platinum credit levels.",
+    answer: "The current referral lifecycle can award you ₦1,500 when a referred friend signs up, while they receive ₦500. A further ₦250 may follow their first withdrawal and another ₦250 their first repayment, for a potential ₦2,500 across stages. Rewards depend on onboarding, verification, eligibility, and anti-abuse checks, and potential earnings are not automatically a withdrawable balance.",
   },
 ];
 

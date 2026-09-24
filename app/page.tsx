@@ -13,9 +13,9 @@ import LandingCTA from "@/components/landing/LandingCTA";
 import LandingFooter from "@/components/landing/LandingFooter";
 
 export const metadata: Metadata = {
-  title: "Me2U — 0% Interest Loans. Built on Trust. For Every Nigerian.",
+  title: "Me2U — Interest-Free Borrowing Built on Verified Trust",
   description:
-    "Nigeria's trust-based peer lending platform. Access 0% interest loans, build your Trust Score, join community circles, and save towards goals. No hidden fees, transparent scoring, verified identity. Built for Nigeria and the Diaspora.",
+    "Me2U helps Nigerians verify their identity, build a Trust Score, access interest-free borrowing, join peer and community lending, save towards goals, and earn referral rewards.",
 };
 
 export default function Landing() {

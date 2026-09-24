@@ -164,7 +164,6 @@ const INJECTED_STYLES = `
 
 export interface CinematicHeroProps extends React.HTMLAttributes<HTMLDivElement> {
   brandName?: string;
-  eyebrow?: string;
   tagline1?: string;
   tagline2?: string;
   cardHeading?: string;

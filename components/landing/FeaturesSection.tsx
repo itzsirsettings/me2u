@@ -21,8 +21,8 @@ const featureCategories = [
     title: "Join & Verify",
     items: [
       { text: "Simple onboarding with verified identity checks" },
-      { text: "Secure account setup in minutes" },
-      { text: "One-time refundable deposit to start", href: "/register" },
+      { text: "Email verification, identity checks, and onboarding review" },
+      { text: "Registration deposit required to activate your account", href: "/register" },
       { text: "Get 24/7 answers from the built-in Me2U Guide" },
     ],
   },
@@ -32,14 +32,14 @@ const featureCategories = [
     items: [
       { text: "Build a visible profile from repayments" },
       { text: "Wallet use and referrals boost your score" },
-      { text: "Higher limits from verified behavior" },
+      { text: "Progress through verified behavior and repayment history" },
     ],
   },
   {
     icon: <WalletCards size={24} />,
     title: "Smart Wallet",
     items: [
-      { text: "Send, receive, and withdraw with ease" },
+      { text: "Send, receive, fund, and withdraw from one wallet" },
       { text: "Verified records for every transaction" },
       { text: "Payment links for daily use" },
     ],
@@ -48,9 +48,9 @@ const featureCategories = [
     icon: <ReceiptText size={24} />,
     title: "Daily Bills",
     items: [
-      { text: "Airtime, data, and cable TV" },
-      { text: "Electricity and utilities" },
-      { text: "School fees and everyday essentials" },
+      { text: "Keep everyday payments and money movement in one place" },
+      { text: "Track transactions with clear records" },
+      { text: "Bills access is routed through the account experience" },
     ],
   },
   {
@@ -75,9 +75,9 @@ const featureCategories = [
     icon: <Gift size={24} />,
     title: "Referral Rewards",
     items: [
-      { text: "Invite friends you trust and earn rewards" },
-      { text: "Unlock Bronze to Platinum credit levels" },
-      { text: "Build your network, grow your score" },
+      { text: "You earn ₦1,500 when a referred friend signs up; they receive ₦500" },
+      { text: "Earn another ₦250 after their first withdrawal and ₦250 after their first repayment" },
+      { text: "Potential total: ₦2,500 across stages, subject to onboarding and verification rules" },
     ],
   },
   {
@@ -117,7 +117,7 @@ export default function FeaturesSection() {
             </span>
           </>
         }
-        subtitle="From verified wallets to savings goals, referral rewards to community circles—Me2U gives you the tools to build trust, save smart, and access 0% interest loans."
+        subtitle="From verified wallets and savings goals to peer lending, community circles, and referral rewards, Me2U gives you a clearer path from onboarding to responsible borrowing."
         illustrationSrc={featuresIllustration.src}
         illustrationDarkSrc={featuresDarkIllustration.src}
         illustrationAlt="Me2U platform features showing verified accounts and community lending"
