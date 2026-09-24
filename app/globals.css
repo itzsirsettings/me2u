@@ -30,7 +30,7 @@
   --color-text-on-dark: rgba(255, 255, 255, 0.85);
   --color-text-muted-dark: rgba(255, 255, 255, 0.5);
   --color-border-dark: rgba(255, 255, 255, 0.08);
-  --color-border-light: rgba(0, 0, 0, 0.08);
+  --color-border-light: rgba(64, 64, 64, 0.08);
 
   /* Legacy Aliases for compatibility */
   --brand-primary: var(--navy);
@@ -43,10 +43,10 @@
   --color-bg-card: var(--snow);
   --color-accent-primary: var(--brand-accent);
   --color-accent-deep: var(--brand-primary);
-  --color-text-primary: var(--brand-primary);
-  --color-text-secondary: var(--brand-text);
+  --color-text-primary: #404040;
+  --color-text-secondary: #404040;
   --color-border: var(--color-border-light);
-  --color-on-accent: var(--navy);
+  --color-on-accent: #404040;
   --color-shadow: rgba(8, 19, 32, 0.05);
   --color-hover-soft: rgba(34, 197, 94, 0.08);
   --color-glass-bg: rgba(255, 255, 255, 0.78);
@@ -101,11 +101,11 @@ html[data-theme="dark"] {
   --color-text-secondary: var(--color-text-muted-dark);
   --color-border: var(--color-border-dark);
   --color-on-accent: var(--navy);
-  --color-shadow: rgba(0, 0, 0, 0.4);
+  --color-shadow: rgba(64, 64, 64, 0.4);
   --color-hover-soft: rgba(34, 197, 94, 0.12);
   --color-glass-bg: rgba(8, 19, 32, 0.84);
   --color-glass-border: var(--color-border-dark);
-  --color-scrim: rgba(0, 0, 0, 0.5);
+  --color-scrim: rgba(64, 64, 64, 0.5);
   --color-warning-bg: color-mix(in srgb, var(--lime) 18%, var(--navy));
   --color-warning-text: var(--lime);
   --color-positive-bg: rgba(34, 197, 94, 0.16);
@@ -1121,7 +1121,7 @@ html[data-theme="dark"] {
   );
   --landing-card-shadow:
     0 1px 2px color-mix(in srgb, var(--snow) 4%, transparent),
-    0 10px 30px -12px rgba(0, 0, 0, 0.6);
+    0 10px 30px -12px rgba(64, 64, 64, 0.6);
 }
 
 .landing-h1 {
