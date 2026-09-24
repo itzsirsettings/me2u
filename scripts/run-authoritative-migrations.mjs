@@ -50,6 +50,24 @@ try {
     }
     console.log(`RUN ${migration}`);
     const sql = await fs.readFile(path.join("railway", "migrations", migration), "utf8");
+    // Migration 010 adds a Postgres enum value, which cannot run inside a
+    // transaction block. Run its prerequisite outside the runner transaction.
+    // All other migrations stay atomic: BEGIN -> SQL -> record -> COMMIT.
+    if (migration === "010_financial_unique_invariants.sql") {
+      await client.query(`
+        DO $$
+        BEGIN
+          IF NOT EXISTS (
+            SELECT 1
+              FROM pg_enum
+             WHERE enumlabel = 'cancelled'
+               AND enumtypid = 'public.withdrawal_request_status'::regtype
+          ) THEN
+            EXECUTE 'ALTER TYPE public.withdrawal_request_status ADD VALUE ''cancelled''';
+          END IF;
+        END $$;
+      `);
+    }
     try {
       await client.query("BEGIN");
       await client.query(sql);

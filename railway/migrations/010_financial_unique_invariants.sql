@@ -3,18 +3,10 @@
 -- Mirror of migrations/20260918000002_financial_unique_invariants.sql
 -- =====================================================================
 
--- Pre-requisite: ensure 'cancelled' enum value exists (22P02 guard)
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1
-      FROM pg_enum
-     WHERE enumlabel = 'cancelled'
-       AND enumtypid = 'public.withdrawal_request_status'::regtype
-  ) THEN
-    EXECUTE 'ALTER TYPE public.withdrawal_request_status ADD VALUE ''cancelled''';
-  END IF;
-END $$;
+-- NOTE: the 'cancelled' enum prerequisite is applied by
+-- scripts/run-authoritative-migrations.mjs outside the runner transaction,
+-- because ALTER TYPE ... ADD VALUE cannot run inside a transaction block.
+-- Do not re-add the enum block here.
 
 BEGIN;
 
