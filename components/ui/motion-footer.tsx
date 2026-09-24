@@ -27,15 +27,15 @@ const STYLES = `
 
   --pill-bg-1: color-mix(in srgb, var(--snow) 10%, transparent);
   --pill-bg-2: color-mix(in srgb, var(--snow) 4%, transparent);
-  --pill-shadow: rgba(64, 64, 64, 0.42);
+  --pill-shadow: rgba(89, 89, 89, 0.42);
   --pill-highlight: color-mix(in srgb, var(--snow) 22%, transparent);
-  --pill-inset-shadow: rgba(64, 64, 64, 0.32);
+  --pill-inset-shadow: rgba(89, 89, 89, 0.32);
   --pill-border: color-mix(in srgb, var(--green) 24%, transparent);
 
   --pill-bg-1-hover: color-mix(in srgb, var(--green) 26%, transparent);
   --pill-bg-2-hover: color-mix(in srgb, var(--lime) 14%, transparent);
   --pill-border-hover: color-mix(in srgb, var(--lime) 45%, transparent);
-  --pill-shadow-hover: rgba(64, 64, 64, 0.5);
+  --pill-shadow-hover: rgba(89, 89, 89, 0.5);
   --pill-highlight-hover: color-mix(in srgb, var(--lime) 28%, transparent);
 }
 
