@@ -2,170 +2,163 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-
-import SuccessStoryCarousel from "./SuccessStoryCarousel";
 
 import { GlowCard } from "@/components/ui/spotlight-card";
 
-type PlatformMetrics = {
-  totalBorrowed: number;
-  totalRepaid: number;
-  activeCircles: number;
-  totalUsers: number;
-};
+const trustCommitments = [
+  {
+    number: "01",
+    title: "Terms before action",
+    detail:
+      "Review eligibility, charges, retained balances, and repayment details before you confirm a transaction.",
+  },
+  {
+    number: "02",
+    title: "Verified identity",
+    detail:
+      "Identity and account checks help establish who is participating before sensitive features become available.",
+  },
+  {
+    number: "03",
+    title: "Recorded activity",
+    detail:
+      "Wallet movements, repayments, referrals, and account actions are recorded so your Trust Score has visible context.",
+  },
+];
 
-type StatsResponse = {
-  ok?: boolean;
-  stats?: Partial<Record<keyof PlatformMetrics, unknown>>;
-};
-
-const defaultMetrics: PlatformMetrics = {
-  totalBorrowed: 0,
-  totalRepaid: 0,
-  activeCircles: 0,
-  totalUsers: 0,
-};
-
-function formatMetric(value: number, type: "money" | "count" = "count") {
-  if (type === "money") {
-    return new Intl.NumberFormat("en-NG", {
-      style: "currency",
-      currency: "NGN",
-      maximumFractionDigits: 0,
-    }).format(Math.round(value));
-  }
-
-  return new Intl.NumberFormat("en-NG").format(Math.round(value));
-}
-
-type ProofCard = {
-  label: string;
-  value: string;
-  detail: string;
-};
-
-function buildProofCards(metrics: PlatformMetrics): ProofCard[] {
-  const candidates: Array<ProofCard & { raw: number }> = [
-    {
-      label: "Total Borrowed",
-      raw: metrics.totalBorrowed,
-      value: formatMetric(metrics.totalBorrowed, "money"),
-      detail: "Recorded loan value reported by the platform statistics service.",
-    },
-    {
-      label: "Successfully Repaid",
-      raw: metrics.totalRepaid,
-      value: formatMetric(metrics.totalRepaid, "money"),
-      detail: "Recorded repayments reported by the platform statistics service.",
-    },
-    {
-      label: "Trusted Members",
-      raw: metrics.totalUsers,
-      value: formatMetric(metrics.totalUsers),
-      detail: "Accounts included in the current platform statistics response.",
-    },
-    {
-      label: "Active Circles",
-      raw: metrics.activeCircles,
-      value: formatMetric(metrics.activeCircles),
-      detail: "Circles currently included in the platform statistics response.",
-    },
-  ];
-
-  return candidates
-    .filter((card) => card.raw > 0)
-    .map(({ label, value, detail }) => ({ label, value, detail }));
-}
+const memberTestimonials = [
+  {
+    name: "Chinedu Okafor",
+    location: "Lagos, Nigeria",
+    quote:
+      "Me2ULend makes the whole lending process feel simple and straightforward. I especially like how easy it is to navigate the platform and understand what is happening with my account. It feels like a solution built with everyday Nigerians in mind.",
+  },
+  {
+    name: "Aisha Bello",
+    location: "Abuja, Nigeria",
+    quote:
+      "What I like most about Me2ULend is the simplicity. I did not have to struggle to understand the platform, and the experience feels organized and convenient. It is refreshing to see a financial platform focused on making access easier.",
+  },
+  {
+    name: "Daniel Eze",
+    location: "Enugu, Nigeria",
+    quote:
+      "Using Me2ULend has been a smooth experience for me. The platform is easy to understand, and I like the idea of building trust through responsible financial activity. It gives users a reason to maintain a good financial record.",
+  },
+  {
+    name: "Blessing Johnson",
+    location: "Port Harcourt, Nigeria",
+    quote:
+      "Me2ULend feels different from many financial platforms I have tried. Everything is clearly presented, and the platform makes managing lending and financial activities much less stressful. I would recommend checking it out.",
+  },
+  {
+    name: "Ibrahim Musa",
+    location: "Kaduna, Nigeria",
+    quote:
+      "I like the community-focused approach behind Me2ULend. The platform combines technology with trust in a way that feels practical. The dashboard is simple to use, and important information is easy to find.",
+  },
+  {
+    name: "Esther Adeyemi",
+    location: "Ibadan, Nigeria",
+    quote:
+      "My experience with Me2ULend has been very convenient. Registration and navigating the platform were straightforward, and I like how the system encourages responsible financial behaviour. It feels modern and user-friendly.",
+  },
+  {
+    name: "Samuel Nwankwo",
+    location: "Owerri, Nigeria",
+    quote:
+      "Me2ULend is a promising platform for people looking for a simpler way to manage lending and related financial activities. I like the clean experience, the transparency of the process, and the focus on building trust between users.",
+  },
+];
 
 export default function PublicProofSection() {
-  const [metrics, setMetrics] = useState<PlatformMetrics>(defaultMetrics);
-  const proofCards = useMemo(() => buildProofCards(metrics), [metrics]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadMetrics = () => {
-      fetch("/api/platform/stats", { cache: "no-store" })
-        .then((response) => response.json() as Promise<StatsResponse>)
-        .then((data) => {
-          if (cancelled || !data.ok || !data.stats) {
-            return;
-          }
-          const stats = data.stats;
-          setMetrics({
-            totalBorrowed: Number(stats.totalBorrowed) || 0,
-            totalRepaid: Number(stats.totalRepaid) || 0,
-            activeCircles: Number(stats.activeCircles) || 0,
-            totalUsers: Number(stats.totalUsers) || 0,
-          });
-        })
-        .catch(() => {
-          // Stats stay hidden rather than showing empty placeholders.
-        });
-    };
-
-    loadMetrics();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   return (
     <section
       className="relative overflow-hidden border-t border-[var(--color-border)] bg-[var(--landing-proof-bg)] py-24 text-foreground md:py-32"
-      aria-label="Community statistics and user testimonials"
+      aria-labelledby="proof-heading"
     >
       <div className="absolute inset-0 z-0 opacity-20 pointer-events-none" aria-hidden="true">
         <div className="absolute top-[20%] left-[-10%] w-[800px] h-[800px] bg-green/10 rounded-full blur-[120px]" />
       </div>
 
       <div className="container mx-auto px-4 md:px-6 relative z-10">
-        {proofCards.length > 0 ? (
-          <div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16 md:mb-24"
-            role="list"
+        <div className="mb-16 md:mb-24">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mx-auto max-w-3xl text-center"
           >
-            {proofCards.map((card, index) => (
+            <p className="mb-4 text-sm font-bold uppercase tracking-[0.2em] text-green">
+              Member experiences
+            </p>
+            <h2 id="proof-heading" className="text-3xl font-black leading-tight md:text-5xl">
+              Trust should be visible before money moves.
+            </h2>
+            <p className="mx-auto mt-5 max-w-2xl text-base font-medium leading-relaxed text-muted-foreground md:text-lg">
+              Hear how Me2ULend members describe the platform, its simplicity, and its focus on
+              building trust.
+            </p>
+          </motion.div>
+
+          <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-3" role="list">
+            {trustCommitments.map((commitment, index) => (
               <motion.div
-                key={card.label}
+                key={commitment.number}
                 role="listitem"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1, ease: [0.16, 1, 0.3, 1] }}
-                className="group"
               >
                 <GlowCard
                   customSize
                   glowColor="green"
                   className="h-full rounded-2xl border border-[var(--color-border)] bg-[var(--landing-proof-card)] p-6 text-card-foreground shadow-[0_1rem_2rem_-1rem_rgba(8,19,32,0.05)]"
                 >
-                  <div className="text-sm font-bold text-muted-foreground mb-6 group-hover:text-green transition-colors tabular-nums">
-                    {String(index + 1).padStart(2, "0")}
+                  <div className="mb-8 text-sm font-bold tabular-nums text-muted-foreground">
+                    {commitment.number}
                   </div>
-                  <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-3">
-                    {card.label}
-                  </h3>
-                  <p className="text-3xl font-black text-card-foreground mb-4 tracking-tighter tabular-nums">
-                    {card.value}
-                  </p>
-                  <div
-                    className="w-full h-px bg-[var(--color-border)] group-hover:bg-green/30 transition-all duration-500 mb-4"
-                    aria-hidden="true"
-                  />
-                  <p className="text-[13px] text-muted-foreground font-medium leading-relaxed">
-                    {card.detail}
+                  <h3 className="mb-3 text-xl font-black">{commitment.title}</h3>
+                  <p className="text-sm font-medium leading-relaxed text-muted-foreground">
+                    {commitment.detail}
                   </p>
                 </GlowCard>
               </motion.div>
             ))}
           </div>
-        ) : null}
 
-        <div className="mb-16 md:mb-24">
-          <SuccessStoryCarousel />
+          <div className="mt-12 rounded-3xl border border-[var(--color-border)] bg-[var(--landing-proof-card)]/60 p-6 md:p-8">
+            <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.16em] text-green">Testimonials</p>
+                <h3 className="mt-2 text-2xl font-black md:text-3xl">
+                  What members are saying
+                </h3>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3" role="list">
+              {memberTestimonials.map((testimonial) => (
+                <article
+                  key={testimonial.name}
+                  role="listitem"
+                  className="rounded-2xl border border-[var(--color-border)] bg-background/60 p-5"
+                >
+                  <blockquote className="text-base font-bold leading-relaxed text-card-foreground">
+                    &ldquo;{testimonial.quote}&rdquo;
+                  </blockquote>
+                  <footer className="mt-5 border-t border-[var(--color-border)] pt-4">
+                    <p className="text-sm font-black text-[var(--landing-accent-strong)]">
+                      {testimonial.name}
+                    </p>
+                    <p className="mt-1 text-xs font-medium text-muted-foreground">
+                      {testimonial.location}
+                    </p>
+                  </footer>
+                </article>
+              ))}
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-16">
