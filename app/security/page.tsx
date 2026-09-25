@@ -29,6 +29,7 @@ export default function SecurityPage() {
   const [walletFrozen, setWalletFrozen] = useState(false);
   const [pinInput, setPinInput] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
+  const [logoutAllSessions, setLogoutAllSessions] = useState(false);
   const [pinLoading, setPinLoading] = useState(false);
   const [securityEvents, setSecurityEvents] = useState<SecurityEvent[]>([]);
   const [securityLoading, setSecurityLoading] = useState(false);
@@ -272,10 +273,16 @@ export default function SecurityPage() {
                   return;
                 }
                 setPinLoading(true);
-                const res = await setTransactionPin(pinInput, passwordInput);
+                const res = await setTransactionPin(pinInput, passwordInput, logoutAllSessions);
                 setPinLoading(false);
                 if (res.ok) {
-                  toast.success("Transaction PIN updated successfully.");
+                  if (logoutAllSessions) {
+                    toast.success("PIN saved. All sessions have been signed out.");
+                    await useStore.getState().logout();
+                    router.push("/login");
+                    return;
+                  }
+                  toast.success("Transaction PIN updated successfully. Other sessions were signed out.");
                   setPinInput("");
                   setPasswordInput("");
                 } else {
@@ -309,6 +316,24 @@ export default function SecurityPage() {
                   disabled={pinLoading}
                 />
               </div>
+
+              <label className="flex cursor-pointer items-start gap-3 rounded-[8px] border border-[var(--color-border)] bg-[var(--mobile-surface-muted)] p-3 text-left">
+                <input
+                  type="checkbox"
+                  checked={logoutAllSessions}
+                  onChange={(event) => setLogoutAllSessions(event.target.checked)}
+                  disabled={pinLoading}
+                  className="mt-0.5 h-4 w-4 accent-[var(--color-accent-primary)]"
+                />
+                <span>
+                  <span className="block text-sm font-bold text-[var(--color-text-primary)]">
+                    Sign out all sessions
+                  </span>
+                  <span className="mt-1 block text-xs leading-5 text-[var(--color-text-secondary)]">
+                    Leave this off to keep this session active and sign out other sessions after saving.
+                  </span>
+                </span>
+              </label>
 
               <button
                 type="submit"

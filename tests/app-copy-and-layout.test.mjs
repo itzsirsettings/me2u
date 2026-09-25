@@ -255,7 +255,9 @@ test("auth and identity flows avoid release-blocking shortcuts", () => {
   assert.match(register, /registrationToken/);
   assert.match(kyc, /kyc_verified: false/);
   assert.match(railwayAuth, /p\.transaction_pin\s+AS "transactionPin"/);
-  assert.match(securityPin, /revokeAllSessionsForUser\(auth\.user\.id, false, auth\.jwtPayload\.jti\)/);
+  assert.match(securityPin, /logoutAllSessions \? undefined : auth\.jwtPayload\.jti/);
+  assert.match(securityPin, /logoutAllSessions/);
+  assert.match(securityPin, /loggedOut: logoutAllSessions/);
   assert.match(adminActions, /approve_kyc/);
   assert.doesNotMatch(source, /fallback_secret_for_dev_only/);
   assert.doesNotMatch(source, /verify_only_123/);

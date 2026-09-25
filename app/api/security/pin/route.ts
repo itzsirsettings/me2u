@@ -21,6 +21,7 @@ export async function POST(request: Request) {
     const pin = typeof body.pin === "string" ? body.pin.trim() : "";
     const password = typeof body.password === "string" ? body.password : "";
     const unlockLockout = Boolean(body.unlockLockout);
+    const logoutAllSessions = Boolean(body.logoutAllSessions);
 
     if (!/^\d{4}$/.test(pin)) throw new Error("Transaction PIN must be a 4-digit number.");
     if (!password) throw new Error("Password is required to change or reset your transaction PIN.");
@@ -50,10 +51,17 @@ export async function POST(request: Request) {
       [createTransactionPinVerifier(auth.user.id, pin), auth.user.id],
     );
 
-    // PIN is a credential; rotating it should invalidate other sessions.
-    revokeAllSessionsForUser(auth.user.id, false, auth.jwtPayload.jti).catch(() => undefined);
+    // Keep this session by default; users can explicitly sign out every session after saving.
+    await revokeAllSessionsForUser(
+      auth.user.id,
+      false,
+      logoutAllSessions ? undefined : auth.jwtPayload.jti,
+    );
 
-    return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json(
+      { ok: true, loggedOut: logoutAllSessions },
+      { headers: { "Cache-Control": "no-store" } },
+    );
   } catch (error) {
     return errorResponse(error, "Unable to set transaction PIN.", "api/security/pin");
   }
