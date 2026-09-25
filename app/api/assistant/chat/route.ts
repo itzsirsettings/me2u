@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
-import { getClientIp, isRateLimited } from "@/lib/rate-limit";
+
 import { getAssistantAccountContext } from "@/lib/assistant/account-context";
+import { getGuideActions, type GuideAction } from "@/lib/assistant/guide-actions";
 import {
   getSupportContactSummary,
   retrieveAssistantKnowledge,
   toCitation,
   type AssistantCitation,
 } from "@/lib/assistant/knowledge";
+import { extractSessionMemory, formatMemorySummary } from "@/lib/assistant/memory";
 import {
   asksForSecret,
   buildSupportRequest,
@@ -17,6 +19,7 @@ import {
   sanitizeAssistantAnswer,
   type AssistantStructuredAnswer,
 } from "@/lib/assistant/safety";
+import { getClientIp, isRateLimited } from "@/lib/rate-limit";
 
 type ChatMessage = {
   role: "user" | "assistant";
@@ -46,7 +49,10 @@ const responseSchema = {
         properties: {
           id: { type: "string" },
           title: { type: "string" },
-          sourceType: { type: "string", enum: ["document", "policy", "feature", "route", "rule", "support", "account"] },
+          sourceType: {
+            type: "string",
+            enum: ["document", "policy", "feature", "route", "rule", "support", "account"],
+          },
           routeHref: { type: "string" },
         },
       },
@@ -68,7 +74,10 @@ function validateMessages(value: unknown): ChatMessage[] {
     .filter((message): message is ChatMessage => {
       if (!message || typeof message !== "object") return false;
       const candidate = message as Partial<ChatMessage>;
-      return (candidate.role === "user" || candidate.role === "assistant") && typeof candidate.content === "string";
+      return (
+        (candidate.role === "user" || candidate.role === "assistant") &&
+        typeof candidate.content === "string"
+      );
     })
     .slice(-maxMessages)
     .map((message) => ({
@@ -103,6 +112,8 @@ function buildPrompt(params: {
   citations: AssistantCitation[];
   snippets: string[];
   accountSummary?: string;
+  memorySummary?: string;
+  guideActions?: GuideAction[];
 }) {
   const latestQuestion = params.messages.at(-1)?.content || "";
   const conversation = params.messages
@@ -122,7 +133,15 @@ function buildPrompt(params: {
     "Return only JSON that matches the response schema. Put the user-facing answer in the answer field.",
     `Current route: ${params.route || "unknown"}`,
     `Latest user question: ${latestQuestion}`,
-    params.accountSummary ? `SAFE ACCOUNT CONTEXT\n${params.accountSummary}` : "SAFE ACCOUNT CONTEXT\nNo logged-in user context is available.",
+    params.memorySummary
+      ? `SESSION MEMORY (same conversation only; never invent stored facts)\n${params.memorySummary}`
+      : "SESSION MEMORY\nNo earlier topics in this conversation yet.",
+    (params.guideActions || []).length > 0
+      ? `SUGGESTED NEXT STEPS (navigation only; never claim to perform them)\n${(params.guideActions || []).map((action) => `- ${action.label}: ${action.href}`).join("\n")}`
+      : "SUGGESTED NEXT STEPS\nNone for this question.",
+    params.accountSummary
+      ? `SAFE ACCOUNT CONTEXT\n${params.accountSummary}`
+      : "SAFE ACCOUNT CONTEXT\nNo logged-in user context is available.",
     `APP KNOWLEDGE\n${formatKnowledgeContext(params.citations, params.snippets)}`,
     `CONVERSATION\n${conversation}`,
   ].join("\n\n");
@@ -133,7 +152,7 @@ function parseOpenAiOutputText(response: any) {
 
   const output = Array.isArray(response?.output) ? response.output : [];
   return output
-    .flatMap((item: any) => Array.isArray(item?.content) ? item.content : [])
+    .flatMap((item: any) => (Array.isArray(item?.content) ? item.content : []))
     .map((content: any) => content?.text || "")
     .join("");
 }
@@ -152,14 +171,14 @@ async function readOpenAiStructuredAnswer(requestBody: Record<string, unknown>) 
     timeout = setTimeout(() => controller.abort(), timeoutMs);
 
     const response = await fetch("https://api.openai.com/v1/responses", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
-        signal: controller.signal,
-      });
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+      signal: controller.signal,
+    });
 
     if (!response.ok) {
       const detail = await response.text().catch(() => "");
@@ -211,9 +230,11 @@ function fallbackTokens(value: string) {
     if (token.startsWith("deposit")) variants.push("deposit", "deposits");
     if (token.startsWith("loan")) variants.push("loan", "loans");
     if (token.startsWith("refer")) variants.push("referral", "referrals", "reward", "rewards");
-    if (token === "verify" || token === "verified" || token === "verification") variants.push("kyc");
+    if (token === "verify" || token === "verified" || token === "verification")
+      variants.push("kyc");
     if (token === "kyc") variants.push("verify", "verified", "verification");
-    if (token === "repay" || token === "repayment") variants.push("repay", "repayment", "repayments");
+    if (token === "repay" || token === "repayment")
+      variants.push("repay", "repayment", "repayments");
     return variants;
   });
 
@@ -240,8 +261,18 @@ function fallbackHeading(message: string) {
   if (normalized.includes("referral") || normalized.includes("reward")) return "For referrals:";
   if (normalized.includes("trust") || normalized.includes("score")) return "For trust score:";
   if (normalized.includes("kyc") || normalized.includes("verify")) return "For KYC:";
-  if (normalized.includes("loan") || normalized.includes("borrow") || normalized.includes("repay")) return "For loans:";
-  if (normalized.includes("wallet") || normalized.includes("balance") || normalized.includes("fund")) return "For wallet questions:";
+  if (
+    normalized.includes("loan") ||
+    normalized.includes("borrow") ||
+    normalized.includes("repay")
+  )
+    return "For loans:";
+  if (
+    normalized.includes("wallet") ||
+    normalized.includes("balance") ||
+    normalized.includes("fund")
+  )
+    return "For wallet questions:";
   if (normalized.includes("support") || normalized.includes("complaint")) return "For support:";
   return "Here is the verified Me2U information I found:";
 }
@@ -263,7 +294,11 @@ function isUsefulFallbackLine(line: string, citation: AssistantCitation) {
   return true;
 }
 
-function scoreFallbackLine(line: string, citation: AssistantCitation, queryTokens: Set<string>) {
+function scoreFallbackLine(
+  line: string,
+  citation: AssistantCitation,
+  queryTokens: Set<string>,
+) {
   const lineTokens = fallbackTokens(line);
   const primaryTerms = primaryFallbackTerms(queryTokens);
   if (primaryTerms.length > 0 && !primaryTerms.some((token) => lineTokens.has(token))) return 0;
@@ -281,7 +316,9 @@ function scoreFallbackLine(line: string, citation: AssistantCitation, queryToken
     }
   }
   if (!hasTopicMatch) return 0;
-  const citationTokens = fallbackTokens(`${citation.id} ${citation.title} ${citation.routeHref || ""}`);
+  const citationTokens = fallbackTokens(
+    `${citation.id} ${citation.title} ${citation.routeHref || ""}`,
+  );
   if (primaryTerms.some((token) => citationTokens.has(token))) score += 2;
   if (citation.sourceType === "rule") score += 4;
   if (citation.sourceType === "account") score += 5;
@@ -309,15 +346,25 @@ function buildExtractiveFallbackAnswer(params: {
       }));
   });
 
-  const nonDocumentCandidates = candidates.filter((candidate) => candidate.sourceType !== "document");
+  const nonDocumentCandidates = candidates.filter(
+    (candidate) => candidate.sourceType !== "document",
+  );
   const candidatePool = nonDocumentCandidates.length > 0 ? nonDocumentCandidates : candidates;
   const rankedCandidates = candidatePool.some((candidate) => candidate.score > 0)
     ? candidatePool.filter((candidate) => candidate.score > 0)
     : candidatePool;
 
   const sortedCandidates = rankedCandidates
-    .sort((left, right) => right.score - left.score || left.sourceIndex - right.sourceIndex || left.lineIndex - right.lineIndex)
-    .filter((candidate, index, all) => all.findIndex((item) => item.line === candidate.line) === index);
+    .sort(
+      (left, right) =>
+        right.score - left.score ||
+        left.sourceIndex - right.sourceIndex ||
+        left.lineIndex - right.lineIndex,
+    )
+    .filter(
+      (candidate, index, all) =>
+        all.findIndex((item) => item.line === candidate.line) === index,
+    );
   const sourceCounts = new Map<number, number>();
   const selected = sortedCandidates
     .filter((candidate) => {
@@ -352,7 +399,9 @@ function conversationalFallbackAnswer(message: string): AssistantStructuredAnswe
   const normalized = message.trim().toLowerCase();
   const isThanks = /^(thanks|thank you)\b/.test(normalized);
   const isWellbeing = /^(how are you|how far|what'?s up)\b/.test(normalized);
-  const isIdentity = /^(who are you|what can you do|can you help|help|i need help)\b/.test(normalized);
+  const isIdentity = /^(who are you|what can you do|can you help|help|i need help)\b/.test(
+    normalized,
+  );
 
   return {
     answer: isThanks
@@ -373,15 +422,24 @@ function gettingStartedFallbackAnswer(params: {
   route?: string;
   citations: AssistantCitation[];
 }) {
-  const onboardingCitation = params.citations.find((citation) => citation.id === "rule:onboarding");
-  const globalReadinessCitation = params.citations.find((citation) => citation.id === "feature:global-readiness");
-  const supportCitation = params.citations.find((citation) => citation.id === "rule:support-contact");
+  const onboardingCitation = params.citations.find(
+    (citation) => citation.id === "rule:onboarding",
+  );
+  const globalReadinessCitation = params.citations.find(
+    (citation) => citation.id === "feature:global-readiness",
+  );
+  const supportCitation = params.citations.find(
+    (citation) => citation.id === "rule:support-contact",
+  );
   const citations = [onboardingCitation, globalReadinessCitation, supportCitation]
     .filter((citation): citation is AssistantCitation => Boolean(citation))
     .slice(0, 3);
 
   if (citations.length === 0) {
-    return makeRefusalAnswer("I can help you get started, but I could not load the verified onboarding steps right now. Please open Register or Support.", params.route);
+    return makeRefusalAnswer(
+      "I can help you get started, but I could not load the verified onboarding steps right now. Please open Register or Support.",
+      params.route,
+    );
   }
 
   return sanitizeAssistantAnswer(
@@ -422,20 +480,34 @@ function localFallbackAnswer(params: {
   }
 
   if (params.citations.length === 0) {
-    return makeRefusalAnswer("I do not have enough verified Me2U information to answer that.", params.route);
+    return makeRefusalAnswer(
+      "I do not have enough verified Me2U information to answer that.",
+      params.route,
+    );
   }
 
   const support = getSupportContactSummary();
   const handoffNeeded = needsSupportHandoff(params.latestUserMessage);
-  const personalQuestion = /\b(my|me|account|status|balance|loan|kyc|referral|wallet|notification)\b/i.test(params.latestUserMessage);
-  const accountIndex = params.citations.findIndex((citation) => citation.id === "account:summary");
+  const personalQuestion =
+    /\b(my|me|account|status|balance|loan|kyc|referral|wallet|notification)\b/i.test(
+      params.latestUserMessage,
+    );
+  const accountIndex = params.citations.findIndex(
+    (citation) => citation.id === "account:summary",
+  );
   const orderedCitations =
     personalQuestion && accountIndex > -1
-      ? [params.citations[accountIndex], ...params.citations.filter((_, index) => index !== accountIndex)]
+      ? [
+          params.citations[accountIndex],
+          ...params.citations.filter((_, index) => index !== accountIndex),
+        ]
       : params.citations;
   const orderedSnippets =
     personalQuestion && accountIndex > -1
-      ? [params.snippets[accountIndex], ...params.snippets.filter((_, index) => index !== accountIndex)]
+      ? [
+          params.snippets[accountIndex],
+          ...params.snippets.filter((_, index) => index !== accountIndex),
+        ]
       : params.snippets;
   const summary = buildExtractiveFallbackAnswer({
     latestUserMessage: params.latestUserMessage,
@@ -456,12 +528,18 @@ function localFallbackAnswer(params: {
         summary || "Here is the verified Me2U information I found.",
         handoffNeeded
           ? `This looks like a support issue. Contact ${support.email} or ${support.phones.join(", ")} with the details.`
-        : "",
-      ].filter(Boolean).join("\n\n"),
+          : "",
+      ]
+        .filter(Boolean)
+        .join("\n\n"),
       citations: orderedCitations.slice(0, 3),
       suggestedActions: handoffNeeded
         ? ["Create support request", "Open Support", "Do not share OTPs or PINs"]
-        : ["Open the cited page", "Ask a follow-up", "Contact support if this affects your account"],
+        : [
+            "Open the cited page",
+            "Ask a follow-up",
+            "Contact support if this affects your account",
+          ],
       confidence: "medium",
       handoffNeeded,
       supportRequest: handoffNeeded
@@ -486,6 +564,8 @@ async function buildAssistantAnswer(params: {
   citations: AssistantCitation[];
   snippets: string[];
   accountSummary?: string;
+  memorySummary?: string;
+  guideActions?: GuideAction[];
   userId?: string;
 }) {
   const latestUserMessage = params.messages.at(-1)?.content || "";
@@ -529,7 +609,9 @@ async function buildAssistantAnswer(params: {
     const outputText = await readOpenAiStructuredAnswer({
       model,
       input: prompt,
-      max_output_tokens: Number(process.env.OPENAI_MAX_OUTPUT_TOKENS || defaultOpenAiMaxOutputTokens),
+      max_output_tokens: Number(
+        process.env.OPENAI_MAX_OUTPUT_TOKENS || defaultOpenAiMaxOutputTokens,
+      ),
       text: {
         format: {
           type: "json_schema",
@@ -541,7 +623,12 @@ async function buildAssistantAnswer(params: {
     });
 
     const parsed = JSON.parse(outputText || "{}");
-    const sanitized = sanitizeAssistantAnswer(parsed, allowedCitationIds, latestUserMessage, params.route);
+    const sanitized = sanitizeAssistantAnswer(
+      parsed,
+      allowedCitationIds,
+      latestUserMessage,
+      params.route,
+    );
     if (
       sanitized.citations.length === 0 &&
       params.citations.length > 0 &&
@@ -559,7 +646,9 @@ async function buildAssistantAnswer(params: {
 
     return sanitized;
   } catch (error) {
-    console.warn(`Me2U Guide using local fallback after OpenAI error: ${summarizeOpenAiError(error)}`);
+    console.warn(
+      `Me2U Guide using local fallback after OpenAI error: ${summarizeOpenAiError(error)}`,
+    );
     return makeRefusalAnswer(
       "Me2U Guide could not complete that answer right now. Please try again or contact support.",
       params.route,
@@ -572,13 +661,20 @@ export async function POST(request: Request) {
     const clientIp = getClientIp(request);
     const dailyLimit = Number(process.env.ASSISTANT_DAILY_LIMIT || 80);
     if (await isRateLimited(`assistant-ip:${clientIp}`, dailyLimit, 24 * 60 * 60_000)) {
-      return NextResponse.json({ error: "Me2U Guide is busy. Please wait and try again." }, { status: 429 });
+      return NextResponse.json(
+        { error: "Me2U Guide is busy. Please wait and try again." },
+        { status: 429 },
+      );
     }
 
-    const body = await request.json().catch(() => ({}));
+    const body = (await request.json().catch(() => ({}))) as {
+      messages?: unknown;
+      route?: unknown;
+    };
     const messages = validateMessages(body.messages);
     const route = typeof body.route === "string" ? body.route.slice(0, 160) : undefined;
-    const latestUserMessage = messages.filter((message) => message.role === "user").at(-1)?.content || "";
+    const latestUserMessage =
+      messages.filter((message) => message.role === "user").at(-1)?.content || "";
 
     if (!latestUserMessage.trim()) {
       return NextResponse.json({ error: "Ask Me2U Guide a question first." }, { status: 400 });
@@ -591,8 +687,13 @@ export async function POST(request: Request) {
 
     const authHeader = request.headers.get("authorization");
     const accountContext = await getAssistantAccountContext(authHeader);
-    const citations = accountContext ? [...knowledgeCitations, ...accountContext.citations] : knowledgeCitations;
+    const citations = accountContext
+      ? [...knowledgeCitations, ...accountContext.citations]
+      : knowledgeCitations;
     const accountSummary = accountContext?.summary;
+
+    const memorySummary = formatMemorySummary(extractSessionMemory(messages, route));
+    const guideActions = getGuideActions(latestUserMessage, route);
 
     const stream = new ReadableStream({
       async start(controller) {
@@ -603,24 +704,38 @@ export async function POST(request: Request) {
             citations,
             snippets: accountSummary ? [...snippets, accountSummary] : snippets,
             accountSummary,
+            memorySummary,
+            guideActions,
             userId: accountContext?.userId,
           });
+
+          const suggestedActions = [
+            ...answer.suggestedActions,
+            ...guideActions
+              .map((action) => action.label)
+              .filter((label) => !answer.suggestedActions.includes(label)),
+          ].slice(0, 4);
 
           for (const chunk of chunkAnswer(answer.answer)) {
             controller.enqueue(sse("delta", { text: chunk }));
           }
 
-          controller.enqueue(sse("metadata", {
-            citations: answer.citations,
-            suggestedActions: answer.suggestedActions,
-            confidence: answer.confidence,
-            handoffNeeded: answer.handoffNeeded,
-            supportRequest: answer.supportRequest,
-          }));
+          controller.enqueue(
+            sse("metadata", {
+              citations: answer.citations,
+              suggestedActions,
+              guideActions,
+              confidence: answer.confidence,
+              handoffNeeded: answer.handoffNeeded,
+              supportRequest: answer.supportRequest,
+            }),
+          );
         } catch (error) {
-          controller.enqueue(sse("error", {
-            message: error instanceof Error ? error.message : "Me2U Guide is unavailable.",
-          }));
+          controller.enqueue(
+            sse("error", {
+              message: error instanceof Error ? error.message : "Me2U Guide is unavailable.",
+            }),
+          );
         } finally {
           controller.close();
         }

@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+
 import {
   companyInfo,
   legalDocuments,
@@ -7,6 +8,11 @@ import {
   type PolicyDocument,
   type PolicySection,
 } from "@/lib/legal-content";
+import {
+  defaultTrustTiers,
+  registrationDepositAmount,
+  repeatPlatformLoanMinimum,
+} from "@/lib/loans";
 import {
   financialEducationLessons,
   globalCountryOptions,
@@ -16,10 +22,10 @@ import {
   visibleSecurityFeatures,
 } from "@/lib/product-features";
 import {
-  registrationDepositAmount,
-  repeatPlatformLoanMinimum,
-} from "@/lib/loans";
-import { withdrawalFeeAmount } from "@/lib/revenue";
+  marketplaceBoostFeeAmount,
+  withdrawalFeeAmount,
+  withdrawalProcessorFeeRate,
+} from "@/lib/revenue";
 
 export type AssistantKnowledgeItem = {
   id: string;
@@ -61,20 +67,16 @@ function readDesignContext() {
 function flattenPolicySections(sections: PolicySection[], prefix = ""): string[] {
   return sections.flatMap((section) => {
     const title = prefix ? `${prefix}: ${section.title}` : section.title;
-    const lines = [
-      title,
-      ...(section.paragraphs || []),
-      ...(section.bullets || []),
-    ];
+    const lines = [title, ...(section.paragraphs || []), ...(section.bullets || [])];
 
-    return [
-      lines.join("\n"),
-      ...flattenPolicySections(section.subsections || [], title),
-    ];
+    return [lines.join("\n"), ...flattenPolicySections(section.subsections || [], title)];
   });
 }
 
-function policyToKnowledge(document: PolicyDocument, sourceType: "policy" | "support"): AssistantKnowledgeItem {
+function policyToKnowledge(
+  document: PolicyDocument,
+  sourceType: "policy" | "support",
+): AssistantKnowledgeItem {
   const baseHref = sourceType === "support" ? "/support" : "/legal";
   const routeHref =
     sourceType === "support"
@@ -89,7 +91,10 @@ function policyToKnowledge(document: PolicyDocument, sourceType: "policy" | "sup
     id: `${sourceType}:${document.slug}`,
     title: document.title,
     sourceType,
-    sourcePath: sourceType === "support" ? "lib/legal-content.ts#supportDocuments" : "lib/legal-content.ts#legalDocuments",
+    sourcePath:
+      sourceType === "support"
+        ? "lib/legal-content.ts#supportDocuments"
+        : "lib/legal-content.ts#legalDocuments",
     routeHref: routeHref || baseHref,
     updatedAt: document.lastUpdated,
     content: [
@@ -100,7 +105,12 @@ function policyToKnowledge(document: PolicyDocument, sourceType: "policy" | "sup
   };
 }
 
-function makeRule(id: string, title: string, routeHref: string, content: string): AssistantKnowledgeItem {
+function makeRule(
+  id: string,
+  title: string,
+  routeHref: string,
+  content: string,
+): AssistantKnowledgeItem {
   return {
     id: `rule:${id}`,
     title,
@@ -128,12 +138,15 @@ function tokenize(value: string) {
   const expanded = tokens.flatMap((token) => {
     const variants = [token];
     if (token.endsWith("s")) variants.push(token.slice(0, -1));
-    if (token === "start" || token === "started" || token === "begin") variants.push("onboarding", "register", "registration", "signup", "account");
-    if (token === "signup" || token === "sign" || token === "register") variants.push("onboarding", "registration", "account");
+    if (token === "start" || token === "started" || token === "begin")
+      variants.push("onboarding", "register", "registration", "signup", "account");
+    if (token === "signup" || token === "sign" || token === "register")
+      variants.push("onboarding", "registration", "account");
     if (token.startsWith("withdraw")) variants.push("withdraw", "withdrawal", "withdrawals");
     if (token.startsWith("deposit")) variants.push("deposit", "deposits");
     if (token.startsWith("loan")) variants.push("loan", "loans");
-    if (token === "verification" || token === "verify" || token === "verified") variants.push("kyc");
+    if (token === "verification" || token === "verify" || token === "verified")
+      variants.push("kyc");
     return variants;
   });
 
@@ -145,16 +158,34 @@ function getIntentBoost(queryTokens: Set<string>, item: AssistantKnowledgeItem) 
   const route = item.routeHref.toLowerCase();
   let boost = 0;
 
-  if (queryTokens.has("withdraw") && (id.includes("withdraw") || route.includes("withdraw"))) boost += 20;
+  if (queryTokens.has("withdraw") && (id.includes("withdraw") || route.includes("withdraw")))
+    boost += 20;
   if (queryTokens.has("kyc") && (id.includes("kyc") || route.includes("kyc"))) boost += 18;
   if (queryTokens.has("deposit") && id.includes("onboarding")) boost += 12;
-  if ((queryTokens.has("start") || queryTokens.has("started") || queryTokens.has("begin") || queryTokens.has("onboarding")) && id.includes("onboarding")) boost += 24;
-  if ((queryTokens.has("signup") || queryTokens.has("register") || queryTokens.has("registration")) && (id.includes("onboarding") || route.includes("register"))) boost += 20;
+  if (
+    (queryTokens.has("start") ||
+      queryTokens.has("started") ||
+      queryTokens.has("begin") ||
+      queryTokens.has("onboarding")) &&
+    id.includes("onboarding")
+  )
+    boost += 24;
+  if (
+    (queryTokens.has("signup") ||
+      queryTokens.has("register") ||
+      queryTokens.has("registration")) &&
+    (id.includes("onboarding") || route.includes("register"))
+  )
+    boost += 20;
   if (queryTokens.has("loan") && (id.includes("loan") || route.includes("loan"))) boost += 18;
-  if (queryTokens.has("wallet") && (id.includes("wallet") || route.includes("wallet"))) boost += 14;
-  if (queryTokens.has("referral") && (id.includes("referral") || route.includes("referral"))) boost += 14;
-  if (queryTokens.has("support") && (id.includes("support") || route.includes("support"))) boost += 12;
-  if (queryTokens.has("security") && (id.includes("security") || route.includes("security"))) boost += 12;
+  if (queryTokens.has("wallet") && (id.includes("wallet") || route.includes("wallet")))
+    boost += 14;
+  if (queryTokens.has("referral") && (id.includes("referral") || route.includes("referral")))
+    boost += 14;
+  if (queryTokens.has("support") && (id.includes("support") || route.includes("support")))
+    boost += 12;
+  if (queryTokens.has("security") && (id.includes("security") || route.includes("security")))
+    boost += 12;
 
   return boost;
 }
@@ -173,7 +204,9 @@ export function getAssistantKnowledge() {
       sourcePath: "PRODUCT.md",
       routeHref: "/",
       updatedAt: currentUpdatedAt,
-      content: product || "Me2U is a secure interest-free peer lending, wallet, KYC, referral, and support app.",
+      content:
+        product ||
+        "Me2U is a secure interest-free peer lending, wallet, KYC, referral, and support app.",
     },
     {
       id: "document:design",
@@ -182,7 +215,9 @@ export function getAssistantKnowledge() {
       sourcePath: "design.md",
       routeHref: "/profile",
       updatedAt: currentUpdatedAt,
-      content: design || "Me2U uses light and dark themes, mobile cards, bottom navigation, and support pages.",
+      content:
+        design ||
+        "Me2U uses light and dark themes, mobile cards, bottom navigation, and support pages.",
     },
     ...legalDocuments.map((document) => policyToKnowledge(document, "policy")),
     ...supportDocuments.map((document) => policyToKnowledge(document, "support")),
@@ -193,7 +228,9 @@ export function getAssistantKnowledge() {
       sourcePath: "lib/product-features.ts#growthFeatureModules",
       routeHref: "/learn",
       updatedAt: currentUpdatedAt,
-      content: growthFeatureModules.map((item) => `${item.title}: ${item.body} Status: ${item.status}.`).join("\n"),
+      content: growthFeatureModules
+        .map((item) => `${item.title}: ${item.body} Status: ${item.status}.`)
+        .join("\n"),
     },
     {
       id: "feature:education",
@@ -202,7 +239,9 @@ export function getAssistantKnowledge() {
       sourcePath: "lib/product-features.ts#financialEducationLessons",
       routeHref: "/learn",
       updatedAt: currentUpdatedAt,
-      content: financialEducationLessons.map((item) => `${item.title}: ${item.outcome} Duration: ${item.duration}.`).join("\n"),
+      content: financialEducationLessons
+        .map((item) => `${item.title}: ${item.outcome} Duration: ${item.duration}.`)
+        .join("\n"),
     },
     {
       id: "feature:security",
@@ -211,7 +250,9 @@ export function getAssistantKnowledge() {
       sourcePath: "lib/product-features.ts#visibleSecurityFeatures",
       routeHref: "/security",
       updatedAt: currentUpdatedAt,
-      content: visibleSecurityFeatures.map((item) => `${item.title}: ${item.detail}`).join("\n"),
+      content: visibleSecurityFeatures
+        .map((item) => `${item.title}: ${item.detail}`)
+        .join("\n"),
     },
     {
       id: "feature:referrals",
@@ -220,7 +261,12 @@ export function getAssistantKnowledge() {
       sourcePath: "lib/product-features.ts#referralProgramLevels",
       routeHref: "/referrals",
       updatedAt: currentUpdatedAt,
-      content: referralProgramLevels.map((level) => `${level.name}: ${level.summary}. Reward: ${level.reward}. Badge: ${level.badge}.`).join("\n"),
+      content: referralProgramLevels
+        .map(
+          (level) =>
+            `${level.name}: ${level.summary}. Reward: ${level.reward}. Badge: ${level.badge}.`,
+        )
+        .join("\n"),
     },
     {
       id: "feature:global-readiness",
@@ -230,7 +276,9 @@ export function getAssistantKnowledge() {
       routeHref: "/register",
       updatedAt: currentUpdatedAt,
       content: [
-        ...globalCountryOptions.map((country) => `${country.name}: ${country.lendingStatus}. ${country.kycSummary}`),
+        ...globalCountryOptions.map(
+          (country) => `${country.name}: ${country.lendingStatus}. ${country.kycSummary}`,
+        ),
         ...mobileAppReadiness.map((item) => `${item.title}: ${item.status}. ${item.detail}`),
       ].join("\n"),
     },
@@ -259,6 +307,54 @@ export function getAssistantKnowledge() {
       `Official support email: ${companyInfo.email}. Official support phone or WhatsApp: ${companyInfo.phones.join(", ")}. Company: ${companyInfo.legalName}.`,
     ),
     makeRule(
+      "trust-tiers",
+      "Trust tiers and loan terms",
+      "/loans",
+      `Trust tiers: ${defaultTrustTiers.map((tier) => `${tier.label} ${tier.min}-${tier.max} (retention ${Math.round(tier.rate * 100)}%, up to ${tier.maxDays} days)`).join("; ")}. Platform loans are 0% interest; higher tiers keep a smaller retained balance and allow longer durations.`,
+    ),
+    makeRule(
+      "fees",
+      "Me2U charges and fee visibility",
+      "/wallet",
+      `Withdrawals include a ₦${withdrawalFeeAmount.toLocaleString()} Me2U processing fee plus a ${Math.round(withdrawalProcessorFeeRate * 10000) / 100}% processor charge, shown before confirmation. Wallet funding credits the exact amount sent. Marketplace boost costs ₦${marketplaceBoostFeeAmount.toLocaleString()} per boost. Platform loans carry 0% interest and no origination fee.`,
+    ),
+    makeRule(
+      "savings",
+      "Savings goals",
+      "/savings",
+      "Savings goals track a name, target amount, funded amount, lock state, and status (active, completed, or withdrawn). Fund goals from the wallet; locked goals restrict withdrawals until unlocked.",
+    ),
+    makeRule(
+      "circles",
+      "Me2U Circles community lending",
+      "/circles",
+      "Circles are private groups with people you know for contributions, borrowing, and repayment. Circle activity, rewards, and leaderboards are visible to members.",
+    ),
+    makeRule(
+      "bills",
+      "Bills and daily payments",
+      "/bills",
+      "Pay airtime, data, and utilities from the verified wallet. Successful bill payments build wallet and bills trust signals.",
+    ),
+    makeRule(
+      "learn",
+      "Me2U Learn financial education",
+      "/learn",
+      "Me2U Learn offers short financial education lessons across borrowing, saving, security, and circles, with progress tracking per lesson.",
+    ),
+    makeRule(
+      "deals",
+      "Local merchant deals",
+      "/deals",
+      "Deals surface verified local merchant offers for food, pharmacy, transport, and everyday savings, subject to availability.",
+    ),
+    makeRule(
+      "referrals",
+      "Referral rewards lifecycle",
+      "/referrals",
+      "Invite friends with a referral link or QR code. Rewards unlock across verified stages such as signup, first withdrawal, and first repayment, subject to verification and anti-abuse checks. Track progress, challenges, milestones, and the leaderboard on the referrals page.",
+    ),
+    makeRule(
       "read-only-assistant",
       "Me2U Guide safety boundary",
       "/support",
@@ -277,9 +373,15 @@ export function retrieveAssistantKnowledge(query: string, limit = 6): RetrievedK
 
   return getAssistantKnowledge()
     .map((item) => {
-      const haystack = tokenize(`${item.id}\n${item.title}\n${item.routeHref}\n${item.content}`);
+      const haystack = tokenize(
+        `${item.id}\n${item.title}\n${item.routeHref}\n${item.content}`,
+      );
       const score = haystack.reduce((total, token) => total + (tokenSet.has(token) ? 1 : 0), 0);
-      const phraseBonus = normalizeText(item.content).includes(normalizeText(query).slice(0, 80)) ? 5 : 0;
+      const phraseBonus = normalizeText(item.content).includes(
+        normalizeText(query).slice(0, 80),
+      )
+        ? 5
+        : 0;
       return { item, score: score + phraseBonus + getIntentBoost(tokenSet, item) };
     })
     .filter((result) => result.score > 0)

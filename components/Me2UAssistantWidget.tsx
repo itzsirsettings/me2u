@@ -14,9 +14,15 @@ type AssistantMessage = {
   content: string;
   citations?: AssistantCitation[];
   suggestedActions?: string[];
+  guideActions?: GuideAction[];
   confidence?: "low" | "medium" | "high";
   handoffNeeded?: boolean;
   supportRequest?: SupportRequest;
+};
+
+type GuideAction = {
+  label: string;
+  href: string;
 };
 
 type AssistantCitation = {
@@ -57,7 +63,18 @@ function parseSseFrames(buffer: string) {
   };
 }
 
-function parseFrame(frame: string) {
+type FrameData = {
+  text?: string;
+  citations?: AssistantCitation[];
+  suggestedActions?: string[];
+  guideActions?: GuideAction[];
+  confidence?: "low" | "medium" | "high";
+  handoffNeeded?: boolean;
+  supportRequest?: SupportRequest;
+  message?: string;
+};
+
+function parseFrame(frame: string): { event: string; data: FrameData } | null {
   const event = frame
     .split("\n")
     .find((line) => line.startsWith("event: "))
@@ -68,7 +85,7 @@ function parseFrame(frame: string) {
     ?.slice(6);
   if (!event || !data) return null;
   try {
-    return { event, data: JSON.parse(data) };
+    return { event, data: JSON.parse(data) as FrameData };
   } catch {
     return null;
   }
@@ -204,6 +221,7 @@ export default function Me2UAssistantWidget() {
                       ...message,
                       citations: event.data.citations || [],
                       suggestedActions: event.data.suggestedActions || [],
+                      guideActions: event.data.guideActions || [],
                       confidence: event.data.confidence,
                       handoffNeeded: Boolean(event.data.handoffNeeded),
                       supportRequest: event.data.supportRequest,
@@ -365,6 +383,21 @@ export default function Me2UAssistantWidget() {
                             className="inline-flex items-center gap-1 rounded-full border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2.5 py-1 text-[10px] font-black text-[var(--color-text-secondary)] transition hover:border-green/40 hover:text-green"
                           >
                             {sourceLabel(citation)}
+                            <ArrowUpRight size={11} aria-hidden="true" />
+                          </a>
+                        ))}
+                      </div>
+                    )}
+
+                    {message.role === "assistant" && Boolean(message.guideActions?.length) && (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {message.guideActions?.map((action) => (
+                          <a
+                            key={action.href}
+                            href={action.href}
+                            className="inline-flex items-center gap-1 rounded-full border border-green/30 bg-green/10 px-2.5 py-1 text-[10px] font-black text-green transition hover:border-green/60 hover:bg-green/20"
+                          >
+                            {action.label}
                             <ArrowUpRight size={11} aria-hidden="true" />
                           </a>
                         ))}
