@@ -12,6 +12,7 @@ import LandingFooter from "@/components/landing/LandingFooter";
 import LandingHeader from "@/components/landing/LandingHeader";
 import PublicProofSection from "@/components/landing/PublicProofSection";
 import TrustScoreSection from "@/components/landing/TrustScoreSection";
+import { landingFaqs } from "@/lib/landing-faq";
 
 export const metadata: Metadata = {
   title: "Me2U — Interest-Free Borrowing Built on Verified Trust",
@@ -44,6 +45,18 @@ export default function Landing() {
               "@type": "WebSite",
               name: "Me2U",
               url: "https://www.me2ulend.online",
+            },
+            {
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              mainEntity: landingFaqs.map((faq) => ({
+                "@type": "Question",
+                name: faq.question,
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: faq.answer,
+                },
+              })),
             },
           ]),
         }}

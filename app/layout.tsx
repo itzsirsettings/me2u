@@ -1,15 +1,18 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { Outfit } from "next/font/google";
 import { Toaster } from "sonner";
-import BottomNav from "@/components/BottomNav";
+
 import AuthBootstrap from "@/components/AuthBootstrap";
+import BottomNav from "@/components/BottomNav";
+import GlobalClientProviders from "@/components/GlobalClientProviders";
+import Me2UAssistantWidget from "@/components/Me2UAssistantWidget";
 import MobileHeader from "@/components/MobileHeader";
 import ProtectedOnboarding from "@/components/ProtectedOnboarding";
-import Me2UAssistantWidget from "@/components/Me2UAssistantWidget";
-import { SpotlightPointer } from "@/components/ui/spotlight-card";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
-import GlobalClientProviders from "@/components/GlobalClientProviders";
-import { Outfit } from "next/font/google";
+import { SpotlightPointer } from "@/components/ui/spotlight-card";
+
+const siteUrl = "https://www.me2ulend.online";
 
 const body = Outfit({
   subsets: ["latin"],
@@ -39,7 +42,7 @@ const themeScript = `
 `;
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://me2ulend.online"),
+  metadataBase: new URL(siteUrl),
   title: {
     default: "Me2U — 0% Interest Loans. Built on Trust.",
     template: "%s · Me2U",
@@ -61,16 +64,25 @@ export const metadata: Metadata = {
     title: "Me2U — 0% Interest Loans. Built on Trust.",
     description:
       "Nigeria's trust-based peer lending platform. 0% interest, no hidden fees, community circles, and transparent Trust Scores.",
-    url: "https://me2ulend.online",
+    url: siteUrl,
     siteName: "Me2U",
     locale: "en_NG",
     type: "website",
+    images: [
+      {
+        url: "/Hero_final.png",
+        width: 1680,
+        height: 944,
+        alt: "Me2U interest-free lending platform",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Me2U — 0% Interest Loans. Built on Trust.",
     description:
       "Nigeria's trust-based peer lending platform. 0% interest, community circles, transparent scoring.",
+    images: ["/Hero_final.png"],
   },
   icons: {
     icon: "/me2u_logo_v2.svg",
