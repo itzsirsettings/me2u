@@ -289,7 +289,7 @@ insert into public.education_content (slug, title, summary, content, category, d
    'trust_score', 'beginner', 5, 1, true),
 
   ('borrowing-responsibly', 'Borrowing Responsibly', 'Best practices for taking and repaying loans',
-   E'# Borrowing Responsibly\n\n## Before You Borrow\n\n1. Assess Your Need: Only borrow what you actually need\n2. Plan Repayment: Ensure you can repay before the due date\n3. Check Your Trust Score: Higher scores unlock better terms\n4. Understand the Terms: 0% interest, but on-time repayment matters',
+  E'Lending Responsibly\n\n## Before You Borrow\n\n1. Assess Your Need: Only borrow what you actually need\n2. Plan Repayment: Ensure you can repay before the due date\n3. Check Your Trust Score: Higher scores unlock better terms\n4. Understand the Terms: 0% interest, but on-time repayment matters',
    'borrowing', 'beginner', 7, 2, true),
 
   ('building-wealth-circles', 'Building Wealth with Circles', 'Maximize the power of group lending',

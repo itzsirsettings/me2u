@@ -400,7 +400,7 @@ test("Me2U Guide assistant is citation-bound and globally mounted", () => {
   assert.match(route, /sse\("delta"/);
   assert.match(route, /sse\("metadata"/);
   assert.match(route, /OPENAI_MODEL/);
-  assert.match(route, /gpt-5\.2/);
+  assert.match(route, /gpt-4o-mini/);
 
   assert.match(knowledge, /PRODUCT\.md/);
   assert.match(knowledge, /design\.md/);

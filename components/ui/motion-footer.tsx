@@ -8,6 +8,7 @@ import * as React from "react";
 import { useEffect, useRef } from "react";
 
 import { cn } from "@/lib/utils";
+import { companyInfo } from "@/lib/legal-content";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -342,7 +343,9 @@ export function CinematicFooter() {
 
           <div className="relative z-20 flex w-full flex-col items-center justify-between gap-6 px-6 pb-8 md:flex-row md:px-12">
             <div className="order-2 flex flex-col items-center gap-2 text-center md:order-1 md:items-start md:text-left">
-              <div className="text-xs font-semibold text-snow/52">© 2026 Me2U</div>
+              <div className="text-xs font-semibold text-snow/52">
+                © 2026 Me2U by {companyInfo.legalName}
+              </div>
             </div>
 
             <MagneticButton

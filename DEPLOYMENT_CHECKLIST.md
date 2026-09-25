@@ -118,8 +118,8 @@ railway init
 - [ ] `NEXT_PUBLIC_PLATFORM_ACCOUNT_NUMBER` → `0010245606`
 
 #### Contact Info
-- [ ] `NEXT_PUBLIC_CONTACT_EMAIL` → `admin@me2ulend.online`
-- [ ] `ADMIN_EMAIL` → `admin@me2ulend.online`
+- [ ] `NEXT_PUBLIC_CONTACT_EMAIL` → `wecare@me2ulend.online`
+- [ ] `ADMIN_EMAIL` → `wecare@me2ulend.online`
 
 ### Step 6: Deploy Application
 ```powershell
@@ -152,8 +152,8 @@ railway run --service me2u psql $DATABASE_URL -f migrations/migrations/202609161
 - [ ] Landing page loads without errors
 - [ ] All sections visible: Hero, HowItWorks, Features, TrustScore, AdvancedTools, CommunityCircles, PublicProof, Comparison, FAQ
 - [ ] Mobile responsive (test on phone)
-- [ ] Footer shows © 2026 Me2U — Merenity Systems
-- [ ] Email shows `admin@me2ulend.online`
+- [ ] Footer shows © 2026 Me2U — MPT TECNOLOGIES AFRICA LIMITED
+- [ ] Email shows `wecare@me2ulend.online`
 
 ### Test 2: User Registration (5 minutes)
 - [ ] Navigate to `/auth/register`
@@ -470,7 +470,7 @@ LIMIT 10;
 
 ### Internal Team:
 - **Developer**: _______________
-- **Admin**: admin@me2ulend.online
+- **Support**: wecare@me2ulend.online
 - **On-call**: _______________
 
 ---

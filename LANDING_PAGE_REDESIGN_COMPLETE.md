@@ -19,7 +19,7 @@ The Me2U landing page has been professionally redesigned with **15 of 16 tasks c
 7. ✅ **AdvancedToolsSection updated** — User-benefit headlines, no deposit/KYC/API exposure
 8. ✅ **PublicProofSection polished** — Intl.NumberFormat, tabular-nums, aria-live metrics
 9. ✅ **LandingHeader updated** — Skip link, aria-expanded, focus-visible, Security/Learn/Circles links
-10. ✅ **LandingFooter updated** — admin@me2ulend.online, © 2026 Me2U — Merenity Systems
+10. ✅ **LandingFooter updated** — wecare@me2ulend.online, © 2026 Me2U — MPT TECNOLOGIES AFRICA LIMITED
 11. ✅ **LandingCTA updated** — Domain email mention, "Talk to Support" mailto button
 12. ✅ **HeroSection updated** — 6 trust badges, improved headline, "Create Free Account" CTA
 13. ✅ **app/page.tsx updated** — New section order + stronger metadata
@@ -78,8 +78,8 @@ Landing Page Flow:
 │      • Dual CTAs                        │
 ├─────────────────────────────────────────┤
 │  LandingFooter                          │
-│  • admin@me2ulend.online                │
-│  • Merenity Systems copyright           │
+│  • wecare@me2ulend.online                │
+│  • MPT TECNOLOGIES AFRICA LIMITED       │
 └─────────────────────────────────────────┘
 ```
 
@@ -246,7 +246,7 @@ Landing Page Flow:
 
 ### Call-to-Action
 **Before:** "Start with a protected wallet, complete KYC, and unlock interest-free peer lending built for real communities."
-**After:** "Create your free account, verify your identity, and access 0% interest loans with no hidden fees. Get support at admin@me2ulend.online"
+**After:** "Create your free account, verify your identity, and access 0% interest loans with no hidden fees. Get support at wecare@me2ulend.online"
 
 **Impact:** Removed "KYC" jargon, added domain email credibility, clearer benefits.
 
@@ -264,9 +264,9 @@ Landing Page Flow:
 
 All instances updated to professional domain:
 
-- Email: `admin@me2ulend.online`
+- Email: `wecare@me2ulend.online`
 - Domain: `me2ulend.online`
-- Copyright: `© 2026 Me2U — Merenity Systems`
+- Copyright: `© 2026 Me2U — MPT TECNOLOGIES AFRICA LIMITED`
 
 **Old References Removed:**
 - ❌ Gmail addresses
@@ -470,4 +470,4 @@ For questions about this implementation:
 
 **Built with ❤️ by Kiro AI**
 **Deployment ready: December 2024**
-**For: Me2U — Merenity Systems**
+**For: Me2U — MPT TECNOLOGIES AFRICA LIMITED**

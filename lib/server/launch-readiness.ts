@@ -35,6 +35,7 @@ export function getLaunchReadinessChecks(): LaunchCheck[] {
     checkRequired("PAYSTACK_SECRET_KEY", "Paystack secret key is required."),
     checkRequired("RESEND_API_KEY", "Resend API key is required for email delivery."),
     checkRequired("EMAIL_FROM", "Email sender address is required."),
+    checkRequired("OPENAI_API_KEY", "OpenAI API key is required for Me2U Guide."),
     checkWarning("NEXT_PUBLIC_APP_URL", "Public app URL should be configured."),
     checkWarning(
       "CRON_SECRET",

@@ -95,7 +95,7 @@ function mailtoSupport(request?: SupportRequest) {
       .join("\n\n"),
   );
 
-  return `mailto:admin@me2ulend.online?subject=${subject}&body=${body}`;
+  return `mailto:wecare@me2ulend.online?subject=${subject}&body=${body}`;
 }
 
 export default function Me2UAssistantWidget() {

@@ -17,10 +17,16 @@ export type PolicyDocument = {
 export const legalLastUpdated = "May 19, 2026";
 
 export const companyInfo = {
-  legalName: "Merenity Systems",
+  legalName: "MPT TECNOLOGIES AFRICA LIMITED",
   tradingName: "Me2U",
-  email: "admin@me2ulend.online",
-  phones: ["+234 903 4162 902", "+234 806 5117 689", "+234 815 1583 421"],
+  registrationNumber: "9765615",
+  incorporationType: "Private company limited by shares",
+  incorporatedUnder: "Companies and Allied Matters Act 2020",
+  incorporationAuthority: "Corporate Affairs Commission, Federal Republic of Nigeria",
+  incorporationDate: "12 August 2026",
+  taxIdentificationNumber: "2621054188991",
+  email: "wecare@me2ulend.online",
+  phones: ["+234 815 1583 421", "+234 701 8295 518"],
   address: "Nigeria",
 };
 
@@ -31,6 +37,10 @@ const contactBullets = [
   `Email: ${companyInfo.email}`,
   `Support: ${companyInfo.phones.join(", ")}`,
   `Company: ${companyInfo.legalName}`,
+  `Company registration number: ${companyInfo.registrationNumber}`,
+  `Incorporation: ${companyInfo.incorporationType} under the ${companyInfo.incorporatedUnder}`,
+  `Incorporated by: ${companyInfo.incorporationAuthority} on ${companyInfo.incorporationDate}`,
+  `Tax identification number: ${companyInfo.taxIdentificationNumber}`,
   `Address: ${companyInfo.address}`,
 ];
 
@@ -290,7 +300,7 @@ export const legalDocuments: PolicyDocument[] = [
       {
         title: "Overview",
         paragraphs: [
-          `This Privacy Policy explains how Me2U, legally owned by ${companyInfo.legalName}, protects your privacy when you use our website, app, wallet, lending marketplace, referral system, KYC process, support channels, and related services.`,
+          `This Privacy Policy explains how Me2U, legally registered to and operated by ${companyInfo.legalName}, protects your privacy when you use our website, app, wallet, lending marketplace, referral system, KYC process, support channels, and related services.`,
           "Me2U is built for secure peer-to-peer lending, cooperatives, verified wallets, 0% interest loan access, repayments, referrals, and wallet withdrawals subject to verification and approval.",
         ],
       },
@@ -406,7 +416,13 @@ export const legalDocuments: PolicyDocument[] = [
         bullets: [
           `Legal Entity: ${companyInfo.legalName}`,
           `Trading Name: ${companyInfo.tradingName}`,
-          `Ownership: Me2U is legally owned by ${companyInfo.legalName}`,
+          `Ownership and operation: Me2U is operated by ${companyInfo.legalName}`,
+          `Company registration number: ${companyInfo.registrationNumber}`,
+          `Company type: ${companyInfo.incorporationType}`,
+          `Incorporated under: ${companyInfo.incorporatedUnder}`,
+          `Incorporation authority: ${companyInfo.incorporationAuthority}`,
+          `Date of incorporation: ${companyInfo.incorporationDate}`,
+          `Tax identification number: ${companyInfo.taxIdentificationNumber}`,
           `Registered Address: ${companyInfo.address}`,
           `Support Email: ${companyInfo.email}`,
           `Legal Email: ${companyInfo.email}`,

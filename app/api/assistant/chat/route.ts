@@ -24,7 +24,7 @@ type ChatMessage = {
 };
 
 const encoder = new TextEncoder();
-const defaultModel = "gpt-5.2";
+const defaultModel = "gpt-4o-mini";
 const maxMessages = 12;
 const maxMessageLength = 1200;
 const defaultOpenAiTimeoutMs = 25_000;
@@ -329,9 +329,7 @@ function buildExtractiveFallbackAnswer(params: {
     .slice(0, 4)
     .map((candidate) => candidate.line.replace(/\s+/g, " "));
 
-  if (selected.length === 0) {
-    return "I do not have enough verified Me2U information to answer that.";
-  }
+  if (selected.length === 0) return "";
 
   return [
     fallbackHeading(params.latestUserMessage),
@@ -445,6 +443,13 @@ function localFallbackAnswer(params: {
     snippets: orderedSnippets,
   });
 
+  if (!summary) {
+    return makeRefusalAnswer(
+      "I do not have enough verified Me2U information to answer that.",
+      params.route,
+    );
+  }
+
   return sanitizeAssistantAnswer(
     {
       answer: [
@@ -555,13 +560,10 @@ async function buildAssistantAnswer(params: {
     return sanitized;
   } catch (error) {
     console.warn(`Me2U Guide using local fallback after OpenAI error: ${summarizeOpenAiError(error)}`);
-    return localFallbackAnswer({
-      latestUserMessage,
-      route: params.route,
-      citations: params.citations,
-      snippets: params.snippets,
-      userId: params.userId,
-    });
+    return makeRefusalAnswer(
+      "Me2U Guide could not complete that answer right now. Please try again or contact support.",
+      params.route,
+    );
   }
 }
 

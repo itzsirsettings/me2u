@@ -73,7 +73,7 @@ function PublicFooter() {
         <div>
           <BrandLogo className="h-10 w-28 brightness-0 invert" />
           <p className="mt-4 text-sm leading-6 text-snow/72">
-            Me2U is legally owned by {companyInfo.legalName}.
+            Me2U is legally registered to and operated by {companyInfo.legalName}.
           </p>
           <p className="mt-3 text-sm font-black leading-6 text-snow">
             {companyInfo.tradingName} support

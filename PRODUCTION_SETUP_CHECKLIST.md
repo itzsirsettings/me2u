@@ -95,7 +95,7 @@ VTPASS_API_KEY=your_vtpass_api_key
 
 ---
 
-### 2.5 OpenAI (AI Assistant) - OPTIONAL
+### 2.5 OpenAI (AI Assistant) - REQUIRED FOR ME2U GUIDE
 **Purpose**: Me2U Guide chatbot
 
 1. **Sign up**: https://platform.openai.com/signup
@@ -108,11 +108,7 @@ OPENAI_API_KEY=<your-openai-api-key>
 OPENAI_MODEL=gpt-4o-mini
 ```
 
-**Or disable AI assistant**:
-```
-# Leave OPENAI_API_KEY empty to disable assistant
-OPENAI_API_KEY=
-```
+The Me2U Guide is a production feature and requires a valid OpenAI key. The launch readiness check blocks production when this key is missing.
 
 ---
 
