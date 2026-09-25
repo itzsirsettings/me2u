@@ -327,9 +327,6 @@ export default function LandingHeader() {
             className="fixed inset-x-0 top-20 bottom-0 bg-navy/98 backdrop-blur-md border-b border-snow/5 shadow-2xl z-40 lg:hidden overflow-y-auto overscroll-contain pb-6"
           >
             <nav className="p-4 flex flex-col gap-1" aria-label="Mobile">
-              <div className="text-[11px] font-medium text-snow/40 uppercase tracking-widest px-3 pt-2 pb-2">
-                Products
-              </div>
               {[
                 { href: "/#loans", label: "0% Loans" },
                 { href: "/#marketplace", label: "Peer Marketplace" },
@@ -346,16 +343,14 @@ export default function LandingHeader() {
                 </Link>
               ))}
 
-              <div className="text-[11px] font-medium text-snow/40 uppercase tracking-widest px-3 pt-4 pb-2">
-                Explore
-              </div>
+              <div className="px-3 pt-4 pb-2 text-sm font-medium text-snow/70">Explore</div>
               {[
                 { href: "/#community-circles", label: "Circles" },
                 { href: "/#features", label: "Features" },
                 { href: "/#trust-score", label: "Trust Score" },
                 { href: "/#comparison", label: "Why Me2U" },
                 { href: "/#faq", label: "FAQs" },
-                { href: "/support", label: "Support" },
+                { href: "https://app.me2ulend.online/support", label: "Support" },
               ].map((l) => (
                 <Link
                   key={l.href}

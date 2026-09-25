@@ -139,9 +139,6 @@ export default function PublicProofSection() {
             viewport={{ once: true }}
             className="mx-auto max-w-3xl text-center"
           >
-            <p className="mb-4 text-sm font-bold uppercase tracking-[0.2em] text-green">
-              Member experiences
-            </p>
             <h2 id="proof-heading" className="text-3xl font-black leading-tight md:text-5xl">
               Trust should be visible before money moves.
             </h2>
@@ -181,12 +178,7 @@ export default function PublicProofSection() {
           <div className="mt-12 rounded-3xl border border-[var(--color-border)] bg-[var(--landing-proof-card)]/60 p-6 md:p-8">
             <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.16em] text-green">
-                  Testimonials
-                </p>
-                <h3 className="mt-2 text-2xl font-black md:text-3xl">
-                  What members are saying
-                </h3>
+                <h3 className="text-2xl font-black md:text-3xl">What members are saying</h3>
               </div>
             </div>
             <SuccessStoryCarousel fallbackStories={memberTestimonials} />

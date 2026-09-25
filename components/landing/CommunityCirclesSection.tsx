@@ -1,14 +1,15 @@
 "use client";
 
-import { useRef } from "react";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import Link from "next/link";
+import { useRef } from "react";
 
 const circleTypes = [
   {
     emoji: "👨‍👩‍👧‍👦",
     name: "Family",
-    useCase: "Pool savings for weddings, emergencies, or family projects with trusted relatives.",
+    useCase:
+      "Pool savings for weddings, emergencies, or family projects with trusted relatives.",
     color: "#22C55E",
   },
   {
@@ -80,7 +81,8 @@ export default function CommunityCirclesSection() {
             <span className="landing-accent-word">Trusted Community</span>
           </motion.h2>
           <motion.p className="landing-body max-w-2xl mx-auto" variants={variants}>
-            Create private circles with people you know and trust. Coordinate contributions, borrowing, and repayment within family, faith, trader, school, or business networks.
+            Create private circles with people you know and trust. Coordinate contributions,
+            borrowing, and repayment within family, faith, trader, school, or business networks.
           </motion.p>
         </motion.div>
 
@@ -100,7 +102,9 @@ export default function CommunityCirclesSection() {
               {/* Background accent */}
               <div
                 className="absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity duration-300"
-                style={{ background: `radial-gradient(circle at 50% 0%, ${circle.color}, transparent 70%)` }}
+                style={{
+                  background: `radial-gradient(circle at 50% 0%, ${circle.color}, transparent 70%)`,
+                }}
                 aria-hidden="true"
               />
 
@@ -128,12 +132,31 @@ export default function CommunityCirclesSection() {
           animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
           transition={{ delay: 0.6, duration: 0.5 }}
         >
-          <Link href="/circles" className="btn-secondary inline-flex items-center gap-2 min-h-[44px]">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <Link
+            href="https://app.me2ulend.online/circles"
+            className="btn-secondary inline-flex items-center gap-2 min-h-[44px]"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
               <circle cx="7" cy="6" r="3" stroke="currentColor" strokeWidth="1.5" />
               <circle cx="14" cy="8" r="2.5" stroke="currentColor" strokeWidth="1.5" />
-              <path d="M2 17v-1.5a3 3 0 013-3h4a3 3 0 013 3V17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              <path d="M13 17v-1a2.5 2.5 0 012.5-2.5H17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <path
+                d="M2 17v-1.5a3 3 0 013-3h4a3 3 0 013 3V17"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+              <path
+                d="M13 17v-1a2.5 2.5 0 012.5-2.5H17"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
             </svg>
             <span>Explore Circles</span>
           </Link>

@@ -19,6 +19,42 @@ test("production hosts separate marketing and application routes", () => {
   assert.match(proxy, /INDEXABLE_APP_PREFIXES/);
 });
 
+test("landing site sends sign up and login to the app domain", () => {
+  const landingSurfaces = [
+    "components/landing/AdvancedToolsSection.tsx",
+    "components/landing/CommunityCirclesSection.tsx",
+    "components/landing/FeaturesSection.tsx",
+    "components/landing/HeroSection.tsx",
+    "components/landing/HowItWorksSection.tsx",
+    "components/landing/LandingHeader.tsx",
+    "components/landing/PublicProofSection.tsx",
+    "components/ui/aero-hero-3.tsx",
+    "components/ui/motion-footer.tsx",
+  ];
+
+  for (const path of landingSurfaces) {
+    const source = read(path);
+    assert.doesNotMatch(source, /href="\/(login|register)"/);
+    assert.doesNotMatch(source, /router\.push\("\/register"\)/);
+  }
+
+  const header = read("components/landing/LandingHeader.tsx");
+  const footer = read("components/ui/motion-footer.tsx");
+  const callToAction = read("components/ui/aero-hero-3.tsx");
+  const appRegister = /https:\/\/app\.me2ulend\.online\/register/;
+  const appLogin = /https:\/\/app\.me2ulend\.online\/login/;
+
+  for (const surface of [header, footer, callToAction]) {
+    assert.match(surface, appRegister);
+  }
+  for (const surface of [header, footer]) {
+    assert.match(surface, appLogin);
+  }
+
+  assert.match(footer, /https:\/\/app\.me2ulend\.online\/support/);
+  assert.match(footer, /https:\/\/app\.me2ulend\.online\/legal\/privacy-policy/);
+});
+
 test("public launch exposes only public pages to search engines", () => {
   const robots = read("app/robots.ts");
   const sitemap = read("app/sitemap.ts");

@@ -190,7 +190,7 @@ const MagneticButton = React.forwardRef<HTMLElement, MagneticButtonProps>(
 MagneticButton.displayName = "MagneticButton";
 
 const MarqueeItem = () => (
-  <div className="flex items-center gap-12 px-6">
+  <div className="flex items-center gap-12 px-6 tracking-[0.3em]">
     <span>0% peer lending</span> <span className="text-green/70">✦</span>
     <span>Verified wallets</span> <span className="text-lime/70">✦</span>
     <span>Trust scores</span> <span className="text-green/70">✦</span>
@@ -273,7 +273,7 @@ export function CinematicFooter() {
 
           <div className="relative z-10 mx-auto mt-20 flex w-full max-w-5xl flex-1 flex-col items-center justify-center px-6">
             <div className="mb-[2px] w-screen scale-110 -rotate-2 overflow-hidden border-y border-snow/10 bg-navy/70 py-4 shadow-2xl backdrop-blur-md">
-              <div className="flex w-max animate-footer-scroll-marquee text-xs font-bold uppercase tracking-[0.3em] text-snow/62 md:text-sm">
+              <div className="flex w-max animate-footer-scroll-marquee gap-0 text-xs font-bold text-snow/62 md:text-sm">
                 <MarqueeItem />
                 <MarqueeItem />
               </div>
@@ -290,7 +290,7 @@ export function CinematicFooter() {
               <div className="flex w-full flex-wrap justify-center gap-4">
                 <MagneticButton
                   as={Link}
-                  href="/register"
+                  href="https://app.me2ulend.online/register"
                   className="footer-glass-pill group flex items-center gap-3 rounded-full px-10 py-5 text-sm font-bold text-snow md:text-base"
                 >
                   <UserPlus className="h-5 w-5 text-green transition-colors group-hover:text-lime" />
@@ -299,7 +299,7 @@ export function CinematicFooter() {
 
                 <MagneticButton
                   as={Link}
-                  href="/login"
+                  href="https://app.me2ulend.online/login"
                   className="footer-glass-pill group flex items-center gap-3 rounded-full px-10 py-5 text-sm font-bold text-snow md:text-base"
                 >
                   <LogIn className="h-5 w-5 text-green transition-colors group-hover:text-lime" />
@@ -310,14 +310,14 @@ export function CinematicFooter() {
               <div className="mt-2 flex w-full flex-wrap justify-center gap-3 md:gap-6">
                 <MagneticButton
                   as={Link}
-                  href="/legal/privacy-policy"
+                  href="https://app.me2ulend.online/legal/privacy-policy"
                   className="footer-glass-pill rounded-full px-6 py-3 text-xs font-medium text-snow/70 hover:text-snow md:text-sm"
                 >
                   Privacy Policy
                 </MagneticButton>
                 <MagneticButton
                   as={Link}
-                  href="/legal/terms-of-use"
+                  href="https://app.me2ulend.online/legal/terms-of-use"
                   className="footer-glass-pill rounded-full px-6 py-3 text-xs font-medium text-snow/70 hover:text-snow md:text-sm"
                 >
                   Terms of Use
@@ -331,7 +331,7 @@ export function CinematicFooter() {
                 </MagneticButton>
                 <MagneticButton
                   as={Link}
-                  href="/support"
+                  href="https://app.me2ulend.online/support"
                   className="footer-glass-pill rounded-full px-6 py-3 text-xs font-medium text-snow/70 hover:text-snow md:text-sm"
                 >
                   Support
@@ -342,15 +342,7 @@ export function CinematicFooter() {
 
           <div className="relative z-20 flex w-full flex-col items-center justify-between gap-6 px-6 pb-8 md:flex-row md:px-12">
             <div className="order-2 flex flex-col items-center gap-2 text-center md:order-1 md:items-start md:text-left">
-              <div className="text-[10px] font-semibold uppercase tracking-widest text-snow/52 md:text-xs">
-                © 2026 Me2U — Merenity Systems
-              </div>
-              <a
-                href="mailto:admin@me2ulend.online"
-                className="text-[10px] font-medium text-snow/42 hover:text-green transition-colors md:text-xs"
-              >
-                admin@me2ulend.online
-              </a>
+              <div className="text-xs font-semibold text-snow/52">© 2026 Me2U</div>
             </div>
 
             <MagneticButton

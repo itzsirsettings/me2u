@@ -2,13 +2,10 @@
 
 import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 
 export default function AeroHeroCta() {
-  const router = useRouter();
-
   return (
     <section className="relative flex min-h-[92vh] w-full items-center justify-center overflow-hidden bg-background text-foreground">
       <div className="absolute inset-0 z-10 size-full" aria-hidden="true">
@@ -43,7 +40,7 @@ export default function AeroHeroCta() {
           Create your free account, verify your identity, and start borrowing and lending at 0%
           interest — with no hidden fees. Need a hand?{" "}
           <Link
-            href="/support"
+            href="https://app.me2ulend.online/support"
             className="text-green hover:text-lime transition-colors underline decoration-green/30 hover:decoration-lime/50"
           >
             Our support team is here
@@ -54,7 +51,7 @@ export default function AeroHeroCta() {
         <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Button
             className="group mx-auto flex cursor-pointer items-center justify-center gap-0 rounded-full border-none bg-transparent px-0 py-5 font-normal shadow-none hover:bg-transparent"
-            onClick={() => router.push("/register")}
+            onClick={() => window.location.assign("https://app.me2ulend.online/register")}
           >
             <span className="rounded-full bg-green px-7 py-3.5 text-navy transition-colors duration-300 ease-out group-hover:bg-lime">
               Create Free Account
@@ -70,7 +67,7 @@ export default function AeroHeroCta() {
             variant="secondary"
             className="min-h-14 rounded-full border border-[var(--color-border)] bg-card/80 px-8 text-base font-normal text-card-foreground shadow-none backdrop-blur transition-colors hover:bg-card"
           >
-            <Link href="/support">Talk to Support</Link>
+            <Link href="https://app.me2ulend.online/support">Talk to Support</Link>
           </Button>
         </div>
       </div>

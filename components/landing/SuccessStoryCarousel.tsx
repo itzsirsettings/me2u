@@ -31,7 +31,9 @@ type SuccessStoryCarouselProps = {
   fallbackStories?: SuccessStory[];
 };
 
-export default function SuccessStoryCarousel({ fallbackStories = [] }: SuccessStoryCarouselProps) {
+export default function SuccessStoryCarousel({
+  fallbackStories = [],
+}: SuccessStoryCarouselProps) {
   const [stories, setStories] = useState<SuccessStory[]>(fallbackStories);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -153,7 +155,7 @@ export default function SuccessStoryCarousel({ fallbackStories = [] }: SuccessSt
               <span className="text-3xl">
                 {categoryIcons[currentStory.category] || categoryIcons.other}
               </span>
-              <span className="px-3 py-1 rounded-full bg-green/20 text-green text-xs font-bold uppercase tracking-wide">
+              <span className="rounded-full bg-green/20 px-3 py-1 text-xs font-bold text-green">
                 {currentStory.category}
               </span>
             </div>
@@ -162,14 +164,10 @@ export default function SuccessStoryCarousel({ fallbackStories = [] }: SuccessSt
             <Quote className="w-12 h-12 text-green/20 mb-4" />
 
             {/* Story Title */}
-            <h3 className="landing-h3 mb-4">
-              {currentStory.title}
-            </h3>
+            <h3 className="landing-h3 mb-4">{currentStory.title}</h3>
 
             {/* Story Content */}
-            <p className="landing-body mb-6 line-clamp-4">
-              {currentStory.story}
-            </p>
+            <p className="landing-body mb-6 line-clamp-4">{currentStory.story}</p>
 
             {/* Amount & Author */}
             <div className="flex items-center justify-between pt-6 border-t border-border">
