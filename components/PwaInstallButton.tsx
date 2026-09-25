@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Me2uIcon from "@/components/Me2uIcon";
 import { toast } from "sonner";
+
+import Me2uIcon from "@/components/Me2uIcon";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -20,10 +21,18 @@ export default function PwaInstallButton({
 }: PwaInstallButtonProps) {
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isStandalone, setIsStandalone] = useState(false);
+  const [isIos, setIsIos] = useState(false);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(display-mode: standalone)");
-    setIsStandalone(mediaQuery.matches || Boolean((window.navigator as Navigator & { standalone?: boolean }).standalone));
+    const updateDeviceState = () => {
+      setIsStandalone(
+        mediaQuery.matches ||
+          Boolean((window.navigator as Navigator & { standalone?: boolean }).standalone),
+      );
+      setIsIos(/iphone|ipad|ipod/i.test(window.navigator.userAgent));
+    };
+    window.requestAnimationFrame(updateDeviceState);
 
     const handleBeforeInstallPrompt = (event: Event) => {
       event.preventDefault();
@@ -31,7 +40,19 @@ export default function PwaInstallButton({
     };
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-    return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        setIsStandalone(
+          mediaQuery.matches ||
+            Boolean((window.navigator as Navigator & { standalone?: boolean }).standalone),
+        );
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, []);
 
   const handleInstall = async () => {
@@ -41,6 +62,10 @@ export default function PwaInstallButton({
     }
 
     if (!installPrompt) {
+      if (isIos) {
+        toast.info("Tap Share in Safari, then choose Add to Home Screen.");
+        return;
+      }
       toast.info("Install will appear when this browser supports the Me2U app prompt.");
       return;
     }
@@ -57,7 +82,14 @@ export default function PwaInstallButton({
   };
 
   return (
-    <button type="button" className={className} onClick={handleInstall}>
+    <button
+      type="button"
+      className={className}
+      onClick={() => {
+        void handleInstall();
+      }}
+      aria-label={isStandalone ? "Me2U is installed" : label}
+    >
       <span>{isStandalone ? "Installed" : label}</span>
       <Me2uIcon name="mobile" size={18} />
     </button>

@@ -1,8 +1,9 @@
 {
   "name": "Me2U",
   "short_name": "Me2U",
+  "id": "/",
   "description": "Verified wallets, 0% peer lending, trust scores, referrals, savings, and wallet tools.",
-  "start_url": "/dashboard",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#f7fbff",
@@ -11,7 +12,13 @@
   "icons": [
     {
       "src": "/me2u_logo_v2.svg",
-      "sizes": "any",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/me2u_logo_v2.svg",
+      "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"
     }

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#00406b" />
+    <title>Me2U is offline</title>
+    <style>
+      :root { color-scheme: light; font-family: system-ui, sans-serif; background: #f7fbff; color: #0b1f33; }
+      body { display: grid; min-height: 100vh; place-items: center; margin: 0; padding: 24px; }
+      main { width: min(100%, 420px); padding: 32px; border: 1px solid #d9e3ec; border-radius: 20px; background: #fff; box-shadow: 0 18px 45px rgb(11 31 51 / 10%); }
+      img { width: 56px; height: 56px; }
+      h1 { margin: 24px 0 10px; font-size: 28px; line-height: 1.1; }
+      p { margin: 0; color: #526578; line-height: 1.6; }
+      button { margin-top: 24px; min-height: 44px; padding: 0 18px; border: 0; border-radius: 999px; background: #00406b; color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img src="/me2u_logo_v2.svg" alt="Me2U" />
+      <h1>You are offline</h1>
+      <p>Reconnect to continue using your wallet, lending tools, and account.</p>
+      <button type="button" onclick="location.reload()">Try again</button>
+    </main>
+  </body>
+</html>

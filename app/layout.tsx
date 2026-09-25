@@ -9,6 +9,7 @@ import GlobalClientProviders from "@/components/GlobalClientProviders";
 import Me2UAssistantWidget from "@/components/Me2UAssistantWidget";
 import MobileHeader from "@/components/MobileHeader";
 import ProtectedOnboarding from "@/components/ProtectedOnboarding";
+import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
 import { SpotlightPointer } from "@/components/ui/spotlight-card";
 
@@ -90,6 +91,11 @@ export const metadata: Metadata = {
     apple: "/me2u_logo_v2.svg",
   },
   manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    title: "Me2U",
+    statusBarStyle: "default",
+  },
 };
 
 export const viewport: Viewport = {
@@ -107,6 +113,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-sans antialiased" suppressHydrationWarning>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <GlobalClientProviders />
+        <ServiceWorkerRegistration />
         <SpotlightPointer />
         <AuthBootstrap />
         <ProtectedOnboarding />

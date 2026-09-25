@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef, useCallback } from "react";
 
 import BrandLogo from "@/components/BrandLogo";
+import PwaInstallButton from "@/components/PwaInstallButton";
 import { GlowCard } from "@/components/ui/spotlight-card";
 
 export default function LandingHeader() {
@@ -256,6 +257,10 @@ export default function LandingHeader() {
           </nav>
 
           <div className="hidden lg:flex items-center gap-4">
+            <PwaInstallButton
+              className="min-h-[44px] rounded-pill border border-snow/20 px-3 text-sm font-medium text-snow transition-colors hover:bg-snow/10"
+              label="Install app"
+            />
             <Link
               href="/login"
               className="font-medium text-sm text-snow/70 hover:text-snow transition-colors min-h-[44px] inline-flex items-center px-2"
@@ -377,6 +382,10 @@ export default function LandingHeader() {
                   Open account
                 </Link>
               </div>
+              <PwaInstallButton
+                className="mt-3 min-h-[48px] w-full rounded-pill border border-snow/20 px-3 text-sm font-medium text-snow transition-colors hover:bg-snow/10"
+                label="Install Me2U"
+              />
             </nav>
           </motion.div>
         )}
