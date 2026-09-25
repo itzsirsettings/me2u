@@ -1,18 +1,31 @@
 "use client";
 
-import { useRef } from "react";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import Link from "next/link";
+import { useRef } from "react";
 
 const steps = [
   {
     number: "01",
     title: "Verify your identity",
-    description: "Create your account, complete the required identity steps, and make the registration deposit before using the platform.",
+    description:
+      "Create your account, complete the required identity steps, and make the registration deposit before using the platform.",
     icon: (
-      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg
+        width="48"
+        height="48"
+        viewBox="0 0 48 48"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
         <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="2" opacity="0.2" />
-        <path d="M24 14v10l6 6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        <path
+          d="M24 14v10l6 6"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
         <circle cx="24" cy="14" r="2" fill="currentColor" />
       </svg>
     ),
@@ -20,25 +33,72 @@ const steps = [
   {
     number: "02",
     title: "Build your Trust Score",
-    description: "Use your wallet, repay on time, keep your account in good standing, and refer people you trust to strengthen your profile.",
+    description:
+      "Use your wallet, repay on time, keep your account in good standing, and refer people you trust to strengthen your profile.",
     icon: (
-      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 28l6 6 12-12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      <svg
+        width="48"
+        height="48"
+        viewBox="0 0 48 48"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M12 28l6 6 12-12"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
         <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="2" opacity="0.2" />
-        <path d="M24 8v8M24 32v8M8 24h8M32 24h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" opacity="0.3" />
+        <path
+          d="M24 8v8M24 32v8M8 24h8M32 24h8"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          opacity="0.3"
+        />
       </svg>
     ),
   },
   {
     number: "03",
     title: "Choose your money path",
-    description: "Apply for interest-free borrowing when eligible, participate in peer or community lending, save toward goals, and unlock referral rewards.",
+    description:
+      "Apply for interest-free borrowing when eligible, participate in peer or community lending, save toward goals, and unlock referral rewards.",
     icon: (
-      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg
+        width="48"
+        height="48"
+        viewBox="0 0 48 48"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
         <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="2" opacity="0.2" />
-        <rect x="14" y="18" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="2" />
-        <circle cx="24" cy="25" r="3" stroke="currentColor" strokeWidth="2" fill="currentColor" opacity="0.3" />
-        <path d="M20 16v-2a4 4 0 018 0v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        <rect
+          x="14"
+          y="18"
+          width="20"
+          height="14"
+          rx="2"
+          stroke="currentColor"
+          strokeWidth="2"
+        />
+        <circle
+          cx="24"
+          cy="25"
+          r="3"
+          stroke="currentColor"
+          strokeWidth="2"
+          fill="currentColor"
+          opacity="0.3"
+        />
+        <path
+          d="M20 16v-2a4 4 0 018 0v2"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
       </svg>
     ),
   },
@@ -86,7 +146,8 @@ export default function HowItWorksSection() {
             How Me2U Works
           </motion.h2>
           <motion.p className="landing-body max-w-2xl mx-auto" variants={variants}>
-            Start lending and borrowing with zero interest in three simple steps. Build trust, grow your network, and access fair finance.
+            Start lending and borrowing with zero interest in three simple steps. Build trust,
+            grow your network, and access fair finance.
           </motion.p>
         </motion.div>
 
@@ -131,9 +192,7 @@ export default function HowItWorksSection() {
               </div>
 
               {/* Icon */}
-              <div className="flex justify-center mb-5 text-green">
-                {step.icon}
-              </div>
+              <div className="flex justify-center mb-5 text-green">{step.icon}</div>
 
               {/* Content */}
               <h3 className="landing-h3 mb-3">{step.title}</h3>
@@ -149,10 +208,25 @@ export default function HowItWorksSection() {
           animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
           transition={{ delay: 0.8, duration: 0.5 }}
         >
-          <Link href="/register" className="btn-primary inline-flex items-center gap-2 min-h-[44px]">
+          <Link
+            href="https://app.me2ulend.online/register"
+            className="btn-primary inline-flex items-center gap-2 min-h-[44px]"
+          >
             <span>Create Free Account</span>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M3 8h10m0 0l-4-4m4 4l-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M3 8h10m0 0l-4-4m4 4l-4 4"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </Link>
         </motion.div>

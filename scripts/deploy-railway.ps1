@@ -73,6 +73,33 @@ if (-not (Test-Path "package.json")) {
     exit 1
 }
 
+# Record the exact source that is about to be deployed.
+if (-not (Test-Command "git")) {
+    Write-Host "❌ Git is required to verify the production source." -ForegroundColor Red
+    exit 1
+}
+
+$expectedBranch = if ($env:RAILWAY_PRODUCTION_BRANCH) { $env:RAILWAY_PRODUCTION_BRANCH } else { "main" }
+$sourceBranch = (git branch --show-current).Trim()
+$sourceCommit = (git rev-parse HEAD).Trim()
+$workingTree = git status --porcelain
+
+Write-Host "📌 Source branch: $sourceBranch" -ForegroundColor Gray
+Write-Host "📌 Source commit: $sourceCommit" -ForegroundColor Gray
+
+if ($sourceBranch -ne $expectedBranch) {
+    Write-Host "❌ Refusing deployment from '$sourceBranch'. Expected '$expectedBranch'." -ForegroundColor Red
+    Write-Host "   Set RAILWAY_PRODUCTION_BRANCH to override this intentionally." -ForegroundColor Yellow
+    exit 1
+}
+
+if ($workingTree) {
+    Write-Host "❌ Refusing deployment with uncommitted changes:" -ForegroundColor Red
+    Write-Host $workingTree -ForegroundColor Yellow
+    Write-Host "   Commit the exact release source before deploying." -ForegroundColor Yellow
+    exit 1
+}
+
 # Install dependencies if needed
 if (-not (Test-Path "node_modules")) {
     Write-Host "📦 Installing dependencies..." -ForegroundColor Cyan
@@ -185,22 +212,9 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host "✅ Project already linked to Railway" -ForegroundColor Green
     Write-Host $linkCheck -ForegroundColor Gray
 } else {
-    Write-Host "🔗 Initializing Railway project..." -ForegroundColor Cyan
-    
-    if (Get-UserConfirmation "   Create new Railway project?") {
-        railway init
-        
-        if ($LASTEXITCODE -ne 0) {
-            Write-Host "❌ Railway project initialization failed" -ForegroundColor Red
-            exit 1
-        }
-        
-        Write-Host "✅ Railway project initialized" -ForegroundColor Green
-    } else {
-        Write-Host "   Please link to existing project:" -ForegroundColor Yellow
-        Write-Host "   railway link" -ForegroundColor Cyan
-        exit 1
-    }
+    Write-Host "❌ No Railway project is linked to this workspace." -ForegroundColor Red
+    Write-Host "   Link the existing production project with 'railway link', then run this script again." -ForegroundColor Yellow
+    exit 1
 }
 
 Write-Host ""

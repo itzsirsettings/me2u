@@ -19,7 +19,7 @@ $results = @()
 # Test 1: Health Check
 Write-Host "📡 Test 1: API Health Check" -ForegroundColor Yellow
 try {
-    $response = Invoke-WebRequest -Uri "$Url/api/health" -Method GET -UseBasicParsing
+    $response = Invoke-WebRequest -Uri "$Url/api/health/live" -Method GET -UseBasicParsing
     if ($response.StatusCode -eq 200) {
         Write-Host "   ✅ API is alive" -ForegroundColor Green
         $results += "PASS: Health Check"
@@ -76,7 +76,7 @@ Write-Host ""
 # Test 4: Registration Page
 Write-Host "📝 Test 4: Registration Page" -ForegroundColor Yellow
 try {
-    $response = Invoke-WebRequest -Uri "$Url/auth/register" -Method GET -UseBasicParsing
+    $response = Invoke-WebRequest -Uri "$Url/register" -Method GET -UseBasicParsing
     if ($response.StatusCode -eq 200) {
         Write-Host "   ✅ Registration page accessible" -ForegroundColor Green
         $results += "PASS: Registration Page"

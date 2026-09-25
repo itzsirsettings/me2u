@@ -69,7 +69,7 @@ export default function LandingHeader() {
         if (el) {
           el.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
           el.setAttribute("tabindex", "-1");
-          (el).focus({ preventScroll: true });
+          el.focus({ preventScroll: true });
         } else {
           router.push(href);
         }
@@ -162,7 +162,7 @@ export default function LandingHeader() {
                           repayments.
                         </p>
                         <Link
-                          href="/register"
+                          href="https://app.me2ulend.online/register"
                           className="text-sm font-medium text-green hover:text-lime transition-colors inline-flex items-center gap-1"
                         >
                           Create an account
@@ -262,12 +262,15 @@ export default function LandingHeader() {
               label="Install app"
             />
             <Link
-              href="/login"
+              href="https://app.me2ulend.online/login"
               className="font-medium text-sm text-snow/70 hover:text-snow transition-colors min-h-[44px] inline-flex items-center px-2"
             >
               Log In
             </Link>
-            <Link href="/register" className="btn-primary min-h-[44px]">
+            <Link
+              href="https://app.me2ulend.online/register"
+              className="btn-primary min-h-[44px]"
+            >
               Open account
             </Link>
           </div>
@@ -368,14 +371,14 @@ export default function LandingHeader() {
 
               <div className="grid grid-cols-2 gap-3 mt-6 px-1">
                 <Link
-                  href="/login"
+                  href="https://app.me2ulend.online/login"
                   onClick={closeMobileMenu}
                   className="py-3.5 bg-snow/5 text-center font-medium rounded-pill text-snow text-sm min-h-[48px] inline-flex items-center justify-center border border-snow/10"
                 >
                   Log In
                 </Link>
                 <Link
-                  href="/register"
+                  href="https://app.me2ulend.online/register"
                   onClick={closeMobileMenu}
                   className="btn-primary min-h-[48px]"
                 >

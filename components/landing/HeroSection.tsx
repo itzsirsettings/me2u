@@ -108,15 +108,19 @@ export default function HeroSection() {
           {/* Sub-copy */}
           <motion.p id="landing-hero-description" className="hero-subtext" variants={fadeUp}>
             A Nigerian finance platform for verified people.
-            <br className="hidden sm:inline" /> Use your wallet, repayments, circles, and referrals to
-            build a stronger Trust Score.
-            <br className="hidden sm:inline" /> Then borrow, lend, save, and manage everyday money with
-            clearer terms.
+            <br className="hidden sm:inline" /> Use your wallet, repayments, circles, and
+            referrals to build a stronger Trust Score.
+            <br className="hidden sm:inline" /> Then borrow, lend, save, and manage everyday
+            money with clearer terms.
           </motion.p>
 
           {/* CTA Buttons */}
           <motion.div className="hero-cta-row" variants={fadeUp}>
-            <Link href="/register" className="hero-btn-primary" id="hero-open-account">
+            <Link
+              href="https://app.me2ulend.online/register"
+              className="hero-btn-primary"
+              id="hero-open-account"
+            >
               <span>Start Building Trust</span>
               <span className="hero-btn-shine" aria-hidden="true" />
             </Link>
@@ -124,7 +128,6 @@ export default function HeroSection() {
               See the Me2U journey
             </a>
           </motion.div>
-
         </motion.div>
       </div>
     </section>

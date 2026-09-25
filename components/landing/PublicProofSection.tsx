@@ -181,7 +181,9 @@ export default function PublicProofSection() {
           <div className="mt-12 rounded-3xl border border-[var(--color-border)] bg-[var(--landing-proof-card)]/60 p-6 md:p-8">
             <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.16em] text-green">Testimonials</p>
+                <p className="text-xs font-black uppercase tracking-[0.16em] text-green">
+                  Testimonials
+                </p>
                 <h3 className="mt-2 text-2xl font-black md:text-3xl">
                   What members are saying
                 </h3>
@@ -235,7 +237,7 @@ export default function PublicProofSection() {
               </p>
               <div className="flex flex-wrap gap-4">
                 <Link
-                  href="/register"
+                  href="https://app.me2ulend.online/register"
                   className="btn-primary px-8 py-4 text-base shadow-xl shadow-green/10"
                 >
                   Use Web Wallet

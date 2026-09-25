@@ -70,6 +70,17 @@ export default tseslint.config(
       },
     },
   },
+  // The service worker runs in a ServiceWorkerGlobalScope, not a browser window.
+  {
+    files: ["public/sw.js"],
+    languageOptions: {
+      globals: {
+        self: "readonly",
+        caches: "readonly",
+        clients: "readonly",
+      },
+    },
+  },
   {
     files: ["**/*.cjs"],
     languageOptions: { sourceType: "commonjs" },

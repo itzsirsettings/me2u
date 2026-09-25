@@ -22,7 +22,10 @@ const featureCategories = [
     items: [
       { text: "Simple onboarding with verified identity checks" },
       { text: "Email verification, identity checks, and onboarding review" },
-      { text: "Registration deposit required to activate your account", href: "/register" },
+      {
+        text: "Registration deposit required to activate your account",
+        href: "https://app.me2ulend.online/register",
+      },
       { text: "Get 24/7 answers from the built-in Me2U Guide" },
     ],
   },
@@ -76,8 +79,12 @@ const featureCategories = [
     title: "Referral Rewards",
     items: [
       { text: "You earn ₦1,500 when a referred friend signs up; they receive ₦500" },
-      { text: "Earn another ₦250 after their first withdrawal and ₦250 after their first repayment" },
-      { text: "Potential total: ₦2,500 across stages, subject to onboarding and verification rules" },
+      {
+        text: "Earn another ₦250 after their first withdrawal and ₦250 after their first repayment",
+      },
+      {
+        text: "Potential total: ₦2,500 across stages, subject to onboarding and verification rules",
+      },
     ],
   },
   {
@@ -123,7 +130,7 @@ export default function FeaturesSection() {
         illustrationAlt="Me2U platform features showing verified accounts and community lending"
         categories={featureCategories}
         buttonText="Create Free Account"
-        buttonHref="/register"
+        buttonHref="https://app.me2ulend.online/register"
       />
     </section>
   );

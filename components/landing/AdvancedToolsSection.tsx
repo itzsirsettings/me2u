@@ -1,13 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
+
 import { FeatureHighlightCard } from "@/components/ui/feature-highlight-card";
-import protectedWalletImage from "@/protected-wallet-me2u-transparent.png";
-import protectedWalletDarkImage from "@/protected-wallet-me2u-transparent-dark.png";
-import peerMarketplaceImage from "@/peer-marketplace-me2u-transparent.png";
-import peerMarketplaceDarkImage from "@/peer-marketplace-me2u-transparent-dark.png";
-import directLoansImage from "@/direct-loans-me2u-transparent.png";
 import directLoansDarkImage from "@/direct-loans-me2u-transparent-dark.png";
+import directLoansImage from "@/direct-loans-me2u-transparent.png";
+import peerMarketplaceDarkImage from "@/peer-marketplace-me2u-transparent-dark.png";
+import peerMarketplaceImage from "@/peer-marketplace-me2u-transparent.png";
+import protectedWalletDarkImage from "@/protected-wallet-me2u-transparent-dark.png";
+import protectedWalletImage from "@/protected-wallet-me2u-transparent.png";
 
 const tools = [
   {
@@ -50,13 +51,13 @@ export default function AdvancedToolsSection() {
     <section className="bg-background py-32 md:py-40 overflow-hidden" id="loans">
       <div className="container mx-auto px-4 md:px-6">
         <div className="max-w-4xl mb-16 md:mb-24">
-          <motion.h2 
+          <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="landing-h2 mb-8"
           >
-            Built for Trust, <br/>
+            Built for Trust, <br />
             <span className="landing-accent-word">Designed for Transparency.</span>
           </motion.h2>
           <motion.p
@@ -66,7 +67,9 @@ export default function AdvancedToolsSection() {
             transition={{ delay: 0.1 }}
             className="landing-body max-w-2xl"
           >
-            From verified wallets to peer lending, every feature is designed to make your money decisions easier to understand. Review applicable charges, eligibility, and repayment terms before you confirm an action.
+            From verified wallets to peer lending, every feature is designed to make your money
+            decisions easier to understand. Review applicable charges, eligibility, and
+            repayment terms before you confirm an action.
           </motion.p>
         </div>
 
@@ -82,7 +85,7 @@ export default function AdvancedToolsSection() {
               title={tool.title}
               description={tool.description}
               buttonText={tool.buttonText}
-              buttonHref="/register"
+              buttonHref="https://app.me2ulend.online/register"
               className="mx-auto"
             />
           ))}
