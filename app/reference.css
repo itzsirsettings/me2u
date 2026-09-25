@@ -96,6 +96,12 @@
 .design-icon-button:hover {
   background: var(--design-soft);
 }
+.design-icon-button:focus-visible,
+.design-dialog-close:focus-visible,
+.design-notification-delete:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--design-green) 55%, transparent);
+  outline-offset: 2px;
+}
 .design-notification-dot {
   position: absolute;
   top: 0;
@@ -290,8 +296,8 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding-right: 48px;
+  gap: 6px;
+  padding-right: 38px;
   margin-top: 0;
 }
 .design-balance-controls {
@@ -301,46 +307,56 @@
   flex-shrink: 0;
 }
 .design-balance-amount > p {
+  width: auto;
   min-width: 0;
-  max-width: 100%;
+  max-width: calc(100% - 38px);
   flex: 0 1 auto;
-  font-size: clamp(20px, 5.6vw, 23px);
-  font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: -0.045em;
+  margin: 6px 0 0;
+  font-size: clamp(15px, 5.4vw, 18px);
+  font-weight: 450;
+  line-height: 1.25;
+  letter-spacing: normal;
   font-variant-numeric: tabular-nums;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
   overflow: hidden;
-  text-overflow: clip;
 }
 .design-balance-amount button {
   display: grid;
   place-items: center;
-  flex-shrink: 0;
-  height: 44px;
-  width: 44px;
+  color: #fff;
+  width: 15px;
+  min-width: 30px;
+  height: 15px;
+  min-height: 30px;
+  box-shadow: none;
+  border: 0;
   border-radius: 0;
-  background: transparent;
-  color: white;
+  padding: 7px;
+  flex: 0 0 30px;
+  position: static;
+  transform: none;
+  background: none;
 }
 .design-balance-amount button:hover {
   background: transparent;
 }
 .design-balance-controls .design-balance-notifications {
+  color: #fff;
+  width: 15px;
+  min-width: 30px;
+  height: 15px;
+  min-height: 30px;
+  box-shadow: none;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  padding: 7px;
   position: absolute;
   top: 50%;
   right: 0;
   transform: translateY(-50%);
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
-  min-height: 44px;
-  padding: 7px;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  color: white;
-  box-shadow: none;
 }
 .design-balance-controls .design-balance-notifications:hover {
   background: transparent;
@@ -1076,18 +1092,21 @@
   padding: 15px 13px 12px;
   border-radius: 14px;
   min-width: 0;
+  overflow: hidden;
 }
 .design-stat > svg {
   color: #00a755;
 }
 .design-stat strong {
   display: block;
-  font-size: 23px;
-  line-height: 1.1;
-  font-weight: 650;
+  max-width: 100%;
   margin-top: 10px;
+  font-size: clamp(14px, 5.4vw, 16px);
+  font-weight: 450;
+  line-height: 1.1;
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .design-stat > span {
   font-size: 12px;
@@ -1097,6 +1116,20 @@
 }
 .design-how-it-works {
   margin-top: 25px;
+}
+
+@media (max-width: 360px) {
+  .design-referral-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .design-stat {
+    padding-inline: 11px;
+  }
+
+  .design-stat strong {
+    font-size: clamp(15px, 7vw, 21px);
+  }
 }
 .design-section-heading {
   display: flex;
@@ -1408,9 +1441,15 @@ body:has(.design-referrals) button[aria-controls="me2u-guide-panel"] {
   backdrop-filter: blur(5px);
 }
 .design-dialog-content {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: calc(100dvh - 40px);
   padding: 20px;
+  overflow: hidden;
 }
 .design-dialog-content > header {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1429,6 +1468,130 @@ body:has(.design-referrals) button[aria-controls="me2u-guide-panel"] {
   font-size: 14px;
   line-height: 1.5;
   margin-block: 6px;
+}
+.design-dialog-close {
+  appearance: none;
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 9px;
+  border-color: var(--design-ink);
+  background: var(--design-ink);
+  color: var(--design-paper);
+  opacity: 1;
+  visibility: visible;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--design-ink) 22%, transparent);
+}
+.design-dialog-close svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+  color: rgb(255 0 0);
+  stroke: currentColor;
+}
+.design-dialog-close:hover {
+  border-color: var(--design-green);
+  background: var(--design-green);
+  color: var(--design-paper);
+}
+.design-notification-clear {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-end;
+  min-height: 36px;
+  padding: 7px 12px;
+  border: 1px solid var(--design-line);
+  border-radius: 999px;
+  background: var(--design-green);
+  color: var(--color-on-accent);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  opacity: 1;
+  visibility: visible;
+}
+.design-notification-clear:hover {
+  background: var(--design-ink);
+  color: var(--design-paper);
+}
+.design-notifications {
+  flex: 1 1 auto;
+  display: grid;
+  gap: 10px;
+  min-height: 0;
+  margin: 2px -4px 0;
+  padding: 4px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  position: relative;
+  z-index: 0;
+  list-style: none;
+  scrollbar-color: var(--design-line) transparent;
+}
+.design-notifications > li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--design-line);
+  border-radius: 14px;
+  background: var(--design-soft);
+}
+.design-notification-copy {
+  min-width: 0;
+}
+.design-notification-copy h3,
+.design-notification-copy p,
+.design-notification-copy time {
+  overflow-wrap: anywhere;
+}
+.design-notification-copy h3 {
+  line-height: 1.3;
+}
+.design-notification-copy time {
+  display: block;
+  margin-top: 9px;
+  color: var(--design-muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+.design-notification-delete {
+  appearance: none;
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  padding: 7px;
+  border: 1px solid var(--design-line);
+  border-radius: 50%;
+  background: var(--design-paper);
+  color: var(--design-ink);
+  position: relative;
+  z-index: 1;
+  opacity: 1;
+  visibility: visible;
+}
+.design-notification-delete svg {
+  display: block;
+  width: 17px;
+  height: 17px;
+  color: currentColor;
+  stroke: currentColor;
+}
+.design-notification-delete:hover {
+  border-color: #d04444;
+  background: #d04444;
+  color: #fff;
 }
 .design-qr {
   display: flex;

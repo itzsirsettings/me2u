@@ -61,10 +61,10 @@ export default function ReferenceNotifications({ className = "" }: { className?:
               >
                 Clear All
               </button>
-              <ul className="design-notifications">
+              <ul className="design-notifications" aria-label="Notification list">
                 {notifications.map((notification) => (
                   <li key={notification.id}>
-                    <div>
+                    <div className="design-notification-copy">
                       <h3>{notification.title}</h3>
                       <p>{notification.message}</p>
                       <time dateTime={notification.date}>
@@ -77,6 +77,7 @@ export default function ReferenceNotifications({ className = "" }: { className?:
                     <button
                       type="button"
                       aria-label={`Delete notification: ${notification.title}`}
+                      className="design-notification-delete"
                       disabled={busy}
                       onClick={() => void remove(notification.id)}
                     >

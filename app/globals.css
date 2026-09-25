@@ -91,6 +91,29 @@
   --landing-cta-accent: color-mix(in srgb, var(--green) 20%, transparent);
 }
 
+@keyframes success-story-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-50% - 0.625rem));
+  }
+}
+
+.success-story-track {
+  animation: success-story-marquee 58s linear infinite;
+}
+
+.success-story-marquee:hover .success-story-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .success-story-track {
+    animation: none;
+  }
+}
+
 html[data-theme="dark"] {
   --color-bg-primary: var(--navy);
   --color-bg-secondary: var(--slate);
@@ -324,30 +347,29 @@ textarea:focus-visible {
   }
 }
 
-  /* Keep mobile finance surfaces flat and let spacing define their hierarchy. */
-  main :is(section, article, [role="dialog"], .mobile-soft-card, .mobile-card, .design-card),
-  [role="dialog"] {
-    border: 0 !important;
-    box-shadow: none !important;
-  }
+/* Keep mobile finance surfaces flat and let spacing define their hierarchy. */
+main :is(section, article, [role="dialog"], .mobile-soft-card, .mobile-card, .design-card),
+[role="dialog"] {
+  border: 0 !important;
+  box-shadow: none !important;
+}
 
-  main :is(div, section, article, aside)[class*="rounded-"][class*="border"],
-  [role="dialog"] :is(div, section, article, aside)[class*="rounded-"][class*="border"],
-  .kinetic-border {
-    border: 0 !important;
-  }
+main :is(div, section, article, aside)[class*="rounded-"][class*="border"],
+[role="dialog"] :is(div, section, article, aside)[class*="rounded-"][class*="border"],
+.kinetic-border {
+  border: 0 !important;
+}
 
-  [class*="shadow-"],
-  [style*="box-shadow"] {
-    box-shadow: none !important;
-  }
+[class*="shadow-"],
+[style*="box-shadow"] {
+  box-shadow: none !important;
+}
 
-  *,
-  *::before,
-  *::after {
-    box-shadow: none !important;
-  }
-
+*,
+*::before,
+*::after {
+  box-shadow: none !important;
+}
 
 /* Keep form controls aligned with the body typeface across browsers. */
 button,

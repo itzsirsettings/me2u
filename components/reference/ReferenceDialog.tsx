@@ -53,7 +53,7 @@ export default function ReferenceDialog({
               onClose();
             }}
             aria-label={`Close ${title}`}
-            className="design-icon-button"
+            className="design-icon-button design-dialog-close"
           >
             <X size={20} aria-hidden="true" />
           </button>
