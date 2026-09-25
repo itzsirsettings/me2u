@@ -19,12 +19,9 @@ export const legalLastUpdated = "May 19, 2026";
 export const companyInfo = {
   legalName: "MPT TECNOLOGIES AFRICA LIMITED",
   tradingName: "Me2U",
-  registrationNumber: "9765615",
   incorporationType: "Private company limited by shares",
   incorporatedUnder: "Companies and Allied Matters Act 2020",
   incorporationAuthority: "Corporate Affairs Commission, Federal Republic of Nigeria",
-  incorporationDate: "12 August 2026",
-  taxIdentificationNumber: "2621054188991",
   email: "wecare@me2ulend.online",
   phones: ["+234 815 1583 421", "+234 701 8295 518"],
   address: "Nigeria",
@@ -37,10 +34,8 @@ const contactBullets = [
   `Email: ${companyInfo.email}`,
   `Support: ${companyInfo.phones.join(", ")}`,
   `Company: ${companyInfo.legalName}`,
-  `Company registration number: ${companyInfo.registrationNumber}`,
   `Incorporation: ${companyInfo.incorporationType} under the ${companyInfo.incorporatedUnder}`,
-  `Incorporated by: ${companyInfo.incorporationAuthority} on ${companyInfo.incorporationDate}`,
-  `Tax identification number: ${companyInfo.taxIdentificationNumber}`,
+  `Incorporation authority: ${companyInfo.incorporationAuthority}`,
   `Address: ${companyInfo.address}`,
 ];
 
@@ -110,7 +105,9 @@ export const legalDocuments: PolicyDocument[] = [
           },
           {
             title: "KYC and Verification Data",
-            paragraphs: ["To protect users and reduce fraud, Me2U may collect identity verification information, including:"],
+            paragraphs: [
+              "To protect users and reduce fraud, Me2U may collect identity verification information, including:",
+            ],
             bullets: [
               "Name verification",
               "Phone number verification",
@@ -377,7 +374,9 @@ export const legalDocuments: PolicyDocument[] = [
       },
       {
         title: "Cookies and Tracking",
-        paragraphs: ["Me2U may use cookies or similar technologies to keep users logged in, improve website performance, understand app usage, prevent fraud, remember preferences, and measure marketing performance."],
+        paragraphs: [
+          "Me2U may use cookies or similar technologies to keep users logged in, improve website performance, understand app usage, prevent fraud, remember preferences, and measure marketing performance.",
+        ],
       },
       {
         title: "Marketing Communications",
@@ -417,12 +416,9 @@ export const legalDocuments: PolicyDocument[] = [
           `Legal Entity: ${companyInfo.legalName}`,
           `Trading Name: ${companyInfo.tradingName}`,
           `Ownership and operation: Me2U is operated by ${companyInfo.legalName}`,
-          `Company registration number: ${companyInfo.registrationNumber}`,
           `Company type: ${companyInfo.incorporationType}`,
           `Incorporated under: ${companyInfo.incorporatedUnder}`,
           `Incorporation authority: ${companyInfo.incorporationAuthority}`,
-          `Date of incorporation: ${companyInfo.incorporationDate}`,
-          `Tax identification number: ${companyInfo.taxIdentificationNumber}`,
           `Registered Address: ${companyInfo.address}`,
           `Support Email: ${companyInfo.email}`,
           `Legal Email: ${companyInfo.email}`,
@@ -540,7 +536,14 @@ export const legalDocuments: PolicyDocument[] = [
           "These legal notices are governed by the laws of the Federal Republic of Nigeria unless another applicable jurisdiction is required by law or stated in a separate agreement.",
         ],
       },
-      { title: "Contact", bullets: [`Legal Email: ${companyInfo.email}`, `Compliance Email: ${companyInfo.email}`, `Company Address: ${companyInfo.address}`] },
+      {
+        title: "Contact",
+        bullets: [
+          `Legal Email: ${companyInfo.email}`,
+          `Compliance Email: ${companyInfo.email}`,
+          `Company Address: ${companyInfo.address}`,
+        ],
+      },
     ],
   },
   {
@@ -575,7 +578,9 @@ export const legalDocuments: PolicyDocument[] = [
       },
       {
         title: "KYC and Identity Security",
-        paragraphs: ["Me2U may require KYC before users can access loans, withdrawals, bonuses, or higher wallet limits."],
+        paragraphs: [
+          "Me2U may require KYC before users can access loans, withdrawals, bonuses, or higher wallet limits.",
+        ],
         bullets: [
           "Fake accounts",
           "Duplicate accounts",
@@ -631,7 +636,9 @@ export const legalDocuments: PolicyDocument[] = [
       },
       {
         title: "Payment Proof Protection",
-        paragraphs: ["Uploaded receipts, transfer references, and payment confirmations are treated as sensitive records."],
+        paragraphs: [
+          "Uploaded receipts, transfer references, and payment confirmations are treated as sensitive records.",
+        ],
         bullets: [
           "Deposit confirmation",
           "Wallet crediting",
@@ -643,7 +650,9 @@ export const legalDocuments: PolicyDocument[] = [
       },
       {
         title: "Fraud Monitoring",
-        paragraphs: ["Me2U may monitor platform activity for suspicious patterns. Accounts may be restricted or suspended during investigation."],
+        paragraphs: [
+          "Me2U may monitor platform activity for suspicious patterns. Accounts may be restricted or suspended during investigation.",
+        ],
         bullets: [
           "Fake payment proofs",
           "Multiple accounts",
@@ -672,11 +681,17 @@ export const legalDocuments: PolicyDocument[] = [
       },
       {
         title: "Security Incidents",
-        paragraphs: ["If Me2U detects a security incident affecting user data or wallet activity, Me2U may investigate, restrict affected accounts, notify affected users where appropriate, notify regulators where legally required, reduce harm, and strengthen controls to prevent recurrence."],
+        paragraphs: [
+          "If Me2U detects a security incident affecting user data or wallet activity, Me2U may investigate, restrict affected accounts, notify affected users where appropriate, notify regulators where legally required, reduce harm, and strengthen controls to prevent recurrence.",
+        ],
       },
       {
         title: "Reporting Security Issues",
-        bullets: [`Security Email: ${companyInfo.email}`, `Support Email: ${companyInfo.email}`, `Phone/WhatsApp: ${companyInfo.phones.join(", ")}`],
+        bullets: [
+          `Security Email: ${companyInfo.email}`,
+          `Support Email: ${companyInfo.email}`,
+          `Phone/WhatsApp: ${companyInfo.phones.join(", ")}`,
+        ],
       },
     ],
   },
@@ -724,13 +739,16 @@ export const legalDocuments: PolicyDocument[] = [
       },
       {
         title: "4. Me2U Services",
-        paragraphs: ["Some features may be unavailable, restricted, delayed, or changed depending on verification status, account risk, wallet status, regulatory requirements, technical maintenance, or platform policy."],
+        paragraphs: [
+          "Some features may be unavailable, restricted, delayed, or changed depending on verification status, account risk, wallet status, regulatory requirements, technical maintenance, or platform policy.",
+        ],
         bullets: [
           "Digital wallet features",
           "Registration deposit processing",
           "Payment proof upload",
           "Admin review",
-          "Wallet funding",          "Peer lending marketplace",
+          "Wallet funding",
+          "Peer lending marketplace",
           "Direct loan requests",
           "Lending offers",
           "Loan repayment tools",
@@ -813,7 +831,9 @@ export const legalDocuments: PolicyDocument[] = [
       },
       {
         title: "13. Referral Rewards",
-        paragraphs: ["Users may earn referral rewards when direct referrals complete required onboarding and verification."],
+        paragraphs: [
+          "Users may earn referral rewards when direct referrals complete required onboarding and verification.",
+        ],
         bullets: [
           "Fake accounts",
           "Duplicate accounts",
@@ -827,7 +847,9 @@ export const legalDocuments: PolicyDocument[] = [
       },
       {
         title: "14. Fees and Charges",
-        paragraphs: ["Any applicable fees should be shown before the user completes the relevant transaction."],
+        paragraphs: [
+          "Any applicable fees should be shown before the user completes the relevant transaction.",
+        ],
         bullets: [
           "Registration deposit",
           "Wallet service fees",
@@ -932,11 +954,19 @@ export const legalDocuments: PolicyDocument[] = [
       },
       {
         title: "25. Governing Law",
-        paragraphs: ["These Terms are governed by the laws of the Federal Republic of Nigeria unless otherwise required by applicable law."],
+        paragraphs: [
+          "These Terms are governed by the laws of the Federal Republic of Nigeria unless otherwise required by applicable law.",
+        ],
       },
       {
         title: "26. Contact",
-        bullets: [`Support Email: ${companyInfo.email}`, `Legal Email: ${companyInfo.email}`, `Compliance Email: ${companyInfo.email}`, `Phone/WhatsApp: ${companyInfo.phones.join(", ")}`, `Address: ${companyInfo.address}`],
+        bullets: [
+          `Support Email: ${companyInfo.email}`,
+          `Legal Email: ${companyInfo.email}`,
+          `Compliance Email: ${companyInfo.email}`,
+          `Phone/WhatsApp: ${companyInfo.phones.join(", ")}`,
+          `Address: ${companyInfo.address}`,
+        ],
       },
     ],
   },
@@ -1033,7 +1063,9 @@ export const legalDocuments: PolicyDocument[] = [
       },
       {
         title: "Rejected or Reversed Rewards",
-        paragraphs: ["Me2U may reject, delay, cancel, or reverse referral rewards where there is fraud, duplicate accounts, fake registrations, self-referrals, misleading activity, abuse, or violation of platform rules."],
+        paragraphs: [
+          "Me2U may reject, delay, cancel, or reverse referral rewards where there is fraud, duplicate accounts, fake registrations, self-referrals, misleading activity, abuse, or violation of platform rules.",
+        ],
         bullets: [
           "Fake accounts",
           "Duplicate accounts",
@@ -1113,7 +1145,10 @@ export const supportDocuments: PolicyDocument[] = [
     sections: [
       {
         title: "Official Support Channels",
-        bullets: [`Email: ${companyInfo.email}`, ...companyInfo.phones.map((phone) => `Phone/WhatsApp: ${phone}`)],
+        bullets: [
+          `Email: ${companyInfo.email}`,
+          ...companyInfo.phones.map((phone) => `Phone/WhatsApp: ${phone}`),
+        ],
       },
       {
         title: "What Support Can Help With",
@@ -1164,7 +1199,8 @@ export const supportDocuments: PolicyDocument[] = [
     slug: "account-safety",
     title: "Account Safety",
     eyebrow: "Security help",
-    summary: "How users can protect their Me2U account, wallet, OTPs, transaction PINs, devices, and support interactions.",
+    summary:
+      "How users can protect their Me2U account, wallet, OTPs, transaction PINs, devices, and support interactions.",
     lastUpdated: legalLastUpdated,
     sections: [
       {
@@ -1195,7 +1231,8 @@ export const supportDocuments: PolicyDocument[] = [
     slug: "kyc-help",
     title: "KYC Help",
     eyebrow: "Verification help",
-    summary: "KYC guidance for identity verification, bank details, account ownership, withdrawals, and loan eligibility.",
+    summary:
+      "KYC guidance for identity verification, bank details, account ownership, withdrawals, and loan eligibility.",
     lastUpdated: legalLastUpdated,
     sections: [
       {
@@ -1223,7 +1260,8 @@ export const supportDocuments: PolicyDocument[] = [
     slug: "loan-repayment-help",
     title: "Loan Repayment Help",
     eyebrow: "Loan help",
-    summary: "Guidance for repaying Me2U direct or peer marketplace loans and understanding late, failed, or disputed repayments.",
+    summary:
+      "Guidance for repaying Me2U direct or peer marketplace loans and understanding late, failed, or disputed repayments.",
     lastUpdated: legalLastUpdated,
     sections: [
       {
@@ -1279,7 +1317,10 @@ export const legalFooterGroups = [
     title: "Contact",
     links: [
       { label: companyInfo.email, href: `mailto:${companyInfo.email}` },
-      ...companyInfo.phones.map((phone) => ({ label: phone, href: `tel:${phone.replace(/\s+/g, "")}` })),
+      ...companyInfo.phones.map((phone) => ({
+        label: phone,
+        href: `tel:${phone.replace(/\s+/g, "")}`,
+      })),
     ],
   },
 ];
