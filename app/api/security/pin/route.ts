@@ -51,7 +51,7 @@ export async function POST(request: Request) {
     );
 
     // PIN is a credential; rotating it should invalidate other sessions.
-    revokeAllSessionsForUser(auth.user.id, false).catch(() => undefined);
+    revokeAllSessionsForUser(auth.user.id, false, auth.jwtPayload.jti).catch(() => undefined);
 
     return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {

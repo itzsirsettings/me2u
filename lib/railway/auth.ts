@@ -221,12 +221,15 @@ export async function revokeTokenByJti(jti: string, userId: string): Promise<voi
 export async function revokeAllSessionsForUser(
   userId: string,
   touchPasswordChanged = true,
+  excludeJwtId?: string,
 ): Promise<void> {
   const redis = getRevokeRedis();
   try {
     const { rows } = await query<{ jwt_id: string | null }>(
-      `SELECT jwt_id FROM auth_sessions WHERE user_id = $1 AND revoked_at IS NULL`,
-      [userId],
+      `SELECT jwt_id FROM auth_sessions
+        WHERE user_id = $1 AND revoked_at IS NULL
+          AND ($2::text IS NULL OR jwt_id <> $2)`,
+      [userId, excludeJwtId ?? null],
     );
     if (redis) {
       const pipeline = redis.pipeline();
@@ -242,8 +245,11 @@ export async function revokeAllSessionsForUser(
   try {
     await withTransaction(async (client) => {
       await client.query(
-        `UPDATE auth_sessions SET revoked_at = NOW() WHERE user_id = $1 AND revoked_at IS NULL`,
-        [userId],
+        `UPDATE auth_sessions
+            SET revoked_at = NOW()
+          WHERE user_id = $1 AND revoked_at IS NULL
+            AND ($2::text IS NULL OR jwt_id <> $2)`,
+        [userId, excludeJwtId ?? null],
       );
       if (touchPasswordChanged) {
         await client.query(`UPDATE profiles SET password_changed_at = NOW() WHERE id = $1`, [
@@ -296,6 +302,7 @@ export async function getUserById(userId: string): Promise<User | null> {
        p.partner_offer_consent_version                        AS "partnerOfferConsentVersion",
        p.passport_photo_url                                   AS "passportPhotoUrl",
        p.role,
+      p.transaction_pin                                      AS "transactionPin",
        p.group_lending_enabled                                AS "groupLendingEnabled",
        p.created_at                                           AS "createdAt"
      FROM profiles p

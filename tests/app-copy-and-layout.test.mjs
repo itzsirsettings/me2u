@@ -240,6 +240,7 @@ test("auth and identity flows avoid release-blocking shortcuts", () => {
   const register = read("app/api/auth/register/route.ts");
   const store = read("lib/store.ts");
   const securityPin = read("app/api/security/pin/route.ts");
+  const railwayAuth = read("lib/railway/auth.ts");
   const kyc = read("app/api/onboarding/kyc/route.ts");
   const adminActions = read("app/api/admin/actions/route.ts");
   const source = [otp, resetPassword, register, store, securityPin, kyc, adminActions].join(
@@ -253,6 +254,8 @@ test("auth and identity flows avoid release-blocking shortcuts", () => {
   assert.match(register, /step === "verify_code"/);
   assert.match(register, /registrationToken/);
   assert.match(kyc, /kyc_verified: false/);
+  assert.match(railwayAuth, /p\.transaction_pin\s+AS "transactionPin"/);
+  assert.match(securityPin, /revokeAllSessionsForUser\(auth\.user\.id, false, auth\.jwtPayload\.jti\)/);
   assert.match(adminActions, /approve_kyc/);
   assert.doesNotMatch(source, /fallback_secret_for_dev_only/);
   assert.doesNotMatch(source, /verify_only_123/);
