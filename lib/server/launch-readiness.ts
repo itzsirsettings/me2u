@@ -9,10 +9,6 @@ function hasValue(name: string) {
   return Boolean(process.env[name]?.trim());
 }
 
-function readValue(name: string) {
-  return process.env[name]?.trim() || "";
-}
-
 function checkRequired(name: string, message: string): LaunchCheck {
   return {
     key: name,
@@ -22,9 +18,28 @@ function checkRequired(name: string, message: string): LaunchCheck {
   };
 }
 
+function checkWarning(name: string, message: string): LaunchCheck {
+  return {
+    key: name,
+    ok: hasValue(name),
+    severity: "warning",
+    message,
+  };
+}
+
 export function getLaunchReadinessChecks(): LaunchCheck[] {
   return [
-    checkRequired("OPENAI_API_KEY", "OpenAI API key is required for the Me2U Guide assistant."),
+    checkRequired("DATABASE_URL", "PostgreSQL database URL is required."),
+    checkRequired("AUTH_TOKEN_SECRET", "Auth token secret is required."),
+    checkRequired("REDIS_URL", "Redis URL is required for rate limiting."),
+    checkRequired("PAYSTACK_SECRET_KEY", "Paystack secret key is required."),
+    checkRequired("RESEND_API_KEY", "Resend API key is required for email delivery."),
+    checkRequired("EMAIL_FROM", "Email sender address is required."),
+    checkWarning("NEXT_PUBLIC_APP_URL", "Public app URL should be configured."),
+    checkWarning(
+      "CRON_SECRET",
+      "Cron secret should be configured; auth secret is used as fallback.",
+    ),
   ];
 }
 
@@ -35,7 +50,8 @@ export function getLaunchReadiness() {
 
   return {
     ok: blockers.length === 0,
-    status: blockers.length > 0 ? "blocked" : warnings.length > 0 ? "mvp_with_warnings" : "ready",
+    status:
+      blockers.length > 0 ? "blocked" : warnings.length > 0 ? "mvp_with_warnings" : "ready",
     checkedAt: new Date().toISOString(),
     environment: process.env.NODE_ENV || "development",
     checks,
