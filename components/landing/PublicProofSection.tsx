@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 
+import SuccessStoryCarousel from "@/components/landing/SuccessStoryCarousel";
 import { GlowCard } from "@/components/ui/spotlight-card";
 
 const trustCommitments = [
@@ -28,46 +29,95 @@ const trustCommitments = [
 
 const memberTestimonials = [
   {
+    id: "chinedu-okafor",
+    title: "Member experience",
     name: "Chinedu Okafor",
     location: "Lagos, Nigeria",
     quote:
       "Me2ULend makes the whole lending process feel simple and straightforward. I especially like how easy it is to navigate the platform and understand what is happening with my account. It feels like a solution built with everyday Nigerians in mind.",
+    story:
+      "Me2ULend makes the whole lending process feel simple and straightforward. I especially like how easy it is to navigate the platform and understand what is happening with my account. It feels like a solution built with everyday Nigerians in mind.",
+    amount: 0,
+    category: "other",
+    displayName: "Chinedu Okafor",
   },
   {
+    id: "aisha-bello",
+    title: "Member experience",
     name: "Aisha Bello",
     location: "Abuja, Nigeria",
     quote:
       "What I like most about Me2ULend is the simplicity. I did not have to struggle to understand the platform, and the experience feels organized and convenient. It is refreshing to see a financial platform focused on making access easier.",
+    story:
+      "What I like most about Me2ULend is the simplicity. I did not have to struggle to understand the platform, and the experience feels organized and convenient. It is refreshing to see a financial platform focused on making access easier.",
+    amount: 0,
+    category: "other",
+    displayName: "Aisha Bello",
   },
   {
+    id: "daniel-eze",
+    title: "Member experience",
     name: "Daniel Eze",
     location: "Enugu, Nigeria",
     quote:
       "Using Me2ULend has been a smooth experience for me. The platform is easy to understand, and I like the idea of building trust through responsible financial activity. It gives users a reason to maintain a good financial record.",
+    story:
+      "Using Me2ULend has been a smooth experience for me. The platform is easy to understand, and I like the idea of building trust through responsible financial activity. It gives users a reason to maintain a good financial record.",
+    amount: 0,
+    category: "other",
+    displayName: "Daniel Eze",
   },
   {
+    id: "blessing-johnson",
+    title: "Member experience",
     name: "Blessing Johnson",
     location: "Port Harcourt, Nigeria",
     quote:
       "Me2ULend feels different from many financial platforms I have tried. Everything is clearly presented, and the platform makes managing lending and financial activities much less stressful. I would recommend checking it out.",
+    story:
+      "Me2ULend feels different from many financial platforms I have tried. Everything is clearly presented, and the platform makes managing lending and financial activities much less stressful. I would recommend checking it out.",
+    amount: 0,
+    category: "other",
+    displayName: "Blessing Johnson",
   },
   {
+    id: "ibrahim-musa",
+    title: "Member experience",
     name: "Ibrahim Musa",
     location: "Kaduna, Nigeria",
     quote:
       "I like the community-focused approach behind Me2ULend. The platform combines technology with trust in a way that feels practical. The dashboard is simple to use, and important information is easy to find.",
+    story:
+      "I like the community-focused approach behind Me2ULend. The platform combines technology with trust in a way that feels practical. The dashboard is simple to use, and important information is easy to find.",
+    amount: 0,
+    category: "other",
+    displayName: "Ibrahim Musa",
   },
   {
+    id: "esther-adeyemi",
+    title: "Member experience",
     name: "Esther Adeyemi",
     location: "Ibadan, Nigeria",
     quote:
       "My experience with Me2ULend has been very convenient. Registration and navigating the platform were straightforward, and I like how the system encourages responsible financial behaviour. It feels modern and user-friendly.",
+    story:
+      "My experience with Me2ULend has been very convenient. Registration and navigating the platform were straightforward, and I like how the system encourages responsible financial behaviour. It feels modern and user-friendly.",
+    amount: 0,
+    category: "other",
+    displayName: "Esther Adeyemi",
   },
   {
+    id: "samuel-nwankwo",
+    title: "Member experience",
     name: "Samuel Nwankwo",
     location: "Owerri, Nigeria",
     quote:
       "Me2ULend is a promising platform for people looking for a simpler way to manage lending and related financial activities. I like the clean experience, the transparency of the process, and the focus on building trust between users.",
+    story:
+      "Me2ULend is a promising platform for people looking for a simpler way to manage lending and related financial activities. I like the clean experience, the transparency of the process, and the focus on building trust between users.",
+    amount: 0,
+    category: "other",
+    displayName: "Samuel Nwankwo",
   },
 ];
 
@@ -137,27 +187,7 @@ export default function PublicProofSection() {
                 </h3>
               </div>
             </div>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3" role="list">
-              {memberTestimonials.map((testimonial) => (
-                <article
-                  key={testimonial.name}
-                  role="listitem"
-                  className="rounded-2xl border border-[var(--color-border)] bg-background/60 p-5"
-                >
-                  <blockquote className="text-base font-bold leading-relaxed text-card-foreground">
-                    &ldquo;{testimonial.quote}&rdquo;
-                  </blockquote>
-                  <footer className="mt-5 border-t border-[var(--color-border)] pt-4">
-                    <p className="text-sm font-black text-[var(--landing-accent-strong)]">
-                      {testimonial.name}
-                    </p>
-                    <p className="mt-1 text-xs font-medium text-muted-foreground">
-                      {testimonial.location}
-                    </p>
-                  </footer>
-                </article>
-              ))}
-            </div>
+            <SuccessStoryCarousel fallbackStories={memberTestimonials} />
           </div>
         </div>
 

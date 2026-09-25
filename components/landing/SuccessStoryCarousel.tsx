@@ -11,6 +11,7 @@ type SuccessStory = {
   amount: number;
   category: string;
   displayName: string;
+  location?: string;
 };
 
 type SuccessStoriesResponse = {
@@ -26,10 +27,14 @@ const categoryIcons: Record<string, string> = {
   other: "✨",
 };
 
-export default function SuccessStoryCarousel() {
-  const [stories, setStories] = useState<SuccessStory[]>([]);
+type SuccessStoryCarouselProps = {
+  fallbackStories?: SuccessStory[];
+};
+
+export default function SuccessStoryCarousel({ fallbackStories = [] }: SuccessStoryCarouselProps) {
+  const [stories, setStories] = useState<SuccessStory[]>(fallbackStories);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [direction, setDirection] = useState(0);
 
   useEffect(() => {
@@ -168,15 +173,25 @@ export default function SuccessStoryCarousel() {
 
             {/* Amount & Author */}
             <div className="flex items-center justify-between pt-6 border-t border-border">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Loan Amount</p>
-                <p className="text-2xl font-black text-green">
-                  ₦{currentStory.amount.toLocaleString()}
-                </p>
-              </div>
+              {currentStory.amount > 0 ? (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Loan Amount</p>
+                  <p className="text-2xl font-black text-green">
+                    ₦{currentStory.amount.toLocaleString()}
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Member testimonial</p>
+                  <p className="font-bold text-card-foreground">Shared experience</p>
+                </div>
+              )}
               <div className="text-right">
                 <p className="text-sm text-muted-foreground mb-1">Shared by</p>
                 <p className="font-bold text-card-foreground">{currentStory.displayName}</p>
+                {currentStory.location && (
+                  <p className="text-xs text-muted-foreground">{currentStory.location}</p>
+                )}
               </div>
             </div>
           </motion.div>
