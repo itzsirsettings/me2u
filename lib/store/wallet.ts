@@ -7,7 +7,6 @@ import { withdrawalFeeAmount } from "@/lib/revenue";
 import { uploadPrivateImage } from "@/lib/uploads";
 import { getRequiredWithdrawalBalance } from "@/lib/withdrawal";
 
-
 type WalletSlice = Pick<AppStore, "fundWallet" | "confirmRegistrationDeposit" | "withdraw">;
 
 export const createWalletSlice: StoreSlice<WalletSlice> = (set, get) => ({

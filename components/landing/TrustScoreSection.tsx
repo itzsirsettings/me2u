@@ -1,26 +1,57 @@
 "use client";
 
-import { useRef } from "react";
 import { motion, useInView, useReducedMotion } from "framer-motion";
+import { useRef } from "react";
 
 const signals = [
   {
     title: "Verified Identity",
     description: "Complete secure identity verification to establish your baseline trust.",
     icon: (
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M16 4l8 3v6c0 5-3 9-8 11-5-2-8-6-8-11V7l8-3z" stroke="currentColor" strokeWidth="2" fill="currentColor" opacity="0.1" />
-        <path d="M11 16l3 3 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <svg
+        width="32"
+        height="32"
+        viewBox="0 0 32 32"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M16 4l8 3v6c0 5-3 9-8 11-5-2-8-6-8-11V7l8-3z"
+          stroke="currentColor"
+          strokeWidth="2"
+          fill="currentColor"
+          opacity="0.1"
+        />
+        <path
+          d="M11 16l3 3 7-7"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       </svg>
     ),
   },
   {
     title: "On-Time Repayments",
-    description: "Every loan you repay on schedule builds trust and increases your credit level.",
+    description:
+      "Every loan you repay on schedule builds trust and increases your credit level.",
     icon: (
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg
+        width="32"
+        height="32"
+        viewBox="0 0 32 32"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
         <circle cx="16" cy="16" r="12" stroke="currentColor" strokeWidth="2" opacity="0.2" />
-        <path d="M16 8v8l4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <path
+          d="M16 8v8l4 4"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       </svg>
     ),
   },
@@ -28,34 +59,103 @@ const signals = [
     title: "Active Wallet Use",
     description: "Regular wallet activity shows engagement and responsible financial behavior.",
     icon: (
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="6" y="8" width="20" height="16" rx="2" stroke="currentColor" strokeWidth="2" opacity="0.2" />
-        <path d="M20 16h4v4h-4a2 2 0 010-4z" stroke="currentColor" strokeWidth="2" fill="currentColor" opacity="0.1" />
+      <svg
+        width="32"
+        height="32"
+        viewBox="0 0 32 32"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <rect
+          x="6"
+          y="8"
+          width="20"
+          height="16"
+          rx="2"
+          stroke="currentColor"
+          strokeWidth="2"
+          opacity="0.2"
+        />
+        <path
+          d="M20 16h4v4h-4a2 2 0 010-4z"
+          stroke="currentColor"
+          strokeWidth="2"
+          fill="currentColor"
+          opacity="0.1"
+        />
         <circle cx="20" cy="18" r="1" fill="currentColor" />
       </svg>
     ),
   },
   {
     title: "Referral activity",
-    description: "Verified referral stages can unlock rewards and show continued participation in the network.",
+    description:
+      "Verified referral stages can unlock rewards and show continued participation in the network.",
     icon: (
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg
+        width="32"
+        height="32"
+        viewBox="0 0 32 32"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
         <circle cx="12" cy="10" r="4" stroke="currentColor" strokeWidth="2" opacity="0.2" />
-        <path d="M4 24v-2a4 4 0 014-4h8a4 4 0 014 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        <path
+          d="M4 24v-2a4 4 0 014-4h8a4 4 0 014 4v2"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
         <circle cx="24" cy="12" r="3" stroke="currentColor" strokeWidth="2" opacity="0.2" />
-        <path d="M22 24v-1a3 3 0 013-3h2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        <path
+          d="M22 24v-1a3 3 0 013-3h2"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
       </svg>
     ),
   },
   {
     title: "Account age and activity",
-    description: "A consistent account history and responsible platform activity help establish your profile over time.",
+    description:
+      "A consistent account history and responsible platform activity help establish your profile over time.",
     icon: (
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg
+        width="32"
+        height="32"
+        viewBox="0 0 32 32"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
         <circle cx="16" cy="16" r="12" stroke="currentColor" strokeWidth="2" opacity="0.2" />
-        <circle cx="12" cy="13" r="2" stroke="currentColor" strokeWidth="2" fill="currentColor" opacity="0.1" />
-        <circle cx="20" cy="13" r="2" stroke="currentColor" strokeWidth="2" fill="currentColor" opacity="0.1" />
-        <circle cx="16" cy="19" r="2" stroke="currentColor" strokeWidth="2" fill="currentColor" opacity="0.1" />
+        <circle
+          cx="12"
+          cy="13"
+          r="2"
+          stroke="currentColor"
+          strokeWidth="2"
+          fill="currentColor"
+          opacity="0.1"
+        />
+        <circle
+          cx="20"
+          cy="13"
+          r="2"
+          stroke="currentColor"
+          strokeWidth="2"
+          fill="currentColor"
+          opacity="0.1"
+        />
+        <circle
+          cx="16"
+          cy="19"
+          r="2"
+          stroke="currentColor"
+          strokeWidth="2"
+          fill="currentColor"
+          opacity="0.1"
+        />
         <path d="M12 15l4 4m0-4l-4 4" stroke="currentColor" strokeWidth="1.5" opacity="0.3" />
       </svg>
     ),
@@ -64,9 +164,26 @@ const signals = [
     title: "Dispute-Free History",
     description: "Maintaining clear, dispute-free transactions demonstrates reliability.",
     icon: (
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M16 4l11 7v7c0 6-4 11-11 15C9 29 5 24 5 18v-7l11-7z" stroke="currentColor" strokeWidth="2" opacity="0.2" />
-        <path d="M11 17l3 3 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <svg
+        width="32"
+        height="32"
+        viewBox="0 0 32 32"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M16 4l11 7v7c0 6-4 11-11 15C9 29 5 24 5 18v-7l11-7z"
+          stroke="currentColor"
+          strokeWidth="2"
+          opacity="0.2"
+        />
+        <path
+          d="M11 17l3 3 7-7"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       </svg>
     ),
   },
@@ -132,7 +249,10 @@ export default function TrustScoreSection() {
       style={{ background: "var(--landing-proof-bg)" }}
     >
       {/* Background accent */}
-      <div className="absolute inset-0 pointer-events-none landing-hero-mesh opacity-40" aria-hidden="true" />
+      <div
+        className="absolute inset-0 pointer-events-none landing-hero-mesh opacity-40"
+        aria-hidden="true"
+      />
 
       <div className="landing-container relative z-10">
         <motion.div
@@ -146,7 +266,9 @@ export default function TrustScoreSection() {
             <span className="landing-accent-word">Positive Action</span>
           </motion.h2>
           <motion.p className="landing-body max-w-2xl mx-auto" variants={variants}>
-            Your Trust Score reflects verified identity, repayment behavior, wallet activity, referral progress, account history, and dispute outcomes. It helps inform access and progression; it is not a guarantee of approval.
+            Your Trust Score reflects verified identity, repayment behavior, wallet activity,
+            referral progress, account history, and dispute outcomes. It helps inform access and
+            progression; it is not a guarantee of approval.
           </motion.p>
         </motion.div>
 
@@ -171,9 +293,7 @@ export default function TrustScoreSection() {
                   <h3 className="font-semibold text-base mb-1.5 text-[var(--color-text-primary)]">
                     {signal.title}
                   </h3>
-                  <p className="text-sm landing-body">
-                    {signal.description}
-                  </p>
+                  <p className="text-sm landing-body">{signal.description}</p>
                 </div>
               </div>
             </motion.article>
@@ -194,13 +314,15 @@ export default function TrustScoreSection() {
             className="flex flex-wrap justify-center gap-4 sm:gap-6"
             variants={containerVars}
           >
-            {creditLevels.map((level, index) => (
+            {creditLevels.map((level) => (
               <motion.div
                 key={level.name}
                 className="flex flex-col items-center gap-2 p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] min-w-[140px] hover:border-green/30 transition-colors"
                 variants={variants}
               >
-                <div className="text-4xl" aria-hidden="true">{level.icon}</div>
+                <div className="text-4xl" aria-hidden="true">
+                  {level.icon}
+                </div>
                 <div className="font-semibold text-base" style={{ color: level.color }}>
                   {level.name}
                 </div>

@@ -5,6 +5,7 @@
     "buildCommand": "npm run build"
   },
   "deploy": {
+    "preDeployCommand": ["npm run db:migrate"],
     "startCommand": "node node_modules/next/dist/bin/next start -p ${PORT:-3000}",
     "healthcheckPath": "/api/health/live",
     "healthcheckTimeout": 100
