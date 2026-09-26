@@ -4,14 +4,14 @@ Me2U runs entirely on Railway PostgreSQL. No external backend service is require
 
 ## Architecture
 
-| Layer | Runtime dependency |
-| --- | --- |
-| Next.js app (`app/`, `lib/`) | `pg` via `lib/railway/client.ts` |
-| NestJS API (`server/`) | `pg` via `server/src/common/railway-db.service.ts` |
-| Auth | Native PostgreSQL tables (`auth_users`, `auth_sessions`) + bcrypt + JWT |
-| Realtime | Polling (no realtime publications) |
-| File storage | `private_files` table (no external object storage) |
-| Migrations | `railway/migrations/` |
+| Layer                        | Runtime dependency                                                      |
+| ---------------------------- | ----------------------------------------------------------------------- |
+| Next.js app (`app/`, `lib/`) | `pg` via `lib/railway/client.ts`                                        |
+| NestJS API (`server/`)       | `pg` via `server/src/common/railway-db.service.ts`                      |
+| Auth                         | Native PostgreSQL tables (`auth_users`, `auth_sessions`) + bcrypt + JWT |
+| Realtime                     | Polling (no realtime publications)                                      |
+| File storage                 | `private_files` table (no external object storage)                      |
+| Migrations                   | `railway/migrations/`                                                   |
 
 ## Database connection
 
@@ -27,7 +27,10 @@ Me2U runs entirely on Railway PostgreSQL. No external backend service is require
 
 ## Migration files
 
-- `railway/migrations/001` … `019` is the authoritative, Railway-native schema set.
+- `railway/migrations/001` … `021` is the authoritative, Railway-native schema set.
+- `run-all-migrations.py` must list every one of them. It is the only migration
+  runner wired to `schema_migrations`, so a file missing from `MIGRATIONS` is
+  silently never applied even though it exists on disk.
 - `migrations/` holds the same migrations in timestamped form for newer entries.
 - Apply them with:
 
@@ -68,4 +71,3 @@ curl -X POST http://localhost:3000/api/auth/login \
 A `401` with `{"error":"Invalid email or password."}` confirms the database is
 reachable and the credentials were rejected on their merits. A `200` returns the
 session JWT.
-

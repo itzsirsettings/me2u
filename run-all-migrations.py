@@ -34,6 +34,12 @@ MIGRATIONS = [
     '013_g4_fee_transparency.sql',
     '014_money_path_invariants.sql',
     '015_referral_reward_consolidation.sql',
+    '016_badge_check_transactions_fix.sql',
+    '017_registration_deposit_unlock_invariant.sql',
+    '018_reclassify_legacy_registration_deposits.sql',
+    '019_registration_identity_integrity.sql',
+    '020_referral_challenge_integrity.sql',
+    '021_security_event_session_revocations.sql',
 ]
 
 def get_connection_params():

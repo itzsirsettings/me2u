@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 
 function read(path) {
@@ -105,17 +105,19 @@ test("Railway migration runner includes the complete authoritative track", () =>
   const runner = read("run-all-migrations.py");
   const migrationGuide = read("RAILWAY_MIGRATION.md");
 
-  for (const migration of [
-    "015_referral_reward_consolidation.sql",
-    "016_badge_check_transactions_fix.sql",
-    "017_registration_deposit_unlock_invariant.sql",
-    "018_reclassify_legacy_registration_deposits.sql",
-    "019_registration_identity_integrity.sql",
-    "020_referral_challenge_integrity.sql",
-  ]) {
+  // Derive the expected track from disk. A file that exists but is absent from
+  // MIGRATIONS is silently never applied, which is how 016-021 went missing.
+  const onDisk = readdirSync("railway/migrations")
+    .filter((name) => name.endsWith(".sql"))
+    .sort();
+  assert.ok(onDisk.length > 0, "expected migrations on disk");
+
+  for (const migration of onDisk) {
     assert.match(runner, new RegExp(migration.replaceAll(".", "\\.")));
   }
-  assert.match(migrationGuide, /railway\/migrations\/001.*020/);
+
+  const newest = onDisk[onDisk.length - 1].slice(0, 3);
+  assert.match(migrationGuide, new RegExp(`railway/migrations\\b.*${newest}`));
   assert.match(migrationGuide, /run-all-migrations\.py/);
 });
 
