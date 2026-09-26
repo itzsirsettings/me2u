@@ -181,7 +181,7 @@ export interface AppStore {
   ) => Promise<ActionResult>;
   setTransactionPin: (pin: string, password: string) => Promise<ActionResult>;
   revokeOtherSessions: () => Promise<ActionResult>;
-  logoutAllSessions: () => Promise<ActionResult>;
+  revokeAllSessions: () => Promise<ActionResult>;
   toggleGroupLending: () => Promise<ActionResult>;
   deleteNotification: (id: string) => Promise<ActionResult>;
   clearAllNotifications: () => Promise<ActionResult>;

@@ -1,10 +1,13 @@
-import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
 import { randomUUID } from "crypto";
+
+import bcrypt from "bcryptjs";
 import Redis from "ioredis";
+import jwt from "jsonwebtoken";
+
 import { query, withTransaction } from "./client";
-import type { User } from "@/lib/store";
+
 import baseLogger from "@/lib/server/logger";
+import type { User } from "@/lib/store";
 
 const SEVEN_DAYS_SECONDS = 60 * 60 * 24 * 7;
 const REVOKE_REDIS_TTL_MS = SEVEN_DAYS_SECONDS * 1000 + 60_000;
@@ -158,13 +161,17 @@ export async function isTokenRevoked(payload: JWTPayload): Promise<boolean> {
       password_changed_at: string | null;
       account_locked: boolean;
     }>(
+      // Anchored on profiles with a LEFT JOIN so this returns exactly one row.
+      // The previous RIGHT JOIN could return a NULL-extended row belonging to a
+      // DIFFERENT session when the user had more than one, which silently
+      // reported a revoked token as still valid.
       `SELECT
          s.revoked_at,
          s.expires_at,
          p.password_changed_at,
          COALESCE(p.account_locked, false) AS account_locked
-       FROM auth_sessions s
-       RIGHT JOIN profiles p ON p.id = s.user_id AND s.jwt_id = $2
+       FROM profiles p
+       LEFT JOIN auth_sessions s ON s.user_id = p.id AND s.jwt_id = $2
        WHERE p.id = $1
        LIMIT 1`,
       [payload.userId, payload.jti],
@@ -218,10 +225,10 @@ export async function revokeTokenByJti(jti: string, userId: string): Promise<voi
   }
 }
 
-export async function revokeAllSessionsForUser(
+async function markSessionsRevoked(
   userId: string,
-  touchPasswordChanged = true,
-  excludeJwtId?: string,
+  excludeJwtId: string | null,
+  touchPasswordChanged: boolean,
 ): Promise<void> {
   const redis = getRevokeRedis();
   try {
@@ -229,7 +236,7 @@ export async function revokeAllSessionsForUser(
       `SELECT jwt_id FROM auth_sessions
         WHERE user_id = $1 AND revoked_at IS NULL
           AND ($2::text IS NULL OR jwt_id <> $2)`,
-      [userId, excludeJwtId ?? null],
+      [userId, excludeJwtId],
     );
     if (redis) {
       const pipeline = redis.pipeline();
@@ -249,7 +256,7 @@ export async function revokeAllSessionsForUser(
             SET revoked_at = NOW()
           WHERE user_id = $1 AND revoked_at IS NULL
             AND ($2::text IS NULL OR jwt_id <> $2)`,
-        [userId, excludeJwtId ?? null],
+        [userId, excludeJwtId],
       );
       if (touchPasswordChanged) {
         await client.query(`UPDATE profiles SET password_changed_at = NOW() WHERE id = $1`, [
@@ -260,6 +267,26 @@ export async function revokeAllSessionsForUser(
   } catch {
     // ignore
   }
+}
+
+/**
+ * Revoke every session for the user EXCEPT the caller's own.
+ *
+ * `currentJwtId` is deliberately required. This used to be an optional third
+ * argument, and a caller that omitted it revoked its own session mid-request,
+ * signing the user out of the action they were performing.
+ */
+export function revokeOtherSessions(
+  userId: string,
+  currentJwtId: string,
+  touchPasswordChanged = false,
+): Promise<void> {
+  return markSessionsRevoked(userId, currentJwtId, touchPasswordChanged);
+}
+
+/** Revoke EVERY session for the user, including the caller's own. */
+export function revokeEverySession(userId: string, touchPasswordChanged = true): Promise<void> {
+  return markSessionsRevoked(userId, null, touchPasswordChanged);
 }
 
 export async function hashPassword(password: string): Promise<string> {

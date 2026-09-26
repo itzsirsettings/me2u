@@ -240,12 +240,22 @@ test("auth and identity flows avoid release-blocking shortcuts", () => {
   const register = read("app/api/auth/register/route.ts");
   const store = read("lib/store.ts");
   const securityPin = read("app/api/security/pin/route.ts");
+  const revokeOthers = read("app/api/security/sessions/revoke-others/route.ts");
+  const revokeAll = read("app/api/security/sessions/revoke-all/route.ts");
   const railwayAuth = read("lib/railway/auth.ts");
   const kyc = read("app/api/onboarding/kyc/route.ts");
   const adminActions = read("app/api/admin/actions/route.ts");
-  const source = [otp, resetPassword, register, store, securityPin, kyc, adminActions].join(
-    "\n",
-  );
+  const source = [
+    otp,
+    resetPassword,
+    register,
+    store,
+    securityPin,
+    revokeOthers,
+    revokeAll,
+    kyc,
+    adminActions,
+  ].join("\n");
 
   assert.match(otp, /randomInt\(100000, 1000000\)/);
   assert.match(otp, /timingSafeEqual/);
@@ -255,9 +265,25 @@ test("auth and identity flows avoid release-blocking shortcuts", () => {
   assert.match(register, /registrationToken/);
   assert.match(kyc, /kyc_verified: false/);
   assert.match(railwayAuth, /p\.transaction_pin\s+AS "transactionPin"/);
-  assert.match(securityPin, /logoutAllSessions \? undefined : auth\.jwtPayload\.jti/);
-  assert.match(securityPin, /logoutAllSessions/);
-  assert.match(securityPin, /loggedOut: logoutAllSessions/);
+
+  // Saving a PIN must never revoke the caller's own session. Revocation is
+  // opt-in through the two session routes, which must pass the current jti
+  // when preserving it and nothing when revoking everything.
+  assert.doesNotMatch(securityPin, /revoke(All|Other|Every)Session/);
+  assert.match(revokeOthers, /revokeOtherSessions\(auth\.user\.id, auth\.jwtPayload\.jti\)/);
+  assert.match(revokeAll, /revokeEverySession\(auth\.user\.id, false\)/);
+
+  // Excluding the caller's own session is required, not optional.
+  assert.match(
+    railwayAuth,
+    /export function revokeOtherSessions\(\s*userId: string,\s*currentJwtId: string/,
+  );
+  assert.doesNotMatch(railwayAuth, /revokeAllSessionsForUser/);
+
+  // Revocations are recorded in Security history.
+  assert.match(revokeOthers, /sessions_revoked_others/);
+  assert.match(revokeAll, /sessions_revoked_all/);
+
   assert.match(adminActions, /approve_kyc/);
   assert.doesNotMatch(source, /fallback_secret_for_dev_only/);
   assert.doesNotMatch(source, /verify_only_123/);

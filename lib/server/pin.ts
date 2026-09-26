@@ -1,7 +1,9 @@
 import { createHmac, timingSafeEqual } from "crypto";
+
 import type { Pool, PoolClient } from "pg";
+
+import { revokeEverySession } from "@/lib/railway/auth";
 import { query, withUserTransaction, getRailwayDbClient } from "@/lib/railway/client";
-import { revokeAllSessionsForUser } from "@/lib/railway/auth";
 
 const pinVerifierPrefix = "v1:";
 const MAX_PIN_ATTEMPTS = 5;
@@ -15,14 +17,16 @@ function getPinSecret() {
 }
 
 export function createTransactionPinVerifier(userId: string, pin: string) {
-  const digest = createHmac("sha256", getPinSecret())
-    .update(`${userId}:${pin}`)
-    .digest("hex");
+  const digest = createHmac("sha256", getPinSecret()).update(`${userId}:${pin}`).digest("hex");
 
   return `${pinVerifierPrefix}${digest}`;
 }
 
-export function verifyTransactionPin(storedVerifier: string | null | undefined, userId: string, pin: string) {
+export function verifyTransactionPin(
+  storedVerifier: string | null | undefined,
+  userId: string,
+  pin: string,
+) {
   if (!storedVerifier) return false;
   if (!/^\d{4}$/.test(pin)) return false;
 
@@ -44,13 +48,16 @@ export function verifyTransactionPin(storedVerifier: string | null | undefined, 
   const storedBuffer = Buffer.from(storedVerifier);
   const expectedBuffer = Buffer.from(expected);
 
-  return storedBuffer.length === expectedBuffer.length && timingSafeEqual(storedBuffer, expectedBuffer);
+  return (
+    storedBuffer.length === expectedBuffer.length &&
+    timingSafeEqual(storedBuffer, expectedBuffer)
+  );
 }
 
 export async function getUserPinVerifier(userId: string): Promise<string | null> {
   const { rows } = await query<{ transaction_pin: string | null }>(
     `SELECT transaction_pin FROM profiles WHERE id = $1 LIMIT 1`,
-    [userId]
+    [userId],
   );
   return rows[0]?.transaction_pin ?? null;
 }
@@ -172,7 +179,7 @@ export async function verifyAndRecordPinAttempt(
 
     if (willLock && opts.lockoutRevokesSessions !== false) {
       // Best-effort outside the nested tx; failure does not roll back lock.
-      revokeAllSessionsForUser(userId, false).catch(() => undefined);
+      revokeEverySession(userId, false).catch(() => undefined);
     }
 
     return {
@@ -199,7 +206,7 @@ export async function clearPinLockout(
   userId: string,
   opts: { adminId?: string; reason?: string } = {},
 ): Promise<void> {
-  await getRailwayDbClient(); // ensure pool initialized
+  getRailwayDbClient(); // ensure pool initialized (returns the pool synchronously)
   await query(
     `UPDATE profiles
         SET account_locked = false,

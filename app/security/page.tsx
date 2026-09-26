@@ -25,14 +25,14 @@ export default function SecurityPage() {
   const user = useStore((state) => state.user);
   const setTransactionPin = useStore((state) => state.setTransactionPin);
   const revokeOtherSessions = useStore((state) => state.revokeOtherSessions);
-  const logoutAllSessions = useStore((state) => state.logoutAllSessions);
+  const revokeAllSessions = useStore((state) => state.revokeAllSessions);
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [walletFrozen, setWalletFrozen] = useState(false);
   const [pinInput, setPinInput] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
   const [pinLoading, setPinLoading] = useState(false);
-  const [showSessionPrompt, setShowSessionPrompt] = useState(false);
+  const [sessionPromptReason, setSessionPromptReason] = useState<"pin" | "manual" | null>(null);
   const [promptLoading, setPromptLoading] = useState<"other" | "all" | null>(null);
   const [securityEvents, setSecurityEvents] = useState<SecurityEvent[]>([]);
   const [securityLoading, setSecurityLoading] = useState(false);
@@ -192,30 +192,30 @@ export default function SecurityPage() {
   }
 
   async function handleSignOutOtherSessions() {
-    setShowSessionPrompt(false);
     setPromptLoading("other");
     const res = await revokeOtherSessions();
     setPromptLoading(null);
     if (res.ok) {
-      toast.success(
-        "PIN saved. Other sessions have been signed out. This session stays active.",
-      );
+      setSessionPromptReason(null);
+      toast.success("Other sessions have been signed out. This session stays active.");
     } else {
-      toast.error(res.error || "Unable to sign out other sessions. Your PIN was still saved.");
+      // The dialog stays open so a retry does not need the account password
+      // again and does not spend another PIN verification attempt.
+      toast.error(res.error || "Unable to sign out other sessions.");
     }
   }
 
   async function handleSignOutAllSessions() {
-    setShowSessionPrompt(false);
     setPromptLoading("all");
-    const res = await logoutAllSessions();
+    const res = await revokeAllSessions();
+    setPromptLoading(null);
     if (res.ok) {
-      toast.success("PIN saved. All sessions have been signed out.");
+      setSessionPromptReason(null);
+      toast.success("All sessions have been signed out.");
       void router.push("/login");
       return;
     }
-    setPromptLoading(null);
-    toast.error(res.error || "Unable to sign out all sessions. Your PIN was still saved.");
+    toast.error(res.error || "Unable to sign out all sessions.");
   }
 
   async function handleSetPin() {
@@ -234,7 +234,7 @@ export default function SecurityPage() {
       toast.success("Transaction PIN saved successfully.");
       setPinInput("");
       setPasswordInput("");
-      setShowSessionPrompt(true);
+      setSessionPromptReason("pin");
     } else {
       toast.error(res.error || "Failed to update PIN.");
     }
@@ -405,6 +405,13 @@ export default function SecurityPage() {
                 Session and security events are recorded below when sensitive controls are used.
               </p>
             </div>
+            <button
+              type="button"
+              onClick={() => setSessionPromptReason("manual")}
+              className="mt-3 min-h-11 w-full rounded-[12px] border border-[var(--color-border)] px-4 py-2.5 text-sm font-bold hover:bg-[var(--mobile-surface-muted)]"
+            >
+              Review signed-in sessions
+            </button>
           </article>
 
           <article className="mobile-soft-card min-w-0 p-4">
@@ -569,20 +576,21 @@ export default function SecurityPage() {
         </div>
       </section>
 
-      {showSessionPrompt && (
+      {sessionPromptReason && (
         <ReferenceDialog
           id="pin-session-choice"
-          title="PIN saved successfully"
-          onClose={() => setShowSessionPrompt(false)}
+          title={sessionPromptReason === "pin" ? "PIN saved successfully" : "Sign out sessions"}
+          onClose={() => setSessionPromptReason(null)}
         >
           <p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">
-            Your transaction PIN has been saved. Choose which sessions to sign out, or close
-            this prompt to review later.
+            {sessionPromptReason === "pin"
+              ? "Your transaction PIN has been saved. Choose which sessions to sign out, or decide later from the Current session card."
+              : "Choose which sessions to sign out. You can also close this without changing anything."}
           </p>
           <div className="mt-4 flex flex-col gap-2">
             <button
               type="button"
-              disabled={promptLoading === "other"}
+              disabled={promptLoading !== null}
               onClick={() => void handleSignOutOtherSessions()}
               className="btn-primary min-h-11 w-full text-sm font-bold disabled:opacity-50"
             >
@@ -593,7 +601,7 @@ export default function SecurityPage() {
             </button>
             <button
               type="button"
-              disabled={promptLoading === "all"}
+              disabled={promptLoading !== null}
               onClick={() => void handleSignOutAllSessions()}
               className="min-h-11 w-full rounded-[12px] border border-[var(--color-border)] bg-[var(--color-negative-bg)] px-4 py-2.5 text-sm font-bold text-[var(--color-negative-text)] hover:bg-[var(--color-danger-hover)] disabled:opacity-50 flex items-center justify-center gap-2"
             >

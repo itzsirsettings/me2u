@@ -1,17 +1,27 @@
 import { NextResponse } from "next/server";
+
+import { hashPassword, revokeEverySession } from "@/lib/railway/auth";
+import { query, withTransaction } from "@/lib/railway/client";
 import { getClientIp, isRateLimited } from "@/lib/rate-limit";
+import { tooManyRequestsResponse } from "@/lib/server/auth";
 import {
   createSignedFlowToken,
   verifySignedFlowToken,
   verifySignedOtpToken,
 } from "@/lib/server/otp";
 import { consumeOtpAttempt } from "@/lib/server/otp-db";
-import { tooManyRequestsResponse } from "@/lib/server/auth";
-import { hashPassword, revokeAllSessionsForUser } from "@/lib/railway/auth";
-import { query, withTransaction } from "@/lib/railway/client";
 
 function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+async function readJsonObject(request: Request): Promise<Record<string, unknown>> {
+  const value: unknown = await request.json().catch(() => ({}));
+  return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : {};
+}
+
+function readString(value: unknown): string {
+  return typeof value === "string" ? value : "";
 }
 
 export async function POST(request: Request) {
@@ -22,13 +32,13 @@ export async function POST(request: Request) {
       return tooManyRequestsResponse();
     }
 
-    const body = await request.json();
-    const mode = String(body.mode || "reset").trim().toLowerCase();
-    const email = String(body.email || "").trim().toLowerCase();
-    const code = String(body.code || "").trim();
-    const token = String(body.token || "").trim();
-    const resetToken = String(body.resetToken || "").trim();
-    const newPassword = String(body.newPassword || "");
+    const body = await readJsonObject(request);
+    const mode = (readString(body.mode) || "reset").trim().toLowerCase();
+    const email = readString(body.email).trim().toLowerCase();
+    const code = readString(body.code).trim();
+    const token = readString(body.token).trim();
+    const resetToken = readString(body.resetToken).trim();
+    const newPassword = readString(body.newPassword);
 
     if (!email) {
       return NextResponse.json(
@@ -84,7 +94,10 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!resetToken || !verifySignedFlowToken({ email, token: resetToken, purpose: "password_reset_complete" })) {
+    if (
+      !resetToken ||
+      !verifySignedFlowToken({ email, token: resetToken, purpose: "password_reset_complete" })
+    ) {
       return NextResponse.json(
         { error: "Password reset verification has expired. Request a new code." },
         { status: 400, headers: { "Cache-Control": "no-store" } },
@@ -114,10 +127,10 @@ export async function POST(request: Request) {
     const passwordHash = await hashPassword(newPassword);
 
     await withTransaction(async (client) => {
-      await client.query(
-        `UPDATE auth_users SET password_hash = $1 WHERE id = $2`,
-        [passwordHash, userId],
-      );
+      await client.query(`UPDATE auth_users SET password_hash = $1 WHERE id = $2`, [
+        passwordHash,
+        userId,
+      ]);
       await client.query(
         `UPDATE profiles
             SET password_changed_at = NOW(),
@@ -130,7 +143,7 @@ export async function POST(request: Request) {
       );
     });
 
-    revokeAllSessionsForUser(userId, false).catch(() => undefined);
+    revokeEverySession(userId, false).catch(() => undefined);
 
     return NextResponse.json(
       { success: true, message: "Password has been reset successfully." },

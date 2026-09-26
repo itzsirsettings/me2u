@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { getClientIp, isRateLimited } from "@/lib/rate-limit";
 import {
   errorResponse,
@@ -13,7 +14,9 @@ type SecurityAction =
   | "request_recovery"
   | "review_trusted_device"
   | "review_session"
-  | "start_mfa";
+  | "start_mfa"
+  | "revoke_other_sessions"
+  | "revoke_all_sessions";
 
 const eventTypeByAction: Record<SecurityAction, string> = {
   freeze_wallet: "wallet_frozen",
@@ -23,28 +26,36 @@ const eventTypeByAction: Record<SecurityAction, string> = {
   review_trusted_device: "trusted_device_reviewed",
   review_session: "session_reviewed",
   start_mfa: "mfa_started",
+  revoke_other_sessions: "sessions_revoked_others",
+  revoke_all_sessions: "sessions_revoked_all",
 };
 
+async function readJsonObject(request: Request): Promise<Record<string, unknown>> {
+  const value: unknown = await request.json().catch(() => ({}));
+  return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : {};
+}
+
 function readAction(value: unknown): SecurityAction {
-  const action = String(value || "").trim() as SecurityAction;
-  if (action in eventTypeByAction) return action;
+  const action = typeof value === "string" ? value.trim() : "";
+  if (action in eventTypeByAction) return action as SecurityAction;
   throw new Error("Unsupported security action.");
 }
 
 export async function GET(request: Request) {
   try {
     const clientIp = getClientIp(request);
-    if (await isRateLimited(`security-actions-get-ip:${clientIp}`, 300, 15 * 60_000)) return tooManyRequestsResponse();
+    if (await isRateLimited(`security-actions-get-ip:${clientIp}`, 300, 15 * 60_000))
+      return tooManyRequestsResponse();
 
     const auth = await requireAuthenticatedUser(request);
     if ("response" in auth) return auth.response;
 
     const [settingsResult, eventsResult] = await Promise.all([
-      auth.db.query(
+      auth.db.query<Record<string, unknown>>(
         `SELECT * FROM user_security_settings WHERE user_id = $1`,
         [auth.user.id],
       ),
-      auth.db.query(
+      auth.db.query<Record<string, unknown>>(
         `SELECT id, user_id, type, detail, created_at
          FROM security_events
          WHERE user_id = $1
@@ -67,13 +78,15 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const clientIp = getClientIp(request);
-    if (await isRateLimited(`security-actions-post-ip:${clientIp}`, 100, 15 * 60_000)) return tooManyRequestsResponse();
+    if (await isRateLimited(`security-actions-post-ip:${clientIp}`, 100, 15 * 60_000))
+      return tooManyRequestsResponse();
 
     const auth = await requireAuthenticatedUser(request);
     if ("response" in auth) return auth.response;
-    if (await isRateLimited(`security-actions-user:${auth.user.id}`, 50, 60 * 60_000)) return tooManyRequestsResponse();
+    if (await isRateLimited(`security-actions-user:${auth.user.id}`, 50, 60 * 60_000))
+      return tooManyRequestsResponse();
 
-    const body = await request.json().catch(() => ({}));
+    const body = await readJsonObject(request);
     const action = readAction(body.action);
     const detail = typeof body.detail === "string" ? body.detail.trim().slice(0, 500) : "";
 

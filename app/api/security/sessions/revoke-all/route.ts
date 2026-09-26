@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { revokeAllSessionsForUser } from "@/lib/railway/auth";
+import { revokeEverySession } from "@/lib/railway/auth";
 import { getClientIp, isRateLimited } from "@/lib/rate-limit";
 import {
   errorResponse,
@@ -27,7 +27,24 @@ export async function POST(request: Request) {
       return tooManyRequestsResponse();
     }
 
-    await revokeAllSessionsForUser(auth.user.id, false, undefined);
+    await revokeEverySession(auth.user.id, false);
+
+    // The revocation already succeeded; a failed audit write must not be
+    // reported to the caller as a failed sign-out.
+    await auth.db
+      .query(
+        `INSERT INTO security_events (user_id, type, detail, metadata, created_at)
+         VALUES ($1, 'sessions_revoked_all', $2, $3, NOW())`,
+        [
+          auth.user.id,
+          "Signed out of all sessions on every device.",
+          JSON.stringify({
+            userAgent: request.headers.get("user-agent")?.slice(0, 180) || null,
+            at: new Date().toISOString(),
+          }),
+        ],
+      )
+      .catch(() => undefined);
 
     const response = NextResponse.json(
       { ok: true, loggedOut: "all" },

@@ -1,12 +1,9 @@
 import { postAuthenticatedJson } from "./api";
-import { clearSessionState } from "./helpers";
 import type { AppStore, StoreSlice } from "./types";
-
-import { clearToken } from "@/lib/railway/token";
 
 type SecuritySlice = Pick<
   AppStore,
-  "setTransactionPin" | "revokeOtherSessions" | "logoutAllSessions" | "toggleGroupLending"
+  "setTransactionPin" | "revokeOtherSessions" | "revokeAllSessions" | "toggleGroupLending"
 >;
 
 export const createSecuritySlice: StoreSlice<SecuritySlice> = (set, get) => ({
@@ -23,12 +20,11 @@ export const createSecuritySlice: StoreSlice<SecuritySlice> = (set, get) => ({
     if (result.ok) await get().loadCurrentUser();
     return result;
   },
-  logoutAllSessions: async () => {
+  // The route already revoked every session server-side, so reuse the existing
+  // teardown rather than duplicating clearToken + clearSessionState here.
+  revokeAllSessions: async () => {
     const result = await postAuthenticatedJson("/api/security/sessions/revoke-all", {});
-    if (result.ok) {
-      clearToken();
-      set(clearSessionState());
-    }
+    if (result.ok) await get().logout();
     return result;
   },
   toggleGroupLending: async () => {
