@@ -6,11 +6,11 @@ import { toast } from "sonner";
 
 import Me2uIcon from "@/components/Me2uIcon";
 import PwaInstallButton from "@/components/PwaInstallButton";
+import ReferenceDialog from "@/components/reference/ReferenceDialog";
 import { PinInput } from "@/components/ui/PinInput";
 import { authorizedFetch } from "@/lib/fetch";
 import { visibleSecurityFeatures } from "@/lib/product-features";
 import { useStore } from "@/lib/store";
-
 
 type SecurityEvent = {
   id: string;
@@ -24,21 +24,24 @@ export default function SecurityPage() {
   const isLoading = useStore((state) => state.isLoading);
   const user = useStore((state) => state.user);
   const setTransactionPin = useStore((state) => state.setTransactionPin);
+  const revokeOtherSessions = useStore((state) => state.revokeOtherSessions);
+  const logoutAllSessions = useStore((state) => state.logoutAllSessions);
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [walletFrozen, setWalletFrozen] = useState(false);
   const [pinInput, setPinInput] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
-  const [logoutAllSessions, setLogoutAllSessions] = useState(false);
   const [pinLoading, setPinLoading] = useState(false);
+  const [showSessionPrompt, setShowSessionPrompt] = useState(false);
+  const [promptLoading, setPromptLoading] = useState<"other" | "all" | null>(null);
   const [securityEvents, setSecurityEvents] = useState<SecurityEvent[]>([]);
   const [securityLoading, setSecurityLoading] = useState(false);
-  const [mfaQr, setMfaQr] = useState("");
+  const [_mfaQr, setMfaQr] = useState("");
   const [mfaSecret, setMfaSecret] = useState("");
-  const [mfaCode, setMfaCode] = useState("");
-  const [mfaLoading, setMfaLoading] = useState(false);
+  const [_mfaLoading, setMfaLoading] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
@@ -55,7 +58,11 @@ export default function SecurityPage() {
     setSecurityLoading(true);
     try {
       const response = await authorizedFetch("/api/security/actions");
-      const data = await response.json().catch(() => ({}));
+      const data = (await response.json().catch(() => ({}))) as {
+        ok?: boolean;
+        settings?: { wallet_frozen?: boolean };
+        events?: SecurityEvent[];
+      };
       if (data.ok) {
         setWalletFrozen(Boolean(data.settings?.wallet_frozen));
         setSecurityEvents(data.events || []);
@@ -67,8 +74,10 @@ export default function SecurityPage() {
 
   useEffect(() => {
     if (mounted && isAuthenticated) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       loadSecuritySettings().catch(() => {});
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted, isAuthenticated]);
 
   async function recordSecurityAction(action: string, detail?: string) {
@@ -77,7 +86,10 @@ export default function SecurityPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action, detail }),
     });
-    const data = await response.json().catch(() => ({}));
+    const data = (await response.json().catch(() => ({}))) as {
+      ok?: boolean;
+      error?: string;
+    };
     if (!response.ok || !data.ok) {
       throw new Error(
         typeof data.error === "string" ? data.error : "Unable to complete security action.",
@@ -104,14 +116,6 @@ export default function SecurityPage() {
     }
   }
 
-  async function verifyMfaEnrollment() {
-    // No-op until TOTP is implemented server-side.
-    setMfaQr("");
-    setMfaSecret("");
-    setMfaCode("");
-    toast.success("Two-factor authentication is coming soon.");
-  }
-
   function handleFeatureAction(title: string) {
     if (title === "Two-factor authentication") {
       startMfaEnrollment().catch(() => {});
@@ -126,7 +130,11 @@ export default function SecurityPage() {
     if (title === "Freeze wallet") {
       recordSecurityAction(walletFrozen ? "unfreeze_wallet" : "freeze_wallet")
         .then(() => toast.success(walletFrozen ? "Wallet unfrozen." : "Wallet frozen."))
-        .catch((error) => toast.error(error.message));
+        .catch((error: unknown) =>
+          toast.error(
+            error instanceof Error ? error.message : "Unable to complete security action.",
+          ),
+        );
       return;
     }
     if (title === "Fraud report") {
@@ -135,7 +143,11 @@ export default function SecurityPage() {
         "User flagged suspicious account or wallet activity.",
       )
         .then(() => toast.success("Fraud report recorded for support review."))
-        .catch((error) => toast.error(error.message));
+        .catch((error: unknown) =>
+          toast.error(
+            error instanceof Error ? error.message : "Unable to complete security action.",
+          ),
+        );
       return;
     }
     if (title === "Account recovery") {
@@ -145,13 +157,21 @@ export default function SecurityPage() {
             "Recovery request recorded. Support will verify identity before changes.",
           ),
         )
-        .catch((error) => toast.error(error.message));
+        .catch((error: unknown) =>
+          toast.error(
+            error instanceof Error ? error.message : "Unable to complete security action.",
+          ),
+        );
       return;
     }
     if (title === "Trusted devices") {
       recordSecurityAction("review_trusted_device", "User reviewed trusted device controls.")
         .then(() => toast.success("Trusted device review recorded."))
-        .catch((error) => toast.error(error.message));
+        .catch((error: unknown) =>
+          toast.error(
+            error instanceof Error ? error.message : "Unable to complete security action.",
+          ),
+        );
       return;
     }
     if (
@@ -161,10 +181,63 @@ export default function SecurityPage() {
     ) {
       recordSecurityAction("review_session", `User reviewed ${title.toLowerCase()}.`)
         .then(() => toast.success("Session review recorded."))
-        .catch((error) => toast.error(error.message));
+        .catch((error: unknown) =>
+          toast.error(
+            error instanceof Error ? error.message : "Unable to complete security action.",
+          ),
+        );
       return;
     }
     toast.info(`${title} uses device support where available.`);
+  }
+
+  async function handleSignOutOtherSessions() {
+    setShowSessionPrompt(false);
+    setPromptLoading("other");
+    const res = await revokeOtherSessions();
+    setPromptLoading(null);
+    if (res.ok) {
+      toast.success(
+        "PIN saved. Other sessions have been signed out. This session stays active.",
+      );
+    } else {
+      toast.error(res.error || "Unable to sign out other sessions. Your PIN was still saved.");
+    }
+  }
+
+  async function handleSignOutAllSessions() {
+    setShowSessionPrompt(false);
+    setPromptLoading("all");
+    const res = await logoutAllSessions();
+    if (res.ok) {
+      toast.success("PIN saved. All sessions have been signed out.");
+      void router.push("/login");
+      return;
+    }
+    setPromptLoading(null);
+    toast.error(res.error || "Unable to sign out all sessions. Your PIN was still saved.");
+  }
+
+  async function handleSetPin() {
+    if (pinInput.length !== 4 || !/^\d+$/.test(pinInput)) {
+      toast.error("PIN must be exactly 4 digits.");
+      return;
+    }
+    if (!passwordInput) {
+      toast.error("Please enter your account password to verify identity.");
+      return;
+    }
+    setPinLoading(true);
+    const res = await setTransactionPin(pinInput, passwordInput);
+    setPinLoading(false);
+    if (res.ok) {
+      toast.success("Transaction PIN saved successfully.");
+      setPinInput("");
+      setPasswordInput("");
+      setShowSessionPrompt(true);
+    } else {
+      toast.error(res.error || "Failed to update PIN.");
+    }
   }
 
   if (!mounted || (!isAuthenticated && !isLoading)) return null;
@@ -218,7 +291,13 @@ export default function SecurityPage() {
                         : "Wallet frozen. Outgoing wallet actions are paused.",
                     ),
                   )
-                  .catch((error) => toast.error(error.message));
+                  .catch((error: unknown) =>
+                    toast.error(
+                      error instanceof Error
+                        ? error.message
+                        : "Unable to complete security action.",
+                    ),
+                  );
               }}
             >
               {walletFrozen ? "Unfreeze Wallet" : "Freeze Wallet"}
@@ -262,32 +341,9 @@ export default function SecurityPage() {
             </div>
 
             <form
-              onSubmit={async (e) => {
+              onSubmit={(e) => {
                 e.preventDefault();
-                if (pinInput.length !== 4 || !/^\d+$/.test(pinInput)) {
-                  toast.error("PIN must be exactly 4 digits.");
-                  return;
-                }
-                if (!passwordInput) {
-                  toast.error("Please enter your account password to verify identity.");
-                  return;
-                }
-                setPinLoading(true);
-                const res = await setTransactionPin(pinInput, passwordInput, logoutAllSessions);
-                setPinLoading(false);
-                if (res.ok) {
-                  if (logoutAllSessions) {
-                    toast.success("PIN saved. All sessions have been signed out.");
-                    await useStore.getState().logout();
-                    router.push("/login");
-                    return;
-                  }
-                  toast.success("Transaction PIN updated successfully. Other sessions were signed out.");
-                  setPinInput("");
-                  setPasswordInput("");
-                } else {
-                  toast.error(res.error || "Failed to update PIN.");
-                }
+                void handleSetPin();
               }}
               className="space-y-4"
             >
@@ -316,24 +372,6 @@ export default function SecurityPage() {
                   disabled={pinLoading}
                 />
               </div>
-
-              <label className="flex cursor-pointer items-start gap-3 rounded-[8px] border border-[var(--color-border)] bg-[var(--mobile-surface-muted)] p-3 text-left">
-                <input
-                  type="checkbox"
-                  checked={logoutAllSessions}
-                  onChange={(event) => setLogoutAllSessions(event.target.checked)}
-                  disabled={pinLoading}
-                  className="mt-0.5 h-4 w-4 accent-[var(--color-accent-primary)]"
-                />
-                <span>
-                  <span className="block text-sm font-bold text-[var(--color-text-primary)]">
-                    Sign out all sessions
-                  </span>
-                  <span className="mt-1 block text-xs leading-5 text-[var(--color-text-secondary)]">
-                    Leave this off to keep this session active and sign out other sessions after saving.
-                  </span>
-                </span>
-              </label>
 
               <button
                 type="submit"
@@ -530,6 +568,43 @@ export default function SecurityPage() {
           </article>
         </div>
       </section>
+
+      {showSessionPrompt && (
+        <ReferenceDialog
+          id="pin-session-choice"
+          title="PIN saved successfully"
+          onClose={() => setShowSessionPrompt(false)}
+        >
+          <p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">
+            Your transaction PIN has been saved. Choose which sessions to sign out, or close
+            this prompt to review later.
+          </p>
+          <div className="mt-4 flex flex-col gap-2">
+            <button
+              type="button"
+              disabled={promptLoading === "other"}
+              onClick={() => void handleSignOutOtherSessions()}
+              className="btn-primary min-h-11 w-full text-sm font-bold disabled:opacity-50"
+            >
+              {promptLoading === "other" ? (
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              ) : null}
+              Keep this session active — sign out all others
+            </button>
+            <button
+              type="button"
+              disabled={promptLoading === "all"}
+              onClick={() => void handleSignOutAllSessions()}
+              className="min-h-11 w-full rounded-[12px] border border-[var(--color-border)] bg-[var(--color-negative-bg)] px-4 py-2.5 text-sm font-bold text-[var(--color-negative-text)] hover:bg-[var(--color-danger-hover)] disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {promptLoading === "all" ? (
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              ) : null}
+              Sign out all sessions globally
+            </button>
+          </div>
+        </ReferenceDialog>
+      )}
     </main>
   );
 }
