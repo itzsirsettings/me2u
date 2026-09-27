@@ -1,5 +1,19 @@
 import { getWithdrawalDebitAmount, withdrawalFeeAmount } from "@/lib/revenue";
 
+export const WITHDRAWAL_TIME_ZONE = "Africa/Lagos";
+
+export function isWithdrawalDay(date = new Date()) {
+  return (
+    new Intl.DateTimeFormat("en", {
+      timeZone: WITHDRAWAL_TIME_ZONE,
+      day: "numeric",
+    }).format(date) === "15"
+  );
+}
+
+export const WITHDRAWAL_SCHEDULE_MESSAGE =
+  "Withdrawals are available only on the 15th of each month (Nigeria time).";
+
 export function getRequiredWithdrawalBalance(
   amount: number,
   protectedWalletBalance = 0,

@@ -19,6 +19,7 @@ import { randomUUID } from "crypto";
 import { buildLedgerRef, recordWalletMove } from "@/lib/server/wallet-ledger";
 import { logWarn } from "@/lib/server/logger";
 import { isUniqueViolation } from "@/lib/server/pg-errors";
+import { isWithdrawalDay, WITHDRAWAL_SCHEDULE_MESSAGE } from "@/lib/withdrawal";
 import {
   WITHDRAWAL_IN_FLIGHT_SQL,
   WITHDRAWAL_QUEUED_STATUS,
@@ -130,6 +131,15 @@ export async function POST(request: Request) {
 
     const auth = await requireAuthenticatedUser(request);
     if ("response" in auth) return auth.response;
+
+    // Enforce the schedule on the server before idempotency replay or any
+    // withdrawal/PIN/provider work. Client-side gating is only a convenience.
+    if (!isWithdrawalDay()) {
+      return NextResponse.json(
+        { error: WITHDRAWAL_SCHEDULE_MESSAGE },
+        { status: 403, headers: { "Cache-Control": "no-store" } },
+      );
+    }
 
     if (await isRateLimited(`wallet-withdraw-user:${auth.user.id}`, 50, 60 * 60_000)) {
       return tooManyRequestsResponse(

@@ -75,6 +75,26 @@ test("visible product copy uses the new loan language", () => {
   assert.match(read("lib/loans.ts"), /repeatPlatformLoanMinimum = 5000/);
 });
 
+test("withdrawals are restricted to the 15th in Nigeria time on the client and API", () => {
+  const withdrawal = read("lib/withdrawal.ts");
+  const page = read("app/withdraw/page.tsx");
+  const route = read("app/api/wallet/withdraw/route.ts");
+
+  assert.match(withdrawal, /WITHDRAWAL_TIME_ZONE = "Africa\/Lagos"/);
+  assert.match(withdrawal, /day: "numeric"/);
+  assert.match(withdrawal, /format\(date\) === "15"/);
+  assert.match(page, /withdrawalDayOpen &&/);
+  assert.match(page, /isWithdrawalDay\(\)/);
+  assert.match(page, /WITHDRAWAL_SCHEDULE_MESSAGE/);
+  assert.match(route, /if \(!isWithdrawalDay\(\)\)/);
+  assert.match(route, /status: 403/);
+  assert.ok(
+    route.indexOf("if (!isWithdrawalDay())") <
+      route.indexOf("const duplicate = await replayIfDuplicate"),
+    "schedule validation must precede idempotency replay",
+  );
+});
+
 // Account-surface overflow is exercised with actual long data at mobile and
 // desktop viewports in tests/e2e/reference-pages.spec.ts.
 

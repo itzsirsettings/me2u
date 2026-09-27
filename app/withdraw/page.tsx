@@ -11,7 +11,12 @@ import { PinInput } from "@/components/ui/PinInput";
 import { authorizedFetch } from "@/lib/fetch";
 import { getActivePlatformLoanRetainedDeposit } from "@/lib/loans";
 import { useStore } from "@/lib/store";
-import { getRequiredWithdrawalBalance, getWithdrawalErrorMessage } from "@/lib/withdrawal";
+import {
+  getRequiredWithdrawalBalance,
+  getWithdrawalErrorMessage,
+  isWithdrawalDay,
+  WITHDRAWAL_SCHEDULE_MESSAGE,
+} from "@/lib/withdrawal";
 
 const MIN_WITHDRAWAL = 1000;
 
@@ -67,6 +72,7 @@ export default function WithdrawPage() {
   const [verifying, setVerifying] = useState(false);
   const [verified, setVerified] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [withdrawalDayOpen, setWithdrawalDayOpen] = useState(false);
 
   const user = useStore((s) => s.user);
   const activeLoans = useStore((s) => s.activeLoans);
@@ -81,6 +87,13 @@ export default function WithdrawPage() {
     }
   }, [isLoading, isAuthenticated, router]);
 
+  useEffect(() => {
+    const refreshSchedule = () => setWithdrawalDayOpen(isWithdrawalDay());
+    refreshSchedule();
+    const interval = window.setInterval(refreshSchedule, 30_000);
+    return () => window.clearInterval(interval);
+  }, []);
+
   const withdrawalAmount = Number(amount) || 0;
   const currentBalance = user?.balance || 0;
   const platformLoanDeposit = getActivePlatformLoanRetainedDeposit(activeLoans);
@@ -93,6 +106,7 @@ export default function WithdrawPage() {
   );
 
   const canProceedToBank =
+    withdrawalDayOpen &&
     withdrawalAmount >= MIN_WITHDRAWAL &&
     currentBalance >= requiredBalance &&
     !hasOutstandingLoans;
@@ -143,6 +157,12 @@ export default function WithdrawPage() {
   }, [bankCode, accountNumber]);
 
   const handleSubmit = async () => {
+    if (!isWithdrawalDay()) {
+      setWithdrawalDayOpen(false);
+      toast.error(WITHDRAWAL_SCHEDULE_MESSAGE);
+      return;
+    }
+
     if (!user?.transactionPin) {
       toast.error("Please set a transaction PIN in Security settings first.");
       router.push("/security");
@@ -289,13 +309,23 @@ export default function WithdrawPage() {
                 exit={{ opacity: 0, x: 20 }}
                 className="space-y-4"
               >
+                {!withdrawalDayOpen && (
+                  <p
+                    role="status"
+                    className="rounded-[8px] bg-[var(--color-warning-bg)] p-3 text-xs text-[var(--color-warning-text)]"
+                  >
+                    {WITHDRAWAL_SCHEDULE_MESSAGE}
+                  </p>
+                )}
                 <div>
                   <label className="mb-2 block text-xs font-sans font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
                     Amount to withdraw (₦)
                   </label>
                   <input
                     type="number"
-                    disabled={hasOutstandingLoans || !user?.transactionPin}
+                    disabled={
+                      hasOutstandingLoans || !user?.transactionPin || !withdrawalDayOpen
+                    }
                     placeholder={`Min ₦${MIN_WITHDRAWAL.toLocaleString()}`}
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
@@ -431,7 +461,11 @@ export default function WithdrawPage() {
                   <button
                     onClick={() => void handleSubmit()}
                     disabled={
-                      submitting || !verified || !accountName || transactionPin.length !== 4
+                      !withdrawalDayOpen ||
+                      submitting ||
+                      !verified ||
+                      !accountName ||
+                      transactionPin.length !== 4
                     }
                     className="btn-primary h-11 w-full overflow-anywhere text-sm md:h-12 disabled:opacity-40"
                   >
