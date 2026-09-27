@@ -72,11 +72,46 @@ export function withClearedAuthCookie<T extends Response>(response: T): T {
 }
 
 // ── CSRF double-submit ────────────────────────────────────────────────
-function getCsrfSecret(): Buffer {
-  const raw = process.env.CSRF_SIGNING_SECRET || process.env.AUTH_TOKEN_SECRET;
+let _csrfFallbackWarned = false;
+
+export function resetCsrfFallbackWarnedForTests(): void {
+  _csrfFallbackWarned = false;
+}
+
+export function getCsrfSecret(): Buffer {
+  const csrfSecret = process.env.CSRF_SIGNING_SECRET;
+  const jwtSecret = process.env.AUTH_TOKEN_SECRET;
+
+  if (process.env.NODE_ENV === "production") {
+    // Fail closed: CSRF must have its own dedicated secret in production.
+    if (!csrfSecret) {
+      throw new Error(
+        "SECURITY: CSRF_SIGNING_SECRET is required in production. " +
+          "Generate one with: openssl rand -base64 32",
+      );
+    }
+    if (jwtSecret && csrfSecret === jwtSecret) {
+      throw new Error(
+        "SECURITY: CSRF_SIGNING_SECRET must differ from AUTH_TOKEN_SECRET. " +
+          "Using the same secret weakens trust-boundary separation.",
+      );
+    }
+  }
+
+  const raw = csrfSecret || jwtSecret;
   if (!raw) {
     throw new Error("Missing CSRF_SIGNING_SECRET or AUTH_TOKEN_SECRET.");
   }
+
+  // Warn once in development if falling back to the JWT secret.
+  if (!csrfSecret && !_csrfFallbackWarned) {
+    _csrfFallbackWarned = true;
+    console.warn(
+      "[auth-cookie] CSRF_SIGNING_SECRET is not set; falling back to AUTH_TOKEN_SECRET. " +
+        "Set a distinct CSRF_SIGNING_SECRET before deploying to production.",
+    );
+  }
+
   return Buffer.from(raw.substring(0, 32).padEnd(32, "0"), "utf8");
 }
 
@@ -86,7 +121,9 @@ export function buildSignedCsrfToken(nonce: string, issuedAt: number): string {
   return `${payload}.${signature}`;
 }
 
-function verifySignedCsrfToken(token: string): { nonce: string; issuedAt: number } | null {
+export function verifySignedCsrfToken(
+  token: string,
+): { nonce: string; issuedAt: number } | null {
   try {
     const idx = token.lastIndexOf(".");
     if (idx < 0) return null;

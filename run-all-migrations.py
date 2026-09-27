@@ -40,6 +40,7 @@ MIGRATIONS = [
     '019_registration_identity_integrity.sql',
     '020_referral_challenge_integrity.sql',
     '021_security_event_session_revocations.sql',
+    '022_repair_wallet_ledger_audit_columns.sql',
 ]
 
 def get_connection_params():
@@ -157,6 +158,26 @@ def main():
             
             # Read migration SQL
             sql = migration_path.read_text(encoding='utf-8')
+
+            # Postgres versions used by Railway don't allow enum labels added
+            # inside a transaction to be used until that transaction commits.
+            # Add the prerequisite in its own transaction before migration 010
+            # updates withdrawal rows to the new status.
+            if migration_file == '010_financial_unique_invariants.sql':
+                cursor.execute("""
+                    DO $$
+                    BEGIN
+                      IF NOT EXISTS (
+                        SELECT 1
+                          FROM pg_enum
+                         WHERE enumlabel = 'cancelled'
+                           AND enumtypid = 'public.withdrawal_request_status'::regtype
+                      ) THEN
+                        EXECUTE 'ALTER TYPE public.withdrawal_request_status ADD VALUE ''cancelled''';
+                      END IF;
+                    END $$;
+                """)
+                conn.commit()
             
             try:
                 # Execute migration

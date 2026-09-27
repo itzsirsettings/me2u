@@ -7,18 +7,18 @@
  * attempt-based lockout that survives process restarts.
  *
  * Rules (AC-R13, AUTH-005):
- *  - Exactly ONE active (verified=false AND expires_at>now) row per
- *    (identifier, purpose) — enforced by partial UNIQUE index from G0 T4.
+ *  - At most ONE unverified row per (identifier, purpose) — enforced by a
+ *    partial UNIQUE index. Expiration is checked at use time because Postgres
+ *    does not allow a time-dependent predicate in an index.
  *  - 1st-7th mismatches: attempts counter incremented.
  *  - 8th mismatch: OTP row invalidated (verified=true) so it cannot be reused;
  *    caller must request a fresh code.
  *  - Match + consume: sets verified=true atomically so the same OTP cannot be
  *    replayed even if the signed token is replayed.
  */
-import type { PoolClient } from "pg";
-import { query, withTransaction, withUserTransaction } from "@/lib/railway/client";
-import type { OtpPurpose } from "@/lib/server/otp";
+import { query, withTransaction } from "@/lib/railway/client";
 import baseLogger from "@/lib/server/logger";
+import type { OtpPurpose } from "@/lib/server/otp";
 
 const MAX_ATTEMPTS = 8;
 const DEFAULT_TTL_MS = 10 * 60_000;
@@ -43,10 +43,10 @@ export interface OtpCreateResult {
 /**
  * Create a fresh active OTP row for (identifier, purpose).
  *
- * Uses the partial UNIQUE index from G0 T4 as the concurrency guard:
- *  - If no active row: insert → ok.
- *  - If an active row exists (race), the INSERT throws 23505; we atomically
- *    invalidate the old row (set verified=true) then insert the new one,
+ * Uses the partial UNIQUE index as the concurrency guard:
+ *  - If no unverified row exists: insert → ok.
+ *  - If one exists (expired or concurrent), the INSERT throws 23505; we
+ *    atomically invalidate the old row (set verified=true) then insert the new one,
  *    guaranteeing exactly ONE active row remains.
  */
 export async function createOtp(
@@ -76,18 +76,16 @@ export async function createOtp(
       [identifierLower, purpose, opts.code, expiresAt, ip.ipInet, ua],
     );
     return { code: opts.code, otpId: rows[0].id, replaced: false };
-  } catch (err: any) {
+  } catch (err: unknown) {
     // Postgres 23505 = unique_violation → means another active row for (id,purpose)
     // beat us to the insert. Atomically invalidate it and retry.
-    if (err?.code !== "23505") {
-      try {
-        baseLogger.error(
-          { err: err?.message, identifierLower, purpose },
-          "[otp_create_unexpected_error]",
-        );
-      } catch {
-        // ignore
-      }
+    const errorCode =
+      typeof err === "object" && err !== null && "code" in err ? err.code : undefined;
+    if (errorCode !== "23505") {
+      baseLogger.error(
+        { err: err instanceof Error ? err.message : String(err), identifierLower, purpose },
+        "[otp_create_unexpected_error]",
+      );
       throw err;
     }
   }
@@ -100,7 +98,6 @@ export async function createOtp(
         WHERE identifier = $1
           AND purpose    = $2
           AND verified   = false
-          AND expires_at > NOW()
         RETURNING id`,
       [identifierLower, purpose],
     );
@@ -169,7 +166,8 @@ export async function consumeOtpAttempt(
     );
     const row = rows[0];
     if (!row) return { outcome: "not_found", attempts: 0, remaining: 0 };
-    if (row.purpose !== purpose) return { outcome: "wrong_purpose", attempts: row.attempts, remaining: 0 };
+    if (row.purpose !== purpose)
+      return { outcome: "wrong_purpose", attempts: row.attempts, remaining: 0 };
 
     if (row.verified) {
       // Either matched earlier OR attempts-exhaust invalidation; collapse to
@@ -193,9 +191,7 @@ export async function consumeOtpAttempt(
     const sameLen = a.length === b.length;
     const dummyA = Buffer.alloc(Math.max(a.length, b.length, 6), 0);
     const dummyB = Buffer.alloc(Math.max(a.length, b.length, 6), 0);
-    const dummyMatch = sameLen
-      ? true
-      : compareDummy(a, b, dummyA, dummyB);
+    const dummyMatch = sameLen ? true : compareDummy(a, b, dummyA, dummyB);
     const realMatch = sameLen && Buffer.compare(a, b) === 0;
     const match = dummyMatch && realMatch;
 

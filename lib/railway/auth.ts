@@ -39,7 +39,7 @@ function getRevokeRedis(): Redis | null {
   return redisRevoke;
 }
 
-function getJwtSecret(): string {
+export function getJwtSecret(): string {
   const secret = process.env.AUTH_TOKEN_SECRET;
   if (!secret) throw new Error("AUTH_TOKEN_SECRET environment variable is required");
 
@@ -49,6 +49,17 @@ function getJwtSecret(): string {
     if (otpSecret && secret === otpSecret) {
       throw new Error(
         "SECURITY: AUTH_TOKEN_SECRET and OTP_SIGNING_SECRET must be different in production",
+      );
+    }
+    const csrfSecret = process.env.CSRF_SIGNING_SECRET;
+    if (csrfSecret && secret === csrfSecret) {
+      throw new Error(
+        "SECURITY: AUTH_TOKEN_SECRET and CSRF_SIGNING_SECRET must be different in production",
+      );
+    }
+    if (otpSecret && csrfSecret && otpSecret === csrfSecret) {
+      throw new Error(
+        "SECURITY: OTP_SIGNING_SECRET and CSRF_SIGNING_SECRET must be different in production",
       );
     }
   }

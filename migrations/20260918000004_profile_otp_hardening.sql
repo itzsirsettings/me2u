@@ -48,7 +48,6 @@ BEGIN
         SELECT identifier, purpose, COUNT(*) AS n
           FROM otp_codes
          WHERE verified = false
-           AND expires_at > NOW()
          GROUP BY identifier, purpose
     ) t;
 
@@ -67,7 +66,6 @@ WITH ranked AS (
            ROW_NUMBER() OVER (PARTITION BY identifier, purpose ORDER BY created_at DESC, id DESC) AS rn
       FROM otp_codes
      WHERE verified = false
-       AND expires_at > NOW()
 ),
 invalidated AS (
     UPDATE otp_codes oc
@@ -81,6 +79,6 @@ SELECT COUNT(*) AS invalidated_duplicate_active_otps FROM invalidated;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_otp_codes_one_active_per_user_purpose
     ON otp_codes (identifier, purpose)
-    WHERE verified = false AND expires_at > NOW();
+    WHERE verified = false;
 
 COMMIT;

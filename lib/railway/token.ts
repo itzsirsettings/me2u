@@ -8,9 +8,27 @@
 export const TOKEN_KEY = "me2u_token";
 export const CSRF_KEY = "me2u_csrf_value";
 
-const legacyTokenFallbackEnabled = () =>
-  process.env.NODE_ENV === "development" &&
-  process.env.NEXT_PUBLIC_ENABLE_LEGACY_TOKEN_FALLBACK === "true";
+let _legacyFallbackWarned = false;
+
+export function resetLegacyFallbackWarnedForTests(): void {
+  _legacyFallbackWarned = false;
+}
+
+export const legacyTokenFallbackEnabled = () => {
+  const enabled =
+    process.env.NODE_ENV === "development" &&
+    process.env.NEXT_PUBLIC_ENABLE_LEGACY_TOKEN_FALLBACK === "true";
+
+  if (enabled && !_legacyFallbackWarned) {
+    _legacyFallbackWarned = true;
+    console.warn(
+      "[token] NEXT_PUBLIC_ENABLE_LEGACY_TOKEN_FALLBACK is active. " +
+        "localStorage tokens create a second auth channel alongside cookies. " +
+        "Disable this before deploying.",
+    );
+  }
+  return enabled;
+};
 
 function readLegacyToken(): string | null {
   if (!legacyTokenFallbackEnabled() || typeof localStorage === "undefined") return null;
@@ -23,7 +41,7 @@ function writeLegacyToken(token: string) {
 }
 
 function clearLegacyToken() {
-  if (typeof localStorage === "undefined") return;
+  if (!legacyTokenFallbackEnabled() || typeof localStorage === "undefined") return;
   localStorage.removeItem(TOKEN_KEY);
 }
 
@@ -45,7 +63,8 @@ export function getCsrfHeaderValue(): string | null {
 }
 
 export function clearCsrfHeaderValue() {
-  if (typeof localStorage !== "undefined") localStorage.removeItem(CSRF_KEY);
+  if (!legacyTokenFallbackEnabled() || typeof localStorage === "undefined") return;
+  localStorage.removeItem(CSRF_KEY);
 }
 
 export function getToken(): string | null {

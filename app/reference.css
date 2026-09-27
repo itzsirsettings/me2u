@@ -1438,6 +1438,7 @@ body:has(.design-referrals) button[aria-controls="me2u-guide-panel"] {
 }
 .design-dialog::backdrop {
   background: #042e236b;
+  -webkit-backdrop-filter: blur(5px);
   backdrop-filter: blur(5px);
 }
 .design-dialog-content {

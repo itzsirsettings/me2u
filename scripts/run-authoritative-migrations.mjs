@@ -24,6 +24,8 @@ const migrations = [
   "018_reclassify_legacy_registration_deposits.sql",
   "019_registration_identity_integrity.sql",
   "020_referral_challenge_integrity.sql",
+  "021_security_event_session_revocations.sql",
+  "022_repair_wallet_ledger_audit_columns.sql",
 ];
 
 const client = new Client({ connectionString: process.env.DATABASE_URL });
@@ -71,15 +73,16 @@ try {
     try {
       await client.query("BEGIN");
       await client.query(sql);
-      await client.query(
-        "INSERT INTO public.schema_migrations (migration_name) VALUES ($1)",
-        [migration],
-      );
+      await client.query("INSERT INTO public.schema_migrations (migration_name) VALUES ($1)", [
+        migration,
+      ]);
       await client.query("COMMIT");
       console.log(`OK ${migration}`);
     } catch (error) {
       await client.query("ROLLBACK");
-      throw new Error(`${migration}: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `${migration}: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
   console.log("All authoritative migrations completed.");

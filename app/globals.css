@@ -12,11 +12,15 @@
 
   --navy: var(--color-dark);
   --slate: var(--color-slate);
+  --slate-mid: #6c6c6d;
   --slate-mid: color-mix(in srgb, var(--slate) 82%, var(--snow));
+  --slate-light: #878889;
   --slate-light: color-mix(in srgb, var(--slate) 66%, var(--snow));
   --green: var(--color-green);
+  --green-dark: #29b25b;
   --green-dark: color-mix(in srgb, var(--green) 84%, var(--navy));
   --lime: var(--color-lime);
+  --lime-dark: #95ce39;
   --lime-dark: color-mix(in srgb, var(--lime) 84%, var(--navy));
   --snow: var(--color-light);
   --white: var(--color-light);
@@ -52,13 +56,19 @@
   --color-glass-bg: rgba(255, 255, 255, 0.78);
   --color-glass-border: rgba(30, 41, 59, 0.12);
   --color-scrim: rgba(77, 77, 77, 0.18);
+  --color-warning-bg: #e4f5cc;
   --color-warning-bg: color-mix(in srgb, var(--lime) 24%, var(--snow));
+  --color-warning-text: #718d43;
   --color-warning-text: color-mix(in srgb, var(--lime) 42%, var(--navy));
   --color-positive-bg: rgba(34, 197, 94, 0.11);
+  --color-positive-text: #2ca85a;
   --color-positive-text: color-mix(in srgb, var(--green) 76%, var(--navy));
   --color-danger: var(--color-rose);
+  --color-danger-bg: #f8e4e9;
   --color-danger-bg: color-mix(in srgb, var(--color-rose) 12%, var(--snow));
+  --color-danger-text: #c9435a;
   --color-danger-text: color-mix(in srgb, var(--color-rose) 74%, var(--navy));
+  --color-danger-hover: #f7e0e6;
   --color-danger-hover: color-mix(in srgb, var(--color-rose) 14%, var(--snow));
   --color-text-danger: var(--color-danger-text);
   --color-negative-bg: var(--color-danger-bg);
@@ -70,7 +80,11 @@
 
   --mobile-app-bg: var(--snow);
   --mobile-surface: var(--snow);
+  --mobile-surface-muted: #eef0f2;
   --mobile-surface-muted: color-mix(in srgb, var(--slate) 6%, var(--snow));
+  --mobile-screen-bg:
+    radial-gradient(circle at 85% 0%, rgba(34, 197, 94, 0.1), transparent 18rem),
+    linear-gradient(180deg, var(--snow), #f0f8e8), var(--mobile-app-bg);
   --mobile-screen-bg:
     radial-gradient(circle at 85% 0%, rgba(34, 197, 94, 0.1), transparent 18rem),
     linear-gradient(180deg, var(--snow), color-mix(in srgb, var(--lime) 10%, var(--snow))),
@@ -82,12 +96,18 @@
 
   /* Landing page bands */
   --landing-accent-strong: var(--green-dark);
+  --landing-proof-bg: #eff8f6;
   --landing-proof-bg: color-mix(in srgb, var(--green) 4%, var(--snow));
+  --landing-proof-card: #f2f8f7;
   --landing-proof-card: color-mix(in srgb, var(--green) 3%, var(--snow));
   --landing-cta-image-opacity: 0.2;
+  --landing-cta-grid: rgba(77, 77, 77, 0.1);
   --landing-cta-grid: color-mix(in srgb, var(--navy) 10%, transparent);
+  --landing-cta-scrim-start: rgba(248, 250, 252, 0.68);
   --landing-cta-scrim-start: color-mix(in srgb, var(--snow) 68%, transparent);
+  --landing-cta-scrim-end: rgba(248, 250, 252, 0.92);
   --landing-cta-scrim-end: color-mix(in srgb, var(--snow) 92%, transparent);
+  --landing-cta-accent: rgba(34, 197, 94, 0.2);
   --landing-cta-accent: color-mix(in srgb, var(--green) 20%, transparent);
 }
 
@@ -129,12 +149,15 @@ html[data-theme="dark"] {
   --color-glass-bg: rgba(77, 77, 77, 0.84);
   --color-glass-border: var(--color-border-dark);
   --color-scrim: rgba(77, 77, 77, 0.5);
+  --color-warning-bg: #5c6949;
   --color-warning-bg: color-mix(in srgb, var(--lime) 18%, var(--navy));
   --color-warning-text: var(--lime);
   --color-positive-bg: rgba(34, 197, 94, 0.16);
   --color-positive-text: var(--green);
+  --color-danger-bg: #684b50;
   --color-danger-bg: color-mix(in srgb, var(--color-rose) 16%, var(--navy));
   --color-danger-text: var(--color-rose);
+  --color-danger-hover: #724a51;
   --color-danger-hover: color-mix(in srgb, var(--color-rose) 22%, var(--navy));
   --color-text-danger: var(--color-danger-text);
   --color-negative-bg: var(--color-danger-bg);
@@ -152,11 +175,16 @@ html[data-theme="dark"] {
 
   --landing-accent-strong: var(--lime);
   --landing-proof-bg: var(--navy);
+  --landing-proof-card: #4d4d4d;
   --landing-proof-card: color-mix(in srgb, var(--slate) 84%, var(--navy));
   --landing-cta-image-opacity: 0.48;
+  --landing-cta-grid: rgba(248, 250, 252, 0.15);
   --landing-cta-grid: color-mix(in srgb, var(--snow) 15%, transparent);
+  --landing-cta-scrim-start: rgba(77, 77, 77, 0.54);
   --landing-cta-scrim-start: color-mix(in srgb, var(--navy) 54%, transparent);
+  --landing-cta-scrim-end: rgba(77, 77, 77, 0.92);
   --landing-cta-scrim-end: color-mix(in srgb, var(--navy) 92%, transparent);
+  --landing-cta-accent: rgba(34, 197, 94, 0.28);
   --landing-cta-accent: color-mix(in srgb, var(--green) 28%, transparent);
 }
 
@@ -495,8 +523,11 @@ body {
   background-size: calc(100% + (2 * var(--border-size))) calc(100% + (2 * var(--border-size)));
   background-repeat: no-repeat;
   background-position: 50% 50%;
+  -webkit-mask: linear-gradient(transparent, transparent), linear-gradient(white, white);
   mask: linear-gradient(transparent, transparent), linear-gradient(white, white);
+  -webkit-mask-clip: padding-box, border-box;
   mask-clip: padding-box, border-box;
+  -webkit-mask-composite: source-in;
   mask-composite: intersect;
 }
 
@@ -1263,6 +1294,7 @@ html[data-theme="dark"] {
   border-radius: 2.3rem;
   background: rgba(255, 255, 255, 0.94);
   box-shadow: 0 -10px 28px rgba(7, 76, 57, 0.12);
+  -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
 }
 .reference-nav-orb {
