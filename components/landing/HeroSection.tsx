@@ -1,9 +1,10 @@
 "use client";
 
 import { motion, useInView } from "framer-motion";
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+
+import BlackHoleHeroSection from "@/components/ui/blackhole-hero-section";
 
 /* ─── Stagger animation variants ─── */
 const containerVariants = {
@@ -22,25 +23,24 @@ const fadeUp = {
   },
 };
 
+function useNarrowViewport() {
+  const [narrow, setNarrow] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 767px)");
+    const sync = () => setNarrow(media.matches);
+    sync();
+    media.addEventListener("change", sync);
+    return () => media.removeEventListener("change", sync);
+  }, []);
+
+  return narrow;
+}
+
 export default function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.15 });
-  const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
-
-  /* Subtle parallax on desktop */
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (window.innerWidth < 768) return;
-      const x = e.clientX / window.innerWidth;
-      const y = e.clientY / window.innerHeight;
-      setMousePos({ x, y });
-    };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
-
-  const parallaxX = (mousePos.x - 0.5) * -12;
-  const parallaxY = (mousePos.y - 0.5) * -8;
+  const narrow = useNarrowViewport();
 
   return (
     <section
@@ -50,26 +50,22 @@ export default function HeroSection() {
       aria-describedby="landing-hero-description"
       className="hero-section"
     >
-      {/* ── Background Image ── */}
-      <div
-        className="hero-bg"
-        style={{
-          transform: `translate(${parallaxX}px, ${parallaxY}px) scale(1.04)`,
-        }}
-      >
-        <Image
-          src="/Hero_final.png"
-          alt="Young woman using Me2U app on her smartphone"
-          fill
-          priority
-          sizes="100vw"
-          className="hero-bg-img"
-        />
-        {/* Dark gradient overlay for text readability */}
-        <div className="hero-overlay" />
-      </div>
+      <BlackHoleHeroSection
+        aria-hidden="true"
+        className="absolute inset-0 z-0 bg-transparent bg-[url('/Hero_final.png')] bg-cover bg-center"
+        focus={narrow ? [0.5, 0.76] : [0.72, 0.46]}
+        scrim={narrow ? "top" : "left"}
+        scrimStrength={0.9}
+        distance={24}
+        elevation={narrow ? -7 : -5.5}
+        fov={narrow ? 58 : 42}
+        glow={narrow ? 0.85 : 1}
+        steps={narrow ? 190 : 260}
+        resolution={narrow ? 0.52 : 0.62}
+        maxDpr={narrow ? 1.25 : 1.5}
+      />
+      <div className="hero-overlay" aria-hidden="true" />
 
-      {/* ── Content ── */}
       <div className="hero-content">
         <motion.div
           className="hero-text-block"
@@ -77,7 +73,6 @@ export default function HeroSection() {
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
         >
-          {/* Headline */}
           <motion.h1 id="landing-hero-heading" className="hero-headline" variants={fadeUp}>
             Borrow with clarity.
             <br />
@@ -105,7 +100,6 @@ export default function HeroSection() {
             </span>
           </motion.h1>
 
-          {/* Sub-copy */}
           <motion.p id="landing-hero-description" className="hero-subtext" variants={fadeUp}>
             A Nigerian finance platform for verified people.
             <br className="hidden sm:inline" /> Use your wallet, repayments, circles, and
@@ -114,7 +108,6 @@ export default function HeroSection() {
             money with clearer terms.
           </motion.p>
 
-          {/* CTA Buttons */}
           <motion.div className="hero-cta-row" variants={fadeUp}>
             <Link
               href="https://app.me2ulend.online/register"
