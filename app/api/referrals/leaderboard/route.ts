@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { requireAuthenticatedUser, errorResponse } from "@/lib/server/auth";
 
 export async function GET(request: Request) {
@@ -169,6 +170,10 @@ export async function GET(request: Request) {
       userPosition: userPosition || null,
     });
   } catch (error) {
-    return errorResponse(error, "Failed to fetch referral leaderboard.");
+    return errorResponse(
+      error,
+      "Failed to fetch referral leaderboard.",
+      "/api/referrals/leaderboard",
+    );
   }
 }

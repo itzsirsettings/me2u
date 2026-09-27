@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { requireAuthenticatedUser, errorResponse } from "@/lib/server/auth";
 
 export async function POST(request: Request) {
@@ -7,8 +8,11 @@ export async function POST(request: Request) {
     if ("response" in auth) return auth.response;
 
     const userId = auth.user.id;
-    const body = await request.json();
-    const templateType = String(body.template_type || "").trim();
+    const body: unknown = await request.json();
+    const payload =
+      typeof body === "object" && body !== null ? (body as Record<string, unknown>) : {};
+    const templateType =
+      typeof payload.template_type === "string" ? payload.template_type.trim() : "";
 
     const validTypes = ["whatsapp", "sms", "copy", "native_share"];
     if (!validTypes.includes(templateType)) {
@@ -27,7 +31,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    return errorResponse(error, "Failed to track share.");
+    return errorResponse(error, "Failed to track share.", "/api/referrals/share-tracking");
   }
 }
 
@@ -61,6 +65,10 @@ export async function GET(request: Request) {
       mostUsed: rows[0]?.template_type || null,
     });
   } catch (error) {
-    return errorResponse(error, "Failed to fetch share statistics.");
+    return errorResponse(
+      error,
+      "Failed to fetch share statistics.",
+      "/api/referrals/share-tracking",
+    );
   }
 }

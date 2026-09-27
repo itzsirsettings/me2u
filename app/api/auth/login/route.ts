@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { getClientIp, isRateLimited } from "@/lib/rate-limit";
+
 import { getUserByEmail, verifyPassword, generateToken } from "@/lib/railway/auth";
+import { getClientIp, isRateLimited } from "@/lib/rate-limit";
 import { tooManyRequestsResponse, withAuthCookiesForLogin } from "@/lib/server/auth";
 import { requestMeta } from "@/lib/server/idempotency";
 
-const DUMMY_BCRYPT_HASH =
-  "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
+const DUMMY_BCRYPT_HASH = "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
 const GENERIC_AUTH_ERROR = "Invalid email or password.";
 
 export async function POST(request: Request) {
@@ -17,9 +17,11 @@ export async function POST(request: Request) {
       return tooManyRequestsResponse();
     }
 
-    const body = await request.json().catch(() => ({}));
-    const email = String(body.email || "").trim().toLowerCase();
-    const password = String(body.password || "");
+    const body: unknown = await request.json().catch(() => ({}));
+    const payload =
+      typeof body === "object" && body !== null ? (body as Record<string, unknown>) : {};
+    const email = typeof payload.email === "string" ? payload.email.trim().toLowerCase() : "";
+    const password = typeof payload.password === "string" ? payload.password : "";
 
     if (!email || !password) {
       return NextResponse.json(
@@ -46,12 +48,15 @@ export async function POST(request: Request) {
 
     if (account.accountLocked) {
       return NextResponse.json(
-        { error: "Account is locked due to too many failed attempts. Reset your password or contact support." },
+        {
+          error:
+            "Account is locked due to too many failed attempts. Reset your password or contact support.",
+        },
         { status: 403, headers: { "Cache-Control": "no-store" } },
       );
     }
 
-    const { token, jti } = await generateToken({
+    const { token } = await generateToken({
       userId: account.id,
       email: account.email,
       role: account.role,
@@ -59,10 +64,12 @@ export async function POST(request: Request) {
       userAgent: meta.userAgent,
     });
 
-    const bodyPayload = { token, jti, role: account.role, email: account.email };
-    const response = NextResponse.json(bodyPayload, {
-      headers: { "Cache-Control": "no-store" },
-    });
+    const response = NextResponse.json(
+      { success: true },
+      {
+        headers: { "Cache-Control": "no-store" },
+      },
+    );
 
     return withAuthCookiesForLogin(response, token);
   } catch (error) {

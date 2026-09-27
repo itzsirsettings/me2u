@@ -190,10 +190,21 @@ function ReferralsContent() {
       await navigator.clipboard.writeText(link);
       setCopied(true);
       toast.success("Referral link copied");
+      void trackDirectShare("copy");
       if (copyTimer.current) clearTimeout(copyTimer.current);
       copyTimer.current = setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error("Couldn’t copy the link. Select the link and copy it manually.");
+    }
+  }
+  async function trackDirectShare(type: "copy" | "native_share") {
+    try {
+      await authorizedFetch("/api/referrals/share-tracking", {
+        method: "POST",
+        body: JSON.stringify({ template_type: type }),
+      });
+    } catch (error) {
+      console.error("Failed to track referral share:", error);
     }
   }
   async function share() {
@@ -208,6 +219,7 @@ function ReferralsContent() {
         text: "Join Me2U using my referral link.",
         url: link,
       });
+      void trackDirectShare("native_share");
     } catch (error) {
       if (!(error instanceof DOMException && error.name === "AbortError"))
         toast.error("Sharing failed. Try copying your referral link.");
@@ -420,9 +432,7 @@ function ReferralsContent() {
             height={1280}
             sizes="200px"
           />
-          <span className="design-phone-amount">
-            ₦1,500
-          </span>
+          <span className="design-phone-amount">₦1,500</span>
           <span className="design-phone-bubble">Earn More</span>
         </div>
       </section>

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { requireAuthenticatedUser, errorResponse } from "@/lib/server/auth";
 
 export async function GET(request: Request) {
@@ -67,6 +68,6 @@ export async function GET(request: Request) {
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {
-    return errorResponse(error, "Failed to fetch referrals.");
+    return errorResponse(error, "Failed to fetch referrals.", "/api/referrals");
   }
 }

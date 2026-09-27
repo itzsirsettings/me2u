@@ -10,8 +10,7 @@ import type { AppStore, LoanApiRow, StoreSlice, ActionResult, User } from "./typ
 
 import type { MarketplaceRow, NotificationRow, TransactionRow } from "@/lib/database/types";
 import { authorizedFetch, isAbortError } from "@/lib/fetch";
-import { saveToken, clearToken, saveCsrfHeaderValue } from "@/lib/railway/token";
-
+import { clearToken, saveCsrfHeaderValue } from "@/lib/railway/token";
 
 let loadCurrentUserInflight: Promise<ActionResult> | null = null;
 let loadCurrentUserAbort: (() => void) | null = null;
@@ -146,9 +145,6 @@ export const createAuthSlice: StoreSlice<AuthSlice> = (set, get) => ({
         throw new Error(
           typeof data.error === "string" ? data.error : "Invalid email or password.",
         );
-      if (typeof data.token !== "string" || !data.token)
-        throw new Error("No token returned from server.");
-      saveToken(data.token);
       const csrf = response.headers.get("x-csrf-token");
       if (csrf) saveCsrfHeaderValue(csrf);
       return await get().loadCurrentUser();

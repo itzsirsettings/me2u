@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { requireAuthenticatedUser, errorResponse } from "@/lib/server/auth";
 
 export async function GET(request: Request) {
@@ -18,10 +19,9 @@ export async function GET(request: Request) {
         completed: boolean;
         week_end: string;
       } | null;
-    }>(
-      `SELECT (public.me2u_get_current_week_challenge($1)::jsonb)::json as challenge`,
-      [userId],
-    );
+    }>(`SELECT (public.me2u_get_current_week_challenge($1)::jsonb)::json as challenge`, [
+      userId,
+    ]);
 
     const challengeData = challengeRows[0]?.challenge || {
       active: false,
@@ -78,14 +78,16 @@ export async function GET(request: Request) {
       },
     });
   } catch (error) {
-    return errorResponse(error, "Failed to fetch referral challenges.");
+    return errorResponse(
+      error,
+      "Failed to fetch referral challenges.",
+      "/api/referrals/challenges",
+    );
   }
 }
 
 // Calculate consecutive weeks of completed challenges
-function calculateStreak(
-  history: Array<{ completed: boolean; week_start: string }>,
-): number {
+function calculateStreak(history: Array<{ completed: boolean; week_start: string }>): number {
   if (history.length === 0) return 0;
 
   let streak = 0;

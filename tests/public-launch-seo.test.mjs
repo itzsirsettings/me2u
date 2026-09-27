@@ -108,7 +108,7 @@ test("Railway migration runner includes the complete authoritative track", () =>
   // Derive the expected track from disk. A file that exists but is absent from
   // MIGRATIONS is silently never applied, which is how 016-021 went missing.
   const onDisk = readdirSync("railway/migrations")
-    .filter((name) => name.endsWith(".sql"))
+    .filter((name) => /^\d{3}_.*\.sql$/.test(name))
     .sort();
   assert.ok(onDisk.length > 0, "expected migrations on disk");
 

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { requireAuthenticatedUser, errorResponse } from "@/lib/server/auth";
 
 interface Milestone {
@@ -22,10 +23,7 @@ export async function GET(request: Request) {
     // Get user's verified referral count
     const { rows: profileRows } = await auth.db.query<{
       verified_referral_count: number;
-    }>(
-      `SELECT verified_referral_count FROM profiles WHERE id = $1`,
-      [userId],
-    );
+    }>(`SELECT verified_referral_count FROM profiles WHERE id = $1`, [userId]);
 
     const verifiedCount = profileRows[0]?.verified_referral_count || 0;
 
@@ -130,6 +128,10 @@ export async function GET(request: Request) {
       },
     });
   } catch (error) {
-    return errorResponse(error, "Failed to fetch referral milestones.");
+    return errorResponse(
+      error,
+      "Failed to fetch referral milestones.",
+      "/api/referrals/milestones",
+    );
   }
 }

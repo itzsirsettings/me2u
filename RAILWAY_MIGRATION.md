@@ -27,7 +27,7 @@ Me2U runs entirely on Railway PostgreSQL. No external backend service is require
 
 ## Migration files
 
-- `railway/migrations/001` … `021` is the authoritative, Railway-native schema set.
+- `railway/migrations/001` … `022` is the authoritative, Railway-native schema set.
 - `run-all-migrations.py` must list every one of them. It is the only migration
   runner wired to `schema_migrations`, so a file missing from `MIGRATIONS` is
   silently never applied even though it exists on disk.
