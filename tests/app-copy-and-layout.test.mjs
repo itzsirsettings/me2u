@@ -331,10 +331,22 @@ test("bill payments and withdrawals use hardened financial paths", () => {
 });
 
 test("withdrawal UI hides the fee breakdown while retaining the flat Me2U debit", () => {
-  const { getWithdrawalDebitAmount } = loadSource("lib/revenue.ts");
+  const revenue = loadSource("lib/revenue.ts");
+  const { getWithdrawalDebitAmount } = revenue;
+  const { getWithdrawalErrorMessage } = loadSource("lib/withdrawal.ts", {
+    "@/lib/revenue": revenue,
+  });
 
   assert.equal(getWithdrawalDebitAmount(3000, 0), 3045);
   assert.equal(getWithdrawalDebitAmount(3000), 3145);
+  assert.equal(
+    getWithdrawalErrorMessage("Your balance is not enough to fulfil this request"),
+    "Withdrawals are temporarily unavailable. Your wallet balance was restored. Please try again later or contact support.",
+  );
+  assert.equal(
+    getWithdrawalErrorMessage("Incorrect transaction PIN."),
+    "Incorrect transaction PIN.",
+  );
 });
 
 test("Wema banking rails are adapter-backed and ledger-first", () => {

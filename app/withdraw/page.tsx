@@ -11,7 +11,7 @@ import { PinInput } from "@/components/ui/PinInput";
 import { authorizedFetch } from "@/lib/fetch";
 import { getActivePlatformLoanRetainedDeposit } from "@/lib/loans";
 import { useStore } from "@/lib/store";
-import { getRequiredWithdrawalBalance } from "@/lib/withdrawal";
+import { getRequiredWithdrawalBalance, getWithdrawalErrorMessage } from "@/lib/withdrawal";
 
 const MIN_WITHDRAWAL = 1000;
 
@@ -51,8 +51,10 @@ const NIGERIAN_BANKS = [
 type Step = "amount" | "bank" | "confirm";
 
 function readApiError(value: unknown, fallback: string) {
-  if (typeof value !== "object" || value === null || !("error" in value)) return fallback;
-  return typeof value.error === "string" ? value.error : fallback;
+  if (typeof value !== "object" || value === null || !("error" in value)) {
+    return getWithdrawalErrorMessage(undefined, fallback);
+  }
+  return getWithdrawalErrorMessage(value.error, fallback);
 }
 
 export default function WithdrawPage() {
