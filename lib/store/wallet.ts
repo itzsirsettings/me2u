@@ -3,7 +3,6 @@ import { toErrorMessage } from "./helpers";
 import type { AppStore, StoreSlice } from "./types";
 
 import { registrationDepositAmount, getActivePlatformLoanRetainedDeposit } from "@/lib/loans";
-import { withdrawalFeeAmount } from "@/lib/revenue";
 import { uploadPrivateImage } from "@/lib/uploads";
 import { getRequiredWithdrawalBalance } from "@/lib/withdrawal";
 
@@ -75,8 +74,8 @@ export const createWalletSlice: StoreSlice<WalletSlice> = (set, get) => ({
         ok: false,
         error:
           platformLoanDeposit > 0
-            ? `Fund ₦${shortfall.toLocaleString()} first. ₦${platformLoanDeposit.toLocaleString()} must remain while a loan is active, plus the ₦${withdrawalFeeAmount.toLocaleString()} fee.`
-            : `Insufficient balance for the withdrawal and ₦${withdrawalFeeAmount.toLocaleString()} processing fee.`,
+            ? `Fund ₦${shortfall.toLocaleString()} first. ₦${platformLoanDeposit.toLocaleString()} must remain while a loan is active.`
+            : `Insufficient balance for this withdrawal.`,
       };
     }
     const result = await postAuthenticatedJson("/api/wallet/withdraw", { amount, pin });

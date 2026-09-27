@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { test } from "node:test";
+import { loadSource } from "./helpers/load-source.mjs";
 
 const visibleFiles = [
   "app/dashboard/page.tsx",
@@ -126,7 +127,7 @@ test("authenticated routes keep long financial data inside their containers", ()
   assert.match(globals, /:where\(button, input, select, textarea\)/);
   assert.match(loadingButton, /maxWidth: "100%"/);
   assert.match(wallet, /overflow-anywhere min-w-0 text-right font-semibold/);
-  assert.match(withdraw, /overflow-anywhere min-w-0 text-right font-mono font-semibold/);
+  assert.match(withdraw, /w-full overflow-anywhere text-sm md:h-12 disabled:opacity-40/);
   assert.match(loans, /md:grid-cols-\[minmax\(0,1fr\)_auto\]/);
   assert.match(loans, /overflow-anywhere text-2xl font-display/);
   assert.match(marketplace, /overflow-anywhere mt-2 text-2xl font-display/);
@@ -316,9 +317,24 @@ test("bill payments and withdrawals use hardened financial paths", () => {
   assert.match(migration, /You can only read your own referral stats/);
   assert.match(withdrawal, /account_number/);
   assert.match(withdrawal, /getWithdrawalProcessorFee/);
+  assert.match(withdrawal, /const fee_amount = withdrawalFeeAmount/);
+  assert.match(withdrawal, /const totalFee = paystackFee \+ fee_amount/);
+  assert.match(withdrawal, /balanceDelta: -\(amount \+ totalFee\)/);
+  assert.match(revenue, /withdrawalFeeAmount = 100/);
+  assert.doesNotMatch(
+    withdrawPage,
+    /Me2U processing fee|Paystack fee \(1\.5%\)|Total fee|You receive/,
+  );
   assert.match(withdrawPage, /PinInput/);
   assert.match(withdrawPage, /pin: transactionPin/);
   assert.match(revenue, /withdrawalProcessorFeeRate = 0\.015/);
+});
+
+test("withdrawal UI hides the fee breakdown while retaining the flat Me2U debit", () => {
+  const { getWithdrawalDebitAmount } = loadSource("lib/revenue.ts");
+
+  assert.equal(getWithdrawalDebitAmount(3000, 0), 3045);
+  assert.equal(getWithdrawalDebitAmount(3000), 3145);
 });
 
 test("Wema banking rails are adapter-backed and ledger-first", () => {

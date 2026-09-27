@@ -21,11 +21,7 @@ import {
   referralProgramLevels,
   visibleSecurityFeatures,
 } from "@/lib/product-features";
-import {
-  marketplaceBoostFeeAmount,
-  withdrawalFeeAmount,
-  withdrawalProcessorFeeRate,
-} from "@/lib/revenue";
+import { marketplaceBoostFeeAmount } from "@/lib/revenue";
 
 export type AssistantKnowledgeItem = {
   id: string;
@@ -286,7 +282,7 @@ export function getAssistantKnowledge() {
       "withdrawals",
       "Withdrawal requirements",
       "/withdraw",
-      `Withdrawals require login, completed KYC, confirmed registration deposit, enough available wallet balance, no retained active-loan balance conflict, and the ₦${withdrawalFeeAmount.toLocaleString()} withdrawal processing fee.`,
+      "Withdrawals require login, completed KYC, confirmed registration deposit, enough available wallet balance, and no retained active-loan balance conflict.",
     ),
     makeRule(
       "loans",
@@ -314,9 +310,9 @@ export function getAssistantKnowledge() {
     ),
     makeRule(
       "fees",
-      "Me2U charges and fee visibility",
+      "Other Me2U product charges",
       "/wallet",
-      `Withdrawals include a ₦${withdrawalFeeAmount.toLocaleString()} Me2U processing fee plus a ${Math.round(withdrawalProcessorFeeRate * 10000) / 100}% processor charge, shown before confirmation. Wallet funding credits the exact amount sent. Marketplace boost costs ₦${marketplaceBoostFeeAmount.toLocaleString()} per boost. Platform loans carry 0% interest and no origination fee.`,
+      `Wallet funding credits the exact amount sent. Marketplace boost costs ₦${marketplaceBoostFeeAmount.toLocaleString()} per boost. Platform loans carry 0% interest and no origination fee.`,
     ),
     makeRule(
       "savings",

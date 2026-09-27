@@ -24,7 +24,10 @@ test("project-brain knowledge covers the whole app surface", () => {
 
   assert.match(knowledge, /defaultTrustTiers/);
   assert.match(knowledge, /marketplaceBoostFeeAmount/);
-  assert.match(knowledge, /withdrawalProcessorFeeRate/);
+  assert.doesNotMatch(
+    knowledge,
+    /withdrawalFeeAmount|withdrawalProcessorFeeRate|Me2U processing fee|Paystack fee/,
+  );
 });
 
 test("session memory stays per-conversation and secret-free", () => {

@@ -3,8 +3,8 @@
  *
  * Withdrawals: the user pays BOTH the Me2U flat processing fee
  * (`withdrawalFeeAmount` = ₦100) AND the Paystack processor fee
- * (`withdrawalProcessorFeeRate` = 1.5%), already the enforced behavior —
- * now explicit in the withdraw UI and booked as two revenue events:
+ * (`withdrawalProcessorFeeRate` = 1.5%), both enforced by the withdrawal
+ * backend and booked as separate revenue events:
  *   - 'withdrawal_fee'            → Me2U flat ₦100 (platform revenue)
  *   - 'withdrawal_processor_cost' → Paystack 1.5% (processor cost booked for reconciliation)
  * Paystack transfer failures reverse the full debit (amount + fees) via
