@@ -4,6 +4,10 @@ import { query, withTransaction } from "@/lib/railway/client";
 import { buildLedgerRef, recordWalletMove } from "@/lib/server/wallet-ledger";
 import { logApiError, logInfo } from "@/lib/server/logger";
 import { WITHDRAWAL_IN_FLIGHT_SQL } from "@/lib/server/withdrawal-status";
+import {
+  completeRegistrationDepositCharge,
+  flagRejectedRegistrationDepositTransfer,
+} from "@/lib/server/registration-deposit-paystack";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -98,6 +102,7 @@ async function findUserIdByPaystackCustomer(payload: any): Promise<string | null
 
 async function handleChargeSuccess(eventId: string, payload: any): Promise<void> {
   const data = payload?.data ?? {};
+  if (await completeRegistrationDepositCharge(data, eventId)) return;
   const amount = ngnFromKobo(Number(data.amount || 0));
   if (amount <= 0) return;
 
@@ -391,6 +396,9 @@ export async function POST(request: Request) {
     switch (event) {
       case "charge.success":
         await handleChargeSuccess(eventId, payload);
+        break;
+      case "bank.transfer.rejected":
+        await flagRejectedRegistrationDepositTransfer(payload?.data);
         break;
       case "transfer.success":
         await handleTransferSuccess(eventId, payload);

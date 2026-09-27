@@ -123,7 +123,7 @@ export type PaymentProofRow = {
   amount: number;
   reference: string;
   type: "wallet_funding" | "registration_deposit";
-  receipt_image_url: string;
+  receipt_image_url: string | null;
   status: "pending" | "approved" | "rejected";
   created_at: string;
   updated_at: string;
@@ -487,7 +487,7 @@ export interface Database {
           amount: number;
           reference: string;
           type: PaymentProofRow["type"];
-          receipt_image_url: string;
+          receipt_image_url: string | null;
           status?: PaymentProofRow["status"];
           created_at?: string;
           updated_at?: string;

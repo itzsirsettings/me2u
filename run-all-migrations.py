@@ -8,6 +8,7 @@ import os
 import sys
 import subprocess
 from pathlib import Path
+from urllib.parse import quote, urlparse, urlunparse
 
 try:
     import psycopg2
@@ -41,6 +42,7 @@ MIGRATIONS = [
     '020_referral_challenge_integrity.sql',
     '021_security_event_session_revocations.sql',
     '022_repair_wallet_ledger_audit_columns.sql',
+    '023_registration_deposit_paystack_transfer.sql',
 ]
 
 def get_connection_params():
@@ -52,13 +54,26 @@ def get_connection_params():
         print('Run this script with: railway run python run-all-migrations.py')
         return None
 
+    tunnel_host = os.getenv('MIGRATION_DB_HOST')
+    tunnel_port = os.getenv('MIGRATION_DB_PORT')
+    if tunnel_host:
+        parsed = urlparse(database_url)
+        if not parsed.username or not parsed.password or not parsed.path:
+            print('❌ DATABASE_URL is missing required connection fields')
+            return None
+        user = quote(parsed.username, safe='')
+        password = quote(parsed.password, safe='')
+        port_suffix = f':{int(tunnel_port)}' if tunnel_port else ''
+        rebuilt = parsed._replace(netloc=f'{user}:{password}@{tunnel_host}{port_suffix}')
+        print('🔐 Using the Railway SSH database tunnel')
+        return urlunparse(rebuilt)
+
     # Railway exposes two hostnames:
     #   - postgres.railway.internal  -> private network (only works inside Railway)
     #   - RAILWAY_SERVICE_POSTGRES_URL -> public hostname (works from local `railway run`)
     # When running locally we must swap to the public host while keeping user/password/db.
     public_host = os.getenv('RAILWAY_SERVICE_POSTGRES_URL') or os.getenv('PGHOST_PUBLIC')
     if public_host and 'postgres.railway.internal' in database_url:
-        from urllib.parse import urlparse, urlunparse
         parsed = urlparse(database_url)
         # Public port on Railway Postgres is usually 5432 (same as internal)
         port = os.getenv('PGPORT', parsed.port or 5432)

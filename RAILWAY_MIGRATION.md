@@ -27,7 +27,7 @@ Me2U runs entirely on Railway PostgreSQL. No external backend service is require
 
 ## Migration files
 
-- `railway/migrations/001` … `022` is the authoritative, Railway-native schema set.
+- `railway/migrations/001` … `023` is the authoritative, Railway-native schema set.
 - `run-all-migrations.py` must list every one of them. It is the only migration
   runner wired to `schema_migrations`, so a file missing from `MIGRATIONS` is
   silently never applied even though it exists on disk.
@@ -43,6 +43,14 @@ The legacy hosted-backend CLI project (`backend/`, `config.toml`,
 dumps (`COMPLETE_MIGRATION.sql`, `RAILWAY_MIGRATION.sql`) have been removed.
 Those dumps created a hosted compatibility layer (an `auth` schema shim and
 realtime publications) that Railway does not need.
+
+The Paystack registration-deposit path uses a temporary transfer account
+created for the authenticated user's fixed NGN 2,000 charge. A signed Paystack
+webhook or server-side pending-charge verification confirms the exact reference,
+amount, currency, and transfer channel before the deposit is credited and the
+profile is unlocked. `PAYSTACK_SECRET_KEY` and the Paystack webhook signing
+secret stay server-side; the transfer instructions and status are shown in the
+app.
 
 ## Environment variables
 
