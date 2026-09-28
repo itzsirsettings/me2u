@@ -115,22 +115,22 @@ test("admin dashboard uses overflow-safe grids and contained ledger scrolling", 
   assert.match(globals, /\.overflow-anywhere/);
 });
 
-test("landing hero keeps the app phone mockup contained and full-bleed", () => {
+test("landing hero uses the current full-bleed responsive background", () => {
   const hero = read("components/landing/HeroSection.tsx");
   const globals = read("app/globals.css");
 
-  assert.match(hero, /\/Hero_final\.png/);
-  assert.match(hero, /alt="Young woman using Me2U app on her smartphone"/);
-  assert.match(hero, /sizes="100vw"/);
+  assert.match(hero, /hero-final\.webp/);
+  assert.match(hero, /focus=\{narrow \?/);
+  assert.match(hero, /scrim=\{narrow \?/);
   assert.match(globals, /\.hero-section \{[^}]*overflow: hidden/s);
-  assert.match(globals, /\.hero-bg-img \{[^}]*object-fit: cover/s);
+  assert.match(globals, /\.hero-overlay \{/);
   assert.doesNotMatch(globals, /100cqw/);
 });
 
 test("landing header uses the nav logo asset", () => {
   const landingHeader = read("components/landing/LandingHeader.tsx");
 
-  assert.match(landingHeader, /src="\/me2u_nav_logo\.svg"/);
+  assert.match(landingHeader, /src="\/me2u-nav-logo\.webp"/);
   assert.match(landingHeader, /aria-label="Me2U home"/);
 });
 

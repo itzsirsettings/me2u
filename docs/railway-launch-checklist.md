@@ -1,138 +1,62 @@
-# Me2U Full Public Launch Checklist (Railway + Vercel)
+# Production deployment and operations checklist
 
-## Phase 1: Railway Infrastructure Setup
+**Repository review:** 28 September 2026.
+This is a deployment evidence checklist, not proof that the project is deployed or approved for launch. Confirm all service-level settings in the actual Railway/Vercel account before release.
 
-### 1.1 Railway Project & Services
-- [ ] Create a new Railway project
-- [ ] Add a **Redis** service (Railway Marketplace → Redis)
-- [ ] Add **AWS SQS** (or use Railway Queues if SQS-compatible) — create 8 queues:
-  - `bill-purchase`
-  - `bill-requery`
-  - `transfer-dispatch`
-  - `transfer-requery`
-  - `withdrawal-dispatch`
-  - `withdrawal-requery`
-  - `projections-refresh`
-  - `outbox-publish`
-- [ ] Create two Railway services from the repo:
-  - **Next.js App**: Deploy root directory (`/`) with start command `npm start`
-  - **Me2U API/Worker**: Deploy `/server` directory with two services from same image:
-    - Service 1: `ME2U_RUNTIME=api`
-    - Service 2: `ME2U_RUNTIME=worker`
+## Repository deployment configuration
 
-### 1.2 Railway Environment Variables
-Copy all variables from your `.env` file to Railway, plus:
-- `REDIS_URL` (from Railway Redis service)
-- All 8 `SQS_*_QUEUE_URL` values
-- `NEXT_PUBLIC_API_BASE_URL` (your Railway API service URL)
-- `VERCEL_PROJECT_URL` once deployed
+- Root `railway.json` describes a Next.js service. It runs `npm run db:migrate` as a pre-deploy command and uses `/api/health/live` as its health path.
+- `server/railway.json` describes the NestJS service. `server/src/main.ts` starts the API and `server/src/app.module.ts` includes BullMQ job processors; the repository does not define a separate worker start command.
+- `vercel.json` also contains a Next.js deployment configuration and cron declarations. Its presence is not evidence that Vercel is the active production host.
+- Do not create AWS SQS queues based on older versions of this checklist: the current NestJS code uses BullMQ with Redis. Queue names and enabled processors must be derived from `server/src/`.
+- The root migration runner applies sorted files from `railway/migrations/` and records them in `schema_migrations`. Do not manually run both migration trees or mark unapplied files as applied.
 
----
+## Before deployment
 
-## Phase 2: Railway PostgreSQL Production Hardening
+- [ ] Identify the active production host, domains, root and server service IDs, deployment regions, and traffic path. Record who can roll back each service.
+- [ ] Review the exact source revision and CI run. Require successful formatting, lint, TypeScript, unit tests, and production build.
+- [ ] Verify CI uses test-only placeholders and no production secrets are committed or printed in logs.
+- [ ] Confirm compatibility of root app and NestJS service deployment versions, API base URL, CORS origins, health checks, and database connection budget.
+- [ ] Review migration SQL before rollout. Plan backup/restore or forward-recovery for schema/data changes. Verify automated migration behavior in a staging copy first.
+- [ ] Confirm PostgreSQL backup/PITR coverage and complete a restore drill. Limit DB network exposure and use TLS as supported by the chosen host.
+- [ ] Configure shared production Redis when rate limiting or BullMQ is enabled. Verify queue persistence, retry/backoff, dead-letter/reconciliation behavior, and alerting.
+- [ ] Configure secrets through the host secret manager, not committed `.env` files. Use separate least-privilege credentials per environment and integration.
 
-- [ ] Enable **Point-in-Time Recovery (PITR)** on the Postgres service
-- [ ] Enforce **SSL** for all connections (`PGSSLMODE=require`)
-- [ ] Restrict network access — do **not** expose a public TCP proxy in production; use private networking (`postgres.railway.internal`)
-- [ ] Take a **manual backup** and confirm restore steps before launch
-- [ ] Confirm the database password and `AUTH_TOKEN_SECRET` are strong and unique
-- [ ] Enable **2FA** on your Railway account
-- [ ] Review the Railway **observability/metrics** dashboard for slow queries
-- [ ] Perform a **restore drill** and record the date as `DB_RESTORE_DRILL_AT`
-- [ ] Set `DB_PITR_ENABLED_ACK=true`
+## Environment and providers
 
----
+Check names against `lib/server/launch-readiness.ts`, `server/README.md`, and code before changing the deployment. Required for the web readiness endpoint currently include:
 
-## Phase 3: Payment & Banking Providers
+- `DATABASE_URL`
+- `AUTH_TOKEN_SECRET`
+- `REDIS_URL`
+- `PAYSTACK_SECRET_KEY`
+- `RESEND_API_KEY`
+- `EMAIL_FROM`
+- `OPENAI_API_KEY`
 
-### 3.1 Paystack
-- [ ] Use **live secret key** (`sk_live_...`)
-- [ ] Enable DVA (`PAYSTACK_DVA_ENABLED=true`)
-- [ ] Complete sandbox & live certification → set `PAYSTACK_PROVIDER_CERTIFIED_AT=2026-06-09T...`
-- [ ] Configure webhooks to point to your Railway API `/webhooks/paystack`
+`NEXT_PUBLIC_APP_URL` and `CRON_SECRET` are readiness warnings in current code, not required blockers. The separately deployed NestJS service uses Redis and provider credentials for the modules enabled in that release. Do not copy all values from a local `.env`; provision only the secrets needed by each service.
 
-### 3.2 VTpass
-- [ ] Switch from sandbox to live base URL (`https://vtpass.com/api`)
-- [ ] Add all VTpass keys (`PUBLIC_KEY`, `SECRET_KEY`, `API_KEY`)
-- [ ] Add `VTPASS_WEBHOOK_SECRET`
-- [ ] Complete certification → set `VTPASS_PROVIDER_CERTIFIED_AT=2026-06-09T...`
+Account-deletion requests also require `ACCOUNT_DELETION_TARGET_DAYS`, configured only after legal/operations approve the user-facing completion estimate. This setting is not part of the web readiness endpoint; request submission returns `503` until it is configured.
 
-### 3.3 Wema/ALAT
-- [ ] Enable Wema (`WEMA_ENABLED=true`)
-- [ ] Add live base URL, API key, webhook secret
-- [ ] Enable transfers (`WEMA_TRANSFERS_ENABLED=true`)
-- [ ] Complete certification → set `WEMA_PROVIDER_CERTIFIED_AT=2026-06-09T...`
+- [ ] Verify credentials are for the intended environment and are not placeholders.
+- [ ] Verify provider accounts are enabled for the exact integration features shipped. Complete provider certification and contracts where applicable.
+- [ ] Verify Paystack/Wema webhook URLs, signatures, replay handling, and event reconciliation against non-production transactions before live traffic.
+- [ ] Verify email sender/domain and delivery failure monitoring.
+- [ ] Verify cron schedules belong to the selected host and have authentication/overlap protections. `vercel.json` schedules only run when Vercel is the deployed target.
+- [ ] Confirm the app shows unavailable/recovery states for absent, rejected, timed-out, or degraded dependencies.
 
----
+## Release and recovery
 
-## Phase 4: Compliance & Legal
+- [ ] Capture pre-release database backup/restore point and current service revision.
+- [ ] Apply migrations using the configured deployment runner in staging first; inspect migration completion and schema version.
+- [ ] Run auth, wallet, deposit, withdrawal, loan, bills, webhook, account recovery, and support journeys with provider sandbox/test accounts. Never treat mocked browser fixtures as payment evidence.
+- [ ] Verify idempotency and concurrent requests for every financial write. Reconcile provider and ledger state after simulated timeout/unknown outcomes.
+- [ ] Check `/api/health/live` and readiness endpoint semantics. Liveness means the web process answers; readiness reports required environment presence, not that every provider transaction succeeds.
+- [ ] Monitor structured logs, error rates, database/Redis connections, queue age/failures, provider outcomes, webhook lag, and user support reports.
+- [ ] Release gradually where the host permits; verify traffic and financial reconciliation before increasing exposure.
+- [ ] Test rollback or forward-recovery while preserving backward-compatible schema expectations. Rollback the app alone only if it remains compatible with already-applied migrations.
+- [ ] Record commit, migration version, test evidence, provider evidence, operator, release time, rollback point, and unresolved risks.
 
-- [ ] Set `FCCPC_DEON_REGISTRATION_STATUS=approved`
-- [ ] Set `FCCPC_DEON_REGISTRATION_REFERENCE=` (your reference number)
-- [ ] Set `CBN_PAYMENT_PARTNER_STATUS=verified`
-- [ ] Set `CBN_PAYMENT_PARTNER_MEMO_ID=` (your memo ID)
-- [ ] Set `NDPC_REGISTRATION_STATUS=registered`
-- [ ] Set `NDPC_REGISTRATION_REFERENCE=` (your reference number)
-- [ ] Set `NDPC_DPA_AUDIT_STATUS=current`
-- [ ] Set `ME2U_LEGAL_APPROVAL_STATUS=approved`
+## Store and legal gate
 
----
-
-## Phase 5: KYC Operations
-
-Choose one:
-- **Option A (Live NIN)**:
-  - Set `NIN_VERIFICATION_API_URL`, `NIN_VERIFICATION_API_KEY`, `NIN_HASH_SECRET`
-- **Option B (Manual KYC)**:
-  - Set `KYC_MANUAL_REVIEW_SOP_ACK=true`
-  - Set `KYC_REVIEW_OWNER=` (name/email)
-  - Set `KYC_DISPUTE_CHANNEL=` (e.g., support@me2u.ng)
-  - Set `KYC_DOCUMENT_RETENTION_POLICY_ID=` (your policy ID)
-
----
-
-## Phase 6: Email Setup (Resend)
-
-- [ ] Add `RESEND_API_KEY` (live key)
-- [ ] Verify your sending domain in Resend
-- [ ] Set `EMAIL_FROM=` to a non-resend.dev address (e.g., onboarding@me2u.ng)
-
----
-
-## Phase 7: Testing Evidence
-
-- [ ] Run financial E2E tests → set `FINANCIAL_E2E_PASSED_AT=2026-06-09T...`
-- [ ] Complete provider sandbox certification → set `PROVIDER_SANDBOX_CERTIFIED_AT=2026-06-09T...`
-- [ ] Verify reconciliation has zero duplicates → set `RECONCILIATION_ZERO_DUPLICATES_AT=2026-06-09T...`
-- [ ] Run the repository load probe (`npm run load:probe -- --endpoint https://<app-host>/api/health/live --requests 10000 --concurrency 200`) → set `LOAD_TEST_CERTIFIED_AT=2026-06-09T...`
-
----
-
-## Phase 8: Operations Setup
-
-- [ ] Set `OPS_ALARMS_CONFIGURED_ACK=true`
-- [ ] Set `WEBHOOK_MONITORING_ACK=true`
-- [ ] Set `SECRET_ROTATION_SCHEDULE_ACK=true`
-- [ ] Set `ECS_API_SERVICE_ARN=` (or Railway service ID if adapted)
-- [ ] Set `ECS_WORKER_SERVICE_ARN=` (or Railway worker service ID)
-
-## Phase 8.1: Capacity and Horizontal Scaling
-
-- [ ] Run the load probe against the deployed liveness endpoint:
-  - `npm run load:probe -- --endpoint https://<app-host>/api/health/live --requests 10000 --concurrency 200`
-- [ ] Set the API service to at least 2 replicas during normal operation so a deploy or instance failure does not remove all API capacity.
-- [ ] Configure Railway autoscaling or an equivalent external load balancer using CPU, memory, latency, and error-rate thresholds; verify the setting in the Railway service dashboard because replica policy is service-level configuration.
-- [ ] Size the Postgres connection budget before adding replicas: `DB_POOL_MAX` multiplied by API replicas must remain below the database connection limit, with capacity reserved for migrations and admin access.
-- [ ] Use a shared production Redis service for rate limits and queues; never use localhost Redis on a horizontally scaled deployment.
-- [ ] Treat 100,000 registered users as a capacity target, not a concurrency guarantee. Record the tested requests per second, p95/p99 latency, error rate, database utilization, Redis utilization, and queue lag in the release record.
-- [ ] Repeat the test for peak daily traffic and webhook bursts, including one rolling deployment while traffic is active.
-
----
-
-## Phase 9: Final Launch Check
-
-- [ ] Deploy Next.js app to Vercel
-- [ ] Deploy API/worker services to Railway
-- [ ] Call `GET /api/health/ready` with `x-me2u-internal-token` header
-- [ ] Verify response shows `"status": "ready"` and `"blockers": []`
-- [ ] Open to public! 🚀
+Web deployment does not release the iOS app to Apple App Store. The iOS implementation, accurate privacy/data declarations, deletion processing, lending eligibility/disclosures, signing, and store review evidence are tracked in [mobile store readiness](mobile-store-readiness.md). Android currently remains the PWA and has no planned Google Play release.

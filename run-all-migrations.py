@@ -44,6 +44,7 @@ MIGRATIONS = [
     '022_repair_wallet_ledger_audit_columns.sql',
     '023_registration_deposit_paystack_transfer.sql',
     '024_loans_updated_at.sql',
+    '025_account_deletion_requests.sql',
 ]
 
 def get_connection_params():

@@ -1,8 +1,8 @@
 "use client";
 
-import { Component, ErrorInfo, ReactNode } from "react";
 import { AlertTriangle, RefreshCw, Home } from "lucide-react";
 import Link from "next/link";
+import { Component, ErrorInfo, ReactNode } from "react";
 
 interface Props {
   children: ReactNode;
@@ -11,27 +11,27 @@ interface Props {
 
 interface State {
   hasError: boolean;
-  error: Error | null;
-  errorInfo: ErrorInfo | null;
 }
 
 export default class ErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false,
-    error: null,
-    errorInfo: null,
   };
 
   public static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error, errorInfo: null };
+    void error;
+    return { hasError: true };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    this.setState({ error, errorInfo });
     if (typeof window !== "undefined") {
       try {
-        console.error("ErrorBoundary caught an error:", error, errorInfo);
+        console.error("Me2U component render failure", {
+          errorName: error.name,
+          componentStack: errorInfo.componentStack,
+        });
       } catch {
+        // Error reporting must not break the recovery screen.
       }
     }
   }
@@ -43,7 +43,7 @@ export default class ErrorBoundary extends Component<Props, State> {
   };
 
   private handleReset = (): void => {
-    this.setState({ hasError: false, error: null, errorInfo: null });
+    this.setState({ hasError: false });
   };
 
   public render(): ReactNode {
@@ -60,25 +60,12 @@ export default class ErrorBoundary extends Component<Props, State> {
             </div>
 
             <div className="space-y-2">
-              <h2 className="text-2xl font-black text-card-foreground">
-                Something went wrong
-              </h2>
+              <h2 className="text-2xl font-black text-card-foreground">Something went wrong</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                We hit an unexpected issue. You can try reloading this page or
-                return home to continue.
+                We hit an unexpected issue. You can try reloading this page or return home to
+                continue.
               </p>
             </div>
-
-            {this.state.error && (
-              <div className="text-left bg-secondary/50 rounded-2xl p-4 border border-border">
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-1">
-                  Error
-                </p>
-                <p className="text-xs font-mono text-red-500 break-words">
-                  {this.state.error.message}
-                </p>
-              </div>
-            )}
 
             <div className="grid grid-cols-2 gap-3 pt-2">
               <Link

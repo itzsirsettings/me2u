@@ -13,11 +13,11 @@ import {
   registrationDepositAmount,
   repeatPlatformLoanMinimum,
 } from "@/lib/loans";
+import { mobileAppReadiness } from "@/lib/mobile-app-readiness";
 import {
   financialEducationLessons,
   globalCountryOptions,
   growthFeatureModules,
-  mobileAppReadiness,
   referralProgramLevels,
   visibleSecurityFeatures,
 } from "@/lib/product-features";
@@ -268,7 +268,8 @@ export function getAssistantKnowledge() {
       id: "feature:global-readiness",
       title: "Me2U country and app readiness",
       sourceType: "feature",
-      sourcePath: "lib/product-features.ts#globalCountryOptions",
+      sourcePath:
+        "lib/product-features.ts#globalCountryOptions and lib/mobile-app-readiness.ts",
       routeHref: "/register",
       updatedAt: currentUpdatedAt,
       content: [

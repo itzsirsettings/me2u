@@ -259,7 +259,8 @@ export const legalDocuments: PolicyDocument[] = [
         title: "Data Retention",
         paragraphs: [
           "Me2U retains user data only for as long as necessary for business, legal, regulatory, security, and operational purposes.",
-          "Typical retention periods may include account data while the account remains active and for a reasonable period after closure; transaction records as required by financial, accounting, tax, and regulatory obligations; KYC records as required for compliance and fraud prevention; support records for complaint resolution and service improvement; marketing preferences until the user opts out; and security logs for fraud prevention, investigation, and audit purposes.",
+          "Account data is kept while an account is active and afterward only for a documented legal, regulatory, accounting, security, dispute, or operational purpose. Transaction and KYC records may be retained where applicable obligations require them; other personal data should be deleted or de-identified when its purpose ends.",
+          "Users may submit an account-deletion request from Profile settings or at /account-deletion. The request screen provides an estimated completion date only when the approved service timeline is configured. A request does not immediately erase financial records; open loans, wallet balances, disputes, and legal retention obligations must be reviewed. Contact support for request status or to ask which records remain and why.",
         ],
       },
       {

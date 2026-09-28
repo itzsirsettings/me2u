@@ -1,12 +1,14 @@
-import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import { requireAuthenticatedUser, tooManyRequestsResponse } from "@/lib/server/auth";
-import { isRateLimited } from "@/lib/rate-limit";
+
+import { NextResponse } from "next/server";
+
 import {
   maxPrivateImageSizeBytes,
   privateImageContentType,
   privateImageValidationError,
 } from "@/lib/private-images";
+import { isRateLimited } from "@/lib/rate-limit";
+import { requireAuthenticatedUser, tooManyRequestsResponse } from "@/lib/server/auth";
 
 type PrivateImageBucket = "receipts" | "kyc-documents";
 const allowedBuckets = new Set<PrivateImageBucket>(["receipts", "kyc-documents"]);
@@ -16,7 +18,7 @@ function toSafeFileName(name: string) {
 }
 
 function createFileId() {
-  return (globalThis.crypto?.randomUUID?.() || randomUUID()) as string;
+  return (globalThis.crypto?.randomUUID?.() || randomUUID());
 }
 
 function isAllowedBucket(bucket: string): bucket is PrivateImageBucket {
@@ -37,11 +39,14 @@ export async function POST(request: Request) {
     if (requestSize > maxPrivateImageSizeBytes + 64 * 1024) {
       return NextResponse.json({ error: "Image must be 5MB or smaller." }, { status: 413 });
     }
-    const formData = await request.formData().catch(() => null);
+    const formData = (await request.formData().catch(() => null)) as {
+      get(name: string): unknown;
+    } | null;
     if (!formData) {
       return NextResponse.json({ error: "Send the image as a file upload." }, { status: 400 });
     }
-    const bucket = String(formData.get("bucket") || "");
+    const bucketValue = formData.get("bucket");
+    const bucket = typeof bucketValue === "string" ? bucketValue : "";
     const file = formData.get("file");
 
     if (!isAllowedBucket(bucket)) {

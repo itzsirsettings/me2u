@@ -70,6 +70,17 @@ export default tseslint.config(
       },
     },
   },
+  {
+    files: ["mobile/**/*.js"],
+    languageOptions: {
+      globals: {
+        __dirname: "readonly",
+        module: "writable",
+        require: "readonly",
+      },
+    },
+    rules: { "@typescript-eslint/no-require-imports": "off" },
+  },
   // The service worker runs in a ServiceWorkerGlobalScope, not a browser window.
   {
     files: ["public/sw.js"],

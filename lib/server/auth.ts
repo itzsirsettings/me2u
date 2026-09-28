@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { getRailwayDbClient } from "@/lib/railway/client";
+
 import { verifyToken, getUserById, isTokenRevoked } from "@/lib/railway/auth";
 import type { JWTPayload } from "@/lib/railway/auth";
+import { getRailwayDbClient } from "@/lib/railway/client";
 import {
   readTokenFromRequest,
   isTokenFromCookie,
@@ -106,6 +107,50 @@ export async function requireAuthenticatedUser(request: Request): Promise<AuthCo
         { status: 401, headers: { "Cache-Control": "no-store" } },
       ),
     };
+  }
+
+  // A submitted deletion request stops new account activity, while leaving
+  // repayments, support, deletion-status reads, and sign-out available.
+  if (["POST", "PUT", "PATCH", "DELETE"].includes(method.toUpperCase())) {
+    const path = new URL(request.url).pathname;
+    const allowedDuringDeletion =
+      path === "/api/account/deletion" ||
+      path === "/api/auth/logout" ||
+      path === "/api/loans/repay" ||
+      path.startsWith("/api/support");
+    if (!allowedDuringDeletion) {
+      try {
+        const { rows } = await getRailwayDbClient().query<{ id: string }>(
+          `SELECT id FROM account_deletion_requests
+            WHERE user_id = $1 AND status IN ('requested', 'in_review')
+            LIMIT 1`,
+          [user.id],
+        );
+        if (rows[0]) {
+          return {
+            response: NextResponse.json(
+              {
+                error:
+                  "A deletion request is in progress. Repayments and support remain available while it is reviewed.",
+                code: "ACCOUNT_DELETION_PENDING",
+              },
+              { status: 423, headers: { "Cache-Control": "no-store" } },
+            ),
+          };
+        }
+      } catch (error) {
+        logApiError("auth.account_deletion_guard", error);
+        return {
+          response: NextResponse.json(
+            {
+              error: "Account status could not be verified. Please try again shortly.",
+              code: "ACCOUNT_DELETION_STATUS_UNAVAILABLE",
+            },
+            { status: 503, headers: { "Cache-Control": "no-store" } },
+          ),
+        };
+      }
+    }
   }
 
   return { db, user, accessToken: token, jwtPayload: payload };

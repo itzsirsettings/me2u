@@ -125,11 +125,26 @@ test("Paystack Nigerian transfer response works without optional fields", () => 
 });
 
 test("Paystack ambiguous creation outcomes are held for reconciliation", () => {
-  assert.equal(registrationDeposit.registrationTransferFailureStatus(null, false, false), "review");
-  assert.equal(registrationDeposit.registrationTransferFailureStatus(503, false, false), "review");
-  assert.equal(registrationDeposit.registrationTransferFailureStatus(200, true, false), "review");
-  assert.equal(registrationDeposit.registrationTransferFailureStatus(400, false, false), "failed");
-  assert.equal(registrationDeposit.registrationTransferFailureStatus(400, false, true), "review");
+  assert.equal(
+    registrationDeposit.registrationTransferFailureStatus(null, false, false),
+    "review",
+  );
+  assert.equal(
+    registrationDeposit.registrationTransferFailureStatus(503, false, false),
+    "review",
+  );
+  assert.equal(
+    registrationDeposit.registrationTransferFailureStatus(200, true, false),
+    "review",
+  );
+  assert.equal(
+    registrationDeposit.registrationTransferFailureStatus(400, false, false),
+    "failed",
+  );
+  assert.equal(
+    registrationDeposit.registrationTransferFailureStatus(400, false, true),
+    "review",
+  );
 });
 
 test("Paystack transfer-account expiry stays below the provider's documented 25-minute limit", () => {

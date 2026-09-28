@@ -250,13 +250,16 @@ export default function WalletPage() {
       });
       const data: unknown = await response.json();
       if (!response.ok) {
+        const payload = typeof data === "object" && data !== null ? data : {};
         const message =
-          typeof data === "object" &&
-          data !== null &&
-          "error" in data &&
-          typeof data.error === "string"
-            ? data.error
+          "error" in payload && typeof payload.error === "string"
+            ? payload.error
             : "Unable to start Paystack Transfer.";
+        const reference =
+          "reference" in payload && typeof payload.reference === "string"
+            ? payload.reference
+            : "";
+        if (reference) throw new Error(`${message} Reference: ${reference}.`);
         throw new Error(message);
       }
       const payment = readPaystackRegistrationTransfer(data);

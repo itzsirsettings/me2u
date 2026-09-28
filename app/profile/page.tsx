@@ -28,8 +28,6 @@ export default function Profile() {
   const level = getCreditLevel(user.trustScore);
   const country = getCountryConfig(user.countryCode);
   const referral = getReferralProgramProgress(user);
-  const bankReady = Boolean(user.bankName && user.accountNumber);
-
   async function handleLogout() {
     setLoggingOut(true);
     try {
@@ -144,6 +142,16 @@ export default function Profile() {
                 ? `${user.bankName} • ${user.accountNumber || "No account number"}`
                 : "Not added • No account number"}
             </p>
+          </div>
+          <ChevronRight size={20} aria-hidden="true" />
+        </Link>
+        <Link href="/account-deletion" className="design-account-row">
+          <span className="design-icon-square">
+            <ReferenceIcon name="shield" />
+          </span>
+          <div>
+            <h2>Account deletion</h2>
+            <p>Request deletion of your account and personal data</p>
           </div>
           <ChevronRight size={20} aria-hidden="true" />
         </Link>

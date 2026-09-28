@@ -232,7 +232,8 @@ export const financialEducationLessons = [
   {
     title: "How peer lending works",
     duration: "3 min",
-    outcome: "Understand borrower, lender, marketplace, and repayment roles before accepting money.",
+    outcome:
+      "Understand borrower, lender, marketplace, and repayment roles before accepting money.",
   },
   {
     title: "How to avoid loan scams",
@@ -242,17 +243,20 @@ export const financialEducationLessons = [
   {
     title: "How to repay on time",
     duration: "3 min",
-    outcome: "Use reminders, due dates, wallet funding, and smaller commitments to protect your trust score.",
+    outcome:
+      "Use reminders, due dates, wallet funding, and smaller commitments to protect your trust score.",
   },
   {
     title: "How to build trust score",
     duration: "4 min",
-    outcome: "Improve KYC, wallet activity, referrals, repayment history, account age, and community ratings.",
+    outcome:
+      "Improve KYC, wallet activity, referrals, repayment history, account age, and community ratings.",
   },
   {
     title: "How to manage money",
     duration: "5 min",
-    outcome: "Plan cash flow, separate needs from wants, and avoid borrowing for avoidable expenses.",
+    outcome:
+      "Plan cash flow, separate needs from wants, and avoid borrowing for avoidable expenses.",
   },
   {
     title: "How to save for emergencies",
@@ -262,38 +266,79 @@ export const financialEducationLessons = [
   {
     title: "How to protect your wallet",
     duration: "4 min",
-    outcome: "Use PINs, device checks, recovery steps, and fraud reporting when something feels wrong.",
+    outcome:
+      "Use PINs, device checks, recovery steps, and fraud reporting when something feels wrong.",
   },
   {
     title: "Borrowing mistakes to avoid",
     duration: "4 min",
-    outcome: "Avoid hidden side agreements, over-borrowing, missed deadlines, and sharing login details.",
+    outcome:
+      "Avoid hidden side agreements, over-borrowing, missed deadlines, and sharing login details.",
   },
 ] as const;
 
 export const visibleSecurityFeatures = [
-  { title: "Two-factor authentication", detail: "Add a second check before sensitive account access.", icon: "key" },
-  { title: "Device login alerts", detail: "Notify users when a new device signs in.", icon: "bell" },
-  { title: "Biometric login", detail: "Let supported phones unlock the app with face or fingerprint.", icon: "fingerprint" },
-  { title: "Withdrawal PIN", detail: "Require a PIN before money leaves the wallet.", icon: "lock" },
-  { title: "Transaction PIN", detail: "Confirm funding, repayment, and lending actions with a PIN.", icon: "shield" },
-  { title: "Trusted devices", detail: "Let users review and remove saved devices.", icon: "mobile" },
-  { title: "Suspicious login warning", detail: "Show clear warnings when login behavior looks unusual.", icon: "alert" },
-  { title: "Freeze wallet", detail: "Pause outgoing wallet activity while support reviews an issue.", icon: "freeze" },
-  { title: "Session history", detail: "Show recent account sessions without exposing private device data.", icon: "receipt" },
-  { title: "Account recovery", detail: "Guide verified users through safe recovery when access is lost.", icon: "profile" },
-  { title: "Fraud report", detail: "Give users a fast route to report suspicious activity.", icon: "security" },
-] as const;
-
-export const mobileAppReadiness = [
-  { title: "Progressive Web App", status: "Install button ready", detail: "Users can install the web app where browser support is available." },
-  { title: "Push notifications", status: "Planned", detail: "Repayment reminders, login alerts, and referral milestones should become push-ready." },
-  { title: "Android app", status: "Store-ready target", detail: "Play Store listing, screenshots, reviews, and release checks should be prepared before launch." },
-  { title: "iPhone app", status: "Store-ready target", detail: "App Store presence should follow the same trust, security, and compliance posture." },
+  {
+    title: "Two-factor authentication",
+    detail: "Add a second check before sensitive account access.",
+    icon: "key",
+  },
+  {
+    title: "Device login alerts",
+    detail: "Notify users when a new device signs in.",
+    icon: "bell",
+  },
+  {
+    title: "Biometric login",
+    detail: "Let supported phones unlock the app with face or fingerprint.",
+    icon: "fingerprint",
+  },
+  {
+    title: "Withdrawal PIN",
+    detail: "Require a PIN before money leaves the wallet.",
+    icon: "lock",
+  },
+  {
+    title: "Transaction PIN",
+    detail: "Confirm funding, repayment, and lending actions with a PIN.",
+    icon: "shield",
+  },
+  {
+    title: "Trusted devices",
+    detail: "Let users review and remove saved devices.",
+    icon: "mobile",
+  },
+  {
+    title: "Suspicious login warning",
+    detail: "Show clear warnings when login behavior looks unusual.",
+    icon: "alert",
+  },
+  {
+    title: "Freeze wallet",
+    detail: "Pause outgoing wallet activity while support reviews an issue.",
+    icon: "freeze",
+  },
+  {
+    title: "Session history",
+    detail: "Show recent account sessions without exposing private device data.",
+    icon: "receipt",
+  },
+  {
+    title: "Account recovery",
+    detail: "Guide verified users through safe recovery when access is lost.",
+    icon: "profile",
+  },
+  {
+    title: "Fraud report",
+    detail: "Give users a fast route to report suspicious activity.",
+    icon: "security",
+  },
 ] as const;
 
 export function getCountryConfig(code?: string | null) {
-  return globalCountryOptions.find((country) => country.code === code) || globalCountryOptions[0];
+  return (
+    globalCountryOptions.find((country) => country.code === code) || globalCountryOptions[0]
+  );
 }
 
 export function isSupportedCountryCode(code: string) {
@@ -316,15 +361,28 @@ export function formatCountryMoney(amount: number, countryCode?: string | null) 
 
 export function getReferralProgramProgress(user: ReferralUserLike | null | undefined) {
   const verifiedReferralCount = Math.max(0, Number(user?.verifiedReferralCount || 0));
-  const weeklyVerifiedReferralCount = Math.max(0, Number(user?.weeklyVerifiedReferralCount || 0));
-  const unlockedLevels = referralProgramLevels.filter((level) => verifiedReferralCount >= level.requirement);
+  const weeklyVerifiedReferralCount = Math.max(
+    0,
+    Number(user?.weeklyVerifiedReferralCount || 0),
+  );
+  const unlockedLevels = referralProgramLevels.filter(
+    (level) => verifiedReferralCount >= level.requirement,
+  );
   const currentLevel = unlockedLevels.at(-1) || null;
-  const nextLevel = referralProgramLevels.find((level) => verifiedReferralCount < level.requirement) || null;
+  const nextLevel =
+    referralProgramLevels.find((level) => verifiedReferralCount < level.requirement) || null;
   const previousRequirement = currentLevel?.requirement || 0;
-  const nextRequirement = nextLevel?.requirement || referralProgramLevels.at(-1)?.requirement || 100;
+  const nextRequirement =
+    nextLevel?.requirement || referralProgramLevels.at(-1)?.requirement || 100;
   const progressRange = Math.max(1, nextRequirement - previousRequirement);
   const nextProgressPercent = nextLevel
-    ? Math.min(100, Math.max(0, Math.round(((verifiedReferralCount - previousRequirement) / progressRange) * 100)))
+    ? Math.min(
+        100,
+        Math.max(
+          0,
+          Math.round(((verifiedReferralCount - previousRequirement) / progressRange) * 100),
+        ),
+      )
     : 100;
 
   return {
@@ -341,18 +399,38 @@ export function getReferralProgramProgress(user: ReferralUserLike | null | undef
 
 export function getCreditLevel(score = 0) {
   if (score >= 90) {
-    return { name: "Platinum", next: "Max trust level", minimum: 90, color: "text-[var(--color-accent-primary)]" };
+    return {
+      name: "Platinum",
+      next: "Max trust level",
+      minimum: 90,
+      color: "text-[var(--color-accent-primary)]",
+    };
   }
 
   if (score >= 75) {
-    return { name: "Gold", next: "Platinum at 90", minimum: 75, color: "text-[var(--color-warning-text)]" };
+    return {
+      name: "Gold",
+      next: "Platinum at 90",
+      minimum: 75,
+      color: "text-[var(--color-warning-text)]",
+    };
   }
 
   if (score >= 60) {
-    return { name: "Silver", next: "Gold at 75", minimum: 60, color: "text-[var(--color-text-primary)]" };
+    return {
+      name: "Silver",
+      next: "Gold at 75",
+      minimum: 60,
+      color: "text-[var(--color-text-primary)]",
+    };
   }
 
-  return { name: "Bronze", next: "Silver at 60", minimum: 0, color: "text-[var(--color-text-secondary)]" };
+  return {
+    name: "Bronze",
+    next: "Silver at 60",
+    minimum: 0,
+    color: "text-[var(--color-text-secondary)]",
+  };
 }
 
 export function getTrustScoreBreakdown(
@@ -375,8 +453,15 @@ export function getTrustScoreBreakdown(
       (!transaction.date || new Date(transaction.date).getTime() >= thirtyDaysAgo),
   );
   const billActivityPoints =
-    recentBillTransactions.length >= 5 ? 8 : recentBillTransactions.length >= 3 ? 5 : recentBillTransactions.length > 0 ? 2 : 0;
-  const billConsistencyPoints = recentBillTransactions.length > 0 && walletActivity >= 5 ? 2 : 0;
+    recentBillTransactions.length >= 5
+      ? 8
+      : recentBillTransactions.length >= 3
+        ? 5
+        : recentBillTransactions.length > 0
+          ? 2
+          : 0;
+  const billConsistencyPoints =
+    recentBillTransactions.length > 0 && walletActivity >= 5 ? 2 : 0;
   const billFailurePenalty =
     recentBillTransactions.length + recentBillRefunds.length >= 5 &&
     recentBillRefunds.length / (recentBillTransactions.length + recentBillRefunds.length) > 0.2
@@ -385,7 +470,9 @@ export function getTrustScoreBreakdown(
   const ageDays = user?.createdAt
     ? Math.max(0, Math.floor((Date.now() - new Date(user.createdAt).getTime()) / 86_400_000))
     : 0;
-  const verifiedContacts = [user?.email, user?.phone, user?.kycVerified ? "id" : ""].filter(Boolean).length;
+  const verifiedContacts = [user?.email, user?.phone, user?.kycVerified ? "id" : ""].filter(
+    Boolean,
+  ).length;
 
   return [
     {
@@ -398,13 +485,21 @@ export function getTrustScoreBreakdown(
       label: "Repayment history",
       earned: completedLoans > 0 ? 18 : activeLoans > 0 ? 9 : 0,
       weight: 18,
-      detail: completedLoans > 0 ? `${completedLoans} completed` : activeLoans > 0 ? "Loan in progress" : "No repayments yet",
+      detail:
+        completedLoans > 0
+          ? `${completedLoans} completed`
+          : activeLoans > 0
+            ? "Loan in progress"
+            : "No repayments yet",
     },
     {
       label: "Wallet activity",
       earned: walletActivity >= 5 ? 12 : walletActivity > 0 ? 7 : 0,
       weight: 12,
-      detail: walletActivity > 0 ? `${walletActivity} wallet records` : "Fund or repay to build history",
+      detail:
+        walletActivity > 0
+          ? `${walletActivity} wallet records`
+          : "Fund or repay to build history",
     },
     {
       label: "Bills activity",
@@ -417,7 +512,12 @@ export function getTrustScoreBreakdown(
     },
     {
       label: "Referral quality",
-      earned: Number(user?.verifiedReferralCount || 0) >= 5 ? 10 : Number(user?.affiliateEarnings || 0) > 0 ? 7 : 0,
+      earned:
+        Number(user?.verifiedReferralCount || 0) >= 5
+          ? 10
+          : Number(user?.affiliateEarnings || 0) > 0
+            ? 7
+            : 0,
       weight: 10,
       detail:
         Number(user?.verifiedReferralCount || 0) > 0
@@ -444,7 +544,8 @@ export function getTrustScoreBreakdown(
     },
     {
       label: "Verified contacts",
-      earned: verifiedContacts >= 3 ? 7 : verifiedContacts >= 2 ? 5 : verifiedContacts > 0 ? 2 : 0,
+      earned:
+        verifiedContacts >= 3 ? 7 : verifiedContacts >= 2 ? 5 : verifiedContacts > 0 ? 2 : 0,
       weight: 7,
       detail: `${verifiedContacts}/3 signals`,
     },

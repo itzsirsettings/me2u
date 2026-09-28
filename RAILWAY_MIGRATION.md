@@ -1,81 +1,50 @@
-# Railway PostgreSQL
+# Railway PostgreSQL and migrations
 
-Me2U runs entirely on Railway PostgreSQL. No external backend service is required.
+**Reviewed:** 28 September 2026. The repository contains Railway configuration for a Next.js service and a separate NestJS service. This file describes code and deployment configuration; it does not confirm which services are currently deployed.
 
-## Architecture
+## Application architecture
 
-| Layer                        | Runtime dependency                                                      |
-| ---------------------------- | ----------------------------------------------------------------------- |
-| Next.js app (`app/`, `lib/`) | `pg` via `lib/railway/client.ts`                                        |
-| NestJS API (`server/`)       | `pg` via `server/src/common/railway-db.service.ts`                      |
-| Auth                         | Native PostgreSQL tables (`auth_users`, `auth_sessions`) + bcrypt + JWT |
-| Realtime                     | Polling (no realtime publications)                                      |
-| File storage                 | `private_files` table (no external object storage)                      |
-| Migrations                   | `railway/migrations/`                                                   |
+| Layer                                               | PostgreSQL / runtime                                                                                                                               |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Next.js web app and route handlers (`app/`, `lib/`) | `pg` via `lib/railway/client.ts`                                                                                                                   |
+| NestJS API and queued jobs (`server/`)              | `pg` via `server/src/common/railway-db.service.ts`; BullMQ workers use Redis                                                                       |
+| Authentication                                      | App-managed PostgreSQL records, bcrypt, JWT/session cookies for web and bearer sessions for native clients; protected routes authorize server-side |
+| User documents                                      | Private-file database storage and owner-scoped read routes                                                                                         |
+| Migrations                                          | Ordered files in `railway/migrations/`                                                                                                             |
 
-## Database connection
+The checked-in root `railway.json` configures the web app to run `npm run db:migrate` before deployment. The `server/railway.json` configures the NestJS process. The active host, network policy, and service topology must be verified in the deployment account.
 
-- **On Railway:** `DATABASE_URL` is injected from the Postgres service over
-  private networking (`postgres.railway.internal`). Do not override it.
-- **Local development:** create a public TCP proxy once and point `.env` at it:
+## Database configuration
 
-  ```bash
-  railway tcp-proxy create --port 5432 --service Postgres
-  ```
+- Set `DATABASE_URL` as a secret on each service that needs PostgreSQL. Use the host's private database connection and TLS settings where available; do not copy production credentials into the repository.
+- For local development, use a separate development database and `.env.local`. Never run destructive or data-changing diagnostics against production.
+- Set database connection limits in proportion to the number of web and server replicas; preserve capacity for migrations and operator access.
+- Configure backups/PITR and perform a restore drill before production launch.
 
-  Then set `DATABASE_URL` and `PGSSLMODE=require` in `.env`.
+## Migration sources and runners
 
-## Migration files
+`railway/migrations/` contains the ordered schema track 001 through 025. It is the migration directory used by both checked-in runners:
 
-- `railway/migrations/001` … `023` is the authoritative, Railway-native schema set.
-- `run-all-migrations.py` must list every one of them. It is the only migration
-  runner wired to `schema_migrations`, so a file missing from `MIGRATIONS` is
-  silently never applied even though it exists on disk.
-- `migrations/` holds the same migrations in timestamped form for newer entries.
-- Apply them with:
+- `npm run db:migrate` executes `run-migrations.js`, which sorts SQL filenames, records applied names in `schema_migrations`, and is configured as the root Railway pre-deploy command.
+- `railway run python run-all-migrations.py` is the explicit Python runner. Its `MIGRATIONS` list must continue to include every numbered SQL file present in `railway/migrations/`.
+- `migrations/migrations/` is a timestamped mirror/history for selected changes. It is not a second production migration sequence; do not run both trees.
 
-  ```bash
-  railway run python run-all-migrations.py
-  ```
+Before adding a schema change:
 
-The legacy hosted-backend CLI project (`backend/`, `config.toml`,
-`functions/`, `timestamped-migrations/`) and the obsolete full-schema
-dumps (`COMPLETE_MIGRATION.sql`, `RAILWAY_MIGRATION.sql`) have been removed.
-Those dumps created a hosted compatibility layer (an `auth` schema shim and
-realtime publications) that Railway does not need.
+1. Add a new sequentially numbered SQL file in `railway/migrations/`.
+2. Make it safe for the deployed schema and data; prefer additive/expand changes before destructive contract changes.
+3. Add the file to `run-all-migrations.py` and any documented mirror only when required by repository compatibility.
+4. Review the SQL and rollback/forward-recovery plan; test it on a restorable staging copy.
+5. Run the configured migration runner once per environment and verify the schema version and application compatibility before rollout.
 
-The Paystack registration-deposit path uses a temporary transfer account
-created for the authenticated user's fixed NGN 2,000 charge. A signed Paystack
-webhook or server-side pending-charge verification confirms the exact reference,
-amount, currency, and transfer channel before the deposit is credited and the
-profile is unlocked. `PAYSTACK_SECRET_KEY` and the Paystack webhook signing
-secret stay server-side; the transfer instructions and status are shown in the
-app.
+Never manually edit `schema_migrations` to hide a failed or unapplied file. Do not apply a migration by pasting SQL into a live database console unless there is a reviewed recovery procedure and an operator records the exact result.
 
-## Environment variables
+## Production release checks
 
-Set on Railway:
+- Web readiness checks are defined in `lib/server/launch-readiness.ts`; these only check required environment values, not provider uptime or successful customer transactions.
+- `/api/health/live` is liveness, not full readiness. The separate NestJS service also has its own health controller.
+- Test database transactions, migrations, authentication, wallet ledger invariants, payment webhooks, duplicates, provider timeouts, retries, and recovery in staging.
+- Confirm provider credentials, merchant feature enablement, callback URLs, and support/reconciliation procedures outside this repository.
+- Keep credentials, KYC documents, session tokens, and full financial account data out of source control, client responses, and logs.
 
-```
-DATABASE_URL=postgresql://...   # injected automatically; do not override
-AUTH_TOKEN_SECRET=<generate-a-random-32-char-secret>
-PAYSTACK_SECRET_KEY=sk_live_...
-RESEND_API_KEY=re_...
-REDIS_URL=redis://...
-```
-
-Only Railway PostgreSQL variables are read:
-
-- `DATABASE_URL`, `AUTH_TOKEN_SECRET`, `PAYSTACK_SECRET_KEY`, `RESEND_API_KEY`, `REDIS_URL`
-
-## Verification
-
-```bash
-curl -X POST http://localhost:3000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"you@example.com","password":"your-password"}'
-```
-
-A `401` with `{"error":"Invalid email or password."}` confirms the database is
-reachable and the credentials were rejected on their merits. A `200` returns the
-session JWT.
+See [the production deployment checklist](docs/railway-launch-checklist.md) and [architecture and roadmap](docs/architecture-and-roadmap.md) for related release controls.
