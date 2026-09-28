@@ -87,7 +87,9 @@ export function getRailwayDbClient(): Pool {
       connectionTimeoutMillis: Number(process.env.PG_CONNECT_TIMEOUT_MS ?? 10_000),
       statement_timeout: statementTimeoutMs,
       idleTimeoutMillis: safeIdleMs,
-      max: Number(process.env.PG_MAX_POOL_SIZE ?? 20),
+      // Leave connection headroom for database administration and other services
+      // when the app runs several replicas (15 x 4 = 60 of the 100 production slots).
+      max: Number(process.env.PG_MAX_POOL_SIZE ?? 15),
       min: 0,
       allowExitOnIdle: true,
       ...({
@@ -95,11 +97,11 @@ export function getRailwayDbClient(): Pool {
       } as Record<string, unknown>),
     });
 
-    pool.on("error", (err) => {
+    pool.on("error", (err: Error & { code?: string; severity?: string }) => {
       const payload = {
         message: err.message,
-        code: (err as any).code,
-        severity: (err as any).severity,
+        code: err.code,
+        severity: err.severity,
       };
       try {
         baseLogger.error(payload, "[pg_pool_error]");
