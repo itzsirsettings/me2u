@@ -44,16 +44,11 @@ async function worker() {
     const controller = new AbortController();
     const timeoutHandle = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const response = await Promise.race([
-        fetch(`${baseUrl}${endpoint}`, {
-          redirect: "manual",
-          headers,
-          signal: controller.signal,
-        }),
-        new Promise((_, reject) => {
-          setTimeout(() => reject(new Error("request timeout")), timeoutMs);
-        }),
-      ]);
+      const response = await fetch(`${baseUrl}${endpoint}`, {
+        redirect: "manual",
+        headers,
+        signal: controller.signal,
+      });
       if (!response.ok) failures += 1;
     } catch {
       failures += 1;
