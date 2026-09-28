@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import * as db from "@/lib/railway/client";
 import { markCronFinished, markCronStarted } from "@/lib/server/cron-heartbeat";
+import { requireCronAuth } from "@/lib/server/cron-auth";
 
 /**
  * Cron job to auto-unlock users who have reached their 15-day eligibility
@@ -19,13 +20,8 @@ const CRON_JOB_NAME = "unlock-eligible-users";
 
 export async function GET(request: Request) {
   try {
-    // Verify cron secret
-    const authHeader = request.headers.get("authorization");
-    const cronSecret = process.env.CRON_SECRET || process.env.AUTH_TOKEN_SECRET;
-
-    if (authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authError = requireCronAuth(request);
+    if (authError) return authError;
 
     await markCronStarted(CRON_JOB_NAME);
 

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdminUser } from "@/lib/server/auth";
 import { requestWemaVirtualAccountForKycUser } from "@/lib/server/wema-virtual-account";
 import { withTransaction } from "@/lib/railway/client";
+import { buildLedgerRef, recordWalletMove } from "@/lib/server/wallet-ledger";
 
 type AdminAction =
   | "approve_payment_proof"
@@ -118,16 +119,22 @@ export async function POST(request: Request) {
           [id],
         );
 
-        // Credit wallet
-        await client.query(
-          `UPDATE wallets SET balance = balance + $1, updated_at = NOW() WHERE user_id = $2`,
-          [Number(proof.amount), proof.user_id],
-        );
-
         const description =
           proof.type === "registration_deposit"
             ? `Registration deposit of ₦${Number(proof.amount).toLocaleString()} confirmed`
             : `Wallet funded with ₦${Number(proof.amount).toLocaleString()}`;
+
+        // Credit wallet via recordWalletMove so the ledger has a full audit entry.
+        await recordWalletMove(client, {
+          userId: proof.user_id,
+          txType: "credit",
+          source: "deposit",
+          reference: buildLedgerRef("admin-proof", id),
+          description,
+          balanceDelta: Number(proof.amount),
+          sourceDetail: id,
+          metadata: { proofId: id, proofType: proof.type },
+        });
 
         await client.query(
           `INSERT INTO transactions (user_id, type, amount, description, created_at)
@@ -232,27 +239,53 @@ export async function POST(request: Request) {
 
     // ── Withdrawal approve ───────────────────────────────────────────────────
     if (action === "approve_withdrawal") {
-      await db.query(
-        `UPDATE withdrawal_requests
-         SET status = 'success', processed_by = $1, processed_at = NOW(), updated_at = NOW()
-         WHERE id = $2 AND status = 'pending'`,
-        [auth.user.id, id],
-      );
+      await withTransaction(async (client) => {
+        const { rows: wRows } = await client.query<{
+          id: string;
+          user_id: string;
+          amount: number;
+          fee_amount: number;
+          status: string;
+        }>(
+          `SELECT id, user_id, amount, fee_amount, status
+           FROM withdrawal_requests WHERE id = $1 FOR UPDATE`,
+          [id],
+        );
+        const wr = wRows[0];
+        if (!wr) throw new Error("Withdrawal request not found.");
+        if (wr.status !== "pending")
+          throw new Error("This request has already been processed.");
 
-      const { rows: wRows } = await db.query<{ user_id: string; amount: number }>(
-        `SELECT user_id, amount FROM withdrawal_requests WHERE id = $1`,
-        [id],
-      );
-      if (wRows[0]) {
-        await db.query(
+        await client.query(
+          `UPDATE withdrawal_requests
+           SET status = 'success', processed_by = $1, processed_at = NOW(), updated_at = NOW()
+           WHERE id = $2`,
+          [auth.user.id, id],
+        );
+
+        // Record settled ledger entry — balance was already debited at dispatch;
+        // release the locked funds to close the audit trail.
+        await recordWalletMove(client, {
+          userId: wr.user_id,
+          txType: "debit",
+          source: "withdrawal",
+          reference: buildLedgerRef("wdr-admin-approved", id),
+          description: `Withdrawal manually approved by admin`,
+          balanceDelta: 0,
+          lockedDelta: -(Number(wr.amount) + Number(wr.fee_amount || 0)),
+          sourceDetail: id,
+          metadata: { approvedBy: auth.user.id, withdrawalId: id },
+        });
+
+        await client.query(
           `INSERT INTO notifications (user_id, title, message, is_read, created_at)
            VALUES ($1, 'Withdrawal Successful', $2, false, NOW())`,
           [
-            wRows[0].user_id,
-            `Your withdrawal of ₦${Number(wRows[0].amount).toLocaleString()} has been processed.`,
+            wr.user_id,
+            `Your withdrawal of ₦${Number(wr.amount).toLocaleString()} has been processed.`,
           ],
         );
-      }
+      });
 
       return NextResponse.json({ ok: true });
     }

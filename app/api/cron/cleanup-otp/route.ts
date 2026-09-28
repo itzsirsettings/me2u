@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cleanupExpiredOtps } from "@/lib/server/in-app-otp";
 import { markCronFinished, markCronStarted } from "@/lib/server/cron-heartbeat";
+import { requireCronAuth } from "@/lib/server/cron-auth";
 
 /**
  * Cron job to cleanup expired OTP codes
@@ -16,13 +17,8 @@ const CRON_JOB_NAME = "cleanup-otp";
 
 export async function GET(request: Request) {
   try {
-    // Verify cron secret
-    const authHeader = request.headers.get("authorization");
-    const cronSecret = process.env.CRON_SECRET || process.env.AUTH_TOKEN_SECRET;
-
-    if (authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authError = requireCronAuth(request);
+    if (authError) return authError;
 
     await markCronStarted(CRON_JOB_NAME);
 

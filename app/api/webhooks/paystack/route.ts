@@ -204,22 +204,47 @@ async function handleTransferSuccess(eventId: string, payload: any): Promise<voi
   if (!transferCode && !reference) return;
 
   await withTransaction(async (client) => {
-    const { rows } = await client.query<{ id: string }>(
+    const { rows } = await client.query<{
+      id: string;
+      user_id: string;
+      amount: number;
+      fee_amount: number;
+    }>(
       `UPDATE withdrawal_requests
           SET status = 'success',
               paystack_reference = COALESCE($1, paystack_reference),
               updated_at = NOW()
         WHERE (paystack_transfer_code = $2 OR paystack_reference = $1)
           AND status IN (${WITHDRAWAL_IN_FLIGHT_SQL})
-        RETURNING id`,
+        RETURNING id, user_id, amount, fee_amount`,
       [reference, transferCode],
     );
-    if (rows[0]) {
-      logInfo("paystack:transfer.success:updated", {
-        withdrawalId: rows[0].id,
+    const req = rows[0];
+    if (!req) return;
+
+    // Record the settled ledger entry so the debit (written at dispatch time)
+    // has a matching "settled" credit that closes the withdrawal in the audit trail.
+    await recordWalletMove(client, {
+      userId: req.user_id,
+      txType: "debit",
+      source: "withdrawal",
+      reference: buildLedgerRef("wdr-settled", req.id),
+      description: `Withdrawal settled: Paystack transfer confirmed`,
+      balanceDelta: 0, // balance already debited at dispatch; this is a zero-delta ledger marker
+      lockedDelta: -(Number(req.amount) + Number(req.fee_amount || 0)), // release locked funds
+      sourceDetail: req.id,
+      metadata: {
+        event: "transfer.success",
+        eventId,
         transferCode,
-      });
-    }
+        reference,
+      },
+    });
+
+    logInfo("paystack:transfer.success:updated", {
+      withdrawalId: req.id,
+      transferCode,
+    });
   });
 }
 

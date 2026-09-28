@@ -10,6 +10,7 @@ import {
   type InFlightWithdrawal,
 } from "@/lib/server/withdrawal-reconcile";
 import { WITHDRAWAL_IN_FLIGHT_SQL } from "@/lib/server/withdrawal-status";
+import { requireCronAuth } from "@/lib/server/cron-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -35,11 +36,8 @@ const CRON_JOB_NAME = "reconcile-withdrawals";
  * (job_name = 'reconcile-withdrawals'), best-effort only.
  */
 export async function GET(request: Request) {
-  const authHeader = request.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET || process.env.AUTH_TOKEN_SECRET;
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const authError = requireCronAuth(request);
+  if (authError) return authError;
   await markCronStarted(CRON_JOB_NAME);
   try {
     const { rows: inFlight } = await query<InFlightWithdrawal>(
