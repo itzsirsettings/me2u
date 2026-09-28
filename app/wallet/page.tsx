@@ -13,6 +13,7 @@ import { registrationDepositAmount } from "@/lib/loans";
 import {
   readPaystackRegistrationTransfer,
   readPaystackRegistrationTransferError,
+  readPaystackRegistrationTransferReference,
   type PaystackRegistrationTransfer,
 } from "@/lib/paystack-registration";
 import { useStore } from "@/lib/store";
@@ -81,6 +82,7 @@ export default function WalletPage() {
   const [paystackTransfer, setPaystackTransfer] = useState<PaystackRegistrationTransfer | null>(
     null,
   );
+  const [pendingPaystackReference, setPendingPaystackReference] = useState("");
   const [startingPaystackTransfer, setStartingPaystackTransfer] = useState(false);
 
   const confirmRegistrationDeposit = useStore((state) => state.confirmRegistrationDeposit);
@@ -116,6 +118,9 @@ export default function WalletPage() {
         if (payment) {
           setPaystackTransfer(payment);
           if (payment.status === "success") await loadCurrentUser();
+        } else if (response.status === 202) {
+          const reference = readPaystackRegistrationTransferReference(data);
+          if (reference) setPendingPaystackReference(reference);
         }
       })
       .catch(() => undefined);
@@ -124,10 +129,11 @@ export default function WalletPage() {
     };
   }, [mounted, userId, registrationDepositPaid, loadCurrentUser]);
 
-  const paystackReference = paystackTransfer?.reference;
-  const paystackStatus = paystackTransfer?.status;
+  const paystackReference = paystackTransfer?.reference || pendingPaystackReference;
+  const paystackStatus = pendingPaystackReference ? "initializing" : paystackTransfer?.status;
   useEffect(() => {
-    if (!paystackReference || paystackStatus !== "pending") return;
+    if (!paystackReference || !["initializing", "pending"].includes(paystackStatus || ""))
+      return;
     let active = true;
     const checkPayment = async () => {
       try {
@@ -138,18 +144,20 @@ export default function WalletPage() {
         if (!response.ok || !active) return;
         const payment = readPaystackRegistrationTransfer(data);
         if (!payment || !active) return;
-        if (payment.status !== "pending") {
-          setPaystackTransfer(payment);
-          if (payment.status === "success") {
-            toast.success("Registration deposit confirmed.");
-            await loadCurrentUser();
-          }
+        setPaystackTransfer(payment);
+        setPendingPaystackReference("");
+        if (payment.status === "success") {
+          toast.success("Registration deposit confirmed.");
+          await loadCurrentUser();
         }
       } catch {
         // Keep the transfer instructions available while a status check retries.
       }
     };
-    const interval = window.setInterval(() => void checkPayment(), 30_000);
+    const interval = window.setInterval(
+      () => void checkPayment(),
+      paystackStatus === "initializing" ? 10_000 : 30_000,
+    );
     return () => {
       active = false;
       window.clearInterval(interval);
@@ -214,10 +222,35 @@ export default function WalletPage() {
         body: JSON.stringify({}),
       });
       const data: unknown = await response.json();
-      const payment = readPaystackRegistrationTransfer(data);
+      let payment = readPaystackRegistrationTransfer(data);
+      const reference = readPaystackRegistrationTransferReference(data);
+      if (!payment && response.status === 202 && reference) {
+        for (let attempt = 0; attempt < 10; attempt += 1) {
+          await new Promise((resolve) => window.setTimeout(resolve, 2_000));
+          const statusResponse = await authorizedFetch(
+            `/api/onboarding/registration-deposit/paystack?reference=${encodeURIComponent(reference)}`,
+          );
+          const statusData: unknown = await statusResponse.json();
+          payment = readPaystackRegistrationTransfer(statusData);
+          if (payment) break;
+          if (!statusResponse.ok && statusResponse.status !== 202) {
+            throw new Error(
+              readPaystackRegistrationTransferError(statusData, statusResponse.status),
+            );
+          }
+        }
+      }
       if (!response.ok || !payment) {
+        if (response.status === 202 && reference) {
+          setPendingPaystackReference(reference);
+          toast.info(
+            "Your transfer details are still being prepared. Keep this page open; you do not need to click again.",
+          );
+          return;
+        }
         throw new Error(readPaystackRegistrationTransferError(data, response.status));
       }
+      setPendingPaystackReference("");
       setPaystackTransfer(payment);
       if (payment.status === "success") await loadCurrentUser();
     } catch (error) {
@@ -374,12 +407,14 @@ export default function WalletPage() {
                       <button
                         type="button"
                         onClick={() => void startPaystackTransfer()}
-                        disabled={startingPaystackTransfer}
+                        disabled={startingPaystackTransfer || Boolean(pendingPaystackReference)}
                         className="btn-primary min-h-11 w-full disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         {startingPaystackTransfer
                           ? "Preparing Paystack Transfer…"
-                          : "Get Paystack transfer details"}
+                          : pendingPaystackReference
+                            ? "Transfer details are being prepared"
+                            : "Get Paystack transfer details"}
                       </button>
                     ) : (
                       <div className="space-y-3 rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">

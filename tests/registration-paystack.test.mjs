@@ -141,6 +141,18 @@ test("Paystack transfer recovery messages preserve server guidance for successfu
     registrationTransferClient.readPaystackRegistrationTransferError({}, 202),
     /Refresh this page before trying again/,
   );
+  assert.equal(
+    registrationTransferClient.readPaystackRegistrationTransferReference({
+      reference: "regdep-12345678-1234-1234-1234-123456789abc",
+    }),
+    "regdep-12345678-1234-1234-1234-123456789abc",
+  );
+  assert.equal(
+    registrationTransferClient.readPaystackRegistrationTransferReference({
+      reference: "arbitrary-reference",
+    }),
+    null,
+  );
 });
 
 test("Paystack ambiguous creation outcomes are held for reconciliation", () => {

@@ -11,7 +11,6 @@ import {
 import { logWarn } from "@/lib/server/logger";
 import {
   completeRegistrationDepositCharge,
-  registrationTransferFailureStatus,
   registrationTransferExpiresAt,
   readRegistrationTransferAccount,
   readRegistrationDepositTransferDetails,
@@ -35,6 +34,7 @@ type RegistrationPaymentRow = {
   transaction_reference: string | null;
   expires_at: string;
   created_at: string;
+  updated_at: string;
 };
 type RegistrationTransferDetailsRow = {
   reference: string;
@@ -62,6 +62,77 @@ function paymentResponse(
     expiresAt: details.expiresAt,
     status: details.status,
   };
+}
+
+type PaymentQuery = <T>(sql: string, values?: unknown[]) => Promise<{ rows: T[] }>;
+
+async function reconcileTransfer(
+  query: PaymentQuery,
+  paymentRow: Pick<RegistrationPaymentRow, "id" | "reference">,
+) {
+  if (!PAYSTACK_SECRET) return null;
+
+  try {
+    const verification = await fetch(
+      `https://api.paystack.co/charge/${encodeURIComponent(paymentRow.reference)}`,
+      {
+        headers: { Authorization: `Bearer ${PAYSTACK_SECRET}` },
+        cache: "no-store",
+        signal: AbortSignal.timeout(10_000),
+      },
+    );
+    const payload: unknown = await verification.json().catch(() => null);
+    const provider = isRecord(payload) ? payload : null;
+    const transaction = isRecord(provider?.data) ? provider.data : null;
+    if (!verification.ok || provider?.status !== true || !transaction) return null;
+
+    if (transaction.status === "success") {
+      await completeRegistrationDepositCharge(transaction, `verify:${paymentRow.reference}`);
+    } else if (transaction.status === "failed") {
+      await query(
+        `UPDATE registration_deposit_payments SET status = 'failed', updated_at = NOW()
+          WHERE id = $1 AND status IN ('initializing', 'pending')`,
+        [paymentRow.id],
+      );
+      return null;
+    }
+
+    const transferAccount = readRegistrationTransferAccount(
+      payload,
+      paymentRow.reference,
+      REGISTRATION_DEPOSIT_KOBO,
+    );
+    if (
+      !transferAccount ||
+      !["pending_bank_transfer", "success"].includes(String(transaction.status))
+    ) {
+      return null;
+    }
+
+    const { rows } = await query<RegistrationTransferDetailsRow>(
+      `UPDATE registration_deposit_payments
+          SET status = CASE WHEN status = 'success' THEN 'success' ELSE 'pending' END,
+              account_name = $1, account_number = $2,
+              bank_name = $3, transaction_reference = $4, updated_at = NOW()
+        WHERE id = $5 AND status IN ('initializing', 'pending', 'success')
+        RETURNING reference, account_name, account_number, bank_name,
+                  transaction_reference, expires_at, status`,
+      [
+        transferAccount.accountName,
+        transferAccount.accountNumber,
+        transferAccount.bankName,
+        transferAccount.transactionReference,
+        paymentRow.id,
+      ],
+    );
+    const details = readRegistrationDepositTransferDetails(rows[0]);
+    return details && ["pending", "success"].includes(details.status) ? details : null;
+  } catch {
+    logWarn("registration_paystack_transfer_reconciliation_failed", {
+      reference: paymentRow.reference,
+    });
+    return null;
+  }
 }
 
 export async function POST(request: Request) {
@@ -112,24 +183,52 @@ export async function POST(request: Request) {
       );
     }
     const { rows: existingRows } = await auth.db.query<RegistrationPaymentRow>(
-      `SELECT reference, account_name, account_number, bank_name,
-              transaction_reference, expires_at, status
+      `SELECT id, reference, amount, account_name, account_number, bank_name,
+              transaction_reference, expires_at, status, created_at, updated_at
          FROM registration_deposit_payments
         WHERE user_id = $1 AND status IN ('initializing', 'pending')
         LIMIT 1`,
       [userId],
     );
-    const existing = readRegistrationDepositTransferDetails(existingRows[0]);
+    const existingRow = existingRows[0];
+    const existing = readRegistrationDepositTransferDetails(existingRow);
     if (existing) {
-      if (existing.status !== "pending") {
+      return NextResponse.json(
+        { ok: true, payment: paymentResponse(existing) },
+        {
+          headers: { "Cache-Control": "no-store" },
+        },
+      );
+    }
+    if (existingRow) {
+      let recovered = null;
+      const { rows: claimRows } = await auth.db.query<{ id: string }>(
+        `UPDATE registration_deposit_payments SET updated_at = NOW()
+          WHERE id = $1 AND status IN ('initializing', 'pending')
+            AND created_at <= NOW() - INTERVAL '10 seconds'
+            AND updated_at <= NOW() - INTERVAL '10 seconds'
+          RETURNING id`,
+        [existingRow.id],
+      );
+      if (claimRows[0]) {
+        recovered = await reconcileTransfer(auth.db.query.bind(auth.db), existingRow);
+      }
+      if (recovered) {
         return NextResponse.json(
-          { error: "Your Paystack Transfer is being prepared. Refresh in a moment." },
-          { status: 409, headers: { "Cache-Control": "no-store" } },
+          { ok: true, payment: paymentResponse(recovered) },
+          {
+            headers: { "Cache-Control": "no-store" },
+          },
         );
       }
       return NextResponse.json(
-        { ok: true, payment: paymentResponse(existing) },
-        { headers: { "Cache-Control": "no-store" } },
+        {
+          error:
+            "Your transfer account is still being prepared. Keep this page open; do not start another transfer.",
+          reference: existingRow.reference,
+          status: existingRow.status,
+        },
+        { status: 202, headers: { "Cache-Control": "no-store" } },
       );
     }
 
@@ -169,17 +268,26 @@ export async function POST(request: Request) {
         signal: AbortSignal.timeout(15_000),
       });
     } catch {
-      await auth.db.query(
-        `UPDATE registration_deposit_payments SET status = 'review', updated_at = NOW() WHERE id = $1`,
-        [createdRows[0].id],
-      );
+      const recovered = await reconcileTransfer(auth.db.query.bind(auth.db), {
+        id: createdRows[0].id,
+        reference,
+      });
+      if (recovered) {
+        return NextResponse.json(
+          { ok: true, payment: paymentResponse(recovered) },
+          {
+            headers: { "Cache-Control": "no-store" },
+          },
+        );
+      }
       return NextResponse.json(
         {
           error:
-            "Paystack's response could not be confirmed. Do not start another transfer yet; contact support with your reference.",
+            "Your transfer is being confirmed. Keep this page open; do not start another transfer.",
           reference,
+          status: "initializing",
         },
-        { status: 502, headers: { "Cache-Control": "no-store" } },
+        { status: 202, headers: { "Cache-Control": "no-store" } },
       );
     }
 
@@ -191,30 +299,45 @@ export async function POST(request: Request) {
     );
 
     if (!response.ok || !transferAccount) {
-      const status = registrationTransferFailureStatus(
-        response.status,
-        response.ok,
-        Boolean(transferAccount),
-      );
-      await auth.db.query(
-        `UPDATE registration_deposit_payments SET status = $1, updated_at = NOW() WHERE id = $2`,
-        [status, createdRows[0].id],
-      );
       const provider = isRecord(payload) ? payload : null;
       logWarn("registration_paystack_transfer_creation_failed", {
         reference,
         httpStatus: response.status,
         providerStatus: provider?.status === true,
       });
+      if (!response.ok && response.status < 500) {
+        await auth.db.query(
+          `UPDATE registration_deposit_payments SET status = 'failed', updated_at = NOW() WHERE id = $1`,
+          [createdRows[0].id],
+        );
+        return NextResponse.json(
+          {
+            error: "Paystack could not create a transfer account. Please try again.",
+            reference,
+          },
+          { status: 502, headers: { "Cache-Control": "no-store" } },
+        );
+      }
+      const recovered = await reconcileTransfer(auth.db.query.bind(auth.db), {
+        id: createdRows[0].id,
+        reference,
+      });
+      if (recovered) {
+        return NextResponse.json(
+          { ok: true, payment: paymentResponse(recovered) },
+          {
+            headers: { "Cache-Control": "no-store" },
+          },
+        );
+      }
       return NextResponse.json(
         {
           error:
-            status === "review"
-              ? "Paystack's response could not be confirmed. Do not start another transfer yet; contact support with your reference."
-              : "Paystack could not create a transfer account. Please try again.",
+            "Your transfer is being confirmed. Keep this page open; do not start another transfer.",
           reference,
+          status: "initializing",
         },
-        { status: 502, headers: { "Cache-Control": "no-store" } },
+        { status: 202, headers: { "Cache-Control": "no-store" } },
       );
     }
 
@@ -296,7 +419,7 @@ export async function GET(request: Request) {
     const reference = url.searchParams.get("reference");
     const { rows } = await auth.db.query<RegistrationPaymentRow>(
       `SELECT id, reference, amount, status, account_name, account_number,
-              bank_name, transaction_reference, expires_at, created_at
+              bank_name, transaction_reference, expires_at, created_at, updated_at
          FROM registration_deposit_payments
         WHERE user_id = $1 AND ($2::text IS NULL OR reference = $2)
         ORDER BY created_at DESC
@@ -304,9 +427,40 @@ export async function GET(request: Request) {
       [auth.user.id, reference],
     );
     const paymentRow = rows[0];
-    const payment = readRegistrationDepositTransferDetails(paymentRow);
-    if (!payment || !paymentRow) {
+    if (!paymentRow) {
       return NextResponse.json({ payment: null }, { headers: { "Cache-Control": "no-store" } });
+    }
+
+    let payment = readRegistrationDepositTransferDetails(paymentRow);
+    if (
+      !payment &&
+      ["initializing", "pending"].includes(paymentRow.status) &&
+      Date.now() - new Date(paymentRow.created_at).getTime() >= 10_000 &&
+      Date.now() - new Date(paymentRow.updated_at).getTime() >= 10_000
+    ) {
+      const { rows: claimRows } = await auth.db.query<{ id: string }>(
+        `UPDATE registration_deposit_payments SET updated_at = NOW()
+          WHERE id = $1 AND status IN ('initializing', 'pending')
+            AND updated_at <= NOW() - INTERVAL '10 seconds'
+          RETURNING id`,
+        [paymentRow.id],
+      );
+      if (claimRows[0]) {
+        const recovered = await reconcileTransfer(auth.db.query.bind(auth.db), paymentRow);
+        if (recovered) payment = recovered;
+      }
+    }
+
+    if (!payment) {
+      return NextResponse.json(
+        {
+          payment: null,
+          reference: paymentRow.reference,
+          status: paymentRow.status,
+          message: "Transfer details are still being prepared. Do not start another transfer.",
+        },
+        { status: 202, headers: { "Cache-Control": "no-store" } },
+      );
     }
 
     if (

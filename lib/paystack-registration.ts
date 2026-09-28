@@ -40,6 +40,14 @@ export function readPaystackRegistrationTransfer(
   };
 }
 
+export function readPaystackRegistrationTransferReference(value: unknown): string | null {
+  if (typeof value !== "object" || value === null || !("reference" in value)) return null;
+  const reference = value.reference;
+  return typeof reference === "string" && /^regdep-[a-f0-9-]{36}$/i.test(reference)
+    ? reference
+    : null;
+}
+
 export function readPaystackRegistrationTransferError(
   value: unknown,
   httpStatus: number,
