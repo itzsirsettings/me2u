@@ -179,6 +179,9 @@ export default function PublicProofSection() {
             <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
               <div>
                 <h3 className="text-2xl font-black md:text-3xl">What members are saying</h3>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Portraits are AI-generated illustrations and do not depict actual members.
+                </p>
               </div>
             </div>
             <SuccessStoryCarousel fallbackStories={memberTestimonials} />
