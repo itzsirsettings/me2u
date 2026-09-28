@@ -36,6 +36,15 @@ type RegistrationPaymentRow = {
   expires_at: string;
   created_at: string;
 };
+type RegistrationTransferDetailsRow = {
+  reference: string;
+  account_name: string | null;
+  account_number: string | null;
+  bank_name: string | null;
+  transaction_reference: string | null;
+  expires_at: string;
+  status: string;
+};
 
 function isRecord(value: unknown): value is JsonRecord {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -227,7 +236,7 @@ export async function POST(request: Request) {
     );
     const payment = readRegistrationDepositTransferDetails(savedRows[0]);
     if (!payment) {
-      const { rows: finalRows } = await auth.db.query(
+      const { rows: finalRows } = await auth.db.query<RegistrationTransferDetailsRow>(
         `SELECT reference, account_name, account_number, bank_name,
                 transaction_reference, expires_at, status
            FROM registration_deposit_payments WHERE id = $1`,
@@ -235,8 +244,23 @@ export async function POST(request: Request) {
       );
       const finalized = readRegistrationDepositTransferDetails(finalRows[0]);
       if (!finalized) {
+        const finalStatus = finalRows[0]?.status ?? "missing";
+        logWarn("registration_paystack_transfer_details_not_saved", {
+          reference,
+          status: finalStatus,
+          hasAccountName: Boolean(finalRows[0]?.account_name),
+          hasAccountNumber: Boolean(finalRows[0]?.account_number),
+          hasBankName: Boolean(finalRows[0]?.bank_name),
+        });
         return NextResponse.json(
-          { error: "Paystack Transfer was started. Refresh this page to check its status." },
+          {
+            error:
+              finalStatus === "review"
+                ? "This Paystack transfer needs support review. Do not start another transfer."
+                : "Paystack started this transfer, but its details could not be saved. Do not start another transfer until you check its status or contact support.",
+            reference,
+            status: finalStatus,
+          },
           { status: 202, headers: { "Cache-Control": "no-store" } },
         );
       }

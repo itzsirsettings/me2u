@@ -10,6 +10,11 @@ import { ReferenceScreen } from "@/components/reference/ReferenceUI";
 import { Card } from "@/components/ui/card";
 import { authorizedFetch } from "@/lib/fetch";
 import { registrationDepositAmount } from "@/lib/loans";
+import {
+  readPaystackRegistrationTransfer,
+  readPaystackRegistrationTransferError,
+  type PaystackRegistrationTransfer,
+} from "@/lib/paystack-registration";
 import { useStore } from "@/lib/store";
 import LoadingButton from "@/LoadingButton";
 
@@ -19,48 +24,8 @@ type RegistrationDepositAccount = {
   number: string;
 };
 
-type PaystackRegistrationTransfer = {
-  reference: string;
-  accountName: string;
-  accountNumber: string;
-  bankName: string;
-  transactionReference: string;
-  expiresAt: string;
-  status: "pending" | "success" | "failed" | "expired" | "review" | "initializing";
-};
-
 const showPayBillsSection = false;
 const subscribeToNoChanges = () => () => {};
-
-function readPaystackRegistrationTransfer(value: unknown): PaystackRegistrationTransfer | null {
-  if (typeof value !== "object" || value === null || !("payment" in value)) return null;
-  const payment = value.payment;
-  if (typeof payment !== "object" || payment === null) return null;
-  const fields = payment as Record<string, unknown>;
-  if (
-    typeof fields.reference !== "string" ||
-    typeof fields.accountName !== "string" ||
-    typeof fields.accountNumber !== "string" ||
-    typeof fields.bankName !== "string" ||
-    typeof fields.transactionReference !== "string" ||
-    typeof fields.expiresAt !== "string" ||
-    typeof fields.status !== "string" ||
-    !["pending", "success", "failed", "expired", "review", "initializing"].includes(
-      fields.status,
-    )
-  ) {
-    return null;
-  }
-  return {
-    reference: fields.reference,
-    accountName: fields.accountName,
-    accountNumber: fields.accountNumber,
-    bankName: fields.bankName,
-    transactionReference: fields.transactionReference,
-    expiresAt: fields.expiresAt,
-    status: fields.status as PaystackRegistrationTransfer["status"],
-  };
-}
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -249,21 +214,10 @@ export default function WalletPage() {
         body: JSON.stringify({}),
       });
       const data: unknown = await response.json();
-      if (!response.ok) {
-        const payload = typeof data === "object" && data !== null ? data : {};
-        const message =
-          "error" in payload && typeof payload.error === "string"
-            ? payload.error
-            : "Unable to start Paystack Transfer.";
-        const reference =
-          "reference" in payload && typeof payload.reference === "string"
-            ? payload.reference
-            : "";
-        if (reference) throw new Error(`${message} Reference: ${reference}.`);
-        throw new Error(message);
-      }
       const payment = readPaystackRegistrationTransfer(data);
-      if (!payment) throw new Error("Paystack did not return transfer details. Try again.");
+      if (!response.ok || !payment) {
+        throw new Error(readPaystackRegistrationTransferError(data, response.status));
+      }
       setPaystackTransfer(payment);
       if (payment.status === "success") await loadCurrentUser();
     } catch (error) {

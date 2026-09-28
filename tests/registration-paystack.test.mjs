@@ -13,6 +13,7 @@ const registrationDeposit = loadSource("lib/server/registration-deposit-paystack
   },
   "@/lib/server/logger": { logWarn: () => {} },
 });
+const registrationTransferClient = loadSource("lib/paystack-registration.ts");
 
 const successfulCharge = {
   reference: "regdep-reference",
@@ -121,6 +122,24 @@ test("Paystack Nigerian transfer response works without optional fields", () => 
       200000,
     )?.transactionReference,
     "bank-ref",
+  );
+});
+
+test("Paystack transfer recovery messages preserve server guidance for successful HTTP responses", () => {
+  const recovery = registrationTransferClient.readPaystackRegistrationTransferError(
+    {
+      error: "Paystack started this transfer, but its details could not be saved.",
+      reference: "regdep-recovery-reference",
+      status: "review",
+    },
+    202,
+  );
+  assert.match(recovery, /details could not be saved/);
+  assert.match(recovery, /regdep-recovery-reference/);
+  assert.doesNotMatch(recovery, /Try again/);
+  assert.match(
+    registrationTransferClient.readPaystackRegistrationTransferError({}, 202),
+    /Refresh this page before trying again/,
   );
 });
 
