@@ -53,6 +53,92 @@ test("Paystack registration transfers require exact NGN amount, channel, and ref
   );
 });
 
+test("Paystack Nigerian transfer response works without optional fields", () => {
+  const payload = {
+    status: true,
+    message: "Charge attempted",
+    data: {
+      reference: "regdep-reference",
+      status: "pending_bank_transfer",
+      account_name: "TEST-MANAGED-ACCOUNT",
+      account_number: "1260257501",
+      bank: { slug: "test-bank", name: "Test Bank", id: 24 },
+      account_expires_at: "2026-09-28T16:40:57.954Z",
+    },
+  };
+
+  assert.deepEqual(
+    registrationDeposit.readRegistrationTransferAccount(payload, "regdep-reference", 200000),
+    {
+      accountName: "TEST-MANAGED-ACCOUNT",
+      accountNumber: "1260257501",
+      bankName: "Test Bank",
+      transactionReference: "regdep-reference",
+    },
+  );
+  assert.equal(
+    registrationDeposit.readRegistrationTransferAccount(
+      { ...payload, data: { ...payload.data, amount: 199999 } },
+      "regdep-reference",
+      200000,
+    ),
+    null,
+  );
+  assert.equal(
+    registrationDeposit.readRegistrationTransferAccount(payload, "another-reference", 200000),
+    null,
+  );
+  assert.equal(
+    registrationDeposit.readRegistrationTransferAccount(
+      { ...payload, data: { ...payload.data, account_number: "1234" } },
+      "regdep-reference",
+      200000,
+    ),
+    null,
+  );
+  assert.equal(
+    registrationDeposit.readRegistrationTransferAccount(
+      { ...payload, data: { ...payload.data, status: "failed" } },
+      "regdep-reference",
+      200000,
+    ),
+    null,
+  );
+  assert.equal(
+    registrationDeposit.readRegistrationTransferAccount(
+      {
+        ...payload,
+        data: {
+          ...payload.data,
+          account_name: "  TEST-MANAGED-ACCOUNT ",
+          bank: { ...payload.data.bank, name: " Test Bank " },
+          amount: 200000,
+          currency: "NGN",
+          transaction_reference: "bank-ref",
+        },
+      },
+      "regdep-reference",
+      200000,
+    )?.transactionReference,
+    "bank-ref",
+  );
+});
+
+test("Paystack ambiguous creation outcomes are held for reconciliation", () => {
+  assert.equal(registrationDeposit.registrationTransferFailureStatus(null, false, false), "review");
+  assert.equal(registrationDeposit.registrationTransferFailureStatus(503, false, false), "review");
+  assert.equal(registrationDeposit.registrationTransferFailureStatus(200, true, false), "review");
+  assert.equal(registrationDeposit.registrationTransferFailureStatus(400, false, false), "failed");
+  assert.equal(registrationDeposit.registrationTransferFailureStatus(400, false, true), "review");
+});
+
+test("Paystack transfer-account expiry stays below the provider's documented 25-minute limit", () => {
+  const start = new Date("2026-09-28T12:00:00Z");
+  const expiresAt = registrationDeposit.registrationTransferExpiresAt(start);
+  assert.equal(expiresAt.toISOString(), "2026-09-28T12:24:00.000Z");
+  assert.ok(expiresAt.getTime() - start.getTime() < 25 * 60 * 1000);
+});
+
 test("Paystack registration transfer details expose only the expected fields", () => {
   assert.deepEqual(
     registrationDeposit.readRegistrationDepositTransferDetails({
@@ -184,6 +270,7 @@ test("Paystack registration deposits settle separately from generic wallet fundi
   assert.match(webhook, /completeRegistrationDepositCharge\(data, eventId\)/);
   assert.match(route, /https:\/\/api\.paystack\.co\/charge/);
   assert.match(route, /bank_transfer: \{ account_expires_at: expiresAt \}/);
+  assert.match(route, /readRegistrationTransferAccount\(/);
   assert.match(route, /completeRegistrationDepositCharge\(transaction/);
   assert.match(migration, /registration_deposit_one_active_per_user/);
   assert.match(migration, /ALTER COLUMN receipt_image_url DROP NOT NULL/);

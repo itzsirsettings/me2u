@@ -4,8 +4,15 @@ import { buildLedgerRef, recordWalletMove } from "@/lib/server/wallet-ledger";
 
 const REGISTRATION_DEPOSIT_KOBO = 200_000;
 const REGISTRATION_DEPOSIT_NGN = 2_000;
+export const REGISTRATION_TRANSFER_TTL_MS = 24 * 60 * 1000;
 
 type JsonRecord = Record<string, unknown>;
+type RegistrationTransferAccount = {
+  accountName: string;
+  accountNumber: string;
+  bankName: string;
+  transactionReference: string;
+};
 type PendingRegistrationPayment = {
   id: string;
   user_id: string;
@@ -14,10 +21,66 @@ type PendingRegistrationPayment = {
   status: string;
 };
 
+export function registrationTransferExpiresAt(now = new Date()): Date {
+  return new Date(now.getTime() + REGISTRATION_TRANSFER_TTL_MS);
+}
+
 function record(value: unknown): JsonRecord | null {
   return typeof value === "object" && value !== null && !Array.isArray(value)
     ? (value as JsonRecord)
     : null;
+}
+
+/**
+ * Paystack's Nigerian Pay with Transfer response omits amount, currency, and
+ * transaction_reference in its documented example. Validate the core account
+ * details and use the charge reference as the narration/reference fallback.
+ */
+export function readRegistrationTransferAccount(
+  value: unknown,
+  expectedReference: string,
+  expectedAmount: number,
+): RegistrationTransferAccount | null {
+  const response = record(value);
+  const data = record(response?.data);
+  const bank = record(data?.bank);
+  const reference = typeof data?.reference === "string" ? data.reference : "";
+  const accountName = typeof data?.account_name === "string" ? data.account_name.trim() : "";
+  const accountNumber = typeof data?.account_number === "string" ? data.account_number : "";
+  const bankName = typeof bank?.name === "string" ? bank.name.trim() : "";
+  const amount = data?.amount === undefined ? expectedAmount : Number(data.amount);
+  const currency = typeof data?.currency === "string" ? data.currency : "NGN";
+  const transactionReference =
+    typeof data?.transaction_reference === "string" && data.transaction_reference.trim()
+      ? data.transaction_reference
+      : reference;
+
+  if (
+    response?.status !== true ||
+    data?.status !== "pending_bank_transfer" ||
+    reference !== expectedReference ||
+    amount !== expectedAmount ||
+    currency !== "NGN" ||
+    !accountName ||
+    !/^\d{10}$/.test(accountNumber) ||
+    !bankName
+  ) {
+    return null;
+  }
+
+  return { accountName, accountNumber, bankName, transactionReference };
+}
+
+/** Provider timeouts and untrusted success payloads have an unknown outcome. */
+export function registrationTransferFailureStatus(
+  httpStatus: number | null,
+  responseOk: boolean,
+  accountDetailsValid: boolean,
+): "failed" | "review" {
+  if (httpStatus === null || httpStatus >= 500 || responseOk || accountDetailsValid) {
+    return "review";
+  }
+  return "failed";
 }
 
 export function isVerifiedRegistrationDepositCharge(value: unknown, expectedReference: string) {

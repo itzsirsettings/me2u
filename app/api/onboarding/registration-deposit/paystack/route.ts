@@ -11,6 +11,9 @@ import {
 import { logWarn } from "@/lib/server/logger";
 import {
   completeRegistrationDepositCharge,
+  registrationTransferFailureStatus,
+  registrationTransferExpiresAt,
+  readRegistrationTransferAccount,
   readRegistrationDepositTransferDetails,
 } from "@/lib/server/registration-deposit-paystack";
 
@@ -122,7 +125,7 @@ export async function POST(request: Request) {
     }
 
     const reference = `regdep-${randomUUID()}`;
-    const expiresAt = new Date(Date.now() + 8 * 60 * 60_000).toISOString();
+    const expiresAt = registrationTransferExpiresAt().toISOString();
     const { rows: createdRows } = await auth.db.query<{ id: string }>(
       `INSERT INTO registration_deposit_payments
          (user_id, reference, amount, currency, status, expires_at, created_at, updated_at)
@@ -154,49 +157,54 @@ export async function POST(request: Request) {
           bank_transfer: { account_expires_at: expiresAt },
           metadata: { type: "registration_deposit", user_id: userId },
         }),
+        signal: AbortSignal.timeout(15_000),
       });
     } catch {
       await auth.db.query(
-        `UPDATE registration_deposit_payments SET status = 'failed', updated_at = NOW() WHERE id = $1`,
+        `UPDATE registration_deposit_payments SET status = 'review', updated_at = NOW() WHERE id = $1`,
         [createdRows[0].id],
       );
       return NextResponse.json(
-        { error: "Could not start Paystack Transfer. Please try again." },
+        {
+          error:
+            "Paystack's response could not be confirmed. Do not start another transfer yet; contact support with your reference.",
+          reference,
+        },
         { status: 502, headers: { "Cache-Control": "no-store" } },
       );
     }
 
     const payload: unknown = await response.json().catch(() => null);
-    const provider = isRecord(payload) ? payload : null;
-    const data = isRecord(provider?.data) ? provider.data : null;
-    const bank = isRecord(data?.bank) ? data.bank : null;
-    const accountName = typeof data?.account_name === "string" ? data.account_name : "";
-    const accountNumber = typeof data?.account_number === "string" ? data.account_number : "";
-    const bankName = typeof bank?.name === "string" ? bank.name : "";
-    const providerReference = typeof data?.reference === "string" ? data.reference : "";
-    const transactionReference =
-      typeof data?.transaction_reference === "string" ? data.transaction_reference : "";
-    const providerAmount = Number(data?.amount ?? REGISTRATION_DEPOSIT_KOBO);
-    const providerCurrency = typeof data?.currency === "string" ? data.currency : "NGN";
+    const transferAccount = readRegistrationTransferAccount(
+      payload,
+      reference,
+      REGISTRATION_DEPOSIT_KOBO,
+    );
 
-    if (
-      !response.ok ||
-      provider?.status !== true ||
-      data?.status !== "pending_bank_transfer" ||
-      providerReference !== reference ||
-      providerAmount !== REGISTRATION_DEPOSIT_KOBO ||
-      providerCurrency !== "NGN" ||
-      !accountName ||
-      !/^\d{10}$/.test(accountNumber) ||
-      !bankName ||
-      !transactionReference
-    ) {
-      await auth.db.query(
-        `UPDATE registration_deposit_payments SET status = 'failed', updated_at = NOW() WHERE id = $1`,
-        [createdRows[0].id],
+    if (!response.ok || !transferAccount) {
+      const status = registrationTransferFailureStatus(
+        response.status,
+        response.ok,
+        Boolean(transferAccount),
       );
+      await auth.db.query(
+        `UPDATE registration_deposit_payments SET status = $1, updated_at = NOW() WHERE id = $2`,
+        [status, createdRows[0].id],
+      );
+      const provider = isRecord(payload) ? payload : null;
+      logWarn("registration_paystack_transfer_creation_failed", {
+        reference,
+        httpStatus: response.status,
+        providerStatus: provider?.status === true,
+      });
       return NextResponse.json(
-        { error: "Paystack could not create a transfer account. Please try again." },
+        {
+          error:
+            status === "review"
+              ? "Paystack's response could not be confirmed. Do not start another transfer yet; contact support with your reference."
+              : "Paystack could not create a transfer account. Please try again.",
+          reference,
+        },
         { status: 502, headers: { "Cache-Control": "no-store" } },
       );
     }
@@ -209,7 +217,13 @@ export async function POST(request: Request) {
         WHERE id = $5 AND status IN ('initializing', 'success')
         RETURNING reference, account_name, account_number, bank_name,
                   transaction_reference, expires_at, status`,
-      [accountName, accountNumber, bankName, transactionReference, createdRows[0].id],
+      [
+        transferAccount.accountName,
+        transferAccount.accountNumber,
+        transferAccount.bankName,
+        transferAccount.transactionReference,
+        createdRows[0].id,
+      ],
     );
     const payment = readRegistrationDepositTransferDetails(savedRows[0]);
     if (!payment) {
