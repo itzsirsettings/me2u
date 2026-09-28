@@ -7,11 +7,29 @@ const valueAfter = (flag, fallback) => {
   return index >= 0 ? args[index + 1] : fallback;
 };
 
-const baseUrl = (args.find((arg) => !arg.startsWith("--")) || process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3000").replace(/\/$/, "");
+const baseUrl = (
+  args.find((arg) => !arg.startsWith("--")) ||
+  process.env.PLAYWRIGHT_BASE_URL ||
+  "http://127.0.0.1:3000"
+).replace(/\/$/, "");
 const endpoint = valueAfter("--endpoint", "/api/health/live");
 const requests = Math.max(1, Number(valueAfter("--requests", 1000)) || 1000);
 const concurrency = Math.max(1, Number(valueAfter("--concurrency", 50)) || 50);
 const timeoutMs = Math.max(100, Number(valueAfter("--timeout-ms", 10000)) || 10000);
+const stagingMode = args.includes("--staging");
+let headers = {};
+
+if (stagingMode) {
+  const stagingHost = "me2u-staging.up.railway.app";
+  if (new URL(baseUrl).hostname !== stagingHost) {
+    throw new Error(`--staging only permits ${stagingHost}`);
+  }
+  const password = process.env.STAGING_BASIC_AUTH?.trim();
+  if (!password) throw new Error("STAGING_BASIC_AUTH is required for staging probes");
+  headers = {
+    authorization: `Basic ${Buffer.from(`me2u-staging:${password}`).toString("base64")}`,
+  };
+}
 
 let nextRequest = 0;
 let completed = 0;
@@ -31,6 +49,7 @@ async function worker() {
       const response = await Promise.race([
         fetch(`${baseUrl}${endpoint}`, {
           redirect: "manual",
+          headers,
           signal: controller.signal,
         }),
         new Promise((_, reject) => {
@@ -54,13 +73,18 @@ async function worker() {
 const startedAt = performance.now();
 await Promise.all(Array.from({ length: Math.min(concurrency, requests) }, worker));
 latencies.sort((a, b) => a - b);
-const percentile = (percent) => latencies[Math.min(latencies.length - 1, Math.ceil((percent / 100) * latencies.length) - 1)] || 0;
+const percentile = (percent) =>
+  latencies[
+    Math.min(latencies.length - 1, Math.ceil((percent / 100) * latencies.length) - 1)
+  ] || 0;
 const durationSeconds = (performance.now() - startedAt) / 1000;
 
 console.log(`\nLoad probe: ${baseUrl}${endpoint}`);
 console.log(`Requests: ${requests}; concurrency: ${concurrency}; timeout: ${timeoutMs}ms`);
 console.log(`Throughput: ${(requests / durationSeconds).toFixed(1)} requests/sec`);
-console.log(`p50: ${percentile(50).toFixed(1)}ms; p95: ${percentile(95).toFixed(1)}ms; p99: ${percentile(99).toFixed(1)}ms`);
+console.log(
+  `p50: ${percentile(50).toFixed(1)}ms; p95: ${percentile(95).toFixed(1)}ms; p99: ${percentile(99).toFixed(1)}ms`,
+);
 console.log(`Failures: ${failures}`);
 
 if (failures > 0) process.exitCode = 1;

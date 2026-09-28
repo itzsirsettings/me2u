@@ -13,6 +13,27 @@ function isIndexableAppPath(pathname: string) {
 }
 
 export function proxy(request: NextRequest) {
+  if (process.env.RAILWAY_ENVIRONMENT_NAME === "staging") {
+    const stagingPassword = process.env.STAGING_BASIC_AUTH?.trim();
+    if (!stagingPassword) {
+      return new NextResponse("Staging access is not configured.", {
+        status: 503,
+        headers: { "Cache-Control": "no-store" },
+      });
+    }
+
+    const expectedAuthorization = `Basic ${btoa(`me2u-staging:${stagingPassword}`)}`;
+    if (request.headers.get("authorization") !== expectedAuthorization) {
+      return new NextResponse("Authentication required.", {
+        status: 401,
+        headers: {
+          "Cache-Control": "no-store",
+          "WWW-Authenticate": 'Basic realm="Me2U staging", charset="UTF-8"',
+        },
+      });
+    }
+  }
+
   const hostname = request.nextUrl.hostname.toLowerCase();
   const pathname = request.nextUrl.pathname;
 
