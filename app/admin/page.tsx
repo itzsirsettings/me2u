@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import Me2uIcon from "@/components/Me2uIcon";
@@ -273,6 +273,79 @@ function QueueActionButton({
   );
 }
 
+function ReceiptLightbox({
+  url,
+  userName,
+  onClose,
+}: {
+  url: string;
+  userName: string;
+  onClose: () => void;
+}) {
+  const overlayRef = useRef<HTMLDivElement>(null);
+
+  // Close on Escape key
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onClose]);
+
+  // Close on backdrop click
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === overlayRef.current) onClose();
+  };
+
+  return (
+    <div
+      ref={overlayRef}
+      onClick={handleBackdropClick}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Payment receipt from ${userName}`}
+    >
+      <div className="relative flex max-h-[90dvh] max-w-[90dvw] flex-col overflow-hidden rounded-[8px] border border-white/20 bg-[#111] shadow-2xl">
+        {/* Header */}
+        <div className="flex min-w-0 items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
+          <p className="min-w-0 truncate text-sm font-bold text-white">
+            Receipt — {userName}
+          </p>
+          <div className="flex shrink-0 items-center gap-2">
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-[5px] border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-white/20"
+            >
+              Open full size ↗
+            </a>
+            <button
+              onClick={onClose}
+              className="grid h-8 w-8 place-items-center rounded-[5px] border border-white/20 bg-white/10 text-white transition hover:bg-white/20"
+              aria-label="Close receipt viewer"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+        {/* Image */}
+        <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto p-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={url}
+            alt={`Payment receipt submitted by ${userName}`}
+            className="max-h-[80dvh] max-w-full rounded-[4px] object-contain"
+            style={{ imageRendering: "auto" }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminDashboard() {
   const user = useStore((state) => state.user);
   const isAuthenticated = useStore((state) => state.isAuthenticated);
@@ -285,6 +358,7 @@ export default function AdminDashboard() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<"operations" | "users" | "ledger">("operations");
   const [busyAction, setBusyAction] = useState<string | null>(null);
+  const [lightbox, setLightbox] = useState<{ url: string; userName: string } | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -768,19 +842,25 @@ export default function AdminDashboard() {
                       </div>
                       <div className="flex min-w-0 flex-wrap items-center gap-2 md:justify-end">
                         {proof.receipt_signed_url ? (
-                          <a
-                            href={proof.receipt_signed_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="group flex min-h-10 items-center gap-2 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-1.5 text-xs font-bold uppercase leading-tight tracking-normal sm:tracking-[0.08em]"
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setLightbox({
+                                url: proof.receipt_signed_url!,
+                                userName: proof.user_name,
+                              })
+                            }
+                            className="group flex min-h-10 items-center gap-2 rounded-[5px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-1.5 text-xs font-bold uppercase leading-tight tracking-normal transition hover:bg-[var(--color-bg-secondary)] sm:tracking-[0.08em]"
+                            title="Click to view receipt full size"
                           >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={proof.receipt_signed_url}
-                              alt={`Payment receipt submitted by ${proof.user_name}`}
+                              alt={`Payment receipt thumbnail for ${proof.user_name}`}
                               className="h-12 w-12 rounded-[3px] border border-[var(--color-border)] object-cover"
                             />
                             <span>View receipt</span>
-                          </a>
+                          </button>
                         ) : null}
                         <QueueActionButton
                           label="Approve"
@@ -1353,6 +1433,14 @@ export default function AdminDashboard() {
           </aside>
         </div>
       )}
+
+      {lightbox ? (
+        <ReceiptLightbox
+          url={lightbox.url}
+          userName={lightbox.userName}
+          onClose={() => setLightbox(null)}
+        />
+      ) : null}
     </main>
   );
 }
