@@ -13,11 +13,16 @@
  * is owned by this module alone (see migrations/20260920000001).
  */
 import type { PoolClient } from "pg";
+
 import { query } from "@/lib/railway/client";
 import { logApiError, logInfo } from "@/lib/server/logger";
 
 const IDEMPOTENCY_TTL_HOURS = 24;
 const IDEMPOTENCY_TABLE = "api_idempotency_cache";
+const IDEMPOTENCY_CLEANUP_INTERVAL_MS = 60 * 60 * 1000;
+let tableInitialization: Promise<void> | null = null;
+let lastIdempotencyCleanupAt = 0;
+let idempotencyCleanup: Promise<void> | null = null;
 
 type DbLike = {
   query: (
@@ -27,32 +32,55 @@ type DbLike = {
 };
 
 async function ensureTables(db: DbLike): Promise<void> {
-  await db.query(`
-    CREATE TABLE IF NOT EXISTS ${IDEMPOTENCY_TABLE} (
-      key TEXT PRIMARY KEY,
-      user_id TEXT,
-      route TEXT NOT NULL,
-      status INTEGER NOT NULL DEFAULT 200,
-      body JSONB NOT NULL,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    )`);
-  await db.query(`
-    CREATE TABLE IF NOT EXISTS audit_events (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      user_id TEXT,
-      action TEXT NOT NULL,
-      route TEXT,
-      ip TEXT,
-      user_agent TEXT,
-      metadata JSONB,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    )`);
-  await db
+  if (!tableInitialization) {
+    tableInitialization = (async () => {
+      await db.query(`
+        CREATE TABLE IF NOT EXISTS ${IDEMPOTENCY_TABLE} (
+          key TEXT PRIMARY KEY,
+          user_id TEXT,
+          route TEXT NOT NULL,
+          status INTEGER NOT NULL DEFAULT 200,
+          body JSONB NOT NULL,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )`);
+      await db.query(`
+        CREATE TABLE IF NOT EXISTS audit_events (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          user_id TEXT,
+          action TEXT NOT NULL,
+          route TEXT,
+          ip TEXT,
+          user_agent TEXT,
+          metadata JSONB,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )`);
+    })().catch((error) => {
+      tableInitialization = null;
+      throw error;
+    });
+  }
+  await tableInitialization;
+
+  if (
+    Date.now() - lastIdempotencyCleanupAt < IDEMPOTENCY_CLEANUP_INTERVAL_MS ||
+    idempotencyCleanup
+  ) {
+    await idempotencyCleanup;
+    return;
+  }
+
+  lastIdempotencyCleanupAt = Date.now();
+  idempotencyCleanup = db
     .query(
       `DELETE FROM ${IDEMPOTENCY_TABLE} WHERE created_at < NOW() - ($1 || ' hours')::interval`,
       [String(IDEMPOTENCY_TTL_HOURS)],
     )
-    .catch((err) => logApiError("idempotency-cleanup", err));
+    .then(() => undefined)
+    .catch((err) => logApiError("idempotency-cleanup", err))
+    .finally(() => {
+      idempotencyCleanup = null;
+    });
+  await idempotencyCleanup;
 }
 
 export function readIdempotencyKey(request: Request): string {
@@ -81,8 +109,11 @@ export async function replayIfDuplicate(
   try {
     await ensureTables(db);
     const { rows } = await db.query(
-      `SELECT status, body FROM ${IDEMPOTENCY_TABLE} WHERE key = $1 AND user_id = $2 LIMIT 1`,
-      [opts.key, opts.userId],
+      `SELECT status, body FROM ${IDEMPOTENCY_TABLE}
+        WHERE key = $1 AND user_id = $2 AND route = $3
+          AND created_at >= NOW() - ($4 || ' hours')::interval
+        LIMIT 1`,
+      [opts.key, opts.userId, opts.route, String(IDEMPOTENCY_TTL_HOURS)],
     );
     const hit = rows[0];
     if (!hit) return null;
@@ -105,8 +136,21 @@ export async function rememberIdempotentResponse(
     await db.query(
       `INSERT INTO ${IDEMPOTENCY_TABLE} (key, user_id, route, status, body)
        VALUES ($1, $2, $3, $4, $5::jsonb)
-       ON CONFLICT (key) DO NOTHING`,
-      [opts.key, opts.userId, opts.route, opts.status, JSON.stringify(toJsonBody(opts.body))],
+       ON CONFLICT (key) DO UPDATE
+         SET user_id = EXCLUDED.user_id,
+             route = EXCLUDED.route,
+             status = EXCLUDED.status,
+             body = EXCLUDED.body,
+             created_at = NOW()
+       WHERE ${IDEMPOTENCY_TABLE}.created_at < NOW() - ($6 || ' hours')::interval`,
+      [
+        opts.key,
+        opts.userId,
+        opts.route,
+        opts.status,
+        JSON.stringify(toJsonBody(opts.body)),
+        String(IDEMPOTENCY_TTL_HOURS),
+      ],
     );
   } catch (err) {
     logApiError("idempotency-remember", err);

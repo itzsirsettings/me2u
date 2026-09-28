@@ -26,9 +26,7 @@ if (stagingMode) {
   }
   const password = process.env.STAGING_BASIC_AUTH?.trim();
   if (!password) throw new Error("STAGING_BASIC_AUTH is required for staging probes");
-  headers = {
-    authorization: `Basic ${Buffer.from(`me2u-staging:${password}`).toString("base64")}`,
-  };
+  headers = { "x-staging-access": password };
 }
 
 let nextRequest = 0;

@@ -23,7 +23,10 @@ export function proxy(request: NextRequest) {
     }
 
     const expectedAuthorization = `Basic ${btoa(`me2u-staging:${stagingPassword}`)}`;
-    if (request.headers.get("authorization") !== expectedAuthorization) {
+    if (
+      request.headers.get("authorization") !== expectedAuthorization &&
+      request.headers.get("x-staging-access") !== stagingPassword
+    ) {
       return new NextResponse("Authentication required.", {
         status: 401,
         headers: {
