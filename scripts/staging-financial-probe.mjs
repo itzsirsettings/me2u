@@ -78,8 +78,12 @@ async function requestRepayment(fixture, idempotencyKey) {
     body: JSON.stringify({ loanId: fixture.loanId }),
     signal: globalThis.AbortSignal.timeout(15_000),
   });
-  await response.arrayBuffer();
-  return { status: response.status, latencyMs: performance.now() - startedAt };
+  const body = await response.text();
+  return {
+    status: response.status,
+    latencyMs: performance.now() - startedAt,
+    body: body.slice(0, 200),
+  };
 }
 
 async function cleanup() {
@@ -136,10 +140,11 @@ try {
         try {
           const first = await requestRepayment(fixture, fixture.key);
           latencies.push(first.latencyMs);
-          if (first.status !== 200) failures.push(first.status);
+          if (first.status !== 200) failures.push({ status: first.status, body: first.body });
 
           const replay = await requestRepayment(fixture, fixture.key);
-          if (replay.status !== 200) failures.push(replay.status);
+          if (replay.status !== 200)
+            failures.push({ status: replay.status, body: replay.body });
         } catch {
           failures.push("network");
         }
