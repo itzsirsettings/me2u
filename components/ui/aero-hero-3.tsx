@@ -1,9 +1,4 @@
-"use client";
-
-import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
-
-import { Button } from "@/components/ui/button";
 
 export default function AeroHeroCta() {
   return (
@@ -41,7 +36,7 @@ export default function AeroHeroCta() {
           interest — with no hidden fees. Need a hand?{" "}
           <Link
             href="https://app.me2ulend.online/support"
-            className="text-green hover:text-lime transition-colors underline decoration-green/30 hover:decoration-lime/50"
+            className="text-green underline decoration-green/30 transition-colors hover:text-lime hover:decoration-lime/50"
           >
             Our support team is here
           </Link>
@@ -49,26 +44,31 @@ export default function AeroHeroCta() {
         </p>
 
         <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-          <Button
-            className="group mx-auto flex cursor-pointer items-center justify-center gap-0 rounded-full border-none bg-transparent px-0 py-5 font-normal shadow-none hover:bg-transparent"
-            onClick={() => window.location.assign("https://app.me2ulend.online/register")}
+          <Link
+            href="https://app.me2ulend.online/register"
+            className="group inline-flex min-h-14 items-center gap-3 rounded-full bg-green px-7 py-3.5 font-medium text-navy transition-colors hover:bg-lime focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green focus-visible:ring-offset-2"
           >
-            <span className="rounded-full bg-green px-7 py-3.5 text-navy transition-colors duration-300 ease-out group-hover:bg-lime">
-              Create Free Account
-            </span>
-            <div className="relative flex h-fit cursor-pointer items-center overflow-hidden rounded-full bg-green p-5 text-navy transition-colors duration-300 ease-out group-hover:bg-lime">
-              <ArrowUpRight className="absolute size-5 -translate-x-1/2 transition-transform duration-300 ease-out group-hover:translate-x-10" />
-              <ArrowUpRight className="absolute size-5 -translate-x-10 transition-transform duration-300 ease-out group-hover:-translate-x-1/2" />
-            </div>
-          </Button>
+            Create Free Account
+            <svg
+              aria-hidden="true"
+              className="size-5 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M7 17 17 7M7 7h10v10" />
+            </svg>
+          </Link>
 
-          <Button
-            asChild
-            variant="secondary"
-            className="min-h-14 rounded-full border border-[var(--color-border)] bg-card/80 px-8 text-base font-normal text-card-foreground shadow-none backdrop-blur transition-colors hover:bg-card"
+          <Link
+            href="https://app.me2ulend.online/support"
+            className="inline-flex min-h-14 items-center rounded-full border border-[var(--color-border)] bg-card/80 px-8 text-base font-normal text-card-foreground transition-colors hover:bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <Link href="https://app.me2ulend.online/support">Talk to Support</Link>
-          </Button>
+            Talk to Support
+          </Link>
         </div>
       </div>
     </section>

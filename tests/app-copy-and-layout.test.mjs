@@ -115,16 +115,26 @@ test("admin dashboard uses overflow-safe grids and contained ledger scrolling", 
   assert.match(globals, /\.overflow-anywhere/);
 });
 
-test("landing hero uses the current full-bleed responsive background", () => {
+test("landing hero uses a preloaded static image instead of a WebGL animation", () => {
   const hero = read("components/landing/HeroSection.tsx");
   const globals = read("app/globals.css");
 
   assert.match(hero, /hero-final\.webp/);
-  assert.match(hero, /focus=\{narrow \?/);
-  assert.match(hero, /scrim=\{narrow \?/);
+  assert.match(hero, /preload/);
+  assert.match(hero, /unoptimized/);
+  assert.doesNotMatch(hero, /blackhole-hero-section|framer-motion/);
   assert.match(globals, /\.hero-section \{[^}]*overflow: hidden/s);
   assert.match(globals, /\.hero-overlay \{/);
   assert.doesNotMatch(globals, /100cqw/);
+});
+
+test("marketing homepage avoids loading app-only route chrome", () => {
+  const routeChrome = read("components/AppRouteChrome.tsx");
+  const layout = read("app/layout.tsx");
+
+  assert.match(routeChrome, /if \(pathname === "\/"\) return null/);
+  assert.match(routeChrome, /dynamic\(\(\) => import\("@\/components\/AuthBootstrap"\)\)/);
+  assert.match(layout, /<AppRouteChrome \/>/);
 });
 
 test("landing header uses the nav logo asset", () => {
@@ -465,6 +475,7 @@ test("Me2U Guide assistant is citation-bound and globally mounted", () => {
   const accountContext = read("lib/assistant/account-context.ts");
   const widget = read("components/Me2UAssistantWidget.tsx");
   const layout = read("app/layout.tsx");
+  const routeChrome = read("components/AppRouteChrome.tsx");
   const readiness = read("lib/server/launch-readiness.ts");
   const env = read(".env.example");
 
@@ -517,7 +528,12 @@ test("Me2U Guide assistant is citation-bound and globally mounted", () => {
   assert.match(widget, /Create support request/);
   assert.match(widget, /Why can't I withdraw yet\?/);
   assert.match(widget, /html|dark|light|theme|var\(--color-bg-card\)/);
-  assert.match(layout, /<Me2UAssistantWidget \/>/);
+  assert.match(layout, /<AppRouteChrome \/>/);
+  assert.match(
+    routeChrome,
+    /dynamic\(\(\) => import\("@\/components\/Me2UAssistantWidget"\)\)/,
+  );
+  assert.match(routeChrome, /<Me2UAssistantWidget \/>/);
   assert.match(readiness, /OPENAI_API_KEY/);
 
   assert.match(env, /OPENAI_API_KEY/);

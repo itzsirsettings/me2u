@@ -1,17 +1,22 @@
 import { test, expect } from "@playwright/test";
 
 test("landing page loads and shows cooperative messaging", async ({ page }) => {
+  const requestedUrls: string[] = [];
+  page.on("request", (request) => requestedUrls.push(request.url()));
+
   await page.goto("/");
 
-  await expect(page).toHaveTitle(/Me2U/i);
-  await expect(page.getByRole("heading", { name: /0% Interest Loans/i })).toBeVisible();
+  await expect(page).toHaveTitle(/Me2U.*Trust/i);
+  await expect(page.getByRole("heading", { name: /Borrow with clarity/i })).toBeVisible();
 
   const hero = page.locator("#hero");
-  const heroImages = hero.locator('img[src*="Hero_final.png"]');
+  const heroImages = hero.locator('img[src*="hero-final.webp"]');
   await expect(heroImages).toHaveCount(1);
   await expect(heroImages.first()).toBeVisible();
+  await expect(hero.locator("canvas")).toHaveCount(0);
+  expect(requestedUrls.some((url) => url.includes("/api/auth/me"))).toBe(false);
 
-  await expect(hero.getByRole("link", { name: "Create Free Account" })).toBeVisible();
-  await expect(hero.getByRole("link", { name: "See How It Works" })).toBeVisible();
-  await expect(hero.getByRole("link", { name: "No Interest" })).toBeVisible();
+  await expect(hero.getByRole("link", { name: "Start Building Trust" })).toBeVisible();
+  await expect(hero.getByRole("link", { name: "See the Me2U journey" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Create Free Account" }).last()).toBeVisible();
 });

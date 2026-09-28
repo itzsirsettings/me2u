@@ -3,15 +3,10 @@ import "./globals.css";
 import { Outfit } from "next/font/google";
 import { Toaster } from "sonner";
 
-import AuthBootstrap from "@/components/AuthBootstrap";
-import BottomNav from "@/components/BottomNav";
+import AppRouteChrome from "@/components/AppRouteChrome";
 import GlobalClientProviders from "@/components/GlobalClientProviders";
-import Me2UAssistantWidget from "@/components/Me2UAssistantWidget";
-import MobileHeader from "@/components/MobileHeader";
-import ProtectedOnboarding from "@/components/ProtectedOnboarding";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
-import { SpotlightPointer } from "@/components/ui/spotlight-card";
 
 const siteUrl = "https://www.me2ulend.online";
 
@@ -114,24 +109,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <GlobalClientProviders />
         <ServiceWorkerRegistration />
-        <SpotlightPointer />
-        <AuthBootstrap />
-        <ProtectedOnboarding />
-        <MobileHeader />
+        <AppRouteChrome />
         <ErrorBoundary>{children}</ErrorBoundary>
-        <ErrorBoundary
-          fallback={
-            <div className="fixed bottom-20 right-4 z-40 max-w-xs rounded-2xl border border-border bg-card p-4 shadow-2xl">
-              <p className="text-xs font-bold text-card-foreground">Assistant unavailable</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Refresh the page to try again.
-              </p>
-            </div>
-          }
-        >
-          <Me2UAssistantWidget />
-        </ErrorBoundary>
-        <BottomNav />
         <Toaster position="top-center" richColors closeButton />
       </body>
     </html>

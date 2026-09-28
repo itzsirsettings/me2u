@@ -762,10 +762,8 @@ html[data-theme="dark"] .btn-ghost {
 /* ── Background image + parallax wrapper ── */
 .hero-bg {
   position: absolute;
-  inset: -3%;
+  inset: 0;
   z-index: 0;
-  will-change: transform;
-  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .hero-bg-img {
