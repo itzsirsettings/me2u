@@ -10,12 +10,6 @@ import { ReferenceScreen } from "@/components/reference/ReferenceUI";
 import { Card } from "@/components/ui/card";
 import { authorizedFetch } from "@/lib/fetch";
 import { registrationDepositAmount } from "@/lib/loans";
-import {
-  readPaystackRegistrationTransfer,
-  readPaystackRegistrationTransferError,
-  readPaystackRegistrationTransferReference,
-  type PaystackRegistrationTransfer,
-} from "@/lib/paystack-registration";
 import { useStore } from "@/lib/store";
 import LoadingButton from "@/LoadingButton";
 
@@ -76,17 +70,8 @@ export default function WalletPage() {
   const [registrationAccount, setRegistrationAccount] =
     useState<RegistrationDepositAccount | null>(null);
   const [isLoadingRegistrationAccount, setIsLoadingRegistrationAccount] = useState(false);
-  const [registrationMethod, setRegistrationMethod] = useState<"paystack" | "manual">(
-    "paystack",
-  );
-  const [paystackTransfer, setPaystackTransfer] = useState<PaystackRegistrationTransfer | null>(
-    null,
-  );
-  const [pendingPaystackReference, setPendingPaystackReference] = useState("");
-  const [startingPaystackTransfer, setStartingPaystackTransfer] = useState(false);
 
   const confirmRegistrationDeposit = useStore((state) => state.confirmRegistrationDeposit);
-  const loadCurrentUser = useStore((state) => state.loadCurrentUser);
   const user = useStore((state) => state.user);
   const activeLoans = useStore((state) => state.activeLoans);
   const isAuthenticated = useStore((state) => state.isAuthenticated);
@@ -103,66 +88,6 @@ export default function WalletPage() {
       router.push("/login");
     }
   }, [mounted, isLoading, isAuthenticated, router]);
-
-  const userId = user?.id;
-  const registrationDepositPaid = user?.registrationDepositPaid;
-
-  useEffect(() => {
-    if (!mounted || !userId || registrationDepositPaid) return;
-    let active = true;
-    void authorizedFetch("/api/onboarding/registration-deposit/paystack")
-      .then(async (response) => {
-        const data: unknown = await response.json();
-        if (!response.ok || !active) return;
-        const payment = readPaystackRegistrationTransfer(data);
-        if (payment) {
-          setPaystackTransfer(payment);
-          if (payment.status === "success") await loadCurrentUser();
-        } else if (response.status === 202) {
-          const reference = readPaystackRegistrationTransferReference(data);
-          if (reference) setPendingPaystackReference(reference);
-        }
-      })
-      .catch(() => undefined);
-    return () => {
-      active = false;
-    };
-  }, [mounted, userId, registrationDepositPaid, loadCurrentUser]);
-
-  const paystackReference = paystackTransfer?.reference || pendingPaystackReference;
-  const paystackStatus = pendingPaystackReference ? "initializing" : paystackTransfer?.status;
-  useEffect(() => {
-    if (!paystackReference || !["initializing", "pending"].includes(paystackStatus || ""))
-      return;
-    let active = true;
-    const checkPayment = async () => {
-      try {
-        const response = await authorizedFetch(
-          `/api/onboarding/registration-deposit/paystack?reference=${encodeURIComponent(paystackReference)}`,
-        );
-        const data: unknown = await response.json();
-        if (!response.ok || !active) return;
-        const payment = readPaystackRegistrationTransfer(data);
-        if (!payment || !active) return;
-        setPaystackTransfer(payment);
-        setPendingPaystackReference("");
-        if (payment.status === "success") {
-          toast.success("Registration deposit confirmed.");
-          await loadCurrentUser();
-        }
-      } catch {
-        // Keep the transfer instructions available while a status check retries.
-      }
-    };
-    const interval = window.setInterval(
-      () => void checkPayment(),
-      paystackStatus === "initializing" ? 10_000 : 30_000,
-    );
-    return () => {
-      active = false;
-      window.clearInterval(interval);
-    };
-  }, [paystackReference, paystackStatus, loadCurrentUser]);
 
   if (!mounted || (!isAuthenticated && !isLoading)) return null;
 
@@ -211,54 +136,6 @@ export default function WalletPage() {
       );
     } finally {
       setIsLoadingRegistrationAccount(false);
-    }
-  };
-
-  const startPaystackTransfer = async () => {
-    setStartingPaystackTransfer(true);
-    try {
-      const response = await authorizedFetch("/api/onboarding/registration-deposit/paystack", {
-        method: "POST",
-        body: JSON.stringify({}),
-      });
-      const data: unknown = await response.json();
-      let payment = readPaystackRegistrationTransfer(data);
-      const reference = readPaystackRegistrationTransferReference(data);
-      if (!payment && response.status === 202 && reference) {
-        for (let attempt = 0; attempt < 10; attempt += 1) {
-          await new Promise((resolve) => window.setTimeout(resolve, 2_000));
-          const statusResponse = await authorizedFetch(
-            `/api/onboarding/registration-deposit/paystack?reference=${encodeURIComponent(reference)}`,
-          );
-          const statusData: unknown = await statusResponse.json();
-          payment = readPaystackRegistrationTransfer(statusData);
-          if (payment) break;
-          if (!statusResponse.ok && statusResponse.status !== 202) {
-            throw new Error(
-              readPaystackRegistrationTransferError(statusData, statusResponse.status),
-            );
-          }
-        }
-      }
-      if (!response.ok || !payment) {
-        if (response.status === 202 && reference) {
-          setPendingPaystackReference(reference);
-          toast.info(
-            "Your transfer details are still being prepared. Keep this page open; you do not need to click again.",
-          );
-          return;
-        }
-        throw new Error(readPaystackRegistrationTransferError(data, response.status));
-      }
-      setPendingPaystackReference("");
-      setPaystackTransfer(payment);
-      if (payment.status === "success") await loadCurrentUser();
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Unable to start Paystack Transfer.",
-      );
-    } finally {
-      setStartingPaystackTransfer(false);
     }
   };
 
@@ -371,159 +248,7 @@ export default function WalletPage() {
               </div>
 
               <div className="space-y-4">
-                <fieldset>
-                  <legend className="mb-2 text-xs font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
-                    Payment method
-                  </legend>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      aria-pressed={registrationMethod === "paystack"}
-                      onClick={() => setRegistrationMethod("paystack")}
-                      className={`min-h-11 rounded-[8px] border px-3 text-sm font-semibold ${registrationMethod === "paystack" ? "border-[var(--color-accent-primary)] bg-[var(--color-positive-bg)]" : "border-[var(--color-border)]"}`}
-                    >
-                      Paystack Transfer
-                    </button>
-                    <button
-                      type="button"
-                      aria-pressed={registrationMethod === "manual"}
-                      onClick={() => setRegistrationMethod("manual")}
-                      className={`min-h-11 rounded-[8px] border px-3 text-sm font-semibold ${registrationMethod === "manual" ? "border-[var(--color-accent-primary)] bg-[var(--color-positive-bg)]" : "border-[var(--color-border)]"}`}
-                    >
-                      Bank transfer
-                    </button>
-                  </div>
-                </fieldset>
-
-                {registrationMethod === "paystack" ? (
-                  <div className="space-y-4">
-                    <p className="text-sm text-[var(--color-text-secondary)]">
-                      Create a secure, one-time ₦{registrationDepositAmount.toLocaleString()}{" "}
-                      transfer account. Me2U checks payment status here automatically. Complete
-                      the bank transfer using your banking app, then return here for
-                      confirmation.
-                    </p>
-                    {!paystackTransfer ? (
-                      <button
-                        type="button"
-                        onClick={() => void startPaystackTransfer()}
-                        disabled={startingPaystackTransfer || Boolean(pendingPaystackReference)}
-                        className="btn-primary min-h-11 w-full disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        {startingPaystackTransfer
-                          ? "Preparing Paystack Transfer…"
-                          : pendingPaystackReference
-                            ? "Transfer details are being prepared"
-                            : "Get Paystack transfer details"}
-                      </button>
-                    ) : (
-                      <div className="space-y-3 rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
-                        <div role="status" aria-live="polite" className="text-sm font-semibold">
-                          {paystackTransfer.status === "pending" && "Waiting for your transfer"}
-                          {paystackTransfer.status === "success" && "Payment confirmed"}
-                          {paystackTransfer.status === "failed" &&
-                            "Transfer failed or was cancelled"}
-                          {paystackTransfer.status === "expired" && "Transfer account expired"}
-                          {paystackTransfer.status === "review" &&
-                            "Payment needs support review"}
-                          {paystackTransfer.status === "initializing" &&
-                            "Preparing transfer details"}
-                        </div>
-                        {paystackTransfer.status === "pending" && (
-                          <>
-                            <div className="grid gap-2 text-sm">
-                              <p>
-                                <span className="text-[var(--color-text-secondary)]">
-                                  Amount:{" "}
-                                </span>
-                                ₦{registrationDepositAmount.toLocaleString()}
-                              </p>
-                              <p>
-                                <span className="text-[var(--color-text-secondary)]">
-                                  Bank:{" "}
-                                </span>
-                                {paystackTransfer.bankName}
-                              </p>
-                              <p>
-                                <span className="text-[var(--color-text-secondary)]">
-                                  Account name:{" "}
-                                </span>
-                                {paystackTransfer.accountName}
-                              </p>
-                              <p className="font-mono">
-                                <span className="font-sans text-[var(--color-text-secondary)]">
-                                  Account number:{" "}
-                                </span>
-                                {paystackTransfer.accountNumber}
-                              </p>
-                              <p className="font-mono">
-                                <span className="font-sans text-[var(--color-text-secondary)]">
-                                  Transfer narration/reference:{" "}
-                                </span>
-                                {paystackTransfer.transactionReference}
-                              </p>
-                              <p className="text-xs text-[var(--color-text-secondary)]">
-                                Expires{" "}
-                                {new Date(paystackTransfer.expiresAt).toLocaleString("en-NG", {
-                                  timeZone: "Africa/Lagos",
-                                })}{" "}
-                                WAT. Send the exact amount shown above.
-                              </p>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                void navigator.clipboard
-                                  .writeText(paystackTransfer.accountNumber)
-                                  .then(() => toast.success("Account number copied."))
-                                  .catch(() =>
-                                    toast.error("Could not copy the account number."),
-                                  );
-                              }}
-                              className="btn-secondary min-h-10 w-full"
-                            >
-                              Copy account number
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                void navigator.clipboard
-                                  .writeText(paystackTransfer.transactionReference)
-                                  .then(() => toast.success("Transfer reference copied."))
-                                  .catch(() =>
-                                    toast.error("Could not copy the transfer reference."),
-                                  );
-                              }}
-                              className="btn-secondary min-h-10 w-full"
-                            >
-                              Copy transfer reference
-                            </button>
-                            <p className="text-xs text-[var(--color-text-secondary)]">
-                              This page checks for payment automatically. Do not submit a
-                              receipt for this Paystack transfer.
-                            </p>
-                          </>
-                        )}
-                        {(paystackTransfer.status === "failed" ||
-                          paystackTransfer.status === "expired") && (
-                          <button
-                            type="button"
-                            onClick={() => setPaystackTransfer(null)}
-                            className="btn-secondary min-h-10 w-full"
-                          >
-                            Start a new transfer
-                          </button>
-                        )}
-                        {paystackTransfer.status === "review" && (
-                          <p className="text-sm text-[var(--color-text-secondary)]">
-                            Contact support from the app and include reference{" "}
-                            {paystackTransfer.reference}.
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ) : !registrationAccount ? (
+                {!registrationAccount ? (
                   <button
                     type="button"
                     onClick={() => void showRegistrationAccount()}
