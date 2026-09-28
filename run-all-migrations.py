@@ -43,6 +43,7 @@ MIGRATIONS = [
     '021_security_event_session_revocations.sql',
     '022_repair_wallet_ledger_audit_columns.sql',
     '023_registration_deposit_paystack_transfer.sql',
+    '024_loans_updated_at.sql',
 ]
 
 def get_connection_params():
