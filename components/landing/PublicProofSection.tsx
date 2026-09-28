@@ -176,14 +176,6 @@ export default function PublicProofSection() {
           </div>
 
           <div className="mt-12 rounded-3xl border border-[var(--color-border)] bg-[var(--landing-proof-card)]/60 p-6 md:p-8">
-            <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-              <div>
-                <h3 className="text-2xl font-black md:text-3xl">What members are saying</h3>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Portraits are AI-generated illustrations and do not depict actual members.
-                </p>
-              </div>
-            </div>
             <SuccessStoryCarousel fallbackStories={memberTestimonials} />
           </div>
         </div>

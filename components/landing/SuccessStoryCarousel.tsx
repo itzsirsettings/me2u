@@ -87,7 +87,6 @@ export default function SuccessStoryCarousel({
         quote: story.story,
         author: story.location ? `${story.displayName} · ${story.location}` : story.displayName,
         image: portraitFor(story),
-        alt: `AI-generated illustrative portrait for ${story.displayName}; not an actual photo`,
       }))}
     />
   );
