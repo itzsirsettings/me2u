@@ -52,7 +52,7 @@ export default function HeroSection() {
     >
       <div className="absolute inset-0 z-0" aria-hidden="true">
         <BlackHoleHeroSection
-          className="bg-transparent bg-[url('/Hero_final.png')] bg-cover bg-center"
+          className="bg-transparent bg-[url('/hero-final.webp')] bg-cover bg-center"
           focus={narrow ? [0.5, 0.76] : [0.72, 0.46]}
           scrim={narrow ? "top" : "left"}
           scrimStrength={0.9}
@@ -60,9 +60,9 @@ export default function HeroSection() {
           elevation={narrow ? -7 : -5.5}
           fov={narrow ? 58 : 42}
           glow={narrow ? 0.85 : 1}
-          steps={narrow ? 190 : 260}
-          resolution={narrow ? 0.52 : 0.62}
-          maxDpr={narrow ? 1.25 : 1.5}
+          steps={narrow ? 140 : 220}
+          resolution={narrow ? 0.4 : 0.55}
+          maxDpr={narrow ? 1 : 1.25}
         />
       </div>
       <div className="hero-overlay" aria-hidden="true" />

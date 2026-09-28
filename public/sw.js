@@ -1,11 +1,11 @@
-const CACHE_NAME = "me2u-shell-v2";
+const CACHE_NAME = "me2u-shell-v3";
 const OFFLINE_URL = "/offline.html";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
       .open(CACHE_NAME)
-      .then((cache) => cache.addAll([OFFLINE_URL, "/manifest.json", "/me2u_logo_v2.svg"])),
+      .then((cache) => cache.addAll([OFFLINE_URL, "/manifest.json", "/me2u-icon-192.png"])),
   );
   self.skipWaiting();
 });
@@ -44,7 +44,7 @@ self.addEventListener("fetch", (event) => {
 
   const isPublicStaticAsset =
     url.pathname === "/manifest.json" ||
-    url.pathname === "/me2u_logo_v2.svg" ||
+    url.pathname === "/me2u-icon-192.png" ||
     url.pathname.startsWith("/_next/static/");
 
   if (isPublicStaticAsset) {

@@ -45,7 +45,8 @@ export default function MobileHeader() {
 
   if (!title) return null;
   // These destination surfaces own their full reference-inspired mastheads.
-  if (["/dashboard", "/wallet", "/profile", "/referrals", "/savings"].includes(pathname)) return null;
+  if (["/dashboard", "/wallet", "/profile", "/referrals", "/savings"].includes(pathname))
+    return null;
 
   const handleBack = () => {
     if (pathname === "/dashboard") {
@@ -76,7 +77,7 @@ export default function MobileHeader() {
           </button>
           <div className="min-w-0">
             <BrandLogo
-              src="/me2u_nav_logo.svg"
+              src="/me2u-nav-logo.webp"
               className="hidden h-12 w-36 sm:w-40 md:inline-flex"
             />
             <p className="truncate text-[1rem] font-extrabold leading-none tracking-normal text-[var(--color-text-primary)] md:mt-1 md:text-xs md:font-semibold md:uppercase md:tracking-[0.1em] md:text-[var(--color-text-secondary)]">

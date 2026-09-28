@@ -63,44 +63,34 @@ export const createAuthSlice: StoreSlice<AuthSlice> = (set, get) => ({
       set({ isLoading: true });
       try {
         const signal = abortCtrl?.signal;
-        const [meRes, txRes, loansRes, mktRes, notifRes] = await Promise.all([
-          authorizedFetch("/api/auth/me", { signal }),
-          authorizedFetch("/api/auth/me/transactions", { signal }),
-          authorizedFetch("/api/auth/me/loans", { signal }),
-          authorizedFetch("/api/auth/me/marketplace", { signal }),
-          authorizedFetch("/api/auth/me/notifications", { signal }),
-        ]);
-        if (meRes.status === 401) {
+        const response = await authorizedFetch("/api/auth/me/bootstrap", { signal });
+        if (response.status === 401) {
           clearToken();
           set(clearSessionState());
           return { ok: false, error: "Session expired. Please log in again." };
         }
-        if (!meRes.ok) {
-          const error = await readJsonObject(meRes);
+        if (!response.ok) {
+          const error = await readJsonObject(response);
           throw new Error(stringValue(error.error) || "Failed to load user.");
         }
-        const meData = await readJsonObject(meRes);
-        const user = meData.user as User;
-        const txData = txRes.ok ? await readJsonObject(txRes) : {};
-        const loansData = loansRes.ok ? await readJsonObject(loansRes) : {};
-        const mktData = mktRes.ok ? await readJsonObject(mktRes) : {};
-        const notifData = notifRes.ok ? await readJsonObject(notifRes) : {};
+        const accountData = await readJsonObject(response);
+        const user = accountData.user as User;
         set({
           user,
           isAuthenticated: true,
           isLoading: false,
-          transactions: ((txData.transactions as TransactionRow[] | undefined) || []).map(
+          transactions: ((accountData.transactions as TransactionRow[] | undefined) || []).map(
             toTransaction,
           ),
-          activeLoans: ((loansData.loans as LoanApiRow[] | undefined) || []).map((loan) =>
+          activeLoans: ((accountData.loans as LoanApiRow[] | undefined) || []).map((loan) =>
             toLoan(loan, user.id),
           ),
-          marketplace: ((mktData.items as MarketplaceRow[] | undefined) || []).map(
+          marketplace: ((accountData.items as MarketplaceRow[] | undefined) || []).map(
             toMarketplaceItem,
           ),
-          notifications: ((notifData.notifications as NotificationRow[] | undefined) || []).map(
-            toNotification,
-          ),
+          notifications: (
+            (accountData.notifications as NotificationRow[] | undefined) || []
+          ).map(toNotification),
         });
         return { ok: true };
       } catch (error) {

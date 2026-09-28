@@ -184,10 +184,12 @@ export default function Me2UAssistantWidget() {
       });
 
       if (!response.ok || !response.body) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(
-          typeof data.error === "string" ? data.error : "Me2U Guide is unavailable.",
-        );
+        const data: unknown = await response.json().catch(() => null);
+        const errorMessage =
+          data && typeof data === "object" && "error" in data && typeof data.error === "string"
+            ? data.error
+            : "Me2U Guide is unavailable.";
+        throw new Error(errorMessage);
       }
 
       const reader = response.body.getReader();
@@ -290,7 +292,7 @@ export default function Me2UAssistantWidget() {
         </span>
         <span className="relative z-0 grid h-14 w-14 max-h-full max-w-full aspect-square overflow-hidden rounded-full">
           <Image
-            src="/me2u_logo_v2.svg"
+            src="/me2u-icon.webp"
             alt=""
             fill
             sizes="56px"
@@ -324,7 +326,7 @@ export default function Me2UAssistantWidget() {
                 <div className="flex min-w-0 items-center gap-3">
                   <span className="relative grid h-10 w-10 shrink-0 aspect-square overflow-hidden rounded-full bg-[var(--color-bg-card)] p-1">
                     <Image
-                      src="/me2u_logo_v2.svg"
+                      src="/me2u-icon.webp"
                       alt=""
                       fill
                       sizes="40px"
@@ -425,7 +427,7 @@ export default function Me2UAssistantWidget() {
                       <button
                         key={prompt}
                         type="button"
-                        onClick={() => sendMessage(prompt)}
+                        onClick={() => void sendMessage(prompt)}
                         className="min-h-11 rounded-[16px] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 text-left text-sm font-bold text-[var(--color-text-primary)] transition hover:bg-[var(--color-hover-soft)]"
                       >
                         {prompt}

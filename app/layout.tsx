@@ -71,7 +71,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/Hero_final.png",
+        url: "/hero-final.webp",
         width: 1680,
         height: 944,
         alt: "Me2U interest-free lending platform",
@@ -83,12 +83,12 @@ export const metadata: Metadata = {
     title: "Me2U — 0% Interest Loans. Built on Trust.",
     description:
       "Nigeria's trust-based peer lending platform. 0% interest, community circles, transparent scoring.",
-    images: ["/Hero_final.png"],
+    images: ["/hero-final.webp"],
   },
   icons: {
-    icon: "/me2u_logo_v2.svg",
-    shortcut: "/me2u_logo_v2.svg",
-    apple: "/me2u_logo_v2.svg",
+    icon: "/me2u-icon-192.png",
+    shortcut: "/me2u-icon-192.png",
+    apple: "/me2u-icon-180.png",
   },
   manifest: "/manifest.json",
   appleWebApp: {

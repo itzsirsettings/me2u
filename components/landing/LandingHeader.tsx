@@ -99,7 +99,7 @@ export default function LandingHeader() {
               aria-label="Me2U home"
             >
               <BrandLogo
-                src="/me2u_nav_logo.svg"
+                src="/me2u-nav-logo.webp"
                 className="h-11 w-[7.75rem] rounded-[10px] bg-snow px-2 py-1.5 shadow-sm transition-transform duration-300 group-hover:scale-[1.03] sm:h-12 sm:w-36"
               />
             </Link>

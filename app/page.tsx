@@ -38,7 +38,7 @@ export default function Landing() {
               "@type": "Organization",
               name: "Me2U",
               url: "https://www.me2ulend.online",
-              logo: "https://www.me2ulend.online/me2u_logo_v2.svg",
+              logo: "https://www.me2ulend.online/me2u-icon-512.png",
             },
             {
               "@context": "https://schema.org",

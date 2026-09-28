@@ -985,6 +985,7 @@ export function BlackHoleHeroSection({
     let lastFrame = 0;
     let running = true;
     let visible = true;
+    let inViewport = true;
     let raf = 0;
 
     function pass(prog: Prog, target: Target | null) {
@@ -1182,15 +1183,32 @@ export function BlackHoleHeroSection({
 
     function tick(now: number) {
       if (!running) return;
-      raf = requestAnimationFrame(tick);
       if (!visible) {
-        lastFrame = now;
+        return;
+      }
+      // The hero is decorative; 24 fps keeps its motion smooth while avoiding
+      // the full ray-marching and bloom passes on every display refresh.
+      if (lastFrame && now - lastFrame < 1000 / 24) {
+        raf = requestAnimationFrame(tick);
         return;
       }
       const dt = lastFrame ? Math.min(0.05, (now - lastFrame) / 1000) : 0;
       lastFrame = now;
       if (!props.current.paused && !reduced) clock += dt;
       render(clock);
+      raf = requestAnimationFrame(tick);
+    }
+
+    function syncAnimation() {
+      visible = inViewport && !document.hidden;
+      if (!visible) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+        lastFrame = 0;
+      } else if (!reduced && !raf) {
+        lastFrame = 0;
+        raf = requestAnimationFrame(tick);
+      }
     }
 
     if (!build()) {
@@ -1199,7 +1217,6 @@ export function BlackHoleHeroSection({
     }
     resize();
     settle(reduced ? 16 : 1);
-    if (!reduced) raf = requestAnimationFrame(tick);
 
     /* --- the world ------------------------------------------------------- */
 
@@ -1211,15 +1228,15 @@ export function BlackHoleHeroSection({
 
     const io = new IntersectionObserver(
       (entries) => {
-        visible = entries[0]?.isIntersecting ?? true;
+        inViewport = entries[0]?.isIntersecting ?? true;
+        syncAnimation();
       },
       { threshold: 0 },
     );
     io.observe(host);
 
     const onVisibility = () => {
-      visible = !document.hidden;
-      lastFrame = 0;
+      syncAnimation();
     };
     const onLost = (e: Event) => {
       // Asking for the context back is only worth it if it comes back working.
@@ -1227,6 +1244,7 @@ export function BlackHoleHeroSection({
       e.preventDefault();
       running = false;
       cancelAnimationFrame(raf);
+      raf = 0;
       canvas.style.display = "none";
     };
     const onRestored = () => {
@@ -1241,9 +1259,10 @@ export function BlackHoleHeroSection({
       running = true;
       lastFrame = 0;
       settle(reduced ? 16 : 1);
-      if (!reduced) raf = requestAnimationFrame(tick);
+      syncAnimation();
     };
 
+    syncAnimation();
     document.addEventListener("visibilitychange", onVisibility);
     canvas.addEventListener("webglcontextlost", onLost);
     canvas.addEventListener("webglcontextrestored", onRestored);

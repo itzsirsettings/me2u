@@ -6,7 +6,11 @@ type BrandLogoProps = {
   src?: string;
 };
 
-export default function BrandLogo({ className, imageClassName, src = "/me2u_nav_logo.svg" }: BrandLogoProps) {
+export default function BrandLogo({
+  className,
+  imageClassName,
+  src = "/me2u-nav-logo.webp",
+}: BrandLogoProps) {
   return (
     <span className={cn("inline-flex shrink-0 items-center", className)}>
       <img
