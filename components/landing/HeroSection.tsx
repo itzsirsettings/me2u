@@ -50,20 +50,21 @@ export default function HeroSection() {
       aria-describedby="landing-hero-description"
       className="hero-section"
     >
-      <BlackHoleHeroSection
-        aria-hidden="true"
-        className="absolute inset-0 z-0 bg-transparent bg-[url('/Hero_final.png')] bg-cover bg-center"
-        focus={narrow ? [0.5, 0.76] : [0.72, 0.46]}
-        scrim={narrow ? "top" : "left"}
-        scrimStrength={0.9}
-        distance={24}
-        elevation={narrow ? -7 : -5.5}
-        fov={narrow ? 58 : 42}
-        glow={narrow ? 0.85 : 1}
-        steps={narrow ? 190 : 260}
-        resolution={narrow ? 0.52 : 0.62}
-        maxDpr={narrow ? 1.25 : 1.5}
-      />
+      <div className="absolute inset-0 z-0" aria-hidden="true">
+        <BlackHoleHeroSection
+          className="bg-transparent bg-[url('/Hero_final.png')] bg-cover bg-center"
+          focus={narrow ? [0.5, 0.76] : [0.72, 0.46]}
+          scrim={narrow ? "top" : "left"}
+          scrimStrength={0.9}
+          distance={24}
+          elevation={narrow ? -7 : -5.5}
+          fov={narrow ? 58 : 42}
+          glow={narrow ? 0.85 : 1}
+          steps={narrow ? 190 : 260}
+          resolution={narrow ? 0.52 : 0.62}
+          maxDpr={narrow ? 1.25 : 1.5}
+        />
+      </div>
       <div className="hero-overlay" aria-hidden="true" />
 
       <div className="hero-content">
