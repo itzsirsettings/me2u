@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import BlackHoleHeroSection from "@/components/ui/blackhole-hero-section";
+
 export default function HeroSection() {
   return (
     <section
@@ -18,6 +20,13 @@ export default function HeroSection() {
           preload
           unoptimized
           className="hero-bg-img"
+        />
+        <BlackHoleHeroSection
+          className="hero-blackhole-canvas"
+          style={{ backgroundColor: "transparent" }}
+          steps={220}
+          resolution={0.58}
+          maxDpr={1.4}
         />
       </div>
       <div className="hero-overlay" aria-hidden="true" />

@@ -771,6 +771,10 @@ html[data-theme="dark"] .btn-ghost {
   object-position: 65% center;
 }
 
+.hero-blackhole-canvas {
+  z-index: 1;
+}
+
 @media (min-width: 768px) {
   .hero-bg-img {
     object-position: center center;

@@ -13,7 +13,7 @@ test("landing page loads and shows cooperative messaging", async ({ page }) => {
   const heroImages = hero.locator('img[src*="hero-final.webp"]');
   await expect(heroImages).toHaveCount(1);
   await expect(heroImages.first()).toBeVisible();
-  await expect(hero.locator("canvas")).toHaveCount(0);
+  await expect(hero.locator("canvas")).toHaveCount(1);
   expect(requestedUrls.some((url) => url.includes("/api/auth/me"))).toBe(false);
 
   await expect(hero.getByRole("link", { name: "Start Building Trust" })).toBeVisible();

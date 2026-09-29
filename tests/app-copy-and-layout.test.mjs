@@ -115,14 +115,15 @@ test("admin dashboard uses overflow-safe grids and contained ledger scrolling", 
   assert.match(globals, /\.overflow-anywhere/);
 });
 
-test("landing hero uses a preloaded static image instead of a WebGL animation", () => {
+test("landing hero renders the black hole with a preloaded image fallback", () => {
   const hero = read("components/landing/HeroSection.tsx");
   const globals = read("app/globals.css");
 
   assert.match(hero, /hero-final\.webp/);
   assert.match(hero, /preload/);
   assert.match(hero, /unoptimized/);
-  assert.doesNotMatch(hero, /blackhole-hero-section|framer-motion/);
+  assert.match(hero, /BlackHoleHeroSection/);
+  assert.match(hero, /resolution=\{0\.58\}/);
   assert.match(globals, /\.hero-section \{[^}]*overflow: hidden/s);
   assert.match(globals, /\.hero-overlay \{/);
   assert.doesNotMatch(globals, /100cqw/);
