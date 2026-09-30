@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 
 import BlackHoleHeroSection from "@/components/ui/blackhole-hero-section";
@@ -12,15 +11,11 @@ export default function HeroSection() {
       className="hero-section"
     >
       <div className="hero-bg" aria-hidden="true">
-        <Image
-          src="/hero-final.webp"
-          alt=""
-          fill
-          sizes="100vw"
-          preload
-          unoptimized
-          className="hero-bg-img"
-        />
+        <div className="hero-blackhole-fallback" aria-hidden="true">
+          <span className="hero-blackhole-fallback-disc" />
+          <span className="hero-blackhole-fallback-lensing" />
+          <span className="hero-blackhole-fallback-shadow" />
+        </div>
         <BlackHoleHeroSection
           className="hero-blackhole-canvas"
           style={{ backgroundColor: "transparent" }}

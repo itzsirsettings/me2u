@@ -115,15 +115,18 @@ test("admin dashboard uses overflow-safe grids and contained ledger scrolling", 
   assert.match(globals, /\.overflow-anywhere/);
 });
 
-test("landing hero renders the black hole with a preloaded image fallback", () => {
+test("landing hero renders the black hole with a CSS fallback", () => {
   const hero = read("components/landing/HeroSection.tsx");
   const globals = read("app/globals.css");
+  const layout = read("app/layout.tsx");
 
-  assert.match(hero, /hero-final\.webp/);
-  assert.match(hero, /preload/);
-  assert.match(hero, /unoptimized/);
+  assert.doesNotMatch(hero, /hero-final\.webp/);
   assert.match(hero, /BlackHoleHeroSection/);
+  assert.match(hero, /hero-blackhole-fallback/);
   assert.match(hero, /resolution=\{0\.58\}/);
+  assert.match(layout, /me2u-blackhole-og\.png/);
+  assert.doesNotMatch(layout, /hero-final\.webp/);
+  assert.match(globals, /\.hero-blackhole-fallback \{/);
   assert.match(globals, /\.hero-section \{[^}]*overflow: hidden/s);
   assert.match(globals, /\.hero-overlay \{/);
   assert.doesNotMatch(globals, /100cqw/);

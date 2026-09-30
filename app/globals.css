@@ -740,7 +740,7 @@ html[data-theme="dark"] .btn-ghost {
 }
 
 /* ═══════════════════════════════════════════════════════
-   HERO SECTION — Matches Hero_final.png exactly
+   HERO SECTION — WebGL black hole with a CSS fallback
    ═══════════════════════════════════════════════════════ */
 
 .hero-section {
@@ -759,26 +759,84 @@ html[data-theme="dark"] .btn-ghost {
   }
 }
 
-/* ── Background image + parallax wrapper ── */
+/* ── Background scene ── */
 .hero-bg {
   position: absolute;
   inset: 0;
   z-index: 0;
 }
 
-.hero-bg-img {
-  object-fit: cover;
-  object-position: 65% center;
+.hero-blackhole-fallback {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background-color: #05070b;
+  background-image:
+    radial-gradient(circle at 11% 18%, rgba(233, 241, 255, 0.8) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 22% 73%, rgba(233, 241, 255, 0.65) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 36% 31%, rgba(233, 241, 255, 0.55) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 48% 84%, rgba(233, 241, 255, 0.6) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 88% 19%, rgba(233, 241, 255, 0.65) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 93% 76%, rgba(233, 241, 255, 0.55) 0 1px, transparent 1.5px),
+    radial-gradient(ellipse at 72% 46%, rgba(57, 31, 17, 0.35), transparent 42%),
+    linear-gradient(115deg, #07101a 0%, #05070b 62%, #090807 100%);
+}
+
+.hero-blackhole-fallback-disc {
+  position: absolute;
+  top: calc(46% - clamp(7.5rem, 18vw, 14rem));
+  right: -18%;
+  width: 100vw;
+  height: clamp(15rem, 35vw, 28rem);
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 0%,
+    transparent 31%,
+    rgba(255, 244, 218, 0.78) 35%,
+    rgba(255, 169, 81, 0.94) 39%,
+    rgba(212, 79, 18, 0.82) 47%,
+    rgba(87, 34, 11, 0.5) 55%,
+    transparent 66%
+  );
+  filter: blur(3px);
+  transform: rotate(-18deg);
+}
+
+.hero-blackhole-fallback-lensing {
+  position: absolute;
+  top: calc(46% - clamp(3.5rem, 8vw, 9rem));
+  right: clamp(5%, 14vw, 12rem);
+  width: clamp(16rem, 45vw, 44rem);
+  height: clamp(7rem, 16vw, 17rem);
+  border: clamp(0.65rem, 1.4vw, 1.2rem) solid transparent;
+  border-top-color: rgba(255, 244, 218, 0.94);
+  border-bottom-color: rgba(247, 137, 54, 0.82);
+  border-radius: 50%;
+  filter: drop-shadow(0 0 1.5rem rgba(244, 129, 48, 0.62));
+  transform: rotate(-18deg);
+}
+
+.hero-blackhole-fallback-shadow {
+  position: absolute;
+  top: calc(46% - clamp(6rem, 12.5vw, 12rem));
+  right: clamp(5%, 14vw, 12rem);
+  width: clamp(12rem, 25vw, 24rem);
+  height: clamp(12rem, 25vw, 24rem);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    #020203 0%,
+    #020203 53%,
+    rgba(4, 4, 4, 0.98) 61%,
+    rgba(4, 4, 4, 0.4) 74%,
+    transparent 81%
+  );
+  box-shadow: 0 0 2rem rgba(0, 0, 0, 0.9);
 }
 
 .hero-blackhole-canvas {
   z-index: 1;
-}
-
-@media (min-width: 768px) {
-  .hero-bg-img {
-    object-position: center center;
-  }
 }
 
 /* Dark gradient so left-side text is always readable */

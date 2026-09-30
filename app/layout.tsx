@@ -66,10 +66,10 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/hero-final.webp",
-        width: 1680,
-        height: 944,
-        alt: "Me2U interest-free lending platform",
+        url: "/me2u-blackhole-og.png",
+        width: 1280,
+        height: 720,
+        alt: "Me2U homepage with a glowing black hole",
       },
     ],
   },
@@ -78,7 +78,7 @@ export const metadata: Metadata = {
     title: "Me2U — 0% Interest Loans. Built on Trust.",
     description:
       "Nigeria's trust-based peer lending platform. 0% interest, community circles, transparent scoring.",
-    images: ["/hero-final.webp"],
+    images: ["/me2u-blackhole-og.png"],
   },
   icons: {
     icon: "/me2u-icon-192.png",

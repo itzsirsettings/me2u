@@ -183,12 +183,6 @@ export default function LandingHeader() {
                           desc: "Create borrow requests and lending offers.",
                         },
                         {
-                          href: "/#trust-score",
-                          icon: "◈",
-                          title: "Trust Score",
-                          desc: "Build trust from verified actions.",
-                        },
-                        {
                           href: "/#features",
                           icon: "✦",
                           title: "Referral Rewards",
@@ -218,42 +212,6 @@ export default function LandingHeader() {
                 )}
               </AnimatePresence>
             </div>
-
-            <Link
-              href="/#how-it-works"
-              onClick={handleAnchorNavigate("/#how-it-works")}
-              className="font-medium text-sm text-snow/70 hover:text-snow transition-colors min-h-[44px] inline-flex items-center"
-            >
-              How it works
-            </Link>
-            <Link
-              href="/#features"
-              onClick={handleAnchorNavigate("/#features")}
-              className="font-medium text-sm text-snow/70 hover:text-snow transition-colors min-h-[44px] inline-flex items-center"
-            >
-              Features
-            </Link>
-            <Link
-              href="/#trust-score"
-              onClick={handleAnchorNavigate("/#trust-score")}
-              className="font-medium text-sm text-snow/70 hover:text-snow transition-colors min-h-[44px] inline-flex items-center"
-            >
-              Trust Score
-            </Link>
-            <Link
-              href="/#community-circles"
-              onClick={handleAnchorNavigate("/#community-circles")}
-              className="font-medium text-sm text-snow/70 hover:text-snow transition-colors min-h-[44px] inline-flex items-center"
-            >
-              Circles
-            </Link>
-            <Link
-              href="/#faq"
-              onClick={handleAnchorNavigate("/#faq")}
-              className="font-medium text-sm text-snow/70 hover:text-snow transition-colors min-h-[44px] inline-flex items-center"
-            >
-              FAQs
-            </Link>
           </nav>
 
           <div className="hidden lg:flex items-center gap-4">
@@ -330,7 +288,6 @@ export default function LandingHeader() {
               {[
                 { href: "/#loans", label: "0% Loans" },
                 { href: "/#marketplace", label: "Peer Marketplace" },
-                { href: "/#trust-score", label: "Trust Score" },
                 { href: "/#features", label: "Referral Rewards" },
               ].map((l) => (
                 <Link
@@ -345,11 +302,7 @@ export default function LandingHeader() {
 
               <div className="px-3 pt-4 pb-2 text-sm font-medium text-snow/70">Explore</div>
               {[
-                { href: "/#community-circles", label: "Circles" },
-                { href: "/#features", label: "Features" },
-                { href: "/#trust-score", label: "Trust Score" },
                 { href: "/#comparison", label: "Why Me2U" },
-                { href: "/#faq", label: "FAQs" },
                 { href: "https://app.me2ulend.online/support", label: "Support" },
               ].map((l) => (
                 <Link
