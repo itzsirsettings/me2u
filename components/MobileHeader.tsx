@@ -8,6 +8,7 @@ import Me2uIcon from "@/components/Me2uIcon";
 const routeTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/wallet": "Wallet",
+  "/wallet/me2u-testnet": "Me2U Testnet",
   "/withdraw": "Withdraw",
   "/kyc": "KYC",
   "/marketplace": "Marketplace",

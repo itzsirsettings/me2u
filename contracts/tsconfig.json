@@ -1,0 +1,12 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": ["hardhat.config.ts", "ignition/**/*.ts"],
+  "exclude": ["node_modules", "artifacts", "cache", "ignition/deployments"]
+}

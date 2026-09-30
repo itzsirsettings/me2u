@@ -62,6 +62,14 @@ const quickLinks: QuickLink[] = [
     icon: "deal",
     tone: "text-[var(--color-warning-text)]",
   },
+  {
+    label: "Me2U Testnet",
+    description:
+      "Explore self-custody and simulated USD/NGN markets. Test tokens have no value.",
+    path: "/wallet/me2u-testnet",
+    icon: "family",
+    tone: "text-[var(--color-accent-primary)]",
+  },
 ];
 
 export default function WalletPage() {

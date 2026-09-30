@@ -49,7 +49,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ["**/*.mjs", "**/*.js", "**/*.cjs", "scripts/**"],
+    files: ["**/*.mjs", "**/*.js", "**/*.cjs", "**/*.d.mts", "scripts/**"],
     ...tseslint.configs.disableTypeChecked,
     languageOptions: {
       globals: {
