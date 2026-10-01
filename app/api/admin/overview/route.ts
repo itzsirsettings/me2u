@@ -39,7 +39,7 @@ export async function GET(request: Request) {
         registration_deposit_confirmed_at, passport_photo_url, affiliate_earnings,
         partner_offer_consent_at, created_at, updated_at
         FROM profiles ORDER BY created_at DESC LIMIT 500`),
-      db.query(`SELECT w.id, w.user_id, w.balance, w.locked, w.created_at, w.updated_at
+      db.query(`SELECT w.id, w.user_id, w.balance, w.locked
         FROM wallets w JOIN
         (SELECT id FROM profiles ORDER BY created_at DESC LIMIT 500) p ON p.id = w.user_id`),
       db.query(`SELECT * FROM transactions ORDER BY created_at DESC LIMIT 250`),
